@@ -1,0 +1,468 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Mode - warm paper, journal-like */
+    --background: 38 25% 97%;
+    --foreground: 30 10% 15%;
+
+    --card: 38 20% 99%;
+    --card-foreground: 30 10% 15%;
+
+    --canvas: 36 10% 85%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 10% 12%;
+
+    --primary: 220 85% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 40 10% 96%;
+    --secondary-foreground: 30 10% 25%;
+
+    --muted: 40 8% 94%;
+    --muted-foreground: 30 8% 48%;
+
+    --accent: 220 85% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 65% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Light mode: stronger borders (neo-brutal) for clearer perception */
+    --border: 30 10% 72%;
+    --input: 40 10% 94%;
+    --ring: 220 85% 55%;
+
+    --radius: 0.625rem;
+
+    --highlight: 220 85% 55%;
+    --highlight-muted: 220 60% 70%;
+
+    /* Node type colors - present, iconic (second-brain daily driver) */
+    --thought: 222 58% 42%;
+    --thought-bg: 222 28% 97%;
+    --thought-border: 222 32% 88%;
+
+    --idea: 38 92% 44%;
+    --idea-bg: 38 48% 97%;
+    --idea-border: 38 42% 88%;
+
+    --project: 158 52% 38%;
+    --project-bg: 158 32% 96%;
+    --project-border: 158 28% 85%;
+
+    --article: 262 52% 48%;
+    --article-bg: 262 28% 97%;
+    --article-border: 262 24% 88%;
+
+    --article-section: 238 52% 48%;
+    --article-section-bg: 238 28% 97%;
+    --article-section-border: 238 24% 88%;
+
+    --paragraph: 195 28% 42%;
+    --paragraph-bg: 195 18% 96%;
+    --paragraph-border: 195 14% 88%;
+
+    --question: 6 72% 48%;
+    --question-bg: 6 42% 97%;
+    --question-border: 6 38% 88%;
+
+    --connector-line: 40 10% 85%;
+    --node-fill-opacity: 0.11;
+
+    --action-add: 160 55% 42%;
+    --action-move: 220 85% 55%;
+    --action-doc: 275 45% 55%;
+    --action-delete: 0 65% 52%;
+
+    --panel-bg: 0 0% 100%;
+    --panel-border: 30 10% 72%;
+
+    --tree-hover: 40 15% 97%;
+    --tree-active: 220 85% 55%;
+    --tree-line: 40 10% 88%;
+
+    --shadow-sm: 0 1px 2px 0 hsl(30 20% 20% / 0.04), 0 1px 3px 0 hsl(30 20% 20% / 0.02);
+    --shadow-md: 0 4px 8px -2px hsl(30 20% 20% / 0.06), 0 2px 4px -2px hsl(30 20% 20% / 0.03);
+    --shadow-lg: 0 12px 24px -4px hsl(30 20% 20% / 0.08), 0 4px 8px -2px hsl(30 20% 20% / 0.04);
+    --shadow-glow: 0 0 48px -12px hsl(var(--highlight) / 0.15);
+
+    --sidebar-background: 40 15% 99%;
+    --sidebar-foreground: 30 10% 12%;
+    --sidebar-primary: 220 85% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 40 10% 96%;
+    --sidebar-accent-foreground: 30 10% 25%;
+    --sidebar-border: 30 10% 72%;
+    --sidebar-ring: 220 85% 55%;
+
+    --chart-1: 222 58% 42%;
+    --chart-2: 158 52% 38%;
+    --chart-3: 38 92% 44%;
+    --chart-4: 262 52% 48%;
+    --chart-5: 6 72% 48%;
+
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+    --shadow-2xs: 0 1px 1px 0 hsl(30 20% 20% / 0.02);
+    --shadow-xs: 0 1px 2px 0 hsl(30 20% 20% / 0.03);
+    --shadow: var(--shadow-sm);
+    --shadow-xl: 0 16px 32px -8px hsl(30 20% 20% / 0.10);
+    --shadow-2xl: 0 24px 48px -12px hsl(30 20% 20% / 0.12);
+  }
+
+  .dark {
+    --background: 30 8% 7%;
+    --foreground: 38 12% 92%;
+
+    --card: 30 6% 12%;
+    --card-foreground: 38 12% 92%;
+
+    --canvas: 30 6% 6%;
+
+    --popover: 240 10% 7%;
+    --popover-foreground: 40 10% 94%;
+
+    --primary: 220 75% 62%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 30 6% 13%;
+    --secondary-foreground: 38 8% 78%;
+
+    --muted: 30 5% 15%;
+    --muted-foreground: 38 6% 50%;
+
+    --accent: 30 5% 15%;
+    --accent-foreground: 38 10% 92%;
+
+    --border: 30 6% 16%;
+    --input: 30 6% 13%;
+    --ring: 220 75% 62%;
+
+    --connector-line: 30 5% 22%;
+    --node-fill-opacity: 0.08;
+
+    --panel-bg: 30 6% 10%;
+    --panel-border: 30 6% 16%;
+
+    --tree-hover: 30 5% 13%;
+    --tree-active: 220 75% 62%;
+    --tree-line: 30 5% 20%;
+
+    /* Node type colors - dark mode (readable, not harsh) */
+    --thought: 218 55% 62%;
+    --thought-bg: 218 22% 14%;
+    --thought-border: 218 20% 22%;
+
+    --idea: 38 85% 58%;
+    --idea-bg: 38 25% 14%;
+    --idea-border: 38 22% 22%;
+
+    --project: 158 45% 52%;
+    --project-bg: 158 22% 14%;
+    --project-border: 158 20% 22%;
+
+    --article: 262 50% 62%;
+    --article-bg: 262 22% 14%;
+    --article-border: 262 20% 22%;
+
+    --article-section: 238 50% 62%;
+    --article-section-bg: 238 22% 14%;
+    --article-section-border: 238 20% 22%;
+
+    --paragraph: 195 25% 58%;
+    --paragraph-bg: 195 18% 14%;
+    --paragraph-border: 195 16% 22%;
+
+    --question: 6 65% 58%;
+    --question-bg: 6 28% 14%;
+    --question-border: 6 25% 22%;
+
+    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.35);
+    --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.45);
+    --shadow-lg: 0 12px 28px -4px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 48px -12px hsl(var(--highlight) / 0.2);
+
+    --sidebar-background: 30 8% 7%;
+    --sidebar-foreground: 38 12% 92%;
+    --sidebar-border: 30 6% 16%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* Light mode only: slightly thicker borders (neo-brutal) for clarity */
+  html:not(.dark) .border {
+    border-width: 2px;
+  }
+  html:not(.dark) .border-t,
+  html:not(.dark) .border-b,
+  html:not(.dark) .border-l,
+  html:not(.dark) .border-r {
+    border-width: 2px;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv01' 1, 'cv02' 1, 'cv03' 1, 'cv04' 1, 'liga' 1, 'kern' 1;
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    letter-spacing: -0.011em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    @apply font-semibold;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl font-semibold;
+    line-height: 1.1;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl;
+    line-height: 1.15;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl;
+    line-height: 1.2;
+  }
+
+  h4 {
+    @apply text-lg md:text-xl font-medium;
+    line-height: 1.25;
+  }
+
+  p {
+    line-height: 1.65;
+    letter-spacing: -0.005em;
+  }
+
+  code, .mono {
+    font-family: var(--font-mono);
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background-color: hsl(var(--highlight) / 0.15);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .panel {
+    background-color: hsl(var(--panel-bg));
+    border-color: hsl(var(--panel-border));
+    @apply border rounded-lg;
+  }
+
+  .label-caps {
+    @apply text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground;
+  }
+
+  .node-badge {
+    @apply inline-flex items-center px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] rounded-md;
+  }
+
+  .node-badge-thought {
+    background-color: hsl(var(--thought-bg));
+    color: hsl(var(--thought));
+    border: 1px solid hsl(var(--thought-border));
+  }
+
+  .node-badge-idea {
+    background-color: hsl(var(--idea-bg));
+    color: hsl(var(--idea));
+    border: 1px solid hsl(var(--idea-border));
+  }
+
+  .node-badge-project {
+    background-color: hsl(var(--project-bg));
+    color: hsl(var(--project));
+    border: 1px solid hsl(var(--project-border));
+  }
+
+  .node-badge-article {
+    background-color: hsl(var(--article-bg));
+    color: hsl(var(--article));
+    border: 1px solid hsl(var(--article-border));
+  }
+
+  .node-badge-article-section {
+    background-color: hsl(var(--article-section-bg));
+    color: hsl(var(--article-section));
+    border: 1px solid hsl(var(--article-section-border));
+  }
+
+  .node-badge-paragraph {
+    background-color: hsl(var(--paragraph-bg));
+    color: hsl(var(--paragraph));
+    border: 1px solid hsl(var(--paragraph-border));
+  }
+
+  .node-badge-question {
+    background-color: hsl(var(--question-bg));
+    color: hsl(var(--question));
+    border: 1px solid hsl(var(--question-border));
+  }
+
+  .lifecycle-badge {
+    @apply inline-flex items-center px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] rounded-md;
+  }
+
+  .tree-line {
+    border-left: 1px solid hsl(var(--connector-line));
+  }
+
+  .card-interactive {
+    @apply transition-all duration-300;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card-interactive:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .divider {
+    @apply h-px w-full bg-border/60;
+  }
+
+  .glow-hover:hover {
+    box-shadow: 0 0 32px -8px hsl(var(--highlight) / 0.18);
+  }
+
+  /* react-colorful: match app theme (borders, radius) */
+  .react-colorful {
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
+  }
+  .react-colorful__saturation {
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .react-colorful__hue {
+    height: 24px;
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  .react-colorful__hue-pointer {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid hsl(var(--background));
+    box-shadow: 0 0 0 1px hsl(var(--border));
+  }
+  .react-colorful__saturation-pointer {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid hsl(var(--background));
+    box-shadow: 0 0 0 1px hsl(var(--border));
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  :root {
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+  }
+
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-reveal {
+    animation: reveal-up 0.5s var(--ease-out-expo) forwards;
+    opacity: 0;
+  }
+
+  .delay-100 { animation-delay: 80ms; }
+  .delay-200 { animation-delay: 160ms; }
+  .delay-300 { animation-delay: 240ms; }
+  .delay-400 { animation-delay: 320ms; }
+  .delay-500 { animation-delay: 400ms; }
+
+  @keyframes subtle-rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-subtle-rise {
+    animation: subtle-rise 0.5s var(--ease-out-expo) both;
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.3s var(--ease-out-expo);
+  }
+
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-premium {
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+.react-flow__pane {
+  cursor: grab !important;
+}
+.react-flow__pane:active {
+  cursor: grabbing !important;
+}
+.react-flow__node {
+  cursor: pointer !important;
+}
+.react-flow__handle {
+  cursor: crosshair !important;
+}
+.react-flow__selectionpane {
+  cursor: default !important;
+}
