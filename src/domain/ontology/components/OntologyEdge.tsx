@@ -1,6 +1,7 @@
 import { memo } from "react";
 import type { EdgeProps } from "@xyflow/react";
 import { getTypeColor } from "../utils/nodeSchemas";
+import type { NodeType } from "../utils/types";
 
 /** Gentle curve path — almost straight with softness (moc-up style). */
 function getGentlePath(sx: number, sy: number, tx: number, ty: number): string {
@@ -24,7 +25,7 @@ function OntologyEdgeComponent({
   selected,
 }: EdgeProps) {
   const sourceType = (data as { sourceType?: string })?.sourceType ?? "thought";
-  const nodeTypes = (data as { nodeTypes?: Record<string, { color: string }> })?.nodeTypes ?? {};
+  const nodeTypes = (data as { nodeTypes?: Record<string, NodeType> })?.nodeTypes ?? {};
   const color = getTypeColor(sourceType, nodeTypes);
   /** Raw HSL for stroke with alpha: hsl(var(--thought) / 0.4) */
   const colorRaw = color.replace(/^hsl\(|\)$/g, "");

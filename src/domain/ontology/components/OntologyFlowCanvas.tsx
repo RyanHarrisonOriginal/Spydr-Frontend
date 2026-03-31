@@ -205,7 +205,7 @@ export function OntologyFlowCanvasView() {
     return { flowNodes, flowEdges };
   }
 
-  const { initialNodes, initialEdges } = useMemo(
+  const { flowNodes: initialNodes, flowEdges: initialEdges } = useMemo(
     () => buildFlowNodesAndEdges(storeNodes, ctx.nodeTypes),
     [storeNodes, ctx.nodeTypes]
   );

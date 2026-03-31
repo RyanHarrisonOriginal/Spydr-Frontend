@@ -1,4 +1,4 @@
-import type { NodeType, NodeTypeId } from "./types";
+import type { FieldSchemaEntry, NodeType, NodeTypeId } from "./types";
 
 /** Allowed child type ids for a node type (for canHaveChildren). */
 export function getAllowedChildren(
@@ -55,7 +55,7 @@ export function getNodeBadgeClass(type: NodeTypeId, nodeTypes: Record<string, No
 export function getFieldSchema(
   type: NodeTypeId,
   nodeTypes: Record<string, NodeType>
-): { key: string; label: string; type: string }[] {
+): FieldSchemaEntry[] {
   const nt = nodeTypes[type];
   return nt?.fieldSchema ?? [];
 }

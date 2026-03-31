@@ -28,7 +28,6 @@ function ProfileBadge() {
   return (
     <div className="flex items-center gap-2 rounded-full border border-border/50 bg-card/60 pl-1 pr-2 py-1 shadow-sm">
       <UserButton
-        afterSignOutUrl="/"
         appearance={{
           elements: {
             avatarBox: "h-8 w-8",

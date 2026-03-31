@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useOntologyFlowContext } from "../context/OntologyFlowContext";
 import { getRootNodes, getChildren } from "../utils/treeUtils";
 import { getTypeColor } from "../utils/nodeSchemas";
+import type { NodeType } from "../utils/types";
 
 type TreeItem = {
   id: string;
@@ -26,7 +27,7 @@ function NavigatorItem({
   depth: number;
   onNavigate: (id: string) => void;
   onToggleExpand: (nodeId: string) => void;
-  nodeTypes: Record<string, { color: string }>;
+  nodeTypes: Record<string, NodeType>;
   selectedNodeId: string | null;
 }) {
   const hasChildren = item.children.length > 0;
