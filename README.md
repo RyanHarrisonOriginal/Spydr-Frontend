@@ -109,6 +109,12 @@ Events include `node:added`, `node:deleted`, `node:moved`, `node:toggled`, `node
 
 Copy `.env.example` to `.env.local` and set values. `.env.local` is gitignored.
 
+## Deploy on Render (static site)
+
+- **Publish directory:** `dist` (Vite output; not `build`).
+- **Client-side routes** (`/sign-in`, `/ontology/:id`, …): add a **rewrite** so deep links work — **Source** `/*`, **Destination** `/index.html`, **Action** Rewrite ([docs](https://render.com/docs/redirects-rewrites)). Alternatively use the repo’s `render.yaml` with a Render Blueprint.
+- Set **`VITE_CLERK_PUBLISHABLE_KEY`** and **`VITE_API_URL`** in the service **Environment** tab for production.
+
 ## Scripts
 
 ```bash

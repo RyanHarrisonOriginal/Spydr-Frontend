@@ -1,0 +1,21 @@
+# Static site + SPA fallback for React Router (direct visits to /sign-in, /ontology/:id, etc.).
+#
+# Blueprint: connect this repo in Render to provision/sync this service.
+#
+# If you already created a Static Site manually: set Publish Directory to `dist`, then open
+# Dashboard → your site → Redirects/Rewrites → add:
+#   Source: /*   Destination: /index.html   Action: Rewrite
+# (Render still serves real files like /assets/* first; the rewrite applies when no file matches.)
+#
+# https://render.com/docs/redirects-rewrites
+
+services:
+  - type: web
+    name: spydah-ontology-frontend
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
