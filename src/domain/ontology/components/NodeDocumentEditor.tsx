@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { useOntologyFlowContext } from "../context/OntologyFlowContext";
 import { getFieldSchema } from "../utils/nodeSchemas";
 import type { OntologyNode } from "../utils/types";
+import { NodeLifecyclePicker } from "./lifecycle/NodeLifecyclePicker";
+import { getLifecycleStateIds } from "../utils/lifecycle";
 
 interface NodeDocumentEditorProps {
   node: OntologyNode | null;
@@ -19,6 +21,9 @@ interface NodeDocumentEditorProps {
 export function NodeDocumentEditor({ node, onClose, onSaveNotes }: NodeDocumentEditorProps) {
   const { nodeTypes, onUpdateNode } = useOntologyFlowContext();
   const fieldSchema = node ? getFieldSchema(node.type, nodeTypes) : [];
+  const lifecycleOptions = node
+    ? getLifecycleStateIds(node.type, nodeTypes)
+    : [];
   const editor = useEditor({
     extensions: [StarterKit],
     content: node?.notes ?? "",
@@ -95,6 +100,18 @@ export function NodeDocumentEditor({ node, onClose, onSaveNotes }: NodeDocumentE
           <X className="h-4 w-4" />
         </Button>
       </header>
+
+      {lifecycleOptions.length > 0 ? (
+        <section className="px-4 py-3 border-b border-border bg-muted/20 min-w-0 shrink-0">
+          <NodeLifecyclePicker
+            layout="panel"
+            nodeTypeId={node.type}
+            nodeTypes={nodeTypes}
+            value={node.lifecycleState}
+            onChange={(lifecycleState) => onUpdateNode(node.id, { lifecycleState })}
+          />
+        </section>
+      ) : null}
 
       {/* Fields: single column so date picker and inputs stay legible in narrow panel */}
       {fieldSchema.length > 0 && (

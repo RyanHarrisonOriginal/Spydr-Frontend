@@ -16,6 +16,8 @@ import {
   getAllowedChildren,
   getAllowedTypesForParent,
 } from "../utils/nodeSchemas";
+import { getLifecycleStateIds } from "../utils/lifecycle";
+import { NodeLifecyclePicker } from "./lifecycle/NodeLifecyclePicker";
 import { getNodeHeight, getLineCount, NODE_LAYOUT } from "../utils/nodePositioning";
 import { nodeLayoutEvents } from "../utils/nodeLayoutEvents";
 import { cn } from "@/lib/utils";
@@ -220,6 +222,7 @@ function OntologyNodeComponent({ data, selected }: NodeProps<OntologyFlowNode>) 
   );
 
   const canHaveChildren = getAllowedChildren(data.type, nodeTypes).length > 0;
+  const lifecycleOptions = getLifecycleStateIds(data.type, nodeTypes);
 
   const availableTypes = useMemo(() => {
     const parentType = nodes[nodeId]?.parentId
@@ -269,8 +272,10 @@ function OntologyNodeComponent({ data, selected }: NodeProps<OntologyFlowNode>) 
       >
         {/* Type badge + field values (single line, never overlaps title) */}
         <div
-          className="absolute bottom-2.5 left-4 right-12 flex items-center gap-1.5 z-10 min-w-0 overflow-hidden"
-          style={{ maxHeight: "1rem" }}
+          className={cn(
+            "absolute bottom-2.5 left-4 right-12 flex items-center gap-1.5 z-10 min-w-0 overflow-hidden",
+            lifecycleOptions.length > 0 ? "max-h-5" : "max-h-4"
+          )}
         >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -316,6 +321,15 @@ function OntologyNodeComponent({ data, selected }: NodeProps<OntologyFlowNode>) 
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+          {lifecycleOptions.length > 0 ? (
+            <NodeLifecyclePicker
+              layout="inline"
+              nodeTypeId={data.type}
+              nodeTypes={nodeTypes}
+              value={data.lifecycleState}
+              onChange={(lifecycleState) => onUpdateNode(nodeId, { lifecycleState })}
+            />
+          ) : null}
           {fieldsWithValues.length > 0 && node && (
             <span
               className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden shrink"

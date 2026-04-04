@@ -1,12 +1,7 @@
 export type NodeTypeId = string;
-export type LifecycleState =
-  | "planned"
-  | "active"
-  | "complete"
-  | "todo"
-  | "doing"
-  | "done"
-  | null;
+
+/** Current workflow state on a node; must match an entry in the type's `lifecycleStates` when set. */
+export type NodeLifecycleState = string | null;
 
 export interface Position {
   x: number;
@@ -20,7 +15,7 @@ export interface OntologyNode {
   parentId: string | null;
   fields: Record<string, string>;
   notes: string;
-  lifecycleState: LifecycleState;
+  lifecycleState: NodeLifecycleState;
   createdAt: number;
   position: Position;
   isExpanded: boolean;
@@ -42,7 +37,7 @@ export interface NodeType {
   color: string;
   allowedParents: (NodeTypeId | null)[];
   allowedChildren: NodeTypeId[];
-  lifecycleStates: LifecycleState[];
+  lifecycleStates: (string | null)[];
   fieldSchema: FieldSchemaEntry[];
   isPreset: boolean;
   createdAt?: number;

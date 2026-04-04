@@ -25,7 +25,8 @@ export function useUpdateNodeMutation(ontologyId: string | undefined) {
       const hasOptimistic =
         data.isExpanded !== undefined ||
         data.type !== undefined ||
-        data.fields !== undefined;
+        data.fields !== undefined ||
+        data.lifecycleState !== undefined;
       if (!hasOptimistic) return;
       await queryClient.cancelQueries({ queryKey: ["ontology", ontologyId] });
       const prev = queryClient.getQueryData<Ontology>(["ontology", ontologyId]);
@@ -36,6 +37,9 @@ export function useUpdateNodeMutation(ontologyId: string | undefined) {
         ...(data.isExpanded !== undefined && { isExpanded: data.isExpanded }),
         ...(data.type !== undefined && { type: data.type }),
         ...(data.fields !== undefined && { fields: data.fields }),
+        ...(data.lifecycleState !== undefined && {
+          lifecycleState: data.lifecycleState,
+        }),
       };
       queryClient.setQueryData<Ontology>(["ontology", ontologyId], {
         ...prev,
