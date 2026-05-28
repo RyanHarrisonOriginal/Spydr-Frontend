@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useAuth } from "@clerk/react";
-import { setAuthTokenGetter } from "@/domain/ontology/utils/api";
+import { setAuthTokenGetter } from "@/lib/apiClient";
 
 /**
  * Sets the API module's auth token getter from Clerk so all backend requests

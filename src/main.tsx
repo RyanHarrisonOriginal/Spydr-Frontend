@@ -5,6 +5,7 @@ import { ui } from "@clerk/ui";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import App from "./App";
 import { clerkAppearance } from "@/lib/clerkAppearance";
+import { authRoutes } from "@/config/auth";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
@@ -17,9 +18,9 @@ createRoot(document.getElementById("root")!).render(
         }
         ui={ui}
         appearance={clerkAppearance}
-        afterSignOutUrl="/"
-        signInUrl="/sign-in"
-        signUpUrl="/sign-up"
+        afterSignOutUrl={authRoutes.afterSignOutUrl}
+        signInUrl={authRoutes.signInUrl}
+        signUpUrl={authRoutes.signUpUrl}
       >
         <App />
       </ClerkProvider>

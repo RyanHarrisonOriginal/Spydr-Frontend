@@ -2,6 +2,7 @@ import { SignUp } from "@clerk/react";
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { clerkAppearance } from "@/lib/clerkAppearance";
+import { authRoutes } from "@/config/auth";
 
 const nodeTeaserTypes = [
   { label: "Thought", badgeClass: "node-badge-thought" },
@@ -51,7 +52,7 @@ export default function SignUpScreen() {
         <section className="w-full max-w-md flex flex-col items-center order-1 md:order-2" data-clerk-sign-up-container>
           <SignUp
             fallbackRedirectUrl="/"
-            signInUrl="/sign-in"
+            signInUrl={authRoutes.signInUrl}
             appearance={{
               ...clerkAppearance,
               elements: {

@@ -466,3 +466,98 @@
 .react-flow__selectionpane {
   cursor: default !important;
 }
+
+@layer base {
+  :root,
+  .dark {
+    color-scheme: dark;
+
+    --background: 220 18% 6%;
+    --foreground: 220 15% 92%;
+
+    --card: 220 16% 8%;
+    --card-foreground: 220 15% 92%;
+
+    --canvas: 220 18% 6%;
+
+    --popover: 220 16% 9%;
+    --popover-foreground: 220 15% 92%;
+
+    --primary: 230 90% 66%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 12%;
+    --secondary-foreground: 220 15% 85%;
+
+    --muted: 220 14% 11%;
+    --muted-foreground: 220 10% 55%;
+
+    --accent: 220 14% 14%;
+    --accent-foreground: 220 15% 92%;
+
+    --destructive: 0 72% 56%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 14% 14%;
+    --input: 220 14% 12%;
+    --ring: 230 90% 66%;
+
+    --highlight: 230 90% 66%;
+    --highlight-muted: 230 50% 62%;
+
+    --status-todo: 220 10% 55%;
+    --status-active: 210 90% 60%;
+    --status-doing: 38 92% 58%;
+    --status-done: 142 60% 48%;
+    --status-blocked: 0 72% 60%;
+
+    --priority-critical: 0 72% 60%;
+    --priority-high: 28 92% 58%;
+    --priority-medium: 220 10% 60%;
+    --priority-low: 200 20% 45%;
+
+    --sidebar-background: 220 20% 5%;
+    --sidebar-foreground: 220 12% 75%;
+    --sidebar-primary: 230 90% 66%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 11%;
+    --sidebar-accent-foreground: 220 15% 92%;
+    --sidebar-border: 220 14% 11%;
+    --sidebar-ring: 230 90% 66%;
+  }
+}
+
+@layer components {
+  .kbd {
+    @apply inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground;
+  }
+
+  .row-hover {
+    @apply transition-colors hover:bg-muted/40;
+  }
+
+  .ring-focus {
+    @apply focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring;
+  }
+
+  .dot {
+    @apply inline-block h-1.5 w-1.5 rounded-full;
+  }
+}
+
+@layer utilities {
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-in-fade {
+    animation: fadeIn 0.25s ease-out;
+  }
+}

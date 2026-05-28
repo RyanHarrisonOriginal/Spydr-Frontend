@@ -3,8 +3,13 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { RequireAuth } from "@/components/RequireAuth";
 import { ApiAuthSync } from "@/components/ApiAuthSync";
-import OntologyDashboardScreen from "@/screens/OntologyDashboardScreen";
-import OntologyCanvasScreen from "@/screens/OntologyCanvasScreen";
+import WorkspaceShellScreen from "@/screens/WorkspaceShellScreen";
+import ProjectsScreen from "@/screens/ProjectsScreen";
+import ProjectDetailScreen from "@/screens/ProjectDetailScreen";
+import TasksScreen from "@/screens/TasksScreen";
+import DecisionsScreen from "@/screens/DecisionsScreen";
+import NotesScreen from "@/screens/NotesScreen";
+import ResourcesScreen from "@/screens/ResourcesScreen";
 import SignInScreen from "@/screens/SignInScreen";
 import SignUpScreen from "@/screens/SignUpScreen";
 import NotFoundScreen from "@/screens/NotFoundScreen";
@@ -13,7 +18,7 @@ const queryClient = new QueryClient();
 
 export default function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <ApiAuthSync />
       <QueryClientProvider client={queryClient}>
         <BrowserRouter
@@ -26,19 +31,24 @@ export default function App() {
             <Route path="/sign-in" element={<SignInScreen />} />
             <Route path="/sign-up" element={<SignUpScreen />} />
             <Route
-              path="/"
               element={
                 <RequireAuth>
-                  <OntologyDashboardScreen />
+                  <WorkspaceShellScreen />
                 </RequireAuth>
               }
-            />
+            >
+              <Route index element={<Navigate to="/projects" replace />} />
+              <Route path="/projects" element={<ProjectsScreen />} />
+              <Route path="/projects/:projectId" element={<ProjectDetailScreen />} />
+              <Route path="/tasks" element={<TasksScreen />} />
+              <Route path="/decisions" element={<DecisionsScreen />} />
+              <Route path="/notes" element={<NotesScreen />} />
+              <Route path="/resources" element={<ResourcesScreen />} />
+            </Route>
             <Route
               path="/ontology/:ontologyId"
               element={
-                <RequireAuth>
-                  <OntologyCanvasScreen />
-                </RequireAuth>
+                <Navigate to="/projects" replace />
               }
             />
             <Route path="/404" element={<NotFoundScreen />} />
