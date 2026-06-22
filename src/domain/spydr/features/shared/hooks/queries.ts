@@ -43,3 +43,10 @@ export function useResourcesQuery() {
     queryFn: spydrApi.resources.list,
   });
 }
+
+export function useIdeasQuery() {
+  return useQuery({
+    queryKey: ["spydr", "ideas"],
+    queryFn: spydrApi.ideas.list,
+  });
+}

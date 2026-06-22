@@ -1,15 +1,31 @@
 import { apiRequest } from "@/lib/apiClient";
 import type {
+  CreateProjectDecisionInput,
+  CreateProjectIdeaInput,
   CreateProjectInput,
+  CreateProjectNoteInput,
   CreateProjectTaskInput,
   DecisionNode,
+  IdeaNode,
   NoteNode,
+  ProjectChildKind,
   ProjectDetailNode,
   ProjectNode,
   ResourceNode,
   TaskNode,
+  UpdateProjectChildInput,
   UpdateProjectInput,
 } from "./types";
+
+function childPath(
+  projectId: string,
+  kind: ProjectChildKind,
+  childId: string,
+  action?: "restore"
+) {
+  const base = `/projects/${projectId}/${kind}s/${childId}`;
+  return action === "restore" ? `${base}/restore` : base;
+}
 
 export const spydrApi = {
   projects: {
@@ -28,6 +44,48 @@ export const spydrApi = {
         method: "POST",
         body: input,
       }),
+    createNote: (projectId: string, input: CreateProjectNoteInput) =>
+      apiRequest<NoteNode>(`/projects/${projectId}/notes`, {
+        method: "POST",
+        body: input,
+      }),
+    createDecision: (projectId: string, input: CreateProjectDecisionInput) =>
+      apiRequest<DecisionNode>(`/projects/${projectId}/decisions`, {
+        method: "POST",
+        body: input,
+      }),
+    createIdea: (projectId: string, input: CreateProjectIdeaInput) =>
+      apiRequest<IdeaNode>(`/projects/${projectId}/ideas`, {
+        method: "POST",
+        body: input,
+      }),
+    updateChild: (
+      projectId: string,
+      kind: ProjectChildKind,
+      childId: string,
+      input: UpdateProjectChildInput
+    ) =>
+      apiRequest<ProjectDetailNode>(childPath(projectId, kind, childId), {
+        method: "PATCH",
+        body: input,
+      }),
+    deleteChild: (
+      projectId: string,
+      kind: ProjectChildKind,
+      childId: string
+    ) =>
+      apiRequest<ProjectDetailNode>(childPath(projectId, kind, childId), {
+        method: "DELETE",
+      }),
+    restoreChild: (
+      projectId: string,
+      kind: ProjectChildKind,
+      childId: string
+    ) =>
+      apiRequest<ProjectDetailNode>(
+        childPath(projectId, kind, childId, "restore"),
+        { method: "POST" }
+      ),
   },
   tasks: {
     list: () => apiRequest<TaskNode[]>("/tasks"),
@@ -40,5 +98,8 @@ export const spydrApi = {
   },
   resources: {
     list: () => apiRequest<ResourceNode[]>("/resources"),
+  },
+  ideas: {
+    list: () => apiRequest<IdeaNode[]>("/ideas"),
   },
 };

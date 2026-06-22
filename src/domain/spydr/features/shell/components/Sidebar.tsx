@@ -33,7 +33,7 @@ const operate: NavigationItem[] = [
 const workspace: NavigationItem[] = [
   { to: "/projects", icon: FolderKanban, label: "Projects" },
   { to: "/tasks", icon: CheckSquare, label: "Tasks" },
-  { icon: Lightbulb, label: "Ideas", badge: "pending API", disabled: true },
+  { to: "/ideas", icon: Lightbulb, label: "Ideas" },
   { to: "/decisions", icon: GitBranch, label: "Decisions" },
   { to: "/notes", icon: FileText, label: "Notes" },
   { to: "/resources", icon: Bookmark, label: "Resources" },
@@ -45,9 +45,14 @@ const meta: NavigationItem[] = [
 ];
 
 function Item({ to, icon: Icon, label, badge, disabled }: NavigationItem) {
-  const content = (
+  const content = (isActive = false) => (
     <>
-      <Icon className="h-3.5 w-3.5 shrink-0 opacity-70 group-hover:opacity-100" />
+      <Icon
+        className={cn(
+          "h-3.5 w-3.5 shrink-0 opacity-70 group-hover:opacity-100",
+          isActive && "text-highlight-secondary opacity-100"
+        )}
+      />
       <span className="flex-1 truncate">{label}</span>
       {badge && (
         <span className="rounded border border-border bg-muted/40 px-1 py-px font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
@@ -60,7 +65,7 @@ function Item({ to, icon: Icon, label, badge, disabled }: NavigationItem) {
   if (disabled || !to) {
     return (
       <div className="group flex h-7 cursor-not-allowed items-center gap-2 rounded-md px-2 text-[13px] text-sidebar-foreground/35">
-        {content}
+        {content()}
       </div>
     );
   }
@@ -71,11 +76,12 @@ function Item({ to, icon: Icon, label, badge, disabled }: NavigationItem) {
       className={({ isActive }) =>
         cn(
           "group flex h-7 items-center gap-2 rounded-md px-2 text-[13px] text-sidebar-foreground/80 row-hover ring-focus",
-          isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+          isActive &&
+            "bg-highlight-secondary/10 text-foreground shadow-[inset_2px_0_0_0_hsl(var(--highlight-secondary))]"
         )
       }
     >
-      {content}
+      {({ isActive }) => content(isActive)}
     </NavLink>
   );
 }

@@ -8,13 +8,13 @@ export type SpydrNodeType =
   | "inbox_item"
   | "person";
 
+export type { TaskStatus } from "./taskStatus";
+import type { TaskStatus } from "./taskStatus";
+
 export type SpydrNodeStatus =
-  | "active"
+  | TaskStatus
   | "inactive"
-  | "completed"
   | "archived"
-  | "blocked"
-  | "waiting"
   | "snoozed";
 
 export type SpydrPriority = "low" | "medium" | "high" | "critical";
@@ -32,6 +32,8 @@ export interface SpydrNode<TType extends SpydrNodeType = SpydrNodeType, TDetails
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  isDeleted: boolean;
+  deletedAt: string | null;
   details: TDetails | null;
 }
 
@@ -97,6 +99,26 @@ export interface ProjectDetailNode extends ProjectNode {
   ideas: IdeaNode[];
   notes: NoteNode[];
   resources: ResourceNode[];
+  deleted: {
+    tasks: TaskNode[];
+    decisions: DecisionNode[];
+    ideas: IdeaNode[];
+    notes: NoteNode[];
+    resources: ResourceNode[];
+  };
+}
+
+export type ProjectChildKind = "task" | "note" | "decision" | "idea" | "resource";
+
+export interface UpdateProjectChildInput {
+  title?: string;
+  body?: string;
+  status?: string;
+  priority?: SpydrPriority | string;
+  dueDate?: string | null;
+  rationale?: string;
+  impact?: string;
+  estimatedMinutes?: number | null;
 }
 
 export type IdeaDetails = {
@@ -119,8 +141,33 @@ export interface UpdateProjectInput {
 export interface CreateProjectTaskInput {
   title: string;
   body?: string;
-  status?: SpydrNodeStatus;
+  status?: TaskStatus;
   priority?: SpydrPriority;
   dueDate?: string | null;
   estimatedMinutes?: number | null;
+}
+
+export interface CreateProjectNoteInput {
+  title: string;
+  body?: string;
+  status?: SpydrNodeStatus;
+  priority?: SpydrPriority;
+}
+
+export interface CreateProjectDecisionInput {
+  title: string;
+  body?: string;
+  rationale?: string;
+  impact?: string;
+  status?: SpydrNodeStatus;
+  priority?: SpydrPriority;
+}
+
+export interface CreateProjectIdeaInput {
+  title: string;
+  body?: string;
+  confidence?: number | null;
+  potentialValue?: SpydrPriority;
+  status?: SpydrNodeStatus;
+  priority?: SpydrPriority;
 }

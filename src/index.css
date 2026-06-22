@@ -42,6 +42,8 @@
 
     --highlight: 220 85% 55%;
     --highlight-muted: 220 60% 70%;
+    --highlight-secondary: 18 94% 50%;
+    --highlight-secondary-muted: 18 72% 62%;
 
     /* Node type colors - present, iconic (second-brain daily driver) */
     --thought: 222 58% 42%;
@@ -91,6 +93,7 @@
     --shadow-md: 0 4px 8px -2px hsl(30 20% 20% / 0.06), 0 2px 4px -2px hsl(30 20% 20% / 0.03);
     --shadow-lg: 0 12px 24px -4px hsl(30 20% 20% / 0.08), 0 4px 8px -2px hsl(30 20% 20% / 0.04);
     --shadow-glow: 0 0 48px -12px hsl(var(--highlight) / 0.15);
+    --shadow-glow-secondary: 0 0 48px -12px hsl(var(--highlight-secondary) / 0.18);
 
     --sidebar-background: 40 15% 99%;
     --sidebar-foreground: 30 10% 12%;
@@ -146,6 +149,11 @@
     --input: 30 6% 13%;
     --ring: 220 75% 62%;
 
+    --highlight: 220 75% 62%;
+    --highlight-muted: 220 55% 65%;
+    --highlight-secondary: 18 90% 56%;
+    --highlight-secondary-muted: 18 68% 62%;
+
     --connector-line: 30 5% 22%;
     --node-fill-opacity: 0.08;
 
@@ -189,6 +197,7 @@
     --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.45);
     --shadow-lg: 0 12px 28px -4px hsl(0 0% 0% / 0.5);
     --shadow-glow: 0 0 48px -12px hsl(var(--highlight) / 0.2);
+    --shadow-glow-secondary: 0 0 48px -12px hsl(var(--highlight-secondary) / 0.22);
 
     --sidebar-background: 30 8% 7%;
     --sidebar-foreground: 38 12% 92%;
@@ -261,7 +270,7 @@
   }
 
   ::selection {
-    background-color: hsl(var(--highlight) / 0.15);
+    background-color: hsl(var(--highlight-secondary) / 0.22);
   }
 
   html {
@@ -349,6 +358,10 @@
 
   .glow-hover:hover {
     box-shadow: 0 0 32px -8px hsl(var(--highlight) / 0.18);
+  }
+
+  .glow-hover-secondary:hover {
+    box-shadow: 0 0 32px -8px hsl(var(--highlight-secondary) / 0.22);
   }
 
   /* react-colorful: match app theme (borders, radius) */
@@ -504,6 +517,8 @@
 
     --highlight: 230 90% 66%;
     --highlight-muted: 230 50% 62%;
+    --highlight-secondary: 18 92% 58%;
+    --highlight-secondary-muted: 18 58% 58%;
 
     --status-todo: 220 10% 55%;
     --status-active: 210 90% 60%;
@@ -524,6 +539,8 @@
     --sidebar-accent-foreground: 220 15% 92%;
     --sidebar-border: 220 14% 11%;
     --sidebar-ring: 230 90% 66%;
+
+    --shadow-glow-secondary: 0 0 48px -12px hsl(var(--highlight-secondary) / 0.2);
   }
 }
 
@@ -542,6 +559,24 @@
 
   .dot {
     @apply inline-block h-1.5 w-1.5 rounded-full;
+  }
+
+  .date-input {
+    @apply rounded-md border border-input bg-background pl-2 pr-8 text-[12px] text-foreground ring-focus;
+    color-scheme: light;
+  }
+
+  .dark .date-input {
+    color-scheme: dark;
+  }
+
+  .date-input::-webkit-calendar-picker-indicator {
+    position: absolute;
+    right: 0;
+    width: 2rem;
+    height: 100%;
+    cursor: pointer;
+    opacity: 0;
   }
 }
 

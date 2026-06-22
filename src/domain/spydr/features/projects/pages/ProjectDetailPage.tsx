@@ -37,19 +37,44 @@ export function ProjectDetailPage() {
   return (
     <ProjectDetailView
       project={project}
+      deleted={detailPage.deleted}
       stats={stats}
       detailForm={detailPage.detailForm}
+      detailSaveState={detailPage.detailSaveState}
       taskForm={detailPage.taskForm}
-      canSaveDetails={detailPage.canSaveDetails}
+      noteForm={detailPage.noteForm}
+      decisionForm={detailPage.decisionForm}
+      ideaForm={detailPage.ideaForm}
       canAddTask={detailPage.canAddTask}
-      isSavingDetails={detailPage.isSavingDetails}
+      canAddNote={detailPage.canAddNote}
+      canAddDecision={detailPage.canAddDecision}
+      canAddIdea={detailPage.canAddIdea}
       isAddingTask={detailPage.isAddingTask}
+      isAddingNote={detailPage.isAddingNote}
+      isAddingDecision={detailPage.isAddingDecision}
+      isAddingIdea={detailPage.isAddingIdea}
       detailError={detailPage.detailError}
       taskError={detailPage.taskError}
+      noteError={detailPage.noteError}
+      decisionError={detailPage.decisionError}
+      ideaError={detailPage.ideaError}
       onDetailFieldChange={detailPage.updateDetailField}
       onTaskFieldChange={detailPage.updateTaskField}
-      onSaveDetails={detailPage.saveDetails}
+      onNoteFieldChange={detailPage.updateNoteField}
+      onDecisionFieldChange={detailPage.updateDecisionField}
+      onIdeaFieldChange={detailPage.updateIdeaField}
       onAddTask={detailPage.addTask}
+      onAddNote={detailPage.addNote}
+      onAddDecision={detailPage.addDecision}
+      onAddIdea={detailPage.addIdea}
+      onUpdateChild={detailPage.updateChild}
+      onDeleteChild={detailPage.deleteChild}
+      onRestoreChild={detailPage.restoreChild}
+      isUpdatingChild={detailPage.isUpdatingChild}
+      isDeletingChild={detailPage.isDeletingChild}
+      isRestoringChild={detailPage.isRestoringChild}
+      restoringId={detailPage.restoringId}
+      childMutationError={detailPage.childMutationError}
     />
   );
 }

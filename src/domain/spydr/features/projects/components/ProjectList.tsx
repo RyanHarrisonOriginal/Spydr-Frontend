@@ -68,7 +68,7 @@ export function ProjectList({ projects, visibleColumns }: ProjectListProps) {
                 ))}
                 {project.details?.riskLevel && (
                   <span className="font-mono text-[10px] uppercase text-muted-foreground">
-                    risk {project.details.riskLevel}
+                    delivery risk {project.details.riskLevel}
                   </span>
                 )}
               </div>

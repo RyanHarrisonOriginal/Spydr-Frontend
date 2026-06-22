@@ -122,7 +122,7 @@ export function CreateProjectDialog({
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="project-risk">Risk level</Label>
+                <Label htmlFor="project-risk">Delivery risk</Label>
                 <select
                   id="project-risk"
                   value={values.riskLevel}
@@ -137,6 +137,9 @@ export function CreateProjectDialog({
                     </option>
                   ))}
                 </select>
+                <p className="text-[11px] text-muted-foreground">
+                  How likely this project is to slip or fail.
+                </p>
               </div>
             </div>
 

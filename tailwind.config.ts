@@ -19,6 +19,8 @@ export default {
         canvas: "hsl(var(--canvas))",
         highlight: "hsl(var(--highlight))",
         "highlight-muted": "hsl(var(--highlight-muted))",
+        "highlight-secondary": "hsl(var(--highlight-secondary))",
+        "highlight-secondary-muted": "hsl(var(--highlight-secondary-muted))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -75,6 +77,7 @@ export default {
         xl: "var(--shadow-xl)",
         "2xl": "var(--shadow-2xl)",
         glow: "var(--shadow-glow)",
+        "glow-secondary": "var(--shadow-glow-secondary)",
       },
       keyframes: {
         "accordion-down": {

@@ -59,7 +59,7 @@ export function Logo({ className = "", size = "md" }: LogoProps) {
         className="font-semibold tracking-[-0.03em] text-foreground"
         style={{ fontSize: `${fontSize}px` }}
       >
-        Spydr<span className="text-primary">.</span>
+        Spydr<span className="text-highlight-secondary">.</span>
       </span>
     </Link>
   );

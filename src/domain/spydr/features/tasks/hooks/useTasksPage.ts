@@ -2,7 +2,9 @@ import { useMemo } from "react";
 import { useTasksQuery } from "@/domain/spydr/features/shared/hooks/queries";
 import type { TaskNode } from "@/domain/spydr/utils/types";
 
-const statusOrder = ["active", "waiting", "blocked", "completed", "inactive"];
+import { taskStatuses, getTaskStatusBucket } from "@/domain/spydr/utils/taskStatus";
+
+const statusOrder = [...taskStatuses, "inactive", "archived", "snoozed"];
 
 export interface TaskGroup {
   status: string;
@@ -33,7 +35,7 @@ export function useTasksPage() {
   }, [tasks]);
 
   const openCount = useMemo(
-    () => tasks.filter((task) => task.status !== "completed").length,
+    () => tasks.filter((task) => getTaskStatusBucket(task.status) === "open").length,
     [tasks]
   );
 
