@@ -20,8 +20,8 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <ApiAuthSync />
       <QueryClientProvider client={queryClient}>
+        <ApiAuthSync />
         <BrowserRouter
           future={{
             v7_relativeSplatPath: true,

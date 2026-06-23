@@ -21,9 +21,11 @@ export async function apiRequest<T>(
     ...(rest.headers as Record<string, string>),
   };
 
-  const token = authTokenGetter ? await authTokenGetter() : null;
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
+  if (!headers.Authorization && authTokenGetter) {
+    const token = await authTokenGetter();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
   }
 
   const res = await fetch(`${BASE}${path}`, {
@@ -40,4 +42,24 @@ export async function apiRequest<T>(
 
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
+}
+
+/** Fetches with a Clerk token at call time (avoids auth getter race on first load). */
+export async function apiRequestAuthed<T>(
+  getToken: () => Promise<string | null>,
+  path: string,
+  options?: RequestOptions
+): Promise<T> {
+  const token = await getToken();
+  if (!token) {
+    throw new Error("Unauthorized");
+  }
+
+  return apiRequest<T>(path, {
+    ...options,
+    headers: {
+      ...(options?.headers as Record<string, string>),
+      Authorization: `Bearer ${token}`,
+    },
+  });
 }

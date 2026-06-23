@@ -17,8 +17,10 @@ export function useIdeasPage() {
     ideas: sortedIdeas,
     totalCount: ideas.length,
     isLoading: query.isLoading,
+    isFetching: query.isFetching,
     isError: query.isError,
     errorMessage:
       query.error instanceof Error ? query.error.message : "Failed to load ideas",
+    refetch: query.refetch,
   };
 }

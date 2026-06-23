@@ -31,7 +31,7 @@ export function EmptyState({ title, description, children }: ListStateProps) {
   );
 }
 
-export function ErrorState({ title, description }: ListStateProps) {
+export function ErrorState({ title, description, children }: ListStateProps) {
   return (
     <div className="grid min-h-[240px] place-items-center px-6 py-12 text-center">
       <div className="max-w-sm rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3">
@@ -39,6 +39,7 @@ export function ErrorState({ title, description }: ListStateProps) {
         {description && (
           <p className="mt-2 text-[12.5px] text-muted-foreground">{description}</p>
         )}
+        {children && <div className="mt-4">{children}</div>}
       </div>
     </div>
   );
