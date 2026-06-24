@@ -4,6 +4,7 @@ import {
   ErrorState,
   LoadingState,
 } from "@/domain/spydr/features/shared/components/ListState";
+import { ProjectAreasPanel } from "../components/ProjectAreasPanel";
 import { ProjectColumnSelector } from "../components/ProjectColumnSelector";
 import { CreateProjectDialog } from "../components/CreateProjectDialog";
 import { ProjectList } from "../components/ProjectList";
@@ -12,8 +13,21 @@ import { useProjectListColumns } from "../hooks/useProjectListColumns";
 import { useProjectsPage } from "../hooks/useProjectsPage";
 
 export function ProjectsPage() {
-  const { projects, totalCount, activeCount, isLoading, isError, errorMessage } =
-    useProjectsPage();
+  const {
+    projects,
+    areas,
+    totalCount,
+    activeCount,
+    updatingProjectId,
+    updateStatus,
+    updateArea,
+    statusError,
+    areaError,
+    isLoading,
+    isAreasLoading,
+    isError,
+    errorMessage,
+  } = useProjectsPage();
   const createProject = useCreateProjectForm();
   const projectColumns = useProjectListColumns();
 
@@ -35,6 +49,7 @@ export function ProjectsPage() {
               onToggleColumn={projectColumns.toggleColumn}
             />
             <CreateProjectDialog
+              areas={areas}
               open={createProject.isOpen}
               values={createProject.values}
               canSubmit={createProject.canSubmit}
@@ -47,6 +62,7 @@ export function ProjectsPage() {
           </>
         }
       />
+      <ProjectAreasPanel areas={areas} isLoading={isAreasLoading} />
       {isLoading && <LoadingState title="Loading projects" />}
       {isError && <ErrorState title="Projects unavailable" description={errorMessage} />}
       {!isLoading && !isError && projects.length === 0 && (
@@ -56,10 +72,26 @@ export function ProjectsPage() {
         />
       )}
       {!isLoading && !isError && projects.length > 0 && (
-        <ProjectList
-          projects={projects}
-          visibleColumns={projectColumns.visibleColumns}
-        />
+        <>
+          {statusError && (
+            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {statusError}
+            </p>
+          )}
+          {areaError && (
+            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {areaError}
+            </p>
+          )}
+          <ProjectList
+            projects={projects}
+            areas={areas}
+            visibleColumns={projectColumns.visibleColumns}
+            updatingProjectId={updatingProjectId}
+            onStatusChange={updateStatus}
+            onAreaChange={updateArea}
+          />
+        </>
       )}
     </div>
   );

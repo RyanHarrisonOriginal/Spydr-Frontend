@@ -107,7 +107,7 @@ function Section({
 
 export function Sidebar() {
   return (
-    <aside className="hidden h-screen w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
+    <aside className="hidden h-full w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
       <div className="flex h-12 items-center gap-2 border-b border-sidebar-border px-4">
         <div className="grid h-5 w-5 place-items-center rounded-[5px] bg-primary text-primary-foreground">
           <span className="font-mono text-[11px] font-bold leading-none">S</span>

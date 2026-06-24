@@ -1,5 +1,6 @@
 import { apiRequest } from "@/lib/apiClient";
 import type {
+  CreateProjectAreaInput,
   CreateProjectDecisionInput,
   CreateProjectIdeaInput,
   CreateProjectInput,
@@ -10,9 +11,11 @@ import type {
   NoteNode,
   ProjectChildKind,
   ProjectDetailNode,
+  ProjectAreaNode,
   ProjectNode,
   ResourceNode,
   TaskNode,
+  UpdateProjectAreaInput,
   UpdateProjectChildInput,
   UpdateProjectInput,
 } from "./types";
@@ -28,6 +31,18 @@ function childPath(
 }
 
 export const spydrApi = {
+  projectAreas: {
+    list: () => apiRequest<ProjectAreaNode[]>("/project-areas"),
+    create: (input: CreateProjectAreaInput) =>
+      apiRequest<ProjectAreaNode>("/project-areas", { method: "POST", body: input }),
+    update: (areaId: string, input: UpdateProjectAreaInput) =>
+      apiRequest<ProjectAreaNode>(`/project-areas/${areaId}`, {
+        method: "PATCH",
+        body: input,
+      }),
+    delete: (areaId: string) =>
+      apiRequest<void>(`/project-areas/${areaId}`, { method: "DELETE" }),
+  },
   projects: {
     list: () => apiRequest<ProjectNode[]>("/projects"),
     get: (projectId: string) =>

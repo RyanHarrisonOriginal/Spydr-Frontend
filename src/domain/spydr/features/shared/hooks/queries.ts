@@ -69,6 +69,16 @@ export function useResourcesQuery() {
   });
 }
 
+export function useProjectAreasQuery() {
+  const enabled = useSpydrQueryEnabled();
+  return useQuery({
+    queryKey: ["spydr", "project-areas"],
+    queryFn: spydrApi.projectAreas.list,
+    enabled,
+    refetchOnMount: "always",
+  });
+}
+
 export function useIdeasQuery() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const enabled = isLoaded && isSignedIn;

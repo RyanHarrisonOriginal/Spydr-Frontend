@@ -11,7 +11,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex h-full items-center justify-center bg-background">
         <div className="text-center text-muted-foreground text-sm">
           Loading…
         </div>
@@ -21,7 +21,7 @@ export function RequireAuth({ children }: RequireAuthProps) {
 
   if (!isSignedIn) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex h-full items-center justify-center bg-background">
         <div className="text-center text-muted-foreground text-sm">
           Redirecting to sign in…
         </div>

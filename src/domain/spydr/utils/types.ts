@@ -1,5 +1,6 @@
 export type SpydrNodeType =
   | "project"
+  | "project_area"
   | "task"
   | "idea"
   | "note"
@@ -47,6 +48,12 @@ export interface ProjectDetails {
   updatedAt: string;
 }
 
+export interface ProjectAreaDetails {
+  color: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TaskDetails {
   dueDate: string | null;
   completedAt: string | null;
@@ -75,6 +82,7 @@ export interface ResourceDetails {
 }
 
 export type ProjectNode = SpydrNode<"project", ProjectDetails>;
+export type ProjectAreaNode = SpydrNode<"project_area", ProjectAreaDetails>;
 export type TaskNode = SpydrNode<"task", TaskDetails>;
 export type NoteNode = SpydrNode<"note", null>;
 export type DecisionNode = SpydrNode<"decision", DecisionDetails>;
@@ -86,6 +94,7 @@ export interface CreateProjectInput {
   status?: SpydrNodeStatus;
   priority?: SpydrPriority;
   area?: string | null;
+  areaNodeId?: string | null;
   tags?: string[];
   outcome?: string | null;
   startDate?: string | null;
@@ -133,9 +142,21 @@ export type IdeaNode = SpydrNode<"idea", IdeaDetails>;
 
 export interface UpdateProjectInput {
   body?: string;
+  status?: SpydrNodeStatus;
+  areaNodeId?: string | null;
   startDate?: string | null;
   targetDate?: string | null;
   riskLevel?: SpydrPriority;
+}
+
+export interface CreateProjectAreaInput {
+  title: string;
+  body?: string;
+  color?: string;
+}
+
+export interface UpdateProjectAreaInput {
+  color: string;
 }
 
 export interface CreateProjectTaskInput {

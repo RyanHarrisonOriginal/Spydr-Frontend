@@ -28,7 +28,8 @@ export default function App() {
             v7_startTransition: true,
           }}
         >
-          <Routes>
+          <div className="h-full">
+            <Routes>
             <Route path="/sign-in" element={<SignInScreen />} />
             <Route path="/sign-up" element={<SignUpScreen />} />
             <Route
@@ -55,7 +56,8 @@ export default function App() {
             />
             <Route path="/404" element={<NotFoundScreen />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
-          </Routes>
+            </Routes>
+          </div>
         </BrowserRouter>
       </QueryClientProvider>
     </ThemeProvider>

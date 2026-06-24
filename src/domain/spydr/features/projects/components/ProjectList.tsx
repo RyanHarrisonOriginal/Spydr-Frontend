@@ -1,23 +1,29 @@
 import { Link } from "react-router-dom";
-import type { ProjectNode } from "@/domain/spydr/utils/types";
+import type { ProjectAreaNode, ProjectNode } from "@/domain/spydr/utils/types";
 import {
   EntityTag,
   PriorityBadge,
   StatusDot,
-  StatusPill,
 } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { formatRelativeTime, formatShortDate } from "@/domain/spydr/features/shared/components/time";
+import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
 import type { ProjectColumnId } from "../hooks/useProjectListColumns";
+import { ProjectAreaSelect } from "./ProjectAreaSelect";
+import { ProjectStatusSelect } from "./ProjectStatusSelect";
 
 interface ProjectListProps {
   projects: ProjectNode[];
+  areas: ProjectAreaNode[];
   visibleColumns: ProjectColumnId[];
+  updatingProjectId?: string | null;
+  onStatusChange?(projectId: string, status: string): void;
+  onAreaChange?(projectId: string, areaNodeId: string | null): void;
 }
 
 const columnWidths: Record<ProjectColumnId, string> = {
-  area: "128px",
+  area: "148px",
   priority: "96px",
-  status: "112px",
+  status: "128px",
   target: "96px",
   updated: "128px",
 };
@@ -26,7 +32,14 @@ function getProjectListGrid(visibleColumns: ProjectColumnId[]) {
   return ["40px", "minmax(280px,1fr)", ...visibleColumns.map((id) => columnWidths[id])].join(" ");
 }
 
-export function ProjectList({ projects, visibleColumns }: ProjectListProps) {
+export function ProjectList({
+  projects,
+  areas,
+  visibleColumns,
+  updatingProjectId = null,
+  onStatusChange,
+  onAreaChange,
+}: ProjectListProps) {
   const gridTemplateColumns = getProjectListGrid(visibleColumns);
   const minWidth = 440 + visibleColumns.length * 112;
   const hasColumn = (columnId: ProjectColumnId) => visibleColumns.includes(columnId);
@@ -74,8 +87,18 @@ export function ProjectList({ projects, visibleColumns }: ProjectListProps) {
               </div>
             </Link>
             {hasColumn("area") && (
-              <span className="justify-self-start">
-                {project.area ? (
+              <span
+                className="block min-w-0 w-full"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {onAreaChange ? (
+                  <ProjectAreaSelect
+                    areas={areas}
+                    value={resolveProjectAreaId(project, areas)}
+                    onChange={(areaNodeId) => onAreaChange(project.id, areaNodeId)}
+                    disabled={updatingProjectId === project.id}
+                  />
+                ) : project.area ? (
                   <span className="rounded border border-border bg-muted/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-foreground/80">
                     {project.area}
                   </span>
@@ -90,8 +113,22 @@ export function ProjectList({ projects, visibleColumns }: ProjectListProps) {
               </span>
             )}
             {hasColumn("status") && (
-              <span className="justify-self-start">
-                <StatusPill status={project.status} />
+              <span
+                className="block min-w-0 w-full"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {onStatusChange ? (
+                  <ProjectStatusSelect
+                    value={project.status}
+                    onChange={(status) => onStatusChange(project.id, status)}
+                    disabled={updatingProjectId === project.id}
+                  />
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 rounded border border-border bg-muted/40 px-1.5 py-px text-[11px] capitalize text-foreground/80">
+                    <StatusDot status={project.status} />
+                    {project.status.replace(/_/g, " ")}
+                  </span>
+                )}
               </span>
             )}
             {hasColumn("target") && (

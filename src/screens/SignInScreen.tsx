@@ -12,7 +12,7 @@ const nodeTeaserTypes = [
 
 export default function SignInScreen() {
   return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+    <div className="flex h-full flex-col overflow-y-auto bg-background relative">
       {/* Subtle background shape — warm, product feel without gradient slop */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(100vw,720px)] h-[min(80vh,560px)] rounded-full opacity-[0.04] pointer-events-none"

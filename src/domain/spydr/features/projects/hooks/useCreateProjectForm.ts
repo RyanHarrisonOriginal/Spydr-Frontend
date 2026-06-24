@@ -7,7 +7,7 @@ export interface ProjectFormValues {
   body: string;
   status: SpydrNodeStatus;
   priority: SpydrPriority;
-  area: string;
+  areaNodeId: string;
   tags: string;
   outcome: string;
   startDate: string;
@@ -20,7 +20,7 @@ const initialValues: ProjectFormValues = {
   body: "",
   status: "active",
   priority: "medium",
-  area: "",
+  areaNodeId: "",
   tags: "",
   outcome: "",
   startDate: "",
@@ -49,7 +49,7 @@ export function useCreateProjectForm() {
     body: values.body.trim(),
     status: values.status,
     priority: values.priority,
-    area: values.area.trim() || null,
+    areaNodeId: values.areaNodeId || null,
     tags: values.tags
       .split(",")
       .map((tag) => tag.trim())

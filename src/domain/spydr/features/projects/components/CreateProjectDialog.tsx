@@ -12,9 +12,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import type { ProjectAreaNode } from "@/domain/spydr/utils/types";
 import type { ProjectFormValues } from "../hooks/useCreateProjectForm";
+import { ProjectAreaSelect } from "./ProjectAreaSelect";
 
 interface CreateProjectDialogProps {
+  areas: ProjectAreaNode[];
   open: boolean;
   values: ProjectFormValues;
   canSubmit: boolean;
@@ -32,6 +35,7 @@ const statusOptions = ["active", "waiting", "blocked", "inactive"] as const;
 const priorityOptions = ["low", "medium", "high", "critical"] as const;
 
 export function CreateProjectDialog({
+  areas,
   open,
   values,
   canSubmit,
@@ -146,11 +150,13 @@ export function CreateProjectDialog({
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="project-area">Area</Label>
-                <Input
-                  id="project-area"
-                  value={values.area}
-                  onChange={(event) => onFieldChange("area", event.target.value)}
-                  placeholder="platform"
+                <ProjectAreaSelect
+                  areas={areas}
+                  value={values.areaNodeId}
+                  onChange={(areaNodeId) =>
+                    onFieldChange("areaNodeId", areaNodeId ?? "")
+                  }
+                  className="h-10 text-sm normal-case tracking-normal"
                 />
               </div>
               <div className="space-y-2">
