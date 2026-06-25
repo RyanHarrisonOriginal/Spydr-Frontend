@@ -37,6 +37,7 @@ export function ProjectDetailPage() {
   return (
     <ProjectDetailView
       project={project}
+      people={detailPage.people}
       deleted={detailPage.deleted}
       stats={stats}
       detailForm={detailPage.detailForm}
@@ -54,6 +55,7 @@ export function ProjectDetailPage() {
       isAddingDecision={detailPage.isAddingDecision}
       isAddingIdea={detailPage.isAddingIdea}
       detailError={detailPage.detailError}
+      personaError={detailPage.personaError}
       taskError={detailPage.taskError}
       noteError={detailPage.noteError}
       decisionError={detailPage.decisionError}
@@ -68,6 +70,8 @@ export function ProjectDetailPage() {
       onAddDecision={detailPage.addDecision}
       onAddIdea={detailPage.addIdea}
       onUpdateChild={detailPage.updateChild}
+      onPersonaChange={detailPage.updatePersona}
+      isUpdatingPersona={detailPage.isUpdatingPersona}
       onDeleteChild={detailPage.deleteChild}
       onRestoreChild={detailPage.restoreChild}
       isUpdatingChild={detailPage.isUpdatingChild}

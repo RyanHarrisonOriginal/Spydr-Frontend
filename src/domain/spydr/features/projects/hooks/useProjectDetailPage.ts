@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useProjectQuery } from "@/domain/spydr/features/shared/hooks/queries";
-import type { ProjectDetailNode, SpydrPriority } from "@/domain/spydr/utils/types";
+import { useProjectQuery, usePeopleQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import type { PersonNode, ProjectDetailNode, SpydrPriority } from "@/domain/spydr/utils/types";
+import {
+  projectPersonaField,
+  type ProjectPersonaRole,
+} from "@/domain/spydr/utils/projectPersonas";
 import { countTasksByBucket } from "@/domain/spydr/utils/taskStatus";
 import { useCreateProjectTaskMutation } from "./useCreateProjectTaskMutation";
 import { useCreateProjectNoteMutation } from "./useCreateProjectNoteMutation";
@@ -89,7 +93,9 @@ function serializeDetailForm(form: ProjectDetailFormValues) {
 export function useProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const query = useProjectQuery(projectId);
+  const peopleQuery = usePeopleQuery();
   const project = query.data;
+  const people = peopleQuery.data ?? [];
   const updateProject = useUpdateProjectMutation(projectId);
   const createTask = useCreateProjectTaskMutation(projectId);
   const createNote = useCreateProjectNoteMutation(projectId);
@@ -97,6 +103,8 @@ export function useProjectDetailPage() {
   const createIdea = useCreateProjectIdeaMutation(projectId);
   const childMutations = useProjectChildMutations(projectId);
   const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [personaError, setPersonaError] = useState<string | null>(null);
+  const [isUpdatingPersona, setIsUpdatingPersona] = useState(false);
   const [detailForm, setDetailForm] =
     useState<ProjectDetailFormValues>(emptyDetailForm);
   const [taskForm, setTaskForm] = useState<ProjectTaskFormValues>(emptyTaskForm);
@@ -276,6 +284,24 @@ export function useProjectDetailPage() {
     );
   };
 
+  const updatePersona = (role: ProjectPersonaRole, personNodeId: string | null) => {
+    if (!projectId) return;
+
+    setPersonaError(null);
+    setIsUpdatingPersona(true);
+    updateProject.mutate(
+      { [projectPersonaField[role]]: personNodeId },
+      {
+        onError: (error) => {
+          setPersonaError(
+            error instanceof Error ? error.message : "Failed to update project person"
+          );
+        },
+        onSettled: () => setIsUpdatingPersona(false),
+      }
+    );
+  };
+
   const deleted = project?.deleted ?? {
     tasks: [],
     decisions: [],
@@ -287,6 +313,7 @@ export function useProjectDetailPage() {
   return {
     projectId,
     project,
+    people,
     deleted,
     stats,
     detailForm,
@@ -305,6 +332,7 @@ export function useProjectDetailPage() {
     addDecision,
     addIdea,
     updateChild,
+    updatePersona,
     deleteChild,
     restoreChild,
     isUpdatingChild: childMutations.updateChild.isPending,
@@ -330,6 +358,8 @@ export function useProjectDetailPage() {
     isAddingIdea: createIdea.isPending,
     detailError:
       updateProject.error instanceof Error ? updateProject.error.message : null,
+    personaError,
+    isUpdatingPersona,
     taskError: createTask.error instanceof Error ? createTask.error.message : null,
     noteError: createNote.error instanceof Error ? createNote.error.message : null,
     decisionError:

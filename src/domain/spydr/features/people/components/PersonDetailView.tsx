@@ -1,0 +1,142 @@
+import { Link } from "react-router-dom";
+import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { ErrorState, LoadingState } from "@/domain/spydr/features/shared/components/ListState";
+import {
+  ProjectDetailField,
+  ProjectDetailFormPanel,
+  ProjectDetailSection,
+  ProjectDetailSectionBody,
+  ProjectDetailSectionHeader,
+  detailFieldClassName,
+  detailTextareaClassName,
+} from "@/domain/spydr/features/projects/components/ProjectDetailSection";
+import type {
+  PersonDetailFormValues,
+  PersonDetailSaveState,
+} from "../hooks/usePersonDetailPage";
+
+function saveLabel(state: PersonDetailSaveState) {
+  if (state === "saving" || state === "pending") return "Saving…";
+  if (state === "saved") return "Saved";
+  if (state === "error") return "Save failed";
+  return null;
+}
+
+interface PersonDetailViewProps {
+  form: PersonDetailFormValues;
+  saveState: PersonDetailSaveState;
+  personId: string;
+  displayName: string;
+  updatedAt: string;
+  onFieldChange<TField extends keyof PersonDetailFormValues>(
+    field: TField,
+    value: PersonDetailFormValues[TField]
+  ): void;
+}
+
+export function PersonDetailView({
+  form,
+  saveState,
+  personId,
+  displayName,
+  updatedAt,
+  onFieldChange,
+}: PersonDetailViewProps) {
+  const hint = saveLabel(saveState);
+
+  return (
+    <div className="flex min-w-0">
+      <div className="min-w-0 flex-1">
+        <PageHeader
+          eyebrow={
+            <span className="flex items-center gap-2">
+              <Link to="/people" className="hover:text-foreground">
+                People
+              </Link>
+              <span>/</span>
+              <span>{personId.slice(0, 8)}</span>
+            </span>
+          }
+          title={displayName}
+          meta={
+            <span className="font-mono text-[11px] text-muted-foreground">
+              updated {new Date(updatedAt).toLocaleString()}
+            </span>
+          }
+        />
+
+        <div className="space-y-5 px-6 pb-8 pt-2">
+          <ProjectDetailSection>
+            <ProjectDetailSectionHeader
+              label="Profile"
+              hint={hint ?? undefined}
+              hintClassName={saveState === "error" ? "text-destructive" : undefined}
+            />
+            <ProjectDetailSectionBody className="gap-4">
+              <div className="flex items-center gap-3">
+                <span className="grid h-12 w-12 place-items-center rounded-full border border-border bg-muted/30 font-mono text-lg font-semibold text-foreground/85">
+                  {displayName.charAt(0).toUpperCase()}
+                </span>
+                <ProjectDetailField label="Full name" className="min-w-0 flex-1">
+                  <input
+                    value={form.fullName}
+                    onChange={(event) => onFieldChange("fullName", event.target.value)}
+                    className={detailFieldClassName}
+                  />
+                </ProjectDetailField>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <ProjectDetailField label="Email">
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(event) => onFieldChange("email", event.target.value)}
+                    placeholder="name@company.com"
+                    className={detailFieldClassName}
+                  />
+                </ProjectDetailField>
+                <ProjectDetailField label="Job title">
+                  <input
+                    value={form.title}
+                    onChange={(event) => onFieldChange("title", event.target.value)}
+                    placeholder="Product manager"
+                    className={detailFieldClassName}
+                  />
+                </ProjectDetailField>
+                <ProjectDetailField label="Organization">
+                  <input
+                    value={form.organization}
+                    onChange={(event) => onFieldChange("organization", event.target.value)}
+                    placeholder="Acme Corp"
+                    className={detailFieldClassName}
+                  />
+                </ProjectDetailField>
+                <ProjectDetailField label="Relationship context">
+                  <input
+                    value={form.relationshipContext}
+                    onChange={(event) =>
+                      onFieldChange("relationshipContext", event.target.value)
+                    }
+                    placeholder="Internal partner, vendor, client…"
+                    className={detailFieldClassName}
+                  />
+                </ProjectDetailField>
+              </div>
+
+              <ProjectDetailFormPanel label="Notes">
+                <textarea
+                  value={form.body}
+                  onChange={(event) => onFieldChange("body", event.target.value)}
+                  rows={4}
+                  placeholder="How you work with this person, preferences, context…"
+                  className={detailTextareaClassName}
+                />
+              </ProjectDetailFormPanel>
+            </ProjectDetailSectionBody>
+          </ProjectDetailSection>
+        </div>
+      </div>
+    </div>
+  );
+}

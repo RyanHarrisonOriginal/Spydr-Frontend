@@ -11,6 +11,7 @@ import {
   Lightbulb,
   Network,
   Sun,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,7 @@ const workspace: NavigationItem[] = [
   { to: "/ideas", icon: Lightbulb, label: "Ideas" },
   { to: "/decisions", icon: GitBranch, label: "Decisions" },
   { to: "/notes", icon: FileText, label: "Notes" },
+  { to: "/people", icon: Users, label: "People" },
   { to: "/resources", icon: Bookmark, label: "Resources" },
 ];
 

@@ -10,6 +10,8 @@ import TasksScreen from "@/screens/TasksScreen";
 import IdeasScreen from "@/screens/IdeasScreen";
 import DecisionsScreen from "@/screens/DecisionsScreen";
 import NotesScreen from "@/screens/NotesScreen";
+import PeopleScreen from "@/screens/PeopleScreen";
+import PersonDetailScreen from "@/screens/PersonDetailScreen";
 import ResourcesScreen from "@/screens/ResourcesScreen";
 import SignInScreen from "@/screens/SignInScreen";
 import SignUpScreen from "@/screens/SignUpScreen";
@@ -46,6 +48,8 @@ export default function App() {
               <Route path="/ideas" element={<IdeasScreen />} />
               <Route path="/decisions" element={<DecisionsScreen />} />
               <Route path="/notes" element={<NotesScreen />} />
+              <Route path="/people" element={<PeopleScreen />} />
+              <Route path="/people/:personId" element={<PersonDetailScreen />} />
               <Route path="/resources" element={<ResourcesScreen />} />
             </Route>
             <Route

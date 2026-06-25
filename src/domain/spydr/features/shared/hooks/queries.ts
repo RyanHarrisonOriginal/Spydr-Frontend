@@ -9,11 +9,41 @@ function useSpydrQueryEnabled() {
   return isLoaded && isSignedIn;
 }
 
+export function usePeopleQuery() {
+  const enabled = useSpydrQueryEnabled();
+  return useQuery({
+    queryKey: ["spydr", "people"],
+    queryFn: spydrApi.people.list,
+    enabled,
+    refetchOnMount: "always",
+  });
+}
+
+export function usePersonQuery(personId: string | undefined) {
+  const enabled = useSpydrQueryEnabled();
+  return useQuery({
+    queryKey: ["spydr", "people", personId],
+    queryFn: () => spydrApi.people.get(personId!),
+    enabled: enabled && !!personId,
+    refetchOnMount: "always",
+  });
+}
+
 export function useProjectsQuery() {
   const enabled = useSpydrQueryEnabled();
   return useQuery({
     queryKey: ["spydr", "projects"],
     queryFn: spydrApi.projects.list,
+    enabled,
+    refetchOnMount: "always",
+  });
+}
+
+export function useDeletedProjectsQuery() {
+  const enabled = useSpydrQueryEnabled();
+  return useQuery({
+    queryKey: ["spydr", "projects", "trash"],
+    queryFn: spydrApi.projects.listTrash,
     enabled,
     refetchOnMount: "always",
   });

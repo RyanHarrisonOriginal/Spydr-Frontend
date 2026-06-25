@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  useDeletedProjectsQuery,
   useProjectAreasQuery,
   useProjectsQuery,
 } from "@/domain/spydr/features/shared/hooks/queries";
@@ -8,15 +9,21 @@ import { isProjectStatus } from "@/domain/spydr/utils/projectStatus";
 import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
 import type { UpdateProjectInput } from "@/domain/spydr/utils/types";
 import { useProjectListView } from "./useProjectListView";
+import { useDeleteProjectMutation } from "./useDeleteProjectMutation";
+import { useRestoreProjectMutation } from "./useRestoreProjectMutation";
 import { useUpdateProjectMutation } from "./useUpdateProjectMutation";
 
 export function useProjectsPage() {
   const query = useProjectsQuery();
+  const trashQuery = useDeletedProjectsQuery();
   const areasQuery = useProjectAreasQuery();
   const projects = query.data ?? [];
+  const deletedProjects = trashQuery.data ?? [];
   const areas = areasQuery.data ?? [];
   const listView = useProjectListView(projects, areas);
   const updateProject = useUpdateProjectMutation();
+  const deleteProject = useDeleteProjectMutation();
+  const restoreProject = useRestoreProjectMutation();
   const activeCount = useMemo(
     () => projects.filter((project) => project.status === "active").length,
     [projects]
@@ -27,6 +34,11 @@ export function useProjectsPage() {
   const [areaError, setAreaError] = useState<string | null>(null);
   const [priorityError, setPriorityError] = useState<string | null>(null);
   const [targetError, setTargetError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
+  const [restoringProjectId, setRestoringProjectId] = useState<string | null>(null);
+  const [trashExpanded, setTrashExpanded] = useState(false);
 
   const runUpdate = (
     projectId: string,
@@ -64,9 +76,44 @@ export function useProjectsPage() {
     runUpdate(projectId, { targetDate }, setTargetError);
   };
 
+  const deleteProjectById = (projectId: string) => {
+    setDeleteError(null);
+    setDeletingProjectId(projectId);
+    deleteProject.mutate(projectId, {
+      onSuccess: () => setTrashExpanded(true),
+      onError: (error) => {
+        setDeleteError(
+          error instanceof Error ? error.message : "Failed to delete project"
+        );
+      },
+      onSettled: () => setDeletingProjectId(null),
+    });
+  };
+
+  const restoreProjectById = (projectId: string) => {
+    setRestoreError(null);
+    setRestoringProjectId(projectId);
+    restoreProject.mutate(projectId, {
+      onError: (error) => {
+        setRestoreError(
+          error instanceof Error ? error.message : "Failed to restore project"
+        );
+      },
+      onSettled: () => setRestoringProjectId(null),
+    });
+  };
+
+  const openTrash = () => {
+    setTrashExpanded(true);
+    const section = document.getElementById("projects-trash");
+    section?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
+
   return {
     projects: listView.visibleProjects,
     allProjects: projects,
+    deletedProjects,
+    deletedCount: deletedProjects.length,
     areas,
     totalCount: projects.length,
     filteredCount: listView.filteredCount,
@@ -76,6 +123,13 @@ export function useProjectsPage() {
     updateArea,
     updatePriority,
     updateTargetDate,
+    deleteProject: deleteProjectById,
+    restoreProject: restoreProjectById,
+    deletingProjectId,
+    restoringProjectId,
+    trashExpanded,
+    setTrashExpanded,
+    openTrash,
     listView,
     resolveAreaId: (projectId: string) => {
       const project = projects.find((item) => item.id === projectId);
@@ -85,7 +139,10 @@ export function useProjectsPage() {
     areaError,
     priorityError,
     targetError,
+    deleteError,
+    restoreError,
     isLoading: query.isLoading,
+    isTrashLoading: trashQuery.isLoading,
     isAreasLoading: areasQuery.isLoading,
     isError: query.isError,
     errorMessage:

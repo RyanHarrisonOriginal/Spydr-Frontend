@@ -15,11 +15,13 @@ import {
 import { DateInput } from "@/components/ui/date-input";
 import { Button } from "@/components/ui/button";
 import type {
+  PersonNode,
   ProjectChildKind,
   ProjectDetailNode,
   SpydrPriority,
   UpdateProjectChildInput,
 } from "@/domain/spydr/utils/types";
+import type { ProjectPersonaRole } from "@/domain/spydr/utils/projectPersonas";
 import { taskStatusBucketLabels } from "@/domain/spydr/utils/taskStatus";
 import type { ProjectDetailSaveState } from "../hooks/useProjectDetailPage";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
@@ -27,8 +29,8 @@ import {
   EntityTag,
   PriorityBadge,
   StatusDot,
-  StatusPill,
 } from "@/domain/spydr/features/shared/components/StatusPrimitives";
+import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import {
   formatRelativeTime,
   formatShortDate,
@@ -60,9 +62,11 @@ import {
   getDeletedItemCount,
 } from "./ProjectDeletedItems";
 import { ProjectItemActions } from "./ProjectItemActions";
+import { ProjectPersonasPanel } from "./ProjectPersonasPanel";
 
 interface ProjectDetailViewProps {
   project: ProjectDetailNode;
+  people: PersonNode[];
   deleted: ProjectDetailNode["deleted"];
   stats: {
     connected: {
@@ -95,6 +99,7 @@ interface ProjectDetailViewProps {
   isAddingDecision: boolean;
   isAddingIdea: boolean;
   detailError: string | null;
+  personaError: string | null;
   taskError: string | null;
   noteError: string | null;
   decisionError: string | null;
@@ -128,6 +133,8 @@ interface ProjectDetailViewProps {
     childId: string,
     input: UpdateProjectChildInput
   ): void;
+  onPersonaChange(role: ProjectPersonaRole, personNodeId: string | null): void;
+  isUpdatingPersona?: boolean;
   onDeleteChild(kind: ProjectChildKind, childId: string): void;
   onRestoreChild(kind: ProjectChildKind, childId: string): void;
   isUpdatingChild: boolean;
@@ -141,6 +148,7 @@ const priorityOptions: SpydrPriority[] = ["low", "medium", "high", "critical"];
 
 export function ProjectDetailView({
   project,
+  people,
   deleted,
   stats,
   detailForm,
@@ -158,6 +166,7 @@ export function ProjectDetailView({
   isAddingDecision,
   isAddingIdea,
   detailError,
+  personaError,
   taskError,
   noteError,
   decisionError,
@@ -172,6 +181,8 @@ export function ProjectDetailView({
   onAddDecision,
   onAddIdea,
   onUpdateChild,
+  onPersonaChange,
+  isUpdatingPersona = false,
   onDeleteChild,
   onRestoreChild,
   isUpdatingChild,
@@ -181,6 +192,12 @@ export function ProjectDetailView({
   childMutationError,
 }: ProjectDetailViewProps) {
   const deletedCount = getDeletedItemCount(deleted);
+  const personas = project.personas ?? {
+    requester: null,
+    assignee: null,
+    sponsor: null,
+    reviewer: null,
+  };
   const [trashExpanded, setTrashExpanded] = useState(false);
   const prevDeletedCountRef = useRef(deletedCount);
 
@@ -349,6 +366,16 @@ export function ProjectDetailView({
                 </div>
               </ProjectDetailFormPanel>
 
+              <ProjectPersonasPanel
+                people={people}
+                personas={personas}
+                disabled={isUpdatingPersona}
+                onChange={onPersonaChange}
+              />
+              {personaError ? (
+                <ProjectDetailInlineError>{personaError}</ProjectDetailInlineError>
+              ) : null}
+
               {project.details?.outcome && (
                 <div className={detailInsetPanelClassName}>
                   <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -423,13 +450,16 @@ export function ProjectDetailView({
                   key={task.id}
                   className="flex items-center gap-2 rounded-md border border-border/60 bg-background px-3 py-2 shadow-sm"
                 >
-                  <input
-                    type="checkbox"
-                    readOnly
-                    checked={task.status === "completed"}
-                    className="h-3.5 w-3.5 shrink-0 accent-primary"
+                  <TaskStatusSelect
+                    value={task.status}
+                    disabled={isUpdatingChild}
+                    className="w-[108px] shrink-0"
+                    onChange={(status) => {
+                      if (status !== task.status) {
+                        onUpdateChild("task", task.id, { status });
+                      }
+                    }}
                   />
-                  <StatusPill status={task.status} />
                   <span className="min-w-0 flex-1 truncate text-[13px]">
                     {task.title}
                   </span>

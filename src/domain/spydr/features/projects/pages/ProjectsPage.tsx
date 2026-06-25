@@ -9,6 +9,10 @@ import { ProjectColumnSelector } from "../components/ProjectColumnSelector";
 import { CreateProjectDialog } from "../components/CreateProjectDialog";
 import { ProjectList } from "../components/ProjectList";
 import { ProjectListToolbar } from "../components/ProjectListToolbar";
+import {
+  ProjectTrashPanel,
+  ProjectsTrashButton,
+} from "../components/ProjectTrashPanel";
 import { useCreateProjectForm } from "../hooks/useCreateProjectForm";
 import { useProjectListColumns } from "../hooks/useProjectListColumns";
 import { useProjectsPage } from "../hooks/useProjectsPage";
@@ -26,12 +30,24 @@ export function ProjectsPage() {
     updateArea,
     updatePriority,
     updateTargetDate,
+    deleteProject,
+    restoreProject,
+    deletingProjectId,
+    restoringProjectId,
+    deletedProjects,
+    deletedCount,
+    trashExpanded,
+    setTrashExpanded,
+    openTrash,
     listView,
     statusError,
     areaError,
     priorityError,
     targetError,
+    deleteError,
+    restoreError,
     isLoading,
+    isTrashLoading,
     isAreasLoading,
     isError,
     errorMessage,
@@ -51,6 +67,7 @@ export function ProjectsPage() {
         }
         actions={
           <>
+            <ProjectsTrashButton count={deletedCount} onClick={openTrash} />
             <ProjectColumnSelector
               columns={projectColumns.columns}
               visibleColumnSet={projectColumns.visibleColumnSet}
@@ -71,6 +88,18 @@ export function ProjectsPage() {
         }
       />
       <ProjectAreasPanel areas={areas} isLoading={isAreasLoading} />
+      {(isTrashLoading || deletedCount > 0) && (
+        <ProjectTrashPanel
+          projects={deletedProjects}
+          isLoading={isTrashLoading}
+          expanded={trashExpanded}
+          onExpandedChange={setTrashExpanded}
+          onRestore={restoreProject}
+          isRestoring={restoringProjectId !== null}
+          restoringId={restoringProjectId}
+          error={restoreError}
+        />
+      )}
       {isLoading && <LoadingState title="Loading projects" />}
       {isError && <ErrorState title="Projects unavailable" description={errorMessage} />}
       {!isLoading && !isError && allProjects.length === 0 && (
@@ -114,6 +143,11 @@ export function ProjectsPage() {
               {priorityError}
             </p>
           )}
+          {deleteError && (
+            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {deleteError}
+            </p>
+          )}
           <ProjectList
             projects={projects}
             areas={areas}
@@ -127,6 +161,8 @@ export function ProjectsPage() {
             onAreaChange={updateArea}
             onPriorityChange={updatePriority}
             onTargetDateChange={updateTargetDate}
+            onDelete={deleteProject}
+            deletingProjectId={deletingProjectId}
           />
         </>
       )}

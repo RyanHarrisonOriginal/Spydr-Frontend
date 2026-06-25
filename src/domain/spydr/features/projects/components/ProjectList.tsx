@@ -1,4 +1,5 @@
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { ProjectAreaNode, ProjectNode } from "@/domain/spydr/utils/types";
 import {
@@ -29,6 +30,8 @@ interface ProjectListProps {
   onAreaChange?(projectId: string, areaNodeId: string | null): void;
   onPriorityChange?(projectId: string, priority: string): void;
   onTargetDateChange?(projectId: string, targetDate: string | null): void;
+  onDelete?(projectId: string): void;
+  deletingProjectId?: string | null;
 }
 
 const columnWidths: Record<ProjectColumnId, string> = {
@@ -39,8 +42,15 @@ const columnWidths: Record<ProjectColumnId, string> = {
   updated: "128px",
 };
 
+const actionsColumnWidth = "72px";
+
 function getProjectListGrid(visibleColumns: ProjectColumnId[]) {
-  return ["40px", "minmax(280px,1fr)", ...visibleColumns.map((id) => columnWidths[id])].join(" ");
+  return [
+    "40px",
+    "minmax(280px,1fr)",
+    ...visibleColumns.map((id) => columnWidths[id]),
+    actionsColumnWidth,
+  ].join(" ");
 }
 
 function SortableHeader({
@@ -81,6 +91,69 @@ function SortableHeader({
   );
 }
 
+function ProjectListDeleteButton({
+  projectTitle,
+  isConfirming,
+  isDeleting,
+  disabled,
+  onRequestDelete,
+  onConfirmDelete,
+  onCancel,
+}: {
+  projectTitle: string;
+  isConfirming: boolean;
+  isDeleting: boolean;
+  disabled?: boolean;
+  onRequestDelete(): void;
+  onConfirmDelete(): void;
+  onCancel(): void;
+}) {
+  if (isConfirming) {
+    return (
+      <div className="flex items-center justify-end gap-0.5">
+        <button
+          type="button"
+          disabled={isDeleting}
+          onClick={(event) => {
+            event.stopPropagation();
+            onConfirmDelete();
+          }}
+          className="rounded px-1.5 py-1 text-[10px] font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+        >
+          {isDeleting ? "…" : "Delete"}
+        </button>
+        <button
+          type="button"
+          disabled={isDeleting}
+          onClick={(event) => {
+            event.stopPropagation();
+            onCancel();
+          }}
+          aria-label="Cancel delete"
+          className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={(event) => {
+        event.stopPropagation();
+        onRequestDelete();
+      }}
+      aria-label={`Delete ${projectTitle}`}
+      className="ml-auto rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
 export function ProjectList({
   projects,
   areas,
@@ -94,10 +167,19 @@ export function ProjectList({
   onAreaChange,
   onPriorityChange,
   onTargetDateChange,
+  onDelete,
+  deletingProjectId = null,
 }: ProjectListProps) {
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const gridTemplateColumns = getProjectListGrid(visibleColumns);
-  const minWidth = 440 + visibleColumns.length * 112;
+  const minWidth = 440 + visibleColumns.length * 112 + 72;
   const hasColumn = (columnId: ProjectColumnId) => visibleColumns.includes(columnId);
+
+  useEffect(() => {
+    if (!pendingDeleteId) return;
+    const timeout = window.setTimeout(() => setPendingDeleteId(null), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [pendingDeleteId]);
 
   return (
     <div className="overflow-x-auto">
@@ -149,6 +231,7 @@ export function ProjectList({
             onSort={onSortColumn}
           />
         )}
+        <span />
       </div>
       {projects.length === 0 ? (
         <div className="px-6 py-10 text-center">
@@ -275,6 +358,22 @@ export function ProjectList({
                 {formatRelativeTime(project.updatedAt)}
               </span>
             )}
+            {onDelete ? (
+              <ProjectListDeleteButton
+                projectTitle={project.title}
+                isConfirming={pendingDeleteId === project.id}
+                isDeleting={deletingProjectId === project.id}
+                disabled={
+                  deletingProjectId !== null && deletingProjectId !== project.id
+                }
+                onRequestDelete={() => setPendingDeleteId(project.id)}
+                onConfirmDelete={() => {
+                  setPendingDeleteId(null);
+                  onDelete(project.id);
+                }}
+                onCancel={() => setPendingDeleteId(null)}
+              />
+            ) : null}
           </li>
         ))}
       </ul>

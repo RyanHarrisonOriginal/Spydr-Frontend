@@ -44,8 +44,31 @@ export interface ProjectDetails {
   targetDate: string | null;
   riskLevel: string;
   lastActivityAt: string | null;
+  requesterPersonNodeId: string | null;
+  assigneePersonNodeId: string | null;
+  sponsorPersonNodeId: string | null;
+  reviewerPersonNodeId: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PersonDetails {
+  fullName: string;
+  email: string | null;
+  title: string | null;
+  organization: string | null;
+  relationshipContext: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PersonNode = SpydrNode<"person", PersonDetails>;
+
+export interface ProjectPersonas {
+  requester: PersonNode | null;
+  assignee: PersonNode | null;
+  sponsor: PersonNode | null;
+  reviewer: PersonNode | null;
 }
 
 export interface ProjectAreaDetails {
@@ -103,6 +126,7 @@ export interface CreateProjectInput {
 }
 
 export interface ProjectDetailNode extends ProjectNode {
+  personas: ProjectPersonas;
   tasks: TaskNode[];
   decisions: DecisionNode[];
   ideas: IdeaNode[];
@@ -148,6 +172,28 @@ export interface UpdateProjectInput {
   startDate?: string | null;
   targetDate?: string | null;
   riskLevel?: SpydrPriority;
+  requesterPersonNodeId?: string | null;
+  assigneePersonNodeId?: string | null;
+  sponsorPersonNodeId?: string | null;
+  reviewerPersonNodeId?: string | null;
+}
+
+export interface CreatePersonInput {
+  fullName: string;
+  body?: string;
+  email?: string | null;
+  title?: string | null;
+  organization?: string | null;
+  relationshipContext?: string | null;
+}
+
+export interface UpdatePersonInput {
+  fullName?: string;
+  body?: string;
+  email?: string | null;
+  title?: string | null;
+  organization?: string | null;
+  relationshipContext?: string | null;
 }
 
 export interface CreateProjectAreaInput {

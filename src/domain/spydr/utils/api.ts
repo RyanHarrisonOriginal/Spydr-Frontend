@@ -18,6 +18,9 @@ import type {
   UpdateProjectAreaInput,
   UpdateProjectChildInput,
   UpdateProjectInput,
+  CreatePersonInput,
+  UpdatePersonInput,
+  PersonNode,
 } from "./types";
 
 function childPath(
@@ -31,6 +34,14 @@ function childPath(
 }
 
 export const spydrApi = {
+  people: {
+    list: () => apiRequest<PersonNode[]>("/people"),
+    get: (personId: string) => apiRequest<PersonNode>(`/people/${personId}`),
+    create: (input: CreatePersonInput) =>
+      apiRequest<PersonNode>("/people", { method: "POST", body: input }),
+    update: (personId: string, input: UpdatePersonInput) =>
+      apiRequest<PersonNode>(`/people/${personId}`, { method: "PATCH", body: input }),
+  },
   projectAreas: {
     list: () => apiRequest<ProjectAreaNode[]>("/project-areas"),
     create: (input: CreateProjectAreaInput) =>
@@ -45,6 +56,7 @@ export const spydrApi = {
   },
   projects: {
     list: () => apiRequest<ProjectNode[]>("/projects"),
+    listTrash: () => apiRequest<ProjectNode[]>("/projects/trash"),
     get: (projectId: string) =>
       apiRequest<ProjectDetailNode>(`/projects/${projectId}`),
     create: (input: CreateProjectInput) =>
@@ -54,6 +66,10 @@ export const spydrApi = {
         method: "PATCH",
         body: input,
       }),
+    delete: (projectId: string) =>
+      apiRequest<void>(`/projects/${projectId}`, { method: "DELETE" }),
+    restore: (projectId: string) =>
+      apiRequest<ProjectNode>(`/projects/${projectId}/restore`, { method: "POST" }),
     createTask: (projectId: string, input: CreateProjectTaskInput) =>
       apiRequest<TaskNode>(`/projects/${projectId}/tasks`, {
         method: "POST",
