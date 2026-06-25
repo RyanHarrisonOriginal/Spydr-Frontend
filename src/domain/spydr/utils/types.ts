@@ -143,6 +143,7 @@ export type IdeaNode = SpydrNode<"idea", IdeaDetails>;
 export interface UpdateProjectInput {
   body?: string;
   status?: SpydrNodeStatus;
+  priority?: SpydrPriority;
   areaNodeId?: string | null;
   startDate?: string | null;
   targetDate?: string | null;

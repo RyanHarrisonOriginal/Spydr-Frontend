@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -44,6 +43,17 @@ import type {
 import { ProjectDecisionLog } from "./ProjectDecisionLog";
 import { ProjectNotesLog } from "./ProjectNotesLog";
 import { ProjectResourcesList } from "./ProjectResourcesList";
+import {
+  ProjectDetailField,
+  ProjectDetailFormPanel,
+  ProjectDetailInlineError,
+  ProjectDetailSection,
+  ProjectDetailSectionBody,
+  ProjectDetailSectionHeader,
+  detailFieldClassName,
+  detailInsetPanelClassName,
+  detailTextareaClassName,
+} from "./ProjectDetailSection";
 import {
   ProjectDeletedItems,
   PROJECT_TRASH_SECTION_ID,
@@ -211,8 +221,8 @@ export function ProjectDetailView({
           title={project.title}
           meta={
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded border border-border bg-muted/40 px-2 py-1 text-[11px]">
-                <StatusDot status={project.status} /> {project.status}
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[11px] capitalize">
+                <StatusDot status={project.status} /> {project.status.replace(/_/g, " ")}
               </span>
               <PriorityBadge priority={project.priority} />
               {project.area && <EntityTag tag={project.area} />}
@@ -236,12 +246,12 @@ export function ProjectDetailView({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 gap-1 border-highlight-secondary/40 bg-highlight-secondary/10 px-2 text-[11px] text-highlight-secondary hover:bg-highlight-secondary/15 hover:text-highlight-secondary"
+                className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                 onClick={openTrash}
               >
                 <ArchiveRestore className="h-3 w-3" />
                 Trash
-                <span className="rounded-full bg-highlight-secondary/20 px-1 py-px font-mono text-[9px] font-semibold tabular-nums leading-none">
+                <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[9px] font-semibold tabular-nums leading-none text-foreground/80">
                   {deletedCount}
                 </span>
               </Button>
@@ -250,7 +260,7 @@ export function ProjectDetailView({
         />
 
         {deletedCount > 0 && (
-          <div className="px-4 pt-2">
+          <div className="px-6 pt-2">
             <ProjectDeletedItems
               deleted={deleted}
               expanded={trashExpanded}
@@ -262,30 +272,21 @@ export function ProjectDetailView({
           </div>
         )}
 
-        <div className="space-y-3 p-4">
-          <section className="overflow-hidden rounded-lg border border-border bg-card/30">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 px-3 py-2">
-              <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                Project overview
-              </span>
-              {detailSaveLabel(detailSaveState) && (
-                <span
-                  className={cn(
-                    "font-mono text-[10px] uppercase tracking-wider",
-                    detailSaveState === "error"
-                      ? "text-destructive"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {detailSaveLabel(detailSaveState)}
-                </span>
-              )}
-            </div>
+        <div className="space-y-5 px-6 pb-5 pt-2">
+          <ProjectDetailSection>
+            <ProjectDetailSectionHeader
+              label="Overview"
+              hint={detailSaveLabel(detailSaveState) ?? undefined}
+              hintClassName={
+                detailSaveState === "error" ? "text-destructive" : undefined
+              }
+            />
+            <ProjectDetailSectionBody className="gap-5">
+              <div className={detailInsetPanelClassName}>
+                <ConnectedSummary connected={stats.connected} />
+              </div>
 
-            <ConnectedSummary connected={stats.connected} />
-
-            <div className="space-y-2 border-b border-border/60 p-2.5">
-              <Field label="Brief">
+              <ProjectDetailField label="Brief">
                 <textarea
                   value={detailForm.body}
                   onChange={(event) =>
@@ -293,40 +294,37 @@ export function ProjectDetailView({
                   }
                   placeholder="Describe the project brief, context, and intent."
                   rows={4}
-                  className="min-h-[5.5rem] w-full resize-y rounded-md border border-input bg-background px-2 py-1.5 text-[12px] leading-snug ring-focus placeholder:text-muted-foreground"
+                  className={detailTextareaClassName}
                 />
-              </Field>
-            </div>
+              </ProjectDetailField>
 
-            <div className="space-y-2 p-2.5">
-              <div className="rounded-md border border-border/60 bg-muted/15 p-2">
-                <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Timeline
-                </div>
-                <div className="flex flex-col gap-2 lg:flex-row lg:items-end">
-                  <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-2">
-                    <Field label="Start">
+              <ProjectDetailFormPanel label="Timeline">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+                  <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-3">
+                    <ProjectDetailField label="Start">
                       <DateInput
                         value={detailForm.startDate}
                         onChange={(event) =>
                           onDetailFieldChange("startDate", event.target.value)
                         }
+                        className="h-8"
                       />
-                    </Field>
+                    </ProjectDetailField>
                     <ArrowRight
                       aria-hidden
                       className="mb-2 h-3.5 w-3.5 shrink-0 text-muted-foreground"
                     />
-                    <Field label="Target">
+                    <ProjectDetailField label="Target">
                       <DateInput
                         value={detailForm.targetDate}
                         onChange={(event) =>
                           onDetailFieldChange("targetDate", event.target.value)
                         }
+                        className="h-8"
                       />
-                    </Field>
+                    </ProjectDetailField>
                   </div>
-                  <Field
+                  <ProjectDetailField
                     label="Delivery risk"
                     hint="Likelihood this project slips or fails"
                     className="lg:w-44"
@@ -347,23 +345,23 @@ export function ProjectDetailView({
                         </option>
                       ))}
                     </select>
-                  </Field>
+                  </ProjectDetailField>
                 </div>
-              </div>
+              </ProjectDetailFormPanel>
 
               {project.details?.outcome && (
-                <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-1.5">
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                <div className={detailInsetPanelClassName}>
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                     Outcome
-                  </div>
-                  <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug">
+                  </p>
+                  <p className="mt-1.5 line-clamp-3 text-[13px] leading-relaxed">
                     {project.details.outcome}
                   </p>
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
-                <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+              <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/15 px-3 py-2.5">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full bg-highlight-secondary transition-[width]"
                     style={{ width: `${stats.progressPercent}%` }}
@@ -373,30 +371,29 @@ export function ProjectDetailView({
                   {stats.progressPercent}% tasks closed
                 </span>
               </div>
-            </div>
 
-            {detailError && (
-              <p className="mx-2.5 mb-2.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                {detailError}
-              </p>
-            )}
-          </section>
+              {detailError && (
+                <ProjectDetailInlineError>{detailError}</ProjectDetailInlineError>
+              )}
+            </ProjectDetailSectionBody>
+          </ProjectDetailSection>
 
           {childMutationError && (
-            <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {childMutationError}
-            </p>
+            <ProjectDetailInlineError>{childMutationError}</ProjectDetailInlineError>
           )}
         </div>
 
-        <div className="grid gap-4 px-4 pb-4 xl:grid-cols-2">
-          <Panel
-            icon={<Activity className="h-3.5 w-3.5" />}
-            label="In motion"
-            hint={`${stats.openTaskCount} open`}
-          >
+        <div className="grid gap-5 px-6 pb-8 xl:grid-cols-2">
+          <ProjectDetailSection>
+            <ProjectDetailSectionHeader
+              icon={<Activity className="h-3.5 w-3.5" />}
+              label="In motion"
+              hint={`${stats.openTaskCount} open`}
+            />
+            <ProjectDetailSectionBody>
+            <ProjectDetailFormPanel>
             <form
-              className="grid gap-2 border-b border-border pb-3 md:grid-cols-[1fr_118px_auto]"
+              className="grid gap-2 md:grid-cols-[1fr_118px_auto]"
               onSubmit={(event) => {
                 event.preventDefault();
                 onAddTask();
@@ -406,7 +403,7 @@ export function ProjectDetailView({
                 value={taskForm.title}
                 onChange={(event) => onTaskFieldChange("title", event.target.value)}
                 placeholder="Add a task..."
-                className="h-8 rounded-md border border-input bg-background px-3 text-[13px] ring-focus placeholder:text-muted-foreground"
+                className={cn(detailFieldClassName, "h-8")}
               />
               <input
                 type="date"
@@ -418,14 +415,14 @@ export function ProjectDetailView({
                 {isAddingTask ? "Adding..." : "Add"}
               </Button>
             </form>
-            {taskError && (
-              <p className="mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                {taskError}
-              </p>
-            )}
-            <ul className="mt-2 max-h-[280px] divide-y divide-border overflow-y-auto pr-1">
+            </ProjectDetailFormPanel>
+            {taskError && <ProjectDetailInlineError>{taskError}</ProjectDetailInlineError>}
+            <ul className="max-h-[280px] space-y-2 overflow-y-auto">
               {project.tasks.map((task) => (
-                <li key={task.id} className="flex items-center gap-2 py-2">
+                <li
+                  key={task.id}
+                  className="flex items-center gap-2 rounded-md border border-border/60 bg-background px-3 py-2 shadow-sm"
+                >
                   <input
                     type="checkbox"
                     readOnly
@@ -456,12 +453,13 @@ export function ProjectDetailView({
                 </li>
               ))}
               {!project.tasks.length && (
-                <li className="py-3 text-sm text-muted-foreground">
+                <li className="rounded-lg border border-dashed border-border/80 bg-muted/10 py-6 text-center text-sm text-muted-foreground">
                   No tasks linked yet.
                 </li>
               )}
             </ul>
-          </Panel>
+            </ProjectDetailSectionBody>
+          </ProjectDetailSection>
 
           <ProjectDecisionLog
             decisions={project.decisions}
@@ -477,13 +475,16 @@ export function ProjectDetailView({
             isDeleting={isDeletingChild}
           />
 
-          <Panel
-            icon={<Lightbulb className="h-3.5 w-3.5" />}
-            label="Thinking"
-            hint={`${project.ideas.length} ideas`}
-          >
+          <ProjectDetailSection>
+            <ProjectDetailSectionHeader
+              icon={<Lightbulb className="h-3.5 w-3.5" />}
+              label="Thinking"
+              hint={`${project.ideas.length} ideas`}
+            />
+            <ProjectDetailSectionBody>
+            <ProjectDetailFormPanel>
             <form
-              className="grid gap-2 border-b border-border pb-3 md:grid-cols-[1fr_auto]"
+              className="grid gap-2 md:grid-cols-[1fr_auto]"
               onSubmit={(event) => {
                 event.preventDefault();
                 onAddIdea();
@@ -493,22 +494,19 @@ export function ProjectDetailView({
                 value={ideaForm.title}
                 onChange={(event) => onIdeaFieldChange("title", event.target.value)}
                 placeholder="Capture an idea..."
-                className="h-8 rounded-md border border-input bg-background px-3 text-[13px] ring-focus placeholder:text-muted-foreground"
+                className={cn(detailFieldClassName, "h-8")}
               />
               <Button type="submit" size="sm" disabled={!canAddIdea}>
                 {isAddingIdea ? "Adding..." : "Add"}
               </Button>
             </form>
-            {ideaError && (
-              <p className="mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                {ideaError}
-              </p>
-            )}
-            <div className="mt-2 max-h-[220px] space-y-2 overflow-y-auto pr-1">
+            </ProjectDetailFormPanel>
+            {ideaError && <ProjectDetailInlineError>{ideaError}</ProjectDetailInlineError>}
+            <div className="max-h-[220px] space-y-2 overflow-y-auto">
               {project.ideas.map((idea) => (
                 <div
                   key={idea.id}
-                  className="rounded-md border border-border/70 bg-background/40 px-3 py-2"
+                  className="rounded-md border border-border/60 bg-background px-3 py-2.5 shadow-sm"
                 >
                   <div className="flex items-center gap-2">
                     <h3 className="min-w-0 flex-1 truncate text-[13px] font-semibold">
@@ -533,10 +531,13 @@ export function ProjectDetailView({
                 </div>
               ))}
               {!project.ideas.length && (
-                <p className="text-sm text-muted-foreground">No ideas linked yet.</p>
+                <div className="rounded-lg border border-dashed border-border/80 bg-muted/10 py-6 text-center text-sm text-muted-foreground">
+                  No ideas linked yet.
+                </div>
               )}
             </div>
-          </Panel>
+            </ProjectDetailSectionBody>
+          </ProjectDetailSection>
 
           <ProjectNotesLog
             notes={project.notes}
@@ -562,48 +563,6 @@ export function ProjectDetailView({
         </div>
       </div>
     </div>
-  );
-}
-
-function SectionHead({
-  icon,
-  label,
-  hint,
-}: {
-  icon?: ReactNode;
-  label: string;
-  hint?: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      {icon && <span className="text-muted-foreground">{icon}</span>}
-      <h2 className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </h2>
-      <span className="h-px flex-1 bg-border" />
-      {hint && (
-        <span className="font-mono text-[10px] text-muted-foreground">{hint}</span>
-      )}
-    </div>
-  );
-}
-
-function Panel({
-  icon,
-  label,
-  hint,
-  children,
-}: {
-  icon: ReactNode;
-  label: string;
-  hint?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="min-h-0 rounded-lg border border-border bg-card/30 p-3">
-      <SectionHead icon={icon} label={label} hint={hint} />
-      <div className="mt-3">{children}</div>
-    </section>
   );
 }
 
@@ -657,11 +616,11 @@ function ConnectedSummary({
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-2 border-b border-border/60 p-2.5 sm:grid-cols-3 xl:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
       {items.map(({ label, icon: Icon, value, detail }) => (
         <div
           key={label}
-          className="min-w-0 rounded-md border border-border/50 bg-background/40 px-2 py-1.5"
+          className="min-w-0 rounded-md border border-border/50 bg-background/70 px-2.5 py-2"
         >
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Icon className="h-3 w-3 shrink-0" />
@@ -669,7 +628,7 @@ function ConnectedSummary({
               {label}
             </span>
           </div>
-          <div className="mt-0.5 text-lg font-semibold tabular-nums leading-none">
+          <div className="mt-1 text-xl font-semibold tabular-nums leading-none">
             {value}
           </div>
           {detail && (
@@ -680,34 +639,6 @@ function ConnectedSummary({
         </div>
       ))}
     </div>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  className,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className={cn("block min-w-0 space-y-1", className)}>
-      <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {label}
-        </span>
-        {hint && (
-          <span className="text-[10px] normal-case tracking-normal text-muted-foreground/75">
-            {hint}
-          </span>
-        )}
-      </span>
-      {children}
-    </label>
   );
 }
 

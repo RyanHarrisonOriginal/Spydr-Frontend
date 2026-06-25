@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { ProjectAreaNode, ProjectNode } from "@/domain/spydr/utils/types";
 import {
@@ -7,24 +8,34 @@ import {
 } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { formatRelativeTime, formatShortDate } from "@/domain/spydr/features/shared/components/time";
 import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
+import type { ProjectListSort, ProjectSortColumn } from "@/domain/spydr/utils/projectListView";
+import { cn } from "@/lib/utils";
 import type { ProjectColumnId } from "../hooks/useProjectListColumns";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
+import { ProjectPrioritySelect } from "./ProjectPrioritySelect";
 import { ProjectStatusSelect } from "./ProjectStatusSelect";
+import { ProjectTargetDateSelect } from "./ProjectTargetDateSelect";
 
 interface ProjectListProps {
   projects: ProjectNode[];
   areas: ProjectAreaNode[];
   visibleColumns: ProjectColumnId[];
+  sort: ProjectListSort;
   updatingProjectId?: string | null;
+  hasActiveFilters?: boolean;
+  onSortColumn?(column: ProjectSortColumn): void;
+  onClearFilters?(): void;
   onStatusChange?(projectId: string, status: string): void;
   onAreaChange?(projectId: string, areaNodeId: string | null): void;
+  onPriorityChange?(projectId: string, priority: string): void;
+  onTargetDateChange?(projectId: string, targetDate: string | null): void;
 }
 
 const columnWidths: Record<ProjectColumnId, string> = {
   area: "148px",
-  priority: "96px",
+  priority: "104px",
   status: "128px",
-  target: "96px",
+  target: "112px",
   updated: "128px",
 };
 
@@ -32,13 +43,57 @@ function getProjectListGrid(visibleColumns: ProjectColumnId[]) {
   return ["40px", "minmax(280px,1fr)", ...visibleColumns.map((id) => columnWidths[id])].join(" ");
 }
 
+function SortableHeader({
+  label,
+  column,
+  sort,
+  align = "start",
+  onSort,
+}: {
+  label: string;
+  column: ProjectSortColumn;
+  sort: ProjectListSort;
+  align?: "start" | "end";
+  onSort?(column: ProjectSortColumn): void;
+}) {
+  const isActive = sort.column === column;
+  const Icon = !isActive ? ArrowUpDown : sort.direction === "asc" ? ArrowUp : ArrowDown;
+
+  if (!onSort) {
+    return (
+      <span className={align === "end" ? "text-right" : "text-left"}>{label}</span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(column)}
+      className={cn(
+        "inline-flex items-center gap-1 transition-colors hover:text-foreground",
+        align === "end" && "ml-auto",
+        isActive ? "text-foreground" : "text-muted-foreground"
+      )}
+    >
+      <span>{label}</span>
+      <Icon className={cn("h-3 w-3", isActive && "text-primary")} aria-hidden />
+    </button>
+  );
+}
+
 export function ProjectList({
   projects,
   areas,
   visibleColumns,
+  sort,
   updatingProjectId = null,
+  hasActiveFilters = false,
+  onSortColumn,
+  onClearFilters,
   onStatusChange,
   onAreaChange,
+  onPriorityChange,
+  onTargetDateChange,
 }: ProjectListProps) {
   const gridTemplateColumns = getProjectListGrid(visibleColumns);
   const minWidth = 440 + visibleColumns.length * 112;
@@ -51,13 +106,66 @@ export function ProjectList({
         style={{ gridTemplateColumns, minWidth }}
       >
         <span />
-        <span>Name</span>
-        {hasColumn("area") && <span className="text-left">Area</span>}
-        {hasColumn("priority") && <span className="text-left">Priority</span>}
-        {hasColumn("status") && <span className="text-left">Status</span>}
-        {hasColumn("target") && <span className="text-right">Target</span>}
-        {hasColumn("updated") && <span className="text-right">Updated</span>}
+        <SortableHeader label="Name" column="name" sort={sort} onSort={onSortColumn} />
+        {hasColumn("area") && (
+          <SortableHeader
+            label="Area"
+            column="area"
+            sort={sort}
+            onSort={onSortColumn}
+          />
+        )}
+        {hasColumn("priority") && (
+          <SortableHeader
+            label="Priority"
+            column="priority"
+            sort={sort}
+            onSort={onSortColumn}
+          />
+        )}
+        {hasColumn("status") && (
+          <SortableHeader
+            label="Status"
+            column="status"
+            sort={sort}
+            onSort={onSortColumn}
+          />
+        )}
+        {hasColumn("target") && (
+          <SortableHeader
+            label="Target"
+            column="target"
+            sort={sort}
+            align="end"
+            onSort={onSortColumn}
+          />
+        )}
+        {hasColumn("updated") && (
+          <SortableHeader
+            label="Updated"
+            column="updated"
+            sort={sort}
+            align="end"
+            onSort={onSortColumn}
+          />
+        )}
       </div>
+      {projects.length === 0 ? (
+        <div className="px-6 py-10 text-center">
+          <p className="text-[13px] font-medium text-foreground/90">
+            No projects match your filters
+          </p>
+          {hasActiveFilters && onClearFilters ? (
+            <button
+              type="button"
+              onClick={onClearFilters}
+              className="mt-2 text-[12px] text-primary hover:underline"
+            >
+              Clear filters
+            </button>
+          ) : null}
+        </div>
+      ) : (
       <ul className="divide-y divide-border">
         {projects.map((project) => (
           <li
@@ -108,8 +216,19 @@ export function ProjectList({
               </span>
             )}
             {hasColumn("priority") && (
-              <span className="justify-self-start">
-                <PriorityBadge priority={project.priority} />
+              <span
+                className="block min-w-0 w-full"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {onPriorityChange ? (
+                  <ProjectPrioritySelect
+                    value={project.priority}
+                    onChange={(priority) => onPriorityChange(project.id, priority)}
+                    disabled={updatingProjectId === project.id}
+                  />
+                ) : (
+                  <PriorityBadge priority={project.priority} />
+                )}
               </span>
             )}
             {hasColumn("status") && (
@@ -132,8 +251,23 @@ export function ProjectList({
               </span>
             )}
             {hasColumn("target") && (
-              <span className="justify-self-end font-mono text-[11px] tabular-nums text-muted-foreground">
-                {formatShortDate(project.details?.targetDate)}
+              <span
+                className="block min-w-0 w-full"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {onTargetDateChange ? (
+                  <ProjectTargetDateSelect
+                    value={project.details?.targetDate}
+                    onChange={(targetDate) =>
+                      onTargetDateChange(project.id, targetDate)
+                    }
+                    disabled={updatingProjectId === project.id}
+                  />
+                ) : (
+                  <span className="block text-right font-mono text-[11px] tabular-nums text-muted-foreground">
+                    {formatShortDate(project.details?.targetDate)}
+                  </span>
+                )}
               </span>
             )}
             {hasColumn("updated") && (
@@ -144,6 +278,7 @@ export function ProjectList({
           </li>
         ))}
       </ul>
+      )}
     </div>
   );
 }

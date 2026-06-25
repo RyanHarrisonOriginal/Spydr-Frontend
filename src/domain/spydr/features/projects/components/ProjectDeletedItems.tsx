@@ -69,25 +69,20 @@ export function ProjectDeletedItems({
   return (
     <section
       id={PROJECT_TRASH_SECTION_ID}
-      className={cn(
-        "overflow-hidden rounded-md border bg-card/30",
-        expanded
-          ? "border-highlight-secondary/35"
-          : "border-highlight-secondary/25"
-      )}
+      className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
     >
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-1.5 px-2 py-1.5 text-left transition-colors hover:bg-highlight-secondary/5"
+        className="flex w-full items-center gap-1.5 border-b border-border/60 bg-muted/20 px-4 py-2.5 text-left transition-colors hover:bg-muted/30"
       >
         {expanded ? (
-          <ChevronDown className="h-3 w-3 shrink-0 text-highlight-secondary" />
+          <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
         ) : (
-          <ChevronRight className="h-3 w-3 shrink-0 text-highlight-secondary" />
+          <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
         )}
-        <Trash2 className="h-3 w-3 shrink-0 text-highlight-secondary" />
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-foreground">
+        <Trash2 className="h-3 w-3 shrink-0 text-muted-foreground" />
+        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-foreground/80">
           Trash
         </span>
         {!expanded && (
@@ -96,35 +91,25 @@ export function ProjectDeletedItems({
           </span>
         )}
         {expanded && <span className="min-w-0 flex-1" />}
-        <span
-          className={cn(
-            "shrink-0 rounded-full px-1.5 py-px font-mono text-[9px] font-semibold tabular-nums leading-none",
-            "border border-highlight-secondary/35 bg-highlight-secondary/15 text-highlight-secondary"
-          )}
-        >
+        <span className="shrink-0 rounded-full border border-border/60 bg-background px-1.5 py-px font-mono text-[9px] font-semibold tabular-nums leading-none text-muted-foreground">
           {entries.length}
         </span>
       </button>
 
       {expanded && (
         <>
-          <p className="border-t border-highlight-secondary/15 px-2 py-1 text-[10px] text-muted-foreground">
+          <p className="border-b border-border/40 px-4 py-2 text-[10px] text-muted-foreground">
             Tasks, notes, decisions, ideas, and resources
           </p>
-          <ul className="max-h-44 divide-y divide-border/50 overflow-y-auto border-t border-border/50">
+          <ul className="max-h-44 divide-y divide-border/50 overflow-y-auto">
           {entries.map((entry) => {
             const restoring = isRestoring && restoringId === entry.id;
             return (
               <li
                 key={`${entry.kind}-${entry.id}`}
-                className="flex items-center gap-1.5 px-2 py-1"
+                className="flex items-center gap-1.5 px-4 py-2"
               >
-                <span
-                  className={cn(
-                    "shrink-0 rounded border px-1 py-px font-mono text-[8px] uppercase tracking-wider",
-                    "border-border/60 bg-muted/30 text-muted-foreground"
-                  )}
-                >
+                <span className="shrink-0 rounded-md bg-muted/40 px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-muted-foreground">
                   {entry.kind}
                 </span>
                 <p className="min-w-0 flex-1 truncate text-[12px]">{entry.label}</p>

@@ -28,6 +28,7 @@ export function useUpdateProjectMutation(projectId?: string) {
             ? {
                 ...item,
                 status: project.status,
+                priority: project.priority,
                 body: project.body,
                 area: project.area,
                 updatedAt: project.updatedAt,
