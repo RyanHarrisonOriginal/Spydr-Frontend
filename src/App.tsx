@@ -7,6 +7,7 @@ import WorkspaceShellScreen from "@/screens/WorkspaceShellScreen";
 import ProjectsScreen from "@/screens/ProjectsScreen";
 import ProjectDetailScreen from "@/screens/ProjectDetailScreen";
 import TasksScreen from "@/screens/TasksScreen";
+import TaskDetailScreen from "@/screens/TaskDetailScreen";
 import IdeasScreen from "@/screens/IdeasScreen";
 import DecisionsScreen from "@/screens/DecisionsScreen";
 import NotesScreen from "@/screens/NotesScreen";
@@ -45,6 +46,7 @@ export default function App() {
               <Route path="/projects" element={<ProjectsScreen />} />
               <Route path="/projects/:projectId" element={<ProjectDetailScreen />} />
               <Route path="/tasks" element={<TasksScreen />} />
+              <Route path="/tasks/:taskId" element={<TaskDetailScreen />} />
               <Route path="/ideas" element={<IdeasScreen />} />
               <Route path="/decisions" element={<DecisionsScreen />} />
               <Route path="/notes" element={<NotesScreen />} />

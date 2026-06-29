@@ -15,6 +15,7 @@ interface PersonSelectProps {
   disabled?: boolean;
   ariaLabel: string;
   className?: string;
+  compact?: boolean;
 }
 
 export function PersonSelect({
@@ -24,6 +25,7 @@ export function PersonSelect({
   disabled = false,
   ariaLabel,
   className,
+  compact = false,
 }: PersonSelectProps) {
   const selected = people.find((person) => person.id === value) ?? null;
   const options = [
@@ -66,7 +68,7 @@ export function PersonSelect({
         labelClassName="text-[12px] text-foreground/90"
         getOptionLabelClassName={() => "text-[12px]"}
       />
-      {selected ? (
+      {!compact && selected ? (
         <div className="mt-1.5 flex items-center justify-between gap-2">
           {personSubtitle(selected) ? (
             <p className="min-w-0 truncate text-[10px] text-muted-foreground">

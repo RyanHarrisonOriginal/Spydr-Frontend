@@ -18,6 +18,7 @@ import type {
   UpdateProjectAreaInput,
   UpdateProjectChildInput,
   UpdateProjectInput,
+  UpdateTaskInput,
   CreatePersonInput,
   UpdatePersonInput,
   PersonNode,
@@ -120,6 +121,9 @@ export const spydrApi = {
   },
   tasks: {
     list: () => apiRequest<TaskNode[]>("/tasks"),
+    get: (taskId: string) => apiRequest<TaskNode>(`/tasks/${taskId}`),
+    update: (taskId: string, input: UpdateTaskInput) =>
+      apiRequest<TaskNode>(`/tasks/${taskId}`, { method: "PATCH", body: input }),
   },
   decisions: {
     list: () => apiRequest<DecisionNode[]>("/decisions"),

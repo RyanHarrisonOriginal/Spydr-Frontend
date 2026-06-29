@@ -460,9 +460,12 @@ export function ProjectDetailView({
                       }
                     }}
                   />
-                  <span className="min-w-0 flex-1 truncate text-[13px]">
+                  <Link
+                    to={`/tasks/${task.id}`}
+                    className="min-w-0 flex-1 truncate text-[13px] hover:text-primary"
+                  >
                     {task.title}
-                  </span>
+                  </Link>
                   <span className="w-20 shrink-0 text-right font-mono text-[10px] tabular-nums text-muted-foreground">
                     {formatShortDate(task.details?.dueDate)}
                   </span>

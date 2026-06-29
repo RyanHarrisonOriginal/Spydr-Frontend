@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import type { ProjectAreaNode, ProjectNode } from "@/domain/spydr/utils/types";
+import type { ProjectAreaNode, ProjectNode, PersonNode } from "@/domain/spydr/utils/types";
 import {
   EntityTag,
   PriorityBadge,
@@ -16,10 +16,12 @@ import { ProjectAreaSelect } from "./ProjectAreaSelect";
 import { ProjectPrioritySelect } from "./ProjectPrioritySelect";
 import { ProjectStatusSelect } from "./ProjectStatusSelect";
 import { ProjectTargetDateSelect } from "./ProjectTargetDateSelect";
+import { PersonSelect } from "./PersonSelect";
 
 interface ProjectListProps {
   projects: ProjectNode[];
   areas: ProjectAreaNode[];
+  people: PersonNode[];
   visibleColumns: ProjectColumnId[];
   sort: ProjectListSort;
   updatingProjectId?: string | null;
@@ -30,12 +32,14 @@ interface ProjectListProps {
   onAreaChange?(projectId: string, areaNodeId: string | null): void;
   onPriorityChange?(projectId: string, priority: string): void;
   onTargetDateChange?(projectId: string, targetDate: string | null): void;
+  onAssigneeChange?(projectId: string, assigneePersonNodeId: string | null): void;
   onDelete?(projectId: string): void;
   deletingProjectId?: string | null;
 }
 
 const columnWidths: Record<ProjectColumnId, string> = {
   area: "148px",
+  assignee: "148px",
   priority: "104px",
   status: "128px",
   target: "112px",
@@ -157,6 +161,7 @@ function ProjectListDeleteButton({
 export function ProjectList({
   projects,
   areas,
+  people,
   visibleColumns,
   sort,
   updatingProjectId = null,
@@ -167,6 +172,7 @@ export function ProjectList({
   onAreaChange,
   onPriorityChange,
   onTargetDateChange,
+  onAssigneeChange,
   onDelete,
   deletingProjectId = null,
 }: ProjectListProps) {
@@ -193,6 +199,14 @@ export function ProjectList({
           <SortableHeader
             label="Area"
             column="area"
+            sort={sort}
+            onSort={onSortColumn}
+          />
+        )}
+        {hasColumn("assignee") && (
+          <SortableHeader
+            label="Assignee"
+            column="assignee"
             sort={sort}
             onSort={onSortColumn}
           />
@@ -295,6 +309,35 @@ export function ProjectList({
                   </span>
                 ) : (
                   <span className="font-mono text-[11px] text-muted-foreground">No area</span>
+                )}
+              </span>
+            )}
+            {hasColumn("assignee") && (
+              <span
+                className="block min-w-0 w-full"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {onAssigneeChange ? (
+                  <PersonSelect
+                    people={people}
+                    compact
+                    value={
+                      project.personas?.assignee?.id ??
+                      project.details?.assigneePersonNodeId ??
+                      null
+                    }
+                    onChange={(assigneePersonNodeId) =>
+                      onAssigneeChange(project.id, assigneePersonNodeId)
+                    }
+                    disabled={updatingProjectId === project.id}
+                    ariaLabel="Project assignee"
+                  />
+                ) : (
+                  <span className="truncate text-[12px] text-muted-foreground">
+                    {project.personas?.assignee?.details?.fullName ??
+                      project.personas?.assignee?.title ??
+                      "—"}
+                  </span>
                 )}
               </span>
             )}

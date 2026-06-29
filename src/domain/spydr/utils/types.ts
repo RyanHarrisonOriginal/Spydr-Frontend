@@ -104,9 +104,18 @@ export interface ResourceDetails {
   updatedAt: string;
 }
 
-export type ProjectNode = SpydrNode<"project", ProjectDetails>;
+export type ProjectNode = SpydrNode<"project", ProjectDetails> & {
+  personas?: ProjectPersonas;
+};
 export type ProjectAreaNode = SpydrNode<"project_area", ProjectAreaDetails>;
-export type TaskNode = SpydrNode<"task", TaskDetails>;
+export interface TaskProjectRef {
+  id: string;
+  title: string;
+}
+
+export type TaskNode = SpydrNode<"task", TaskDetails> & {
+  project?: TaskProjectRef | null;
+};
 export type NoteNode = SpydrNode<"note", null>;
 export type DecisionNode = SpydrNode<"decision", DecisionDetails>;
 export type ResourceNode = SpydrNode<"resource", ResourceDetails>;
@@ -213,6 +222,16 @@ export interface CreateProjectTaskInput {
   priority?: SpydrPriority;
   dueDate?: string | null;
   estimatedMinutes?: number | null;
+}
+
+export interface UpdateTaskInput {
+  title?: string;
+  body?: string;
+  status?: TaskStatus;
+  priority?: SpydrPriority;
+  dueDate?: string | null;
+  estimatedMinutes?: number | null;
+  projectNodeId?: string | null;
 }
 
 export interface CreateProjectNoteInput {

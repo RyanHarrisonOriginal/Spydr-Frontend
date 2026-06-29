@@ -1,13 +1,33 @@
-import type { ProjectAreaNode, ProjectNode } from "@/domain/spydr/utils/types";
+import type { ProjectAreaNode, PersonNode, ProjectNode } from "@/domain/spydr/utils/types";
 import { projectPriorities } from "@/domain/spydr/utils/projectPriority";
 import { projectStatuses } from "@/domain/spydr/utils/projectStatus";
-import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
+import { personDisplayName } from "@/domain/spydr/utils/projectPersonas";
+import {
+  countActiveProjectListFilters,
+  defaultProjectListFilters,
+  filterProjects as filterProjectsByFacets,
+  hasActiveProjectListFilters,
+  toggleFilterValue,
+  type ProjectListFilterContext,
+  type ProjectListFilters,
+} from "@/domain/spydr/utils/projectListFilterModel";
 
-export const UNASSIGNED_AREA_FILTER = "__unassigned__";
+export {
+  UNASSIGNED_AREA_FILTER,
+  UNASSIGNED_ASSIGNEE_FILTER,
+  defaultProjectListFilters,
+  hasActiveProjectListFilters,
+  countActiveProjectListFilters,
+  toggleFilterValue,
+  type ProjectListFilters,
+  type ProjectListFilterFacetId,
+  type ProjectListFilterContext,
+} from "@/domain/spydr/utils/projectListFilterModel";
 
 export const projectSortColumns = [
   "name",
   "area",
+  "assignee",
   "priority",
   "status",
   "target",
@@ -17,24 +37,10 @@ export const projectSortColumns = [
 export type ProjectSortColumn = (typeof projectSortColumns)[number];
 export type SortDirection = "asc" | "desc";
 
-export interface ProjectListFilters {
-  search: string;
-  statuses: string[];
-  priorities: string[];
-  areaIds: string[];
-}
-
 export interface ProjectListSort {
   column: ProjectSortColumn;
   direction: SortDirection;
 }
-
-export const defaultProjectListFilters: ProjectListFilters = {
-  search: "",
-  statuses: [],
-  priorities: [],
-  areaIds: [],
-};
 
 export const defaultProjectListSort: ProjectListSort = {
   column: "updated",
@@ -70,73 +76,6 @@ function compareNullableNumbers(
   return a - b;
 }
 
-export function hasActiveProjectListFilters(filters: ProjectListFilters): boolean {
-  return (
-    filters.search.trim().length > 0 ||
-    filters.statuses.length > 0 ||
-    filters.priorities.length > 0 ||
-    filters.areaIds.length > 0
-  );
-}
-
-export function countActiveProjectListFilters(filters: ProjectListFilters): number {
-  let count = 0;
-  if (filters.search.trim()) count += 1;
-  if (filters.statuses.length > 0) count += 1;
-  if (filters.priorities.length > 0) count += 1;
-  if (filters.areaIds.length > 0) count += 1;
-  return count;
-}
-
-export function filterProjects(
-  projects: ProjectNode[],
-  areas: ProjectAreaNode[],
-  filters: ProjectListFilters
-): ProjectNode[] {
-  const search = filters.search.trim().toLowerCase();
-  if (
-    !search &&
-    filters.statuses.length === 0 &&
-    filters.priorities.length === 0 &&
-    filters.areaIds.length === 0
-  ) {
-    return projects;
-  }
-
-  return projects.filter((project) => {
-    if (filters.statuses.length > 0 && !filters.statuses.includes(project.status)) {
-      return false;
-    }
-
-    if (filters.priorities.length > 0 && !filters.priorities.includes(project.priority)) {
-      return false;
-    }
-
-    if (filters.areaIds.length > 0) {
-      const areaId = resolveProjectAreaId(project, areas);
-      const matchesUnassigned =
-        filters.areaIds.includes(UNASSIGNED_AREA_FILTER) && !areaId;
-      const matchesArea = areaId ? filters.areaIds.includes(areaId) : false;
-      if (!matchesUnassigned && !matchesArea) {
-        return false;
-      }
-    }
-
-    if (!search) return true;
-
-    const haystack = [
-      project.title,
-      project.body,
-      project.area ?? "",
-      ...project.tags,
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(search);
-  });
-}
-
 export function sortProjects(
   projects: ProjectNode[],
   areas: ProjectAreaNode[],
@@ -154,6 +93,12 @@ export function sortProjects(
         break;
       case "area":
         result = compareStrings(left.area ?? "", right.area ?? "");
+        break;
+      case "assignee":
+        result = compareStrings(
+          personDisplayName(left.personas?.assignee ?? null),
+          personDisplayName(right.personas?.assignee ?? null)
+        );
         break;
       case "priority":
         result =
@@ -189,10 +134,12 @@ export function sortProjects(
 export function applyProjectListView(
   projects: ProjectNode[],
   areas: ProjectAreaNode[],
+  people: PersonNode[],
   filters: ProjectListFilters,
   sort: ProjectListSort
 ): ProjectNode[] {
-  return sortProjects(filterProjects(projects, areas, filters), areas, sort);
+  const context: ProjectListFilterContext = { areas, people };
+  return sortProjects(filterProjectsByFacets(projects, filters, context), areas, sort);
 }
 
 export function toggleSort(
@@ -210,13 +157,4 @@ export function toggleSort(
     column,
     direction: column === "updated" || column === "target" ? "desc" : "asc",
   };
-}
-
-export function toggleFilterValue<T extends string>(
-  values: T[],
-  value: T
-): T[] {
-  return values.includes(value)
-    ? values.filter((item) => item !== value)
-    : [...values, value];
 }

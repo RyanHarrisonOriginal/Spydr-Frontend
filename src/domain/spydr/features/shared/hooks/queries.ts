@@ -69,6 +69,16 @@ export function useTasksQuery() {
   });
 }
 
+export function useTaskQuery(taskId: string | undefined) {
+  const enabled = useSpydrQueryEnabled();
+  return useQuery({
+    queryKey: ["spydr", "tasks", taskId],
+    queryFn: () => spydrApi.tasks.get(taskId!),
+    enabled: enabled && !!taskId,
+    refetchOnMount: "always",
+  });
+}
+
 export function useDecisionsQuery() {
   const enabled = useSpydrQueryEnabled();
   return useQuery({

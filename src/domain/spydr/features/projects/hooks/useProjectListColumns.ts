@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 export const optionalProjectColumns = [
   { id: "area", label: "Area", width: "128px" },
+  { id: "assignee", label: "Assignee", width: "148px" },
   { id: "priority", label: "Priority", width: "96px" },
   { id: "status", label: "Status", width: "112px" },
   { id: "target", label: "Target", width: "96px" },

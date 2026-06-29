@@ -22,6 +22,7 @@ export function ProjectsPage() {
     projects,
     allProjects,
     areas,
+    people,
     totalCount,
     filteredCount,
     activeCount,
@@ -30,6 +31,7 @@ export function ProjectsPage() {
     updateArea,
     updatePriority,
     updateTargetDate,
+    updateAssignee,
     deleteProject,
     restoreProject,
     deletingProjectId,
@@ -44,6 +46,7 @@ export function ProjectsPage() {
     areaError,
     priorityError,
     targetError,
+    assigneeError,
     deleteError,
     restoreError,
     isLoading,
@@ -113,14 +116,13 @@ export function ProjectsPage() {
           <ProjectListToolbar
             filters={listView.filters}
             areas={areas}
+            people={people}
             filteredCount={filteredCount}
             totalCount={totalCount}
-            hasActiveFilters={listView.hasActiveFilters}
             activeFilterCount={listView.activeFilterCount}
             onSearchChange={listView.setSearch}
-            onToggleStatus={listView.toggleStatusFilter}
-            onTogglePriority={listView.togglePriorityFilter}
-            onToggleArea={listView.toggleAreaFilter}
+            onToggleFacet={listView.toggleFacetFilter}
+            onRemoveFacetValue={listView.removeFacetFilter}
             onClearFilters={listView.clearFilters}
           />
           {statusError && (
@@ -148,9 +150,15 @@ export function ProjectsPage() {
               {deleteError}
             </p>
           )}
+          {assigneeError && (
+            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {assigneeError}
+            </p>
+          )}
           <ProjectList
             projects={projects}
             areas={areas}
+            people={people}
             visibleColumns={projectColumns.visibleColumns}
             sort={listView.sort}
             hasActiveFilters={listView.hasActiveFilters}
@@ -161,6 +169,7 @@ export function ProjectsPage() {
             onAreaChange={updateArea}
             onPriorityChange={updatePriority}
             onTargetDateChange={updateTargetDate}
+            onAssigneeChange={updateAssignee}
             onDelete={deleteProject}
             deletingProjectId={deletingProjectId}
           />

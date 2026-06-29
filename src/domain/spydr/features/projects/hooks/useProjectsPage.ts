@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   useDeletedProjectsQuery,
+  usePeopleQuery,
   useProjectAreasQuery,
   useProjectsQuery,
 } from "@/domain/spydr/features/shared/hooks/queries";
@@ -17,10 +18,12 @@ export function useProjectsPage() {
   const query = useProjectsQuery();
   const trashQuery = useDeletedProjectsQuery();
   const areasQuery = useProjectAreasQuery();
+  const peopleQuery = usePeopleQuery();
   const projects = query.data ?? [];
   const deletedProjects = trashQuery.data ?? [];
   const areas = areasQuery.data ?? [];
-  const listView = useProjectListView(projects, areas);
+  const people = peopleQuery.data ?? [];
+  const listView = useProjectListView(projects, areas, people);
   const updateProject = useUpdateProjectMutation();
   const deleteProject = useDeleteProjectMutation();
   const restoreProject = useRestoreProjectMutation();
@@ -34,6 +37,7 @@ export function useProjectsPage() {
   const [areaError, setAreaError] = useState<string | null>(null);
   const [priorityError, setPriorityError] = useState<string | null>(null);
   const [targetError, setTargetError] = useState<string | null>(null);
+  const [assigneeError, setAssigneeError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
@@ -76,6 +80,10 @@ export function useProjectsPage() {
     runUpdate(projectId, { targetDate }, setTargetError);
   };
 
+  const updateAssignee = (projectId: string, assigneePersonNodeId: string | null) => {
+    runUpdate(projectId, { assigneePersonNodeId }, setAssigneeError);
+  };
+
   const deleteProjectById = (projectId: string) => {
     setDeleteError(null);
     setDeletingProjectId(projectId);
@@ -115,6 +123,7 @@ export function useProjectsPage() {
     deletedProjects,
     deletedCount: deletedProjects.length,
     areas,
+    people,
     totalCount: projects.length,
     filteredCount: listView.filteredCount,
     activeCount,
@@ -123,6 +132,7 @@ export function useProjectsPage() {
     updateArea,
     updatePriority,
     updateTargetDate,
+    updateAssignee,
     deleteProject: deleteProjectById,
     restoreProject: restoreProjectById,
     deletingProjectId,
@@ -139,6 +149,7 @@ export function useProjectsPage() {
     areaError,
     priorityError,
     targetError,
+    assigneeError,
     deleteError,
     restoreError,
     isLoading: query.isLoading,

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { spydrApi } from "@/domain/spydr/utils/api";
-import type { ProjectNode, UpdateProjectInput } from "@/domain/spydr/utils/types";
+import type { ProjectDetailNode, ProjectNode, UpdateProjectInput } from "@/domain/spydr/utils/types";
 
 type UpdateProjectVariables =
   | UpdateProjectInput
@@ -22,6 +22,7 @@ export function useUpdateProjectMutation(projectId?: string) {
       return spydrApi.projects.update(id, input);
     },
     onSuccess: (project) => {
+      const detail = project as ProjectDetailNode;
       queryClient.setQueryData<ProjectNode[]>(["spydr", "projects"], (current) =>
         current?.map((item) =>
           item.id === project.id
@@ -34,6 +35,7 @@ export function useUpdateProjectMutation(projectId?: string) {
                 updatedAt: project.updatedAt,
                 archivedAt: project.archivedAt,
                 details: project.details ?? item.details,
+                personas: detail.personas ?? item.personas,
               }
             : item
         )

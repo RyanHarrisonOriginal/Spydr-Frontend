@@ -1,54 +1,59 @@
 import { useMemo, useState } from "react";
-import type { ProjectAreaNode, ProjectNode } from "@/domain/spydr/utils/types";
+import type { ProjectAreaNode, PersonNode, ProjectNode } from "@/domain/spydr/utils/types";
 import {
   applyProjectListView,
   countActiveProjectListFilters,
   defaultProjectListFilters,
   defaultProjectListSort,
   hasActiveProjectListFilters,
+  toggleSort,
+  type ProjectListFilterFacetId,
   type ProjectListFilters,
   type ProjectListSort,
   type ProjectSortColumn,
-  toggleFilterValue,
-  toggleSort,
 } from "@/domain/spydr/utils/projectListView";
+import {
+  clearFacetSelection,
+  getFacetSelections,
+  toggleFacetSelection,
+} from "@/domain/spydr/utils/projectListFilterModel";
 
-export function useProjectListView(projects: ProjectNode[], areas: ProjectAreaNode[]) {
+export function useProjectListView(
+  projects: ProjectNode[],
+  areas: ProjectAreaNode[],
+  people: PersonNode[]
+) {
   const [filters, setFilters] = useState<ProjectListFilters>(defaultProjectListFilters);
   const [sort, setSort] = useState<ProjectListSort>(defaultProjectListSort);
 
   const visibleProjects = useMemo(
-    () => applyProjectListView(projects, areas, filters, sort),
-    [projects, areas, filters, sort]
+    () => applyProjectListView(projects, areas, people, filters, sort),
+    [projects, areas, people, filters, sort]
   );
 
   const setSearch = (search: string) => {
     setFilters((current) => ({ ...current, search }));
   };
 
-  const toggleStatusFilter = (status: string) => {
-    setFilters((current) => ({
-      ...current,
-      statuses: toggleFilterValue(current.statuses, status),
-    }));
+  const toggleFacetFilter = (facetId: ProjectListFilterFacetId, value: string) => {
+    setFilters((current) => toggleFacetSelection(current, facetId, value));
   };
 
-  const togglePriorityFilter = (priority: string) => {
-    setFilters((current) => ({
-      ...current,
-      priorities: toggleFilterValue(current.priorities, priority),
-    }));
-  };
-
-  const toggleAreaFilter = (areaId: string) => {
-    setFilters((current) => ({
-      ...current,
-      areaIds: toggleFilterValue(current.areaIds, areaId),
-    }));
+  const removeFacetFilter = (facetId: ProjectListFilterFacetId, value: string) => {
+    setFilters((current) => {
+      if (!getFacetSelections(current, facetId).includes(value)) {
+        return current;
+      }
+      return toggleFacetSelection(current, facetId, value);
+    });
   };
 
   const clearFilters = () => {
     setFilters(defaultProjectListFilters);
+  };
+
+  const clearFacetFilters = (facetId: ProjectListFilterFacetId) => {
+    setFilters((current) => clearFacetSelection(current, facetId));
   };
 
   const toggleSortColumn = (column: ProjectSortColumn) => {
@@ -63,10 +68,10 @@ export function useProjectListView(projects: ProjectNode[], areas: ProjectAreaNo
     hasActiveFilters: hasActiveProjectListFilters(filters),
     activeFilterCount: countActiveProjectListFilters(filters),
     setSearch,
-    toggleStatusFilter,
-    togglePriorityFilter,
-    toggleAreaFilter,
+    toggleFacetFilter,
+    removeFacetFilter,
     clearFilters,
+    clearFacetFilters,
     toggleSortColumn,
   };
 }
