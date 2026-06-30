@@ -1,20 +1,14 @@
-import { useMemo } from "react";
 import { useNotesQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import { useCollectionView } from "@/domain/spydr/features/shared/hooks/useCollectionView";
+import { notesCollection } from "@/domain/spydr/utils/collections/notesCollection";
 
 export function useNotesPage() {
   const query = useNotesQuery();
   const notes = query.data ?? [];
-
-  const sortedNotes = useMemo(
-    () =>
-      [...notes].sort(
-        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      ),
-    [notes]
-  );
+  const view = useCollectionView(notesCollection, notes);
 
   return {
-    notes: sortedNotes,
+    view,
     totalCount: notes.length,
     isLoading: query.isLoading,
     isError: query.isError,

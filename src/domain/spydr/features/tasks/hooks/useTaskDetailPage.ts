@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
+  usePeopleQuery,
   useProjectsQuery,
   useTaskQuery,
 } from "@/domain/spydr/features/shared/hooks/queries";
@@ -17,6 +18,7 @@ export interface TaskDetailFormValues {
   projectNodeId: string;
   dueDate: string;
   estimatedMinutes: string;
+  assigneePersonNodeId: string;
 }
 
 export type TaskDetailSaveState = "idle" | "pending" | "saving" | "saved" | "error";
@@ -28,6 +30,7 @@ const emptyForm: TaskDetailFormValues = {
   projectNodeId: "",
   dueDate: "",
   estimatedMinutes: "",
+  assigneePersonNodeId: "",
 };
 
 const SAVE_DEBOUNCE_MS = 700;
@@ -43,6 +46,8 @@ function taskToForm(task: TaskNode): TaskDetailFormValues {
       task.details?.estimatedMinutes != null
         ? String(task.details.estimatedMinutes)
         : "",
+    assigneePersonNodeId:
+      task.assignee?.id ?? task.details?.assigneePersonNodeId ?? "",
   };
 }
 
@@ -59,6 +64,7 @@ function formToInput(form: TaskDetailFormValues) {
     dueDate: form.dueDate || null,
     estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : null,
     projectNodeId: form.projectNodeId || null,
+    assigneePersonNodeId: form.assigneePersonNodeId || null,
   };
 }
 
@@ -66,8 +72,10 @@ export function useTaskDetailPage() {
   const { taskId } = useParams<{ taskId: string }>();
   const query = useTaskQuery(taskId);
   const projectsQuery = useProjectsQuery();
+  const peopleQuery = usePeopleQuery();
   const task = query.data;
   const projects = projectsQuery.data ?? [];
+  const people = peopleQuery.data ?? [];
   const updateTask = useUpdateTaskMutation(taskId);
   const [form, setForm] = useState<TaskDetailFormValues>(emptyForm);
   const [saveState, setSaveState] = useState<TaskDetailSaveState>("idle");
@@ -141,6 +149,7 @@ export function useTaskDetailPage() {
     task,
     taskId,
     projects,
+    people,
     form,
     saveState,
     noteDraft,

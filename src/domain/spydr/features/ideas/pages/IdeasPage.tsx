@@ -5,14 +5,16 @@ import {
   ErrorState,
   LoadingState,
 } from "@/domain/spydr/features/shared/components/ListState";
+import { CollectionToolbar } from "@/domain/spydr/features/shared/components/CollectionToolbar";
+import { CollectionNoResults } from "@/domain/spydr/features/shared/components/CollectionNoResults";
 import { IdeaList } from "../components/IdeaList";
 import { useIdeasPage } from "../hooks/useIdeasPage";
 
 export function IdeasPage() {
-  const { ideas, totalCount, isLoading, isFetching, isError, errorMessage, refetch } =
+  const { view, totalCount, isLoading, isFetching, isError, errorMessage, refetch } =
     useIdeasPage();
-  const showInitialLoading = isLoading && ideas.length === 0;
-  const showEmpty = !showInitialLoading && !isError && ideas.length === 0;
+  const showInitialLoading = isLoading && totalCount === 0;
+  const showEmpty = !showInitialLoading && !isError && totalCount === 0;
 
   return (
     <div>
@@ -22,7 +24,7 @@ export function IdeasPage() {
         meta={
           <span>
             {totalCount} captured
-            {isFetching && ideas.length > 0 ? " · refreshing…" : ""}
+            {isFetching && totalCount > 0 ? " · refreshing…" : ""}
             {" · add ideas from a project&apos;s Thinking panel"}
           </span>
         }
@@ -41,7 +43,16 @@ export function IdeasPage() {
           description="Capture ideas on a project page. They'll show up here across your workspace."
         />
       )}
-      {ideas.length > 0 && <IdeaList ideas={ideas} />}
+      {totalCount > 0 && (
+        <>
+          <CollectionToolbar view={view} />
+          {view.items.length > 0 ? (
+            <IdeaList ideas={view.items} />
+          ) : (
+            <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />
+          )}
+        </>
+      )}
     </div>
   );
 }

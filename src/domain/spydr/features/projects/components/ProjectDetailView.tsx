@@ -63,6 +63,7 @@ import {
 } from "./ProjectDeletedItems";
 import { ProjectItemActions } from "./ProjectItemActions";
 import { ProjectPersonasPanel } from "./ProjectPersonasPanel";
+import { PersonSelect } from "./PersonSelect";
 
 interface ProjectDetailViewProps {
   project: ProjectDetailNode;
@@ -466,6 +467,27 @@ export function ProjectDetailView({
                   >
                     {task.title}
                   </Link>
+                  <PersonSelect
+                    people={people}
+                    value={
+                      task.assignee?.id ??
+                      task.details?.assigneePersonNodeId ??
+                      null
+                    }
+                    compact
+                    disabled={isUpdatingChild}
+                    className="w-[132px] shrink-0"
+                    ariaLabel="Task assignee"
+                    onChange={(assigneePersonNodeId) => {
+                      const current =
+                        task.assignee?.id ??
+                        task.details?.assigneePersonNodeId ??
+                        null;
+                      if (assigneePersonNodeId !== current) {
+                        onUpdateChild("task", task.id, { assigneePersonNodeId });
+                      }
+                    }}
+                  />
                   <span className="w-20 shrink-0 text-right font-mono text-[10px] tabular-nums text-muted-foreground">
                     {formatShortDate(task.details?.dueDate)}
                   </span>

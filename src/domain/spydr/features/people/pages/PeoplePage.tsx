@@ -1,10 +1,11 @@
-import { Link } from "react-router-dom";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
 import {
   EmptyState,
   ErrorState,
   LoadingState,
 } from "@/domain/spydr/features/shared/components/ListState";
+import { CollectionToolbar } from "@/domain/spydr/features/shared/components/CollectionToolbar";
+import { CollectionNoResults } from "@/domain/spydr/features/shared/components/CollectionNoResults";
 import { CreatePersonDialog } from "../components/CreatePersonDialog";
 import { PersonList } from "../components/PersonList";
 import { usePeoplePage } from "../hooks/usePeoplePage";
@@ -12,6 +13,7 @@ import { usePeoplePage } from "../hooks/usePeoplePage";
 export function PeoplePage() {
   const {
     people,
+    view,
     totalCount,
     isLoading,
     isError,
@@ -47,7 +49,16 @@ export function PeoplePage() {
           description="Add teammates, stakeholders, and contacts to assign on projects."
         />
       )}
-      {!isLoading && !isError && people.length > 0 && <PersonList people={people} />}
+      {!isLoading && !isError && people.length > 0 && (
+        <>
+          <CollectionToolbar view={view} />
+          {view.items.length > 0 ? (
+            <PersonList people={view.items} />
+          ) : (
+            <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />
+          )}
+        </>
+      )}
     </div>
   );
 }

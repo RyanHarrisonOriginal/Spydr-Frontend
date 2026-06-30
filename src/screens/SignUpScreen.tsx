@@ -12,10 +12,10 @@ const nodeTeaserTypes = [
 
 export default function SignUpScreen() {
   return (
-    <div className="flex h-full flex-col overflow-y-auto bg-background relative">
+    <div className="spydr-surface flex h-full flex-col overflow-y-auto bg-background relative">
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(100vw,720px)] h-[min(80vh,560px)] rounded-full opacity-[0.04] pointer-events-none"
-        style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(100vw,720px)] h-[min(80vh,560px)] rounded-full opacity-[0.05] pointer-events-none"
+        style={{ background: "radial-gradient(circle, hsl(var(--highlight)) 0%, transparent 70%)" }}
         aria-hidden
       />
 
@@ -35,10 +35,11 @@ export default function SignUpScreen() {
             <Logo size="xl" />
           </div>
           <h1 className="text-2xl md:text-3xl font-semibold text-foreground tracking-tight mb-2">
-            Start your map
+            Spin your web
           </h1>
           <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-            Thoughts, projects, notes—one canvas. Create an account and grow it from here.
+            Projects, tasks, decisions, people&mdash;one connected web. Create an
+            account and start mapping it.
           </p>
           <div className="flex flex-wrap gap-2 justify-center md:justify-start">
             {nodeTeaserTypes.map(({ label, badgeClass }) => (

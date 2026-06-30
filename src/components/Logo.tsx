@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { SpydrMark } from "@/components/SpydrMark";
 
 interface LogoProps {
   className?: string;
@@ -22,38 +23,10 @@ export function Logo({ className = "", size = "md" }: LogoProps) {
       style={{ gap: `${gap}px` }}
     >
       <div
-        className="relative flex items-center justify-center rounded-lg bg-primary/12 text-foreground ring-1 ring-primary/20"
+        className="relative flex items-center justify-center rounded-lg bg-primary/12 text-highlight ring-1 ring-highlight/25"
         style={{ width: iconSize, height: iconSize }}
       >
-        <svg
-          width={iconSize * 0.6}
-          height={iconSize * 0.6}
-          viewBox="0 0 24 24"
-          fill="none"
-          className="shrink-0"
-          aria-hidden
-        >
-          {/* Root node — bold */}
-          <circle cx="12" cy="5" r="2.5" fill="currentColor" />
-          {/* Stem */}
-          <path
-            d="M12 7.5V11"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          {/* Branch Y */}
-          <path
-            d="M12 11L7 17M12 11L17 17"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Child nodes */}
-          <circle cx="7" cy="17" r="2" fill="currentColor" opacity="0.85" />
-          <circle cx="17" cy="17" r="2" fill="currentColor" opacity="0.85" />
-        </svg>
+        <SpydrMark size={iconSize * 0.62} strokeWidth={1.5} className="shrink-0" />
       </div>
       <span
         className="font-semibold tracking-[-0.03em] text-foreground"

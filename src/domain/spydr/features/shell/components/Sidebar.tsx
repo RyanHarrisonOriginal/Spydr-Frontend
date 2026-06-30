@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SpydrMark } from "@/components/SpydrMark";
 
 interface NavigationItem {
   to?: string;
@@ -54,7 +55,7 @@ function Item({ to, icon: Icon, label, badge, disabled }: NavigationItem) {
       <Icon
         className={cn(
           "h-3.5 w-3.5 shrink-0 opacity-70 group-hover:opacity-100",
-          isActive && "text-highlight-secondary opacity-100"
+          isActive && "text-highlight opacity-100"
         )}
       />
       <span className="flex-1 truncate">{label}</span>
@@ -79,9 +80,8 @@ function Item({ to, icon: Icon, label, badge, disabled }: NavigationItem) {
       to={to}
       className={({ isActive }) =>
         cn(
-          "group flex h-7 items-center gap-2 rounded-md px-2 text-[13px] text-sidebar-foreground/80 row-hover ring-focus",
-          isActive &&
-            "bg-highlight-secondary/10 text-foreground shadow-[inset_2px_0_0_0_hsl(var(--highlight-secondary))]"
+          "group flex h-7 items-center gap-2 rounded-md px-2 text-[13px] text-sidebar-foreground/80 transition-colors ring-focus hover:bg-muted/40 hover:text-foreground",
+          isActive && "nav-active text-foreground"
         )
       }
     >
@@ -111,14 +111,16 @@ function Section({
 
 export function Sidebar() {
   return (
-    <aside className="hidden h-full w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
-      <div className="flex h-12 items-center gap-2 border-b border-sidebar-border px-4">
-        <div className="grid h-5 w-5 place-items-center rounded-[5px] bg-primary text-primary-foreground">
-          <span className="font-mono text-[11px] font-bold leading-none">S</span>
+    <aside className="spydr-rail hidden h-full w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
+      <div className="flex h-12 items-center gap-2.5 border-b border-sidebar-border px-4">
+        <div className="grid h-6 w-6 place-items-center rounded-md bg-primary/12 text-highlight ring-1 ring-highlight/25">
+          <SpydrMark size={15} strokeWidth={1.5} />
         </div>
-        <span className="text-[13px] font-semibold tracking-tight">Spydr</span>
-        <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-          prod
+        <span className="text-[13px] font-semibold tracking-tight">
+          Spydr<span className="text-highlight-secondary">.</span>
+        </span>
+        <span className="ml-auto font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground/80">
+          ops
         </span>
       </div>
 
@@ -145,10 +147,16 @@ export function Sidebar() {
         </Section>
       </nav>
 
+      <div className="px-3">
+        <div className="web-divider" />
+      </div>
       <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <span className="dot bg-[hsl(var(--status-done))]" />
-          <span>Authenticated workspace</span>
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[hsl(var(--status-done))] opacity-60" />
+            <span className="dot relative bg-[hsl(var(--status-done))]" />
+          </span>
+          <span>Workspace online</span>
         </div>
       </div>
     </aside>

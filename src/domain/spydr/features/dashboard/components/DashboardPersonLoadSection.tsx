@@ -23,7 +23,7 @@ export function DashboardPersonLoadSection({
   );
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-sm">
+    <div className="card-accent rounded-lg border border-border bg-card shadow-sm">
       <div className="flex items-center gap-2 border-b border-border bg-muted/25 px-4 py-2.5">
         <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-foreground/80">
           Load by person

@@ -82,6 +82,7 @@ export interface TaskDetails {
   completedAt: string | null;
   isBlocked: boolean;
   estimatedMinutes: number | null;
+  assigneePersonNodeId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -115,6 +116,7 @@ export interface TaskProjectRef {
 
 export type TaskNode = SpydrNode<"task", TaskDetails> & {
   project?: TaskProjectRef | null;
+  assignee?: PersonNode | null;
 };
 export type NoteNode = SpydrNode<"note", null>;
 export type DecisionNode = SpydrNode<"decision", DecisionDetails>;
@@ -161,6 +163,7 @@ export interface UpdateProjectChildInput {
   rationale?: string;
   impact?: string;
   estimatedMinutes?: number | null;
+  assigneePersonNodeId?: string | null;
 }
 
 export type IdeaDetails = {
@@ -222,6 +225,7 @@ export interface CreateProjectTaskInput {
   priority?: SpydrPriority;
   dueDate?: string | null;
   estimatedMinutes?: number | null;
+  assigneePersonNodeId?: string | null;
 }
 
 export interface UpdateTaskInput {
@@ -232,6 +236,7 @@ export interface UpdateTaskInput {
   dueDate?: string | null;
   estimatedMinutes?: number | null;
   projectNodeId?: string | null;
+  assigneePersonNodeId?: string | null;
 }
 
 export interface CreateProjectNoteInput {

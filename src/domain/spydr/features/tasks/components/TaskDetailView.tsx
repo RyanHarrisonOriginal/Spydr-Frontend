@@ -5,6 +5,7 @@ import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader
 import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
 import { ProjectPrioritySelect } from "@/domain/spydr/features/projects/components/ProjectPrioritySelect";
 import { ProjectSelect } from "@/domain/spydr/features/projects/components/ProjectSelect";
+import { PersonSelect } from "@/domain/spydr/features/projects/components/PersonSelect";
 import {
   ProjectDetailEmpty,
   ProjectDetailEntry,
@@ -16,7 +17,7 @@ import {
   detailFieldClassName,
   detailTextareaClassName,
 } from "@/domain/spydr/features/projects/components/ProjectDetailSection";
-import type { ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
+import type { PersonNode, ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
 import { isTaskStatus } from "@/domain/spydr/utils/taskStatus";
 import { parseTaskNoteEntries } from "@/domain/spydr/utils/taskNotes";
 import type {
@@ -41,6 +42,7 @@ function formatNoteTimestamp(value: string) {
 interface TaskDetailViewProps {
   task: TaskNode;
   projects: ProjectNode[];
+  people: PersonNode[];
   form: TaskDetailFormValues;
   saveState: TaskDetailSaveState;
   noteDraft: string;
@@ -56,6 +58,7 @@ interface TaskDetailViewProps {
 export function TaskDetailView({
   task,
   projects,
+  people,
   form,
   saveState,
   noteDraft,
@@ -139,6 +142,17 @@ export function TaskDetailView({
                     onChange={(projectId) =>
                       onFieldChange("projectNodeId", projectId ?? "")
                     }
+                    className="w-full"
+                  />
+                </ProjectDetailField>
+                <ProjectDetailField label="Assignee">
+                  <PersonSelect
+                    people={people}
+                    value={form.assigneePersonNodeId || null}
+                    onChange={(personNodeId) =>
+                      onFieldChange("assigneePersonNodeId", personNodeId ?? "")
+                    }
+                    ariaLabel="Task assignee"
                     className="w-full"
                   />
                 </ProjectDetailField>

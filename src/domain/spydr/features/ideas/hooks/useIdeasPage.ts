@@ -1,20 +1,14 @@
-import { useMemo } from "react";
 import { useIdeasQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import { useCollectionView } from "@/domain/spydr/features/shared/hooks/useCollectionView";
+import { ideasCollection } from "@/domain/spydr/utils/collections/ideasCollection";
 
 export function useIdeasPage() {
   const query = useIdeasQuery();
   const ideas = query.data ?? [];
-
-  const sortedIdeas = useMemo(
-    () =>
-      [...ideas].sort(
-        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      ),
-    [ideas]
-  );
+  const view = useCollectionView(ideasCollection, ideas);
 
   return {
-    ideas: sortedIdeas,
+    view,
     totalCount: ideas.length,
     isLoading: query.isLoading,
     isFetching: query.isFetching,

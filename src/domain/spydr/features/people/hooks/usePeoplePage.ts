@@ -1,15 +1,18 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { usePeopleQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import { useCollectionView } from "@/domain/spydr/features/shared/hooks/useCollectionView";
+import { peopleCollection } from "@/domain/spydr/utils/collections/peopleCollection";
 import { useCreatePersonMutation } from "./useCreatePersonMutation";
 
 export function usePeoplePage() {
   const query = usePeopleQuery();
   const createPerson = useCreatePersonMutation();
   const people = query.data ?? [];
+  const view = useCollectionView(peopleCollection, people);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  const totalCount = useMemo(() => people.length, [people.length]);
+  const totalCount = people.length;
 
   const submitCreate = (values: {
     fullName: string;
@@ -41,6 +44,7 @@ export function usePeoplePage() {
 
   return {
     people,
+    view,
     totalCount,
     isLoading: query.isLoading,
     isError: query.isError,

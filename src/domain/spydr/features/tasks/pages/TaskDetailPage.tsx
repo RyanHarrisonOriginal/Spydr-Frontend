@@ -22,6 +22,7 @@ export function TaskDetailPage() {
     <TaskDetailView
       task={detail.task}
       projects={detail.projects}
+      people={detail.people}
       form={detail.form}
       saveState={detail.saveState}
       noteDraft={detail.noteDraft}

@@ -4,8 +4,10 @@ import {
   ErrorState,
   LoadingState,
 } from "@/domain/spydr/features/shared/components/ListState";
+import { CollectionToolbar } from "@/domain/spydr/features/shared/components/CollectionToolbar";
+import { CollectionNoResults } from "@/domain/spydr/features/shared/components/CollectionNoResults";
 import { CreateTaskDialog } from "../components/CreateTaskDialog";
-import { TaskGroups } from "../components/TaskGroups";
+import { TaskList } from "../components/TaskList";
 import { useCreateTaskForm } from "../hooks/useCreateTaskForm";
 import { useTasksPage } from "../hooks/useTasksPage";
 
@@ -13,14 +15,19 @@ export function TasksPage() {
   const {
     tasks,
     projects,
-    groups,
+    people,
+    view,
     totalCount,
     openCount,
     updateStatus,
     updateProject,
+    updateAssignee,
+    updateDueDate,
     updatingTaskId,
     statusError,
     projectError,
+    assigneeError,
+    dueDateError,
     isLoading,
     isError,
     errorMessage,
@@ -61,23 +68,43 @@ export function TasksPage() {
       )}
       {!isLoading && !isError && tasks.length > 0 && (
         <>
+          <CollectionToolbar view={view} showSort={false} />
           {statusError ? (
-            <p className="mx-6 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {statusError}
             </p>
           ) : null}
           {projectError ? (
-            <p className="mx-6 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectError}
             </p>
           ) : null}
-          <TaskGroups
-            groups={groups}
-            projects={projects}
-            updatingTaskId={updatingTaskId}
-            onStatusChange={updateStatus}
-            onProjectChange={updateProject}
-          />
+          {assigneeError ? (
+            <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {assigneeError}
+            </p>
+          ) : null}
+          {dueDateError ? (
+            <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {dueDateError}
+            </p>
+          ) : null}
+          {view.items.length > 0 ? (
+            <TaskList
+              tasks={view.items}
+              projects={projects}
+              people={people}
+              sort={view.state.sort}
+              updatingTaskId={updatingTaskId}
+              onSortColumn={view.toggleSort}
+              onStatusChange={updateStatus}
+              onProjectChange={updateProject}
+              onAssigneeChange={updateAssignee}
+              onDueDateChange={updateDueDate}
+            />
+          ) : (
+            <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />
+          )}
         </>
       )}
     </div>
