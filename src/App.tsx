@@ -15,6 +15,7 @@ import NotesScreen from "@/screens/NotesScreen";
 import PeopleScreen from "@/screens/PeopleScreen";
 import PersonDetailScreen from "@/screens/PersonDetailScreen";
 import ResourcesScreen from "@/screens/ResourcesScreen";
+import GraphScreen from "@/screens/GraphScreen";
 import SignInScreen from "@/screens/SignInScreen";
 import SignUpScreen from "@/screens/SignUpScreen";
 import NotFoundScreen from "@/screens/NotFoundScreen";
@@ -55,6 +56,7 @@ export default function App() {
               <Route path="/people" element={<PeopleScreen />} />
               <Route path="/people/:personId" element={<PersonDetailScreen />} />
               <Route path="/resources" element={<ResourcesScreen />} />
+              <Route path="/graph" element={<GraphScreen />} />
             </Route>
             <Route
               path="/ontology/:ontologyId"

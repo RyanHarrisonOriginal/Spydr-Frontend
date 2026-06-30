@@ -45,7 +45,7 @@ const workspace: NavigationItem[] = [
 ];
 
 const meta: NavigationItem[] = [
-  { icon: Network, label: "Graph", badge: "later", disabled: true },
+  { to: "/graph", icon: Network, label: "Graph" },
   { icon: Archive, label: "Archived", badge: "later", disabled: true },
 ];
 
