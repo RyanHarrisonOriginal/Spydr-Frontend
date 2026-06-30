@@ -69,6 +69,16 @@ export function useTasksQuery() {
   });
 }
 
+export function useWorkspaceDashboardQuery() {
+  const enabled = useSpydrQueryEnabled();
+  return useQuery({
+    queryKey: ["spydr", "dashboard"],
+    queryFn: spydrApi.dashboard.getWorkspace,
+    enabled,
+    refetchOnMount: "always",
+  });
+}
+
 export function useTaskQuery(taskId: string | undefined) {
   const enabled = useSpydrQueryEnabled();
   return useQuery({

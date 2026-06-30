@@ -10,6 +10,7 @@ import {
   Inbox,
   Lightbulb,
   Network,
+  LayoutDashboard,
   Sun,
   Users,
 } from "lucide-react";
@@ -32,6 +33,7 @@ const operate: NavigationItem[] = [
 ];
 
 const workspace: NavigationItem[] = [
+  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/projects", icon: FolderKanban, label: "Projects" },
   { to: "/tasks", icon: CheckSquare, label: "Tasks" },
   { to: "/ideas", icon: Lightbulb, label: "Ideas" },

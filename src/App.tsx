@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { RequireAuth } from "@/components/RequireAuth";
 import { ApiAuthSync } from "@/components/ApiAuthSync";
+import DashboardScreen from "@/screens/DashboardScreen";
 import WorkspaceShellScreen from "@/screens/WorkspaceShellScreen";
 import ProjectsScreen from "@/screens/ProjectsScreen";
 import ProjectDetailScreen from "@/screens/ProjectDetailScreen";
@@ -42,7 +43,8 @@ export default function App() {
                 </RequireAuth>
               }
             >
-              <Route index element={<Navigate to="/projects" replace />} />
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardScreen />} />
               <Route path="/projects" element={<ProjectsScreen />} />
               <Route path="/projects/:projectId" element={<ProjectDetailScreen />} />
               <Route path="/tasks" element={<TasksScreen />} />

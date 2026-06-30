@@ -23,6 +23,7 @@ import type {
   UpdatePersonInput,
   PersonNode,
 } from "./types";
+import type { WorkspaceDashboard } from "./workspaceDashboard";
 
 function childPath(
   projectId: string,
@@ -124,6 +125,9 @@ export const spydrApi = {
     get: (taskId: string) => apiRequest<TaskNode>(`/tasks/${taskId}`),
     update: (taskId: string, input: UpdateTaskInput) =>
       apiRequest<TaskNode>(`/tasks/${taskId}`, { method: "PATCH", body: input }),
+  },
+  dashboard: {
+    getWorkspace: () => apiRequest<WorkspaceDashboard>("/dashboard"),
   },
   decisions: {
     list: () => apiRequest<DecisionNode[]>("/decisions"),
