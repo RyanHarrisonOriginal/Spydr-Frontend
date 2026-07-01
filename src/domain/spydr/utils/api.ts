@@ -141,4 +141,8 @@ export const spydrApi = {
   ideas: {
     list: () => apiRequest<IdeaNode[]>("/ideas"),
   },
+  collections: {
+    reorder: (input: { nodeType: string; orderedIds: string[] }) =>
+      apiRequest<void>("/collections/reorder", { method: "POST", body: input }),
+  },
 };

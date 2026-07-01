@@ -15,6 +15,7 @@ import {
 import {
   PRIORITY_ITEM_CLASS,
   STATUS_ITEM_CLASS,
+  createOrderSortDef,
   formatStatusLabel,
   priorityRank,
 } from "./shared";
@@ -92,6 +93,7 @@ export const tasksCollection: CollectionConfig<TaskNode> = {
     },
   ],
   sorts: [
+    createOrderSortDef<TaskNode>(),
     {
       id: "status",
       label: "Status",
@@ -149,5 +151,5 @@ export const tasksCollection: CollectionConfig<TaskNode> = {
       defaultDirection: "desc",
     },
   ],
-  defaultSortId: "updated",
+  defaultSortId: "order",
 };

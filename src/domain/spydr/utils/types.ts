@@ -30,6 +30,7 @@ export interface SpydrNode<TType extends SpydrNodeType = SpydrNodeType, TDetails
   priority: SpydrPriority | string;
   area: string | null;
   tags: string[];
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;

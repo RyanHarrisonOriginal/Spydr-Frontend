@@ -10,7 +10,7 @@ import { ResourceList } from "../components/ResourceList";
 import { useResourcesPage } from "../hooks/useResourcesPage";
 
 export function ResourcesPage() {
-  const { view, groupedResourceTypes, totalCount, isLoading, isError, errorMessage } =
+  const { view, reorder, getPriorityRank, groupedResourceTypes, totalCount, isLoading, isError, errorMessage } =
     useResourcesPage();
   const typeCount = Object.keys(groupedResourceTypes).length;
 
@@ -39,7 +39,12 @@ export function ResourcesPage() {
         <>
           <CollectionToolbar view={view} />
           {view.items.length > 0 ? (
-            <ResourceList resources={view.items} />
+            <ResourceList
+              resources={view.items}
+              getPriorityRank={getPriorityRank}
+              reorderEnabled={reorder.canReorder}
+              onReorder={reorder.onReorder}
+            />
           ) : (
             <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />
           )}

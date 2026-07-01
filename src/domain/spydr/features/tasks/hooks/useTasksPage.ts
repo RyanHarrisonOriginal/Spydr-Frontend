@@ -11,6 +11,8 @@ import {
   isTaskStatus,
 } from "@/domain/spydr/utils/taskStatus";
 import { useUpdateTaskMutation } from "./useUpdateTaskMutation";
+import { useCollectionReorder } from "@/domain/spydr/features/shared/hooks/useCollectionReorder";
+import { useGetPriorityRank } from "@/domain/spydr/features/shared/hooks/usePriorityRankLookup";
 
 export function useTasksPage() {
   const query = useTasksQuery();
@@ -20,6 +22,8 @@ export function useTasksPage() {
   const projects = projectsQuery.data ?? [];
   const people = peopleQuery.data ?? [];
   const view = useCollectionView(tasksCollection, tasks);
+  const reorder = useCollectionReorder("task", view);
+  const getPriorityRank = useGetPriorityRank(tasks);
   const updateTask = useUpdateTaskMutation();
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -103,6 +107,8 @@ export function useTasksPage() {
     projects,
     people,
     view,
+    reorder,
+    getPriorityRank,
     totalCount: tasks.length,
     openCount,
     updateStatus,

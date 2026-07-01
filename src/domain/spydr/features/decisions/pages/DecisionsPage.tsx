@@ -10,7 +10,7 @@ import { DecisionTimeline } from "../components/DecisionTimeline";
 import { useDecisionsPage } from "../hooks/useDecisionsPage";
 
 export function DecisionsPage() {
-  const { view, totalCount, isLoading, isError, errorMessage } = useDecisionsPage();
+  const { view, reorder, getPriorityRank, totalCount, isLoading, isError, errorMessage } = useDecisionsPage();
 
   return (
     <div>
@@ -33,7 +33,12 @@ export function DecisionsPage() {
         <>
           <CollectionToolbar view={view} />
           {view.items.length > 0 ? (
-            <DecisionTimeline decisions={view.items} />
+            <DecisionTimeline
+              decisions={view.items}
+              getPriorityRank={getPriorityRank}
+              reorderEnabled={reorder.canReorder}
+              onReorder={reorder.onReorder}
+            />
           ) : (
             <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />
           )}

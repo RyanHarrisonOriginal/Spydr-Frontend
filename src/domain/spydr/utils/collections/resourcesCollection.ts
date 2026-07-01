@@ -4,6 +4,7 @@ import {
   joinSearchText,
   type CollectionConfig,
 } from "@/domain/spydr/utils/collectionView";
+import { createOrderSortDef } from "./shared";
 
 export const resourcesCollection: CollectionConfig<ResourceNode> = {
   storageKey: "resources",
@@ -50,6 +51,7 @@ export const resourcesCollection: CollectionConfig<ResourceNode> = {
     },
   ],
   sorts: [
+    createOrderSortDef<ResourceNode>(),
     {
       id: "updated",
       label: "Last updated",
@@ -79,5 +81,5 @@ export const resourcesCollection: CollectionConfig<ResourceNode> = {
       defaultDirection: "asc",
     },
   ],
-  defaultSortId: "updated",
+  defaultSortId: "order",
 };

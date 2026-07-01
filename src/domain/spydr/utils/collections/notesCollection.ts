@@ -6,7 +6,7 @@ import {
   staticFacetOptions,
   type CollectionConfig,
 } from "@/domain/spydr/utils/collectionView";
-import { PRIORITY_ITEM_CLASS, STATUS_ITEM_CLASS, formatStatusLabel } from "./shared";
+import { PRIORITY_ITEM_CLASS, STATUS_ITEM_CLASS, createOrderSortDef, formatStatusLabel } from "./shared";
 
 export const notesCollection: CollectionConfig<NoteNode> = {
   storageKey: "notes",
@@ -45,6 +45,7 @@ export const notesCollection: CollectionConfig<NoteNode> = {
     },
   ],
   sorts: [
+    createOrderSortDef<NoteNode>(),
     {
       id: "updated",
       label: "Last updated",
@@ -67,5 +68,5 @@ export const notesCollection: CollectionConfig<NoteNode> = {
       defaultDirection: "asc",
     },
   ],
-  defaultSortId: "updated",
+  defaultSortId: "order",
 };

@@ -12,6 +12,7 @@ import {
   type ProjectListFilters,
   type ProjectListSort,
   type ProjectSortColumn,
+  type SortDirection,
 } from "@/domain/spydr/utils/projectListView";
 import {
   clearFacetSelection,
@@ -132,6 +133,10 @@ export function useProjectListView(
     setSort((current) => toggleSort(current, column));
   };
 
+  const setSortColumn = (column: ProjectSortColumn, direction: SortDirection) => {
+    setSort({ column, direction });
+  };
+
   return {
     filters,
     sort,
@@ -145,5 +150,6 @@ export function useProjectListView(
     clearFilters,
     clearFacetFilters,
     toggleSortColumn,
+    setSortColumn,
   };
 }

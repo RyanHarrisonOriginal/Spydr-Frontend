@@ -5,50 +5,90 @@ import {
   personInitial,
   personSubtitle,
 } from "@/domain/spydr/utils/projectPersonas";
+import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
+import { CollectionSortableHeader } from "@/domain/spydr/features/shared/components/CollectionSortableHeader";
+import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
+import type { CollectionSortState } from "@/domain/spydr/utils/collectionView";
 
 interface PersonListProps {
   people: PersonNode[];
+  sort: CollectionSortState;
+  getPriorityRank(id: string): number | undefined;
+  reorderEnabled?: boolean;
+  onSortColumn(column: string): void;
+  onReorder?(orderedIds: string[]): void;
 }
 
-export function PersonList({ people }: PersonListProps) {
+const ROW_INNER =
+  "grid grid-cols-[36px_40px_minmax(220px,1fr)_minmax(160px,1fr)_minmax(180px,1fr)] items-center gap-4";
+
+export function PersonList({
+  people,
+  sort,
+  getPriorityRank,
+  reorderEnabled = false,
+  onSortColumn,
+  onReorder,
+}: PersonListProps) {
   return (
     <div className="overflow-x-auto">
-      <div className="grid grid-cols-[40px_minmax(220px,1fr)_minmax(160px,1fr)_minmax(180px,1fr)] items-center gap-4 border-b border-border bg-muted/20 px-6 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-        <span />
-        <span>Name</span>
-        <span>Role</span>
-        <span>Organization</span>
+      <div
+        className={`${reorderEnabled ? "grid grid-cols-[24px_minmax(0,1fr)] items-center gap-4 px-6" : "px-6"} border-b border-border bg-muted/20 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground`}
+      >
+        {reorderEnabled ? <span aria-hidden /> : null}
+        <div className={ROW_INNER}>
+          <CollectionSortableHeader
+            label="Rank"
+            column="order"
+            sort={sort}
+            onSort={onSortColumn}
+          />
+          <span />
+          <span>Name</span>
+          <span>Role</span>
+          <span>Organization</span>
+        </div>
       </div>
-      <ul className="divide-y divide-border">
-        {people.map((person) => (
-          <li key={person.id}>
-            <Link
-              to={`/people/${person.id}`}
-              className="grid grid-cols-[40px_minmax(220px,1fr)_minmax(160px,1fr)_minmax(180px,1fr)] items-center gap-4 px-6 py-3 row-hover"
-            >
-              <span className="grid h-8 w-8 place-items-center rounded-full border border-border bg-muted/40 font-mono text-[11px] font-medium text-foreground/80">
-                {personInitial(person)}
-              </span>
-              <div className="min-w-0">
-                <p className="truncate text-[13px] font-medium hover:text-primary">
-                  {personDisplayName(person)}
-                </p>
-                {person.details?.email ? (
-                  <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                    {person.details.email}
+      <CollectionSortableList
+        items={people}
+        enabled={reorderEnabled}
+        className="divide-y divide-border"
+        onReorder={(orderedIds) => onReorder?.(orderedIds)}
+        renderItem={(person, sortable) => (
+          <div
+            className={`${reorderEnabled ? "grid grid-cols-[24px_minmax(0,1fr)] items-center gap-4 px-6 py-3 row-hover" : "px-6 py-3 row-hover"}`}
+          >
+            {reorderEnabled ? (
+              <CollectionDragHandle {...sortable.dragHandleProps} />
+            ) : null}
+            <div className={ROW_INNER}>
+              <CollectionPriorityRank rank={getPriorityRank(person.id)} />
+              <Link to={`/people/${person.id}`} className="contents">
+                <span className="grid h-8 w-8 place-items-center rounded-full border border-border bg-muted/40 font-mono text-[11px] font-medium text-foreground/80">
+                  {personInitial(person)}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-[13px] font-medium hover:text-primary">
+                    {personDisplayName(person)}
                   </p>
-                ) : null}
-              </div>
-              <span className="truncate text-[12px] text-foreground/85">
-                {person.details?.title || "—"}
-              </span>
-              <span className="truncate text-[12px] text-muted-foreground">
-                {person.details?.organization || "—"}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+                  {person.details?.email ? (
+                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                      {person.details.email}
+                    </p>
+                  ) : null}
+                </div>
+                <span className="truncate text-[12px] text-foreground/85">
+                  {person.details?.title || "—"}
+                </span>
+                <span className="truncate text-[12px] text-muted-foreground">
+                  {person.details?.organization || "—"}
+                </span>
+              </Link>
+            </div>
+          </div>
+        )}
+      />
     </div>
   );
 }

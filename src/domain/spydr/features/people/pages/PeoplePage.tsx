@@ -14,6 +14,8 @@ export function PeoplePage() {
   const {
     people,
     view,
+    reorder,
+    getPriorityRank,
     totalCount,
     isLoading,
     isError,
@@ -53,7 +55,14 @@ export function PeoplePage() {
         <>
           <CollectionToolbar view={view} />
           {view.items.length > 0 ? (
-            <PersonList people={view.items} />
+            <PersonList
+              people={view.items}
+              sort={view.state.sort}
+              getPriorityRank={getPriorityRank}
+              reorderEnabled={reorder.canReorder}
+              onSortColumn={view.toggleSort}
+              onReorder={reorder.onReorder}
+            />
           ) : (
             <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />
           )}

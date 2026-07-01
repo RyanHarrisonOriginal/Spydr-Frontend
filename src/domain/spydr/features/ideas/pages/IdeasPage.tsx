@@ -11,7 +11,7 @@ import { IdeaList } from "../components/IdeaList";
 import { useIdeasPage } from "../hooks/useIdeasPage";
 
 export function IdeasPage() {
-  const { view, totalCount, isLoading, isFetching, isError, errorMessage, refetch } =
+  const { view, reorder, getPriorityRank, totalCount, isLoading, isFetching, isError, errorMessage, refetch } =
     useIdeasPage();
   const showInitialLoading = isLoading && totalCount === 0;
   const showEmpty = !showInitialLoading && !isError && totalCount === 0;
@@ -47,7 +47,12 @@ export function IdeasPage() {
         <>
           <CollectionToolbar view={view} />
           {view.items.length > 0 ? (
-            <IdeaList ideas={view.items} />
+            <IdeaList
+              ideas={view.items}
+              getPriorityRank={getPriorityRank}
+              reorderEnabled={reorder.canReorder}
+              onReorder={reorder.onReorder}
+            />
           ) : (
             <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />
           )}

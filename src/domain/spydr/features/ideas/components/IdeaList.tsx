@@ -5,11 +5,17 @@ import {
   PriorityBadge,
   StatusPill,
 } from "@/domain/spydr/features/shared/components/StatusPrimitives";
+import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
+import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
 import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
 import { cn } from "@/lib/utils";
 
 interface IdeaListProps {
   ideas: IdeaNode[];
+  getPriorityRank(id: string): number | undefined;
+  reorderEnabled?: boolean;
+  onReorder?(orderedIds: string[]): void;
 }
 
 function formatConfidence(confidence: number | null | undefined) {
@@ -17,28 +23,44 @@ function formatConfidence(confidence: number | null | undefined) {
   return `${Math.round(confidence)}%`;
 }
 
-export function IdeaList({ ideas }: IdeaListProps) {
+export function IdeaList({
+  ideas,
+  getPriorityRank,
+  reorderEnabled = false,
+  onReorder,
+}: IdeaListProps) {
   return (
-    <ul className="grid gap-2 px-4 pb-4 sm:grid-cols-2 xl:grid-cols-3">
-      {ideas.map((idea) => {
+    <CollectionSortableList
+      items={ideas}
+      enabled={reorderEnabled}
+      layout="grid"
+      className="grid gap-2 px-4 pb-4 sm:grid-cols-2 xl:grid-cols-3"
+      onReorder={(orderedIds) => onReorder?.(orderedIds)}
+      renderItem={(idea, sortable) => {
         const confidence = formatConfidence(idea.details?.confidence);
         const potentialValue = idea.details?.potentialValue;
         const isPromoted = !!idea.details?.promotedToProjectNodeId;
 
         return (
-          <li
-            key={idea.id}
+          <div
             className={cn(
               "rounded-lg border border-border/70 bg-card/30 p-3 row-hover",
               "hover:border-highlight-secondary/30"
             )}
           >
             <div className="flex items-start gap-2">
+              {reorderEnabled ? (
+                <CollectionDragHandle
+                  className="mt-0.5"
+                  {...sortable.dragHandleProps}
+                />
+              ) : null}
               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-highlight-secondary/25 bg-highlight-secondary/10">
                 <Lightbulb className="h-3.5 w-3.5 text-highlight-secondary" />
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start gap-2">
+                  <CollectionPriorityRank rank={getPriorityRank(idea.id)} className="mt-0.5 shrink-0" />
                   <h2 className="min-w-0 flex-1 text-[13px] font-semibold leading-snug">
                     {idea.title}
                   </h2>
@@ -80,9 +102,9 @@ export function IdeaList({ ideas }: IdeaListProps) {
                 </div>
               </div>
             </div>
-          </li>
+          </div>
         );
-      })}
-    </ul>
+      }}
+    />
   );
 }

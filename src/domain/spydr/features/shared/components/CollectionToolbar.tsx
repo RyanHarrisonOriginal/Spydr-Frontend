@@ -93,7 +93,11 @@ export function CollectionToolbar<T>({
             <X className="h-3 w-3" />
             Clear all
           </Button>
-        ) : null}
+        ) : (
+          <span className="hidden font-mono text-[10px] text-muted-foreground/80 sm:inline">
+            Drag rows to set priority
+          </span>
+        )}
 
         <span
           className={cn(

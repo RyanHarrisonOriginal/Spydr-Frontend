@@ -10,6 +10,9 @@ import {
 import { formatRelativeTime, formatShortDate } from "@/domain/spydr/features/shared/components/time";
 import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
 import type { ProjectListSort, ProjectSortColumn } from "@/domain/spydr/utils/projectListView";
+import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
+import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
 import { cn } from "@/lib/utils";
 import type { ProjectColumnId } from "../hooks/useProjectListColumns";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
@@ -24,6 +27,9 @@ interface ProjectListProps {
   people: PersonNode[];
   visibleColumns: ProjectColumnId[];
   sort: ProjectListSort;
+  reorderEnabled?: boolean;
+  getPriorityRank(id: string): number | undefined;
+  onReorder?(orderedIds: string[]): void;
   updatingProjectId?: string | null;
   hasActiveFilters?: boolean;
   onSortColumn?(column: ProjectSortColumn): void;
@@ -48,8 +54,12 @@ const columnWidths: Record<ProjectColumnId, string> = {
 
 const actionsColumnWidth = "72px";
 
-function getProjectListGrid(visibleColumns: ProjectColumnId[]) {
+const rankColumnWidth = "36px";
+
+function getProjectListGrid(visibleColumns: ProjectColumnId[], reorderEnabled = false) {
   return [
+    ...(reorderEnabled ? ["24px"] : []),
+    rankColumnWidth,
     "40px",
     "minmax(280px,1fr)",
     ...visibleColumns.map((id) => columnWidths[id]),
@@ -164,6 +174,9 @@ export function ProjectList({
   people,
   visibleColumns,
   sort,
+  reorderEnabled = false,
+  getPriorityRank,
+  onReorder,
   updatingProjectId = null,
   hasActiveFilters = false,
   onSortColumn,
@@ -177,8 +190,8 @@ export function ProjectList({
   deletingProjectId = null,
 }: ProjectListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const gridTemplateColumns = getProjectListGrid(visibleColumns);
-  const minWidth = 440 + visibleColumns.length * 112 + 72;
+  const gridTemplateColumns = getProjectListGrid(visibleColumns, reorderEnabled);
+  const minWidth = 476 + visibleColumns.length * 112 + 72 + (reorderEnabled ? 24 : 0);
   const hasColumn = (columnId: ProjectColumnId) => visibleColumns.includes(columnId);
 
   useEffect(() => {
@@ -193,6 +206,8 @@ export function ProjectList({
         className="grid items-center gap-4 border-b border-border bg-muted/20 px-6 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
         style={{ gridTemplateColumns, minWidth }}
       >
+        {reorderEnabled ? <span aria-hidden /> : null}
+        <SortableHeader label="Rank" column="order" sort={sort} onSort={onSortColumn} />
         <span />
         <SortableHeader label="Name" column="name" sort={sort} onSort={onSortColumn} />
         {hasColumn("area") && (
@@ -263,13 +278,20 @@ export function ProjectList({
           ) : null}
         </div>
       ) : (
-      <ul className="divide-y divide-border">
-        {projects.map((project) => (
-          <li
-            key={project.id}
+      <CollectionSortableList
+        items={projects}
+        enabled={reorderEnabled}
+        className="divide-y divide-border"
+        onReorder={(orderedIds) => onReorder?.(orderedIds)}
+        renderItem={(project, sortable) => (
+          <div
             className="grid items-center gap-4 px-6 py-3 row-hover"
             style={{ gridTemplateColumns, minWidth }}
           >
+            {reorderEnabled ? (
+              <CollectionDragHandle {...sortable.dragHandleProps} />
+            ) : null}
+            <CollectionPriorityRank rank={getPriorityRank(project.id)} />
             <span className="grid h-7 w-7 place-items-center rounded border border-border bg-muted/40 font-mono text-[11px] text-muted-foreground">
               {project.title.charAt(0).toUpperCase()}
             </span>
@@ -417,9 +439,9 @@ export function ProjectList({
                 onCancel={() => setPendingDeleteId(null)}
               />
             ) : null}
-          </li>
-        ))}
-      </ul>
+          </div>
+        )}
+      />
       )}
     </div>
   );

@@ -17,6 +17,8 @@ export function TasksPage() {
     projects,
     people,
     view,
+    reorder,
+    getPriorityRank,
     totalCount,
     openCount,
     updateStatus,
@@ -68,7 +70,7 @@ export function TasksPage() {
       )}
       {!isLoading && !isError && tasks.length > 0 && (
         <>
-          <CollectionToolbar view={view} showSort={false} />
+          <CollectionToolbar view={view} />
           {statusError ? (
             <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {statusError}
@@ -95,8 +97,11 @@ export function TasksPage() {
               projects={projects}
               people={people}
               sort={view.state.sort}
+              reorderEnabled={reorder.canReorder}
+              getPriorityRank={getPriorityRank}
               updatingTaskId={updatingTaskId}
               onSortColumn={view.toggleSort}
+              onReorder={reorder.onReorder}
               onStatusChange={updateStatus}
               onProjectChange={updateProject}
               onAssigneeChange={updateAssignee}

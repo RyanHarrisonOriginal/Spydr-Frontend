@@ -6,7 +6,7 @@ import {
   staticFacetOptions,
   type CollectionConfig,
 } from "@/domain/spydr/utils/collectionView";
-import { PRIORITY_ITEM_CLASS, STATUS_ITEM_CLASS, formatStatusLabel } from "./shared";
+import { PRIORITY_ITEM_CLASS, STATUS_ITEM_CLASS, createOrderSortDef, formatStatusLabel } from "./shared";
 
 const decisionImpacts = ["high", "medium", "low"] as const;
 
@@ -71,6 +71,7 @@ export const decisionsCollection: CollectionConfig<DecisionNode> = {
     },
   ],
   sorts: [
+    createOrderSortDef<DecisionNode>(),
     {
       id: "decided",
       label: "Decision date",
@@ -100,5 +101,5 @@ export const decisionsCollection: CollectionConfig<DecisionNode> = {
       defaultDirection: "asc",
     },
   ],
-  defaultSortId: "decided",
+  defaultSortId: "order",
 };

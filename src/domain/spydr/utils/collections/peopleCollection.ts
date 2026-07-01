@@ -5,6 +5,7 @@ import {
   joinSearchText,
   type CollectionConfig,
 } from "@/domain/spydr/utils/collectionView";
+import { createOrderSortDef } from "./shared";
 
 export const peopleCollection: CollectionConfig<PersonNode> = {
   storageKey: "people",
@@ -53,6 +54,7 @@ export const peopleCollection: CollectionConfig<PersonNode> = {
     },
   ],
   sorts: [
+    createOrderSortDef<PersonNode>(),
     {
       id: "name",
       label: "Name",
@@ -82,5 +84,5 @@ export const peopleCollection: CollectionConfig<PersonNode> = {
       defaultDirection: "desc",
     },
   ],
-  defaultSortId: "name",
+  defaultSortId: "order",
 };

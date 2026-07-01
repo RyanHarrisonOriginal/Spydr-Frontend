@@ -9,6 +9,7 @@ import {
 import {
   PRIORITY_ITEM_CLASS,
   STATUS_ITEM_CLASS,
+  createOrderSortDef,
   formatStatusLabel,
   priorityRank,
 } from "./shared";
@@ -80,6 +81,7 @@ export const ideasCollection: CollectionConfig<IdeaNode> = {
     },
   ],
   sorts: [
+    createOrderSortDef<IdeaNode>(),
     {
       id: "updated",
       label: "Last updated",
@@ -116,5 +118,5 @@ export const ideasCollection: CollectionConfig<IdeaNode> = {
       defaultDirection: "asc",
     },
   ],
-  defaultSortId: "updated",
+  defaultSortId: "order",
 };

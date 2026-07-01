@@ -25,6 +25,7 @@ export {
 } from "@/domain/spydr/utils/projectListFilterModel";
 
 export const projectSortColumns = [
+  "order",
   "name",
   "area",
   "assignee",
@@ -43,8 +44,8 @@ export interface ProjectListSort {
 }
 
 export const defaultProjectListSort: ProjectListSort = {
-  column: "updated",
-  direction: "desc",
+  column: "order",
+  direction: "asc",
 };
 
 const priorityOrder = Object.fromEntries(
@@ -88,6 +89,9 @@ export function sortProjects(
     let result = 0;
 
     switch (sort.column) {
+      case "order":
+        result = (left.sortOrder ?? 0) - (right.sortOrder ?? 0);
+        break;
       case "name":
         result = compareStrings(left.title, right.title);
         break;
@@ -155,6 +159,11 @@ export function toggleSort(
 
   return {
     column,
-    direction: column === "updated" || column === "target" ? "desc" : "asc",
+    direction:
+      column === "updated" || column === "target"
+        ? "desc"
+        : column === "order"
+          ? "asc"
+          : "asc",
   };
 }

@@ -10,7 +10,7 @@ import { NoteList } from "../components/NoteList";
 import { useNotesPage } from "../hooks/useNotesPage";
 
 export function NotesPage() {
-  const { view, totalCount, isLoading, isError, errorMessage } = useNotesPage();
+  const { view, reorder, getPriorityRank, totalCount, isLoading, isError, errorMessage } = useNotesPage();
 
   return (
     <div>
@@ -31,7 +31,12 @@ export function NotesPage() {
         <>
           <CollectionToolbar view={view} />
           {view.items.length > 0 ? (
-            <NoteList notes={view.items} />
+            <NoteList
+              notes={view.items}
+              getPriorityRank={getPriorityRank}
+              reorderEnabled={reorder.canReorder}
+              onReorder={reorder.onReorder}
+            />
           ) : (
             <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />
           )}

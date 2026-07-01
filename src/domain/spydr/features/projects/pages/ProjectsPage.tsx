@@ -42,6 +42,8 @@ export function ProjectsPage() {
     setTrashExpanded,
     openTrash,
     listView,
+    reorder,
+    getPriorityRank,
     statusError,
     areaError,
     priorityError,
@@ -161,6 +163,9 @@ export function ProjectsPage() {
             people={people}
             visibleColumns={projectColumns.visibleColumns}
             sort={listView.sort}
+            reorderEnabled={reorder.canReorder}
+            getPriorityRank={getPriorityRank}
+            onReorder={reorder.onReorder}
             hasActiveFilters={listView.hasActiveFilters}
             updatingProjectId={updatingProjectId}
             onSortColumn={listView.toggleSortColumn}
