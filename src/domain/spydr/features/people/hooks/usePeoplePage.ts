@@ -5,16 +5,20 @@ import { useCollectionReorder } from "@/domain/spydr/features/shared/hooks/useCo
 import { useGetPriorityRank } from "@/domain/spydr/features/shared/hooks/usePriorityRankLookup";
 import { peopleCollection } from "@/domain/spydr/utils/collections/peopleCollection";
 import { useCreatePersonMutation } from "./useCreatePersonMutation";
+import { useDeletePersonMutation } from "./useDeletePersonMutation";
 
 export function usePeoplePage() {
   const query = usePeopleQuery();
   const createPerson = useCreatePersonMutation();
+  const deletePerson = useDeletePersonMutation();
   const people = query.data ?? [];
   const view = useCollectionView(peopleCollection, people);
   const reorder = useCollectionReorder("person", view);
   const getPriorityRank = useGetPriorityRank(people);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletingPersonId, setDeletingPersonId] = useState<string | null>(null);
 
   const totalCount = people.length;
 
@@ -46,6 +50,19 @@ export function usePeoplePage() {
     );
   };
 
+  const deletePersonById = (personId: string) => {
+    setDeleteError(null);
+    setDeletingPersonId(personId);
+    deletePerson.mutate(personId, {
+      onError: (error) => {
+        setDeleteError(
+          error instanceof Error ? error.message : "Failed to delete person"
+        );
+      },
+      onSettled: () => setDeletingPersonId(null),
+    });
+  };
+
   return {
     people,
     view,
@@ -59,7 +76,10 @@ export function usePeoplePage() {
     isCreateOpen,
     setIsCreateOpen,
     createError,
+    deleteError,
     isCreating: createPerson.isPending,
     submitCreate,
+    deletePerson: deletePersonById,
+    deletingPersonId,
   };
 }

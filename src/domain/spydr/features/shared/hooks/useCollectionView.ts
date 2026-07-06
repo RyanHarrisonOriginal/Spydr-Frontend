@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
 import {
   applyCollectionView,
   clearFilters,
@@ -57,8 +58,11 @@ export function useCollectionView<T>(
   config: CollectionConfig<T>,
   source: T[]
 ): CollectionView<T> {
+  const { activeOrgId } = useOrganizationContext();
   const [state, setState] = usePersistentState<CollectionViewState>(
-    `collection-view:${config.storageKey}`,
+    activeOrgId
+      ? `collection-view:${activeOrgId}:${config.storageKey}`
+      : `collection-view:pending:${config.storageKey}`,
     () => createDefaultState(config),
     (raw, fallback) => sanitizeState(config, raw, fallback)
   );

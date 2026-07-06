@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import type { ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
+import type { ProjectPersonaRole } from "@/domain/spydr/utils/projectPersonas";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
-import { ErrorState, LoadingState } from "@/domain/spydr/features/shared/components/ListState";
+import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import {
   ProjectDetailField,
   ProjectDetailFormPanel,
@@ -14,6 +16,12 @@ import type {
   PersonDetailFormValues,
   PersonDetailSaveState,
 } from "../hooks/usePersonDetailPage";
+import { PersonProjectsSection } from "./PersonProjectsSection";
+import { PersonTasksSection } from "./PersonTasksSection";
+import { cn } from "@/lib/utils";
+
+const personFieldClassName = cn(detailFieldClassName, "px-3.5 py-2.5");
+const personTextareaClassName = cn(detailTextareaClassName, "px-3.5 py-3");
 
 function saveLabel(state: PersonDetailSaveState) {
   if (state === "saving" || state === "pending") return "Saving…";
@@ -28,10 +36,15 @@ interface PersonDetailViewProps {
   personId: string;
   displayName: string;
   updatedAt: string;
+  projectEntries: Array<{ project: ProjectNode; roles: ProjectPersonaRole[] }>;
+  assignedTasks: TaskNode[];
+  deleteError: string | null;
+  isDeleting: boolean;
   onFieldChange<TField extends keyof PersonDetailFormValues>(
     field: TField,
     value: PersonDetailFormValues[TField]
   ): void;
+  onDelete(): void;
 }
 
 export function PersonDetailView({
@@ -40,7 +53,12 @@ export function PersonDetailView({
   personId,
   displayName,
   updatedAt,
+  projectEntries,
+  assignedTasks,
+  deleteError,
+  isDeleting,
   onFieldChange,
+  onDelete,
 }: PersonDetailViewProps) {
   const hint = saveLabel(saveState);
 
@@ -63,7 +81,18 @@ export function PersonDetailView({
               updated {new Date(updatedAt).toLocaleString()}
             </span>
           }
+          actions={
+            <InlineDeleteButton
+              label={displayName}
+              isDeleting={isDeleting}
+              onDelete={onDelete}
+            />
+          }
         />
+
+        {deleteError ? (
+          <p className="px-6 pb-2 text-sm text-destructive">{deleteError}</p>
+        ) : null}
 
         <div className="space-y-5 px-6 pb-8 pt-2">
           <ProjectDetailSection>
@@ -81,7 +110,7 @@ export function PersonDetailView({
                   <input
                     value={form.fullName}
                     onChange={(event) => onFieldChange("fullName", event.target.value)}
-                    className={detailFieldClassName}
+                    className={personFieldClassName}
                   />
                 </ProjectDetailField>
               </div>
@@ -93,7 +122,7 @@ export function PersonDetailView({
                     value={form.email}
                     onChange={(event) => onFieldChange("email", event.target.value)}
                     placeholder="name@company.com"
-                    className={detailFieldClassName}
+                    className={personFieldClassName}
                   />
                 </ProjectDetailField>
                 <ProjectDetailField label="Job title">
@@ -101,7 +130,7 @@ export function PersonDetailView({
                     value={form.title}
                     onChange={(event) => onFieldChange("title", event.target.value)}
                     placeholder="Product manager"
-                    className={detailFieldClassName}
+                    className={personFieldClassName}
                   />
                 </ProjectDetailField>
                 <ProjectDetailField label="Organization">
@@ -109,7 +138,7 @@ export function PersonDetailView({
                     value={form.organization}
                     onChange={(event) => onFieldChange("organization", event.target.value)}
                     placeholder="Acme Corp"
-                    className={detailFieldClassName}
+                    className={personFieldClassName}
                   />
                 </ProjectDetailField>
                 <ProjectDetailField label="Relationship context">
@@ -119,7 +148,7 @@ export function PersonDetailView({
                       onFieldChange("relationshipContext", event.target.value)
                     }
                     placeholder="Internal partner, vendor, client…"
-                    className={detailFieldClassName}
+                    className={personFieldClassName}
                   />
                 </ProjectDetailField>
               </div>
@@ -130,11 +159,14 @@ export function PersonDetailView({
                   onChange={(event) => onFieldChange("body", event.target.value)}
                   rows={4}
                   placeholder="How you work with this person, preferences, context…"
-                  className={detailTextareaClassName}
+                  className={personTextareaClassName}
                 />
               </ProjectDetailFormPanel>
             </ProjectDetailSectionBody>
           </ProjectDetailSection>
+
+          <PersonProjectsSection entries={projectEntries} />
+          <PersonTasksSection tasks={assignedTasks} />
         </div>
       </div>
     </div>

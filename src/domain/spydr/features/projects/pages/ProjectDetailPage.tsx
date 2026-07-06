@@ -44,6 +44,7 @@ export function ProjectDetailPage() {
       detailSaveState={detailPage.detailSaveState}
       taskForm={detailPage.taskForm}
       noteForm={detailPage.noteForm}
+      noteFormResetKey={detailPage.noteFormResetKey}
       decisionForm={detailPage.decisionForm}
       ideaForm={detailPage.ideaForm}
       canAddTask={detailPage.canAddTask}

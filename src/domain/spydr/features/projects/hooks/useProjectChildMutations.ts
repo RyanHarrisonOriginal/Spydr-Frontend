@@ -1,27 +1,33 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
+import { spydrOrgKey } from "@/domain/spydr/features/shared/hooks/spydrQueryKeys";
 import { spydrApi } from "@/domain/spydr/utils/api";
 import type {
   ProjectChildKind,
   UpdateProjectChildInput,
 } from "@/domain/spydr/utils/types";
 
-const listKeys: Partial<Record<ProjectChildKind, string[]>> = {
-  task: ["spydr", "tasks"],
-  note: ["spydr", "notes"],
-  decision: ["spydr", "decisions"],
-  idea: ["spydr", "ideas"],
-  resource: ["spydr", "resources"],
+const listSegments: Partial<Record<ProjectChildKind, string>> = {
+  task: "tasks",
+  note: "notes",
+  decision: "decisions",
+  idea: "ideas",
+  resource: "resources",
 };
 
 export function useProjectChildMutations(projectId: string | undefined) {
   const queryClient = useQueryClient();
+  const { activeOrgId } = useOrganizationContext();
 
   const invalidate = (kind: ProjectChildKind) => {
-    queryClient.invalidateQueries({ queryKey: ["spydr", "projects", projectId] });
-    queryClient.invalidateQueries({ queryKey: ["spydr", "projects"] });
-    const listKey = listKeys[kind];
-    if (listKey) {
-      queryClient.invalidateQueries({ queryKey: listKey });
+    if (!activeOrgId) return;
+    queryClient.invalidateQueries({
+      queryKey: spydrOrgKey(activeOrgId, "projects", projectId!),
+    });
+    queryClient.invalidateQueries({ queryKey: spydrOrgKey(activeOrgId, "projects") });
+    const segment = listSegments[kind];
+    if (segment) {
+      queryClient.invalidateQueries({ queryKey: spydrOrgKey(activeOrgId, segment) });
     }
   };
 

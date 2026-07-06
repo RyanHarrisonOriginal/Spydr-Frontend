@@ -3,12 +3,12 @@ import type { PersonNode } from "@/domain/spydr/utils/types";
 import {
   personDisplayName,
   personInitial,
-  personSubtitle,
 } from "@/domain/spydr/utils/projectPersonas";
 import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
 import { CollectionSortableHeader } from "@/domain/spydr/features/shared/components/CollectionSortableHeader";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
+import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import type { CollectionSortState } from "@/domain/spydr/utils/collectionView";
 
 interface PersonListProps {
@@ -18,10 +18,12 @@ interface PersonListProps {
   reorderEnabled?: boolean;
   onSortColumn(column: string): void;
   onReorder?(orderedIds: string[]): void;
+  onDelete?(personId: string): void;
+  deletingPersonId?: string | null;
 }
 
 const ROW_INNER =
-  "grid grid-cols-[36px_40px_minmax(220px,1fr)_minmax(160px,1fr)_minmax(180px,1fr)] items-center gap-4";
+  "grid grid-cols-[36px_40px_minmax(220px,1fr)_minmax(160px,1fr)_minmax(180px,1fr)_72px] items-center gap-4";
 
 export function PersonList({
   people,
@@ -30,6 +32,8 @@ export function PersonList({
   reorderEnabled = false,
   onSortColumn,
   onReorder,
+  onDelete,
+  deletingPersonId = null,
 }: PersonListProps) {
   return (
     <div className="overflow-x-auto">
@@ -48,6 +52,7 @@ export function PersonList({
           <span>Name</span>
           <span>Role</span>
           <span>Organization</span>
+          <span />
         </div>
       </div>
       <CollectionSortableList
@@ -85,6 +90,14 @@ export function PersonList({
                   {person.details?.organization || "—"}
                 </span>
               </Link>
+              {onDelete ? (
+                <InlineDeleteButton
+                  label={personDisplayName(person)}
+                  isDeleting={deletingPersonId === person.id}
+                  disabled={Boolean(deletingPersonId && deletingPersonId !== person.id)}
+                  onDelete={() => onDelete(person.id)}
+                />
+              ) : null}
             </div>
           </div>
         )}
@@ -94,7 +107,10 @@ export function PersonList({
 }
 
 export function PersonListCard({ person }: { person: PersonNode }) {
-  const subtitle = personSubtitle(person);
+  const subtitle = [person.details?.title, person.details?.organization]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <Link
       to={`/people/${person.id}`}

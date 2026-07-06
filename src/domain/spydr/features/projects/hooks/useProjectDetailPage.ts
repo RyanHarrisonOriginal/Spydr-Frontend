@@ -109,6 +109,7 @@ export function useProjectDetailPage() {
     useState<ProjectDetailFormValues>(emptyDetailForm);
   const [taskForm, setTaskForm] = useState<ProjectTaskFormValues>(emptyTaskForm);
   const [noteForm, setNoteForm] = useState<ProjectNoteFormValues>(emptyNoteForm);
+  const [noteFormResetKey, setNoteFormResetKey] = useState(0);
   const [decisionForm, setDecisionForm] =
     useState<ProjectDecisionFormValues>(emptyDecisionForm);
   const [ideaForm, setIdeaForm] = useState<ProjectIdeaFormValues>(emptyIdeaForm);
@@ -224,16 +225,17 @@ export function useProjectDetailPage() {
   };
 
   const addNote = () => {
-    if (!noteForm.title.trim()) return;
-
     createNote.mutate(
       {
-        title: noteForm.title.trim(),
-        body: noteForm.body.trim() || undefined,
+        title: noteForm.title.trim() || undefined,
+        body: noteForm.body || undefined,
         status: "active",
       },
       {
-        onSuccess: () => setNoteForm(emptyNoteForm),
+        onSuccess: () => {
+          setNoteForm(emptyNoteForm);
+          setNoteFormResetKey((current) => current + 1);
+        },
       }
     );
   };
@@ -348,7 +350,8 @@ export function useProjectDetailPage() {
             ? childMutations.restoreChild.error.message
             : null,
     canAddTask: taskForm.title.trim().length > 0 && !createTask.isPending,
-    canAddNote: noteForm.title.trim().length > 0 && !createNote.isPending,
+    canAddNote: !createNote.isPending,
+    noteFormResetKey,
     canAddDecision:
       decisionForm.title.trim().length > 0 && !createDecision.isPending,
     canAddIdea: ideaForm.title.trim().length > 0 && !createIdea.isPending,

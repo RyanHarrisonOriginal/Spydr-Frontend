@@ -19,9 +19,12 @@ import type {
   UpdateProjectChildInput,
   UpdateProjectInput,
   UpdateTaskInput,
+  UpdateNoteInput,
   CreatePersonInput,
   UpdatePersonInput,
   PersonNode,
+  Organization,
+  CreateOrganizationInput,
 } from "./types";
 import type { WorkspaceDashboard } from "./workspaceDashboard";
 
@@ -36,6 +39,11 @@ function childPath(
 }
 
 export const spydrApi = {
+  organizations: {
+    list: () => apiRequest<Organization[]>("/organizations"),
+    create: (input: CreateOrganizationInput) =>
+      apiRequest<Organization>("/organizations", { method: "POST", body: input }),
+  },
   people: {
     list: () => apiRequest<PersonNode[]>("/people"),
     get: (personId: string) => apiRequest<PersonNode>(`/people/${personId}`),
@@ -43,6 +51,8 @@ export const spydrApi = {
       apiRequest<PersonNode>("/people", { method: "POST", body: input }),
     update: (personId: string, input: UpdatePersonInput) =>
       apiRequest<PersonNode>(`/people/${personId}`, { method: "PATCH", body: input }),
+    delete: (personId: string) =>
+      apiRequest<void>(`/people/${personId}`, { method: "DELETE" }),
   },
   projectAreas: {
     list: () => apiRequest<ProjectAreaNode[]>("/project-areas"),
@@ -134,6 +144,9 @@ export const spydrApi = {
   },
   notes: {
     list: () => apiRequest<NoteNode[]>("/notes"),
+    get: (noteId: string) => apiRequest<NoteNode>(`/notes/${noteId}`),
+    update: (noteId: string, input: UpdateNoteInput) =>
+      apiRequest<NoteNode>(`/notes/${noteId}`, { method: "PATCH", body: input }),
   },
   resources: {
     list: () => apiRequest<ResourceNode[]>("/resources"),

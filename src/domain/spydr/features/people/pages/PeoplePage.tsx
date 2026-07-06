@@ -25,6 +25,9 @@ export function PeoplePage() {
     createError,
     isCreating,
     submitCreate,
+    deleteError,
+    deletePerson,
+    deletingPersonId,
   } = usePeoplePage();
 
   return (
@@ -53,6 +56,9 @@ export function PeoplePage() {
       )}
       {!isLoading && !isError && people.length > 0 && (
         <>
+          {deleteError ? (
+            <p className="px-6 pb-2 text-sm text-destructive">{deleteError}</p>
+          ) : null}
           <CollectionToolbar view={view} />
           {view.items.length > 0 ? (
             <PersonList
@@ -62,6 +68,8 @@ export function PeoplePage() {
               reorderEnabled={reorder.canReorder}
               onSortColumn={view.toggleSort}
               onReorder={reorder.onReorder}
+              onDelete={deletePerson}
+              deletingPersonId={deletingPersonId}
             />
           ) : (
             <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />

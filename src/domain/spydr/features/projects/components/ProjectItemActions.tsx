@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DateInput } from "@/components/ui/date-input";
+import { RichTextEditor } from "@/domain/spydr/features/shared/components/RichTextEditor";
 import type { SpydrPriority } from "@/domain/spydr/utils/types";
 import type { UpdateProjectChildInput } from "@/domain/spydr/utils/types";
 import { taskStatuses } from "@/domain/spydr/utils/taskStatus";
@@ -60,19 +61,26 @@ export function ProjectItemActions({
   };
 
   const handleSave = () => {
-    const title = draft.title.trim();
-    if (!title) return;
-
-    const input: UpdateProjectChildInput = { title };
+    const input: UpdateProjectChildInput = {
+      title: draft.title.trim() || undefined,
+    };
 
     if (fieldSet === "task") {
+      if (!draft.title.trim()) return;
+      input.title = draft.title.trim();
       input.body = draft.body?.trim() ?? "";
       input.dueDate = draft.dueDate || null;
       input.priority = draft.priority;
       input.status = draft.status;
-    } else if (fieldSet === "note" || fieldSet === "idea" || fieldSet === "resource") {
+    } else if (fieldSet === "note") {
+      input.body = draft.body ?? "";
+    } else if (fieldSet === "idea" || fieldSet === "resource") {
+      if (!draft.title.trim()) return;
+      input.title = draft.title.trim();
       input.body = draft.body?.trim() ?? "";
     } else if (fieldSet === "decision") {
+      if (!draft.title.trim()) return;
+      input.title = draft.title.trim();
       input.rationale = draft.rationale?.trim() ?? "";
     }
 
@@ -130,14 +138,25 @@ export function ProjectItemActions({
                 onChange={(event) =>
                   setDraft((current) => ({ ...current, title: event.target.value }))
                 }
+                placeholder={fieldSet === "note" ? "Title (optional)" : undefined}
                 className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px] ring-focus"
               />
             </label>
 
-            {(fieldSet === "note" ||
-              fieldSet === "idea" ||
-              fieldSet === "resource" ||
-              fieldSet === "task") && (
+            {fieldSet === "note" && (
+              <label className="block space-y-1">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Body
+                </span>
+                <RichTextEditor
+                  value={draft.body ?? ""}
+                  onChange={(body) => setDraft((current) => ({ ...current, body }))}
+                  minHeightClassName="min-h-[7rem]"
+                />
+              </label>
+            )}
+
+            {(fieldSet === "idea" || fieldSet === "resource" || fieldSet === "task") && (
               <label className="block space-y-1">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                   {fieldSet === "task" ? "Description" : "Body"}
@@ -248,7 +267,7 @@ export function ProjectItemActions({
             <Button
               type="button"
               size="sm"
-              disabled={!draft.title.trim() || isSaving}
+              disabled={(fieldSet !== "note" && !draft.title.trim()) || isSaving}
               onClick={handleSave}
             >
               {isSaving ? "Saving…" : "Save"}

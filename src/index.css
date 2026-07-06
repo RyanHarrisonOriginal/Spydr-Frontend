@@ -729,4 +729,39 @@
   .workspace-graph .react-flow__pane:active {
     cursor: grabbing;
   }
+
+  .ProseMirror p.is-editor-empty:first-child::before {
+    color: hsl(var(--muted-foreground));
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .spydr-rich-text {
+    @apply prose prose-sm max-w-none;
+    color: hsl(var(--foreground));
+  }
+
+  .dark .spydr-rich-text {
+    @apply prose-invert;
+  }
+
+  .spydr-rich-text :is(strong, b) {
+    font-weight: 600;
+    color: hsl(var(--foreground));
+  }
+
+  .dark .spydr-rich-text :is(strong, b) {
+    font-weight: 700;
+    color: hsl(var(--foreground));
+  }
+
+  .spydr-rich-text :is(em, i) {
+    color: hsl(var(--foreground) / 0.92);
+  }
+
+  .spydr-rich-text :is(p, ul, ol, li) {
+    color: inherit;
+  }
 }

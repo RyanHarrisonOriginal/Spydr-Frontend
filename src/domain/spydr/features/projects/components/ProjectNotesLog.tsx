@@ -2,10 +2,12 @@ import { useMemo } from "react";
 import { FileText, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { NoteNode, UpdateProjectChildInput } from "@/domain/spydr/utils/types";
+import { RichTextEditor } from "@/domain/spydr/features/shared/components/RichTextEditor";
 import {
   formatRelativeTime,
   formatShortDate,
 } from "@/domain/spydr/features/shared/components/time";
+import { isRichTextEmpty } from "@/domain/spydr/utils/richText";
 import { cn } from "@/lib/utils";
 import type { ProjectNoteFormValues } from "../hooks/useProjectDetailPage";
 import {
@@ -17,13 +19,13 @@ import {
   ProjectDetailSectionBody,
   ProjectDetailSectionHeader,
   detailFieldClassName,
-  detailTextareaClassName,
 } from "./ProjectDetailSection";
 import { ProjectItemActions } from "./ProjectItemActions";
 
 interface ProjectNotesLogProps {
   notes: NoteNode[];
   form: ProjectNoteFormValues;
+  formResetKey?: number;
   canAdd: boolean;
   isAdding: boolean;
   error: string | null;
@@ -41,6 +43,7 @@ interface ProjectNotesLogProps {
 export function ProjectNotesLog({
   notes,
   form,
+  formResetKey = 0,
   canAdd,
   isAdding,
   error,
@@ -70,7 +73,7 @@ export function ProjectNotesLog({
       <ProjectDetailSectionBody>
         <ProjectDetailFormPanel label="Add note">
           <form
-            className="space-y-2"
+            className="space-y-3"
             onSubmit={(event) => {
               event.preventDefault();
               onAdd();
@@ -79,16 +82,17 @@ export function ProjectNotesLog({
             <input
               value={form.title}
               onChange={(event) => onFieldChange("title", event.target.value)}
-              placeholder="Note title"
-              className={cn(detailFieldClassName, "h-8")}
+              placeholder="Title (optional)"
+              className={cn(detailFieldClassName, "h-8 px-3.5 py-2")}
             />
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-              <textarea
+              <RichTextEditor
+                key={formResetKey}
                 value={form.body}
-                onChange={(event) => onFieldChange("body", event.target.value)}
-                placeholder="Details, links, or context (optional)"
-                rows={2}
-                className={cn(detailTextareaClassName, "min-h-[3.25rem] flex-1")}
+                onChange={(body) => onFieldChange("body", body)}
+                placeholder="Details, links, or context…"
+                className="flex-1"
+                minHeightClassName="min-h-[5.5rem]"
               />
               <Button
                 type="submit"
@@ -141,7 +145,7 @@ function NoteEntry({
   isUpdating: boolean;
   isDeleting: boolean;
 }) {
-  const hasBody = note.body.trim().length > 0;
+  const hasBody = !isRichTextEmpty(note.body);
 
   return (
     <ProjectDetailEntry>
@@ -166,9 +170,10 @@ function NoteEntry({
         />
       </div>
       {hasBody ? (
-        <p className="mt-1.5 whitespace-pre-wrap text-[12px] leading-relaxed text-muted-foreground">
-          {note.body}
-        </p>
+        <div
+          className="spydr-rich-text mt-1.5 text-[12px] leading-relaxed text-muted-foreground [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1"
+          dangerouslySetInnerHTML={{ __html: note.body }}
+        />
       ) : (
         <p className="mt-1.5 text-[11px] italic text-muted-foreground/70">
           No additional detail.

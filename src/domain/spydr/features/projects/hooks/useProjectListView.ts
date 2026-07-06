@@ -21,6 +21,7 @@ import {
   toggleFacetSelection,
 } from "@/domain/spydr/utils/projectListFilterModel";
 import { usePersistentState } from "@/domain/spydr/features/shared/hooks/usePersistentState";
+import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
 
 interface PersistedProjectListView {
   filters: ProjectListFilters;
@@ -73,8 +74,9 @@ export function useProjectListView(
   areas: ProjectAreaNode[],
   people: PersonNode[]
 ) {
+  const { activeOrgId } = useOrganizationContext();
   const [view, setView] = usePersistentState<PersistedProjectListView>(
-    "collection-view:projects",
+    activeOrgId ? `collection-view:${activeOrgId}:projects` : "collection-view:pending:projects",
     () => defaultProjectListView,
     sanitizeProjectListView
   );

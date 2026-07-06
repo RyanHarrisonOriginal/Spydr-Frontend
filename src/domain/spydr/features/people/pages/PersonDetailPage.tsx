@@ -26,7 +26,12 @@ export function PersonDetailPage() {
       personId={detail.person.id}
       displayName={personDisplayName(detail.person)}
       updatedAt={detail.person.updatedAt}
+      projectEntries={detail.projectEntries}
+      assignedTasks={detail.assignedTasks}
+      deleteError={detail.deleteError}
+      isDeleting={detail.isDeleting}
       onFieldChange={detail.updateField}
+      onDelete={detail.deleteCurrentPerson}
     />
   );
 }

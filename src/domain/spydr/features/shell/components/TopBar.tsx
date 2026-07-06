@@ -1,9 +1,12 @@
 import { Bell, Search } from "lucide-react";
 import { UserButton } from "@clerk/react";
+import { OrganizationSwitcher } from "@/domain/spydr/features/organizations/components/OrganizationSwitcher";
 
 export function TopBar() {
   return (
     <header className="z-30 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-background/70 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <OrganizationSwitcher />
+
       <button
         type="button"
         className="group flex h-8 w-full max-w-xl items-center gap-2 rounded-md border border-border bg-muted/30 px-2.5 text-left text-[13px] text-muted-foreground transition-colors hover:border-highlight/30 hover:bg-muted/50 ring-focus"

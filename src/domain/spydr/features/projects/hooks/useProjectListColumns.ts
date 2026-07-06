@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
 import { usePersistentState } from "@/domain/spydr/features/shared/hooks/usePersistentState";
 
 export const optionalProjectColumns = [
@@ -28,8 +29,9 @@ function sanitizeColumns(
 }
 
 export function useProjectListColumns() {
+  const { activeOrgId } = useOrganizationContext();
   const [visibleColumns, setVisibleColumns] = usePersistentState<ProjectColumnId[]>(
-    "collection-columns:projects",
+    activeOrgId ? `collection-columns:${activeOrgId}:projects` : "collection-columns:pending:projects",
     () => defaultVisibleColumns,
     sanitizeColumns
   );

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SpydrMark } from "@/components/SpydrMark";
+import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
 
 interface NavigationItem {
   to?: string;
@@ -110,6 +111,8 @@ function Section({
 }
 
 export function Sidebar() {
+  const { activeOrg } = useOrganizationContext();
+
   return (
     <aside className="spydr-rail hidden h-full w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
       <div className="flex h-12 items-center gap-2.5 border-b border-sidebar-border px-4">
@@ -119,8 +122,8 @@ export function Sidebar() {
         <span className="text-[13px] font-semibold tracking-tight">
           Spydr<span className="text-highlight-secondary">.</span>
         </span>
-        <span className="ml-auto font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground/80">
-          ops
+        <span className="ml-auto max-w-[5.5rem] truncate font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground/80">
+          {activeOrg?.name ?? "org"}
         </span>
       </div>
 

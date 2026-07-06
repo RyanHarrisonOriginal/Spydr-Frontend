@@ -1,4 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
+import { spydrOrgKey } from "@/domain/spydr/features/shared/hooks/spydrQueryKeys";
 import { spydrApi } from "@/domain/spydr/utils/api";
 import type { ProjectDetailNode, ProjectNode, UpdateProjectInput } from "@/domain/spydr/utils/types";
 
@@ -8,6 +10,7 @@ type UpdateProjectVariables =
 
 export function useUpdateProjectMutation(projectId?: string) {
   const queryClient = useQueryClient();
+  const { activeOrgId } = useOrganizationContext();
 
   return useMutation({
     mutationFn: (variables: UpdateProjectVariables) => {
@@ -22,8 +25,9 @@ export function useUpdateProjectMutation(projectId?: string) {
       return spydrApi.projects.update(id, input);
     },
     onSuccess: (project) => {
+      if (!activeOrgId) return;
       const detail = project as ProjectDetailNode;
-      queryClient.setQueryData<ProjectNode[]>(["spydr", "projects"], (current) =>
+      queryClient.setQueryData<ProjectNode[]>(spydrOrgKey(activeOrgId, "projects"), (current) =>
         current?.map((item) =>
           item.id === project.id
             ? {
@@ -40,7 +44,7 @@ export function useUpdateProjectMutation(projectId?: string) {
             : item
         )
       );
-      queryClient.setQueryData(["spydr", "projects", project.id], project);
+      queryClient.setQueryData(spydrOrgKey(activeOrgId, "projects", project.id), project);
     },
   });
 }

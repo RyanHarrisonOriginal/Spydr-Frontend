@@ -6,9 +6,14 @@ const BASE =
 type RequestOptions = Omit<RequestInit, "body"> & { body?: unknown };
 
 let authTokenGetter: (() => Promise<string | null>) | null = null;
+let orgIdGetter: (() => string | null) | null = null;
 
 export function setAuthTokenGetter(getter: () => Promise<string | null>): void {
   authTokenGetter = getter;
+}
+
+export function setOrgIdGetter(getter: () => string | null): void {
+  orgIdGetter = getter;
 }
 
 export async function apiRequest<T>(
@@ -25,6 +30,14 @@ export async function apiRequest<T>(
     const token = await authTokenGetter();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
+  const orgScoped = !path.startsWith("/organizations");
+  if (orgScoped && !headers["X-Org-Id"] && orgIdGetter) {
+    const orgId = orgIdGetter();
+    if (orgId) {
+      headers["X-Org-Id"] = orgId;
     }
   }
 

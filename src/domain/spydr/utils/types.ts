@@ -20,8 +20,24 @@ export type SpydrNodeStatus =
 
 export type SpydrPriority = "low" | "medium" | "high" | "critical";
 
+export type OrganizationMemberRole = "owner" | "admin" | "member";
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  role: OrganizationMemberRole;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateOrganizationInput {
+  name: string;
+}
+
 export interface SpydrNode<TType extends SpydrNodeType = SpydrNodeType, TDetails = unknown> {
   id: string;
+  organizationId: string;
   userId: string;
   nodeType: TType;
   title: string;
@@ -119,7 +135,9 @@ export type TaskNode = SpydrNode<"task", TaskDetails> & {
   project?: TaskProjectRef | null;
   assignee?: PersonNode | null;
 };
-export type NoteNode = SpydrNode<"note", null>;
+export type NoteNode = SpydrNode<"note", null> & {
+  project?: TaskProjectRef | null;
+};
 export type DecisionNode = SpydrNode<"decision", DecisionDetails>;
 export type ResourceNode = SpydrNode<"resource", ResourceDetails>;
 
@@ -240,8 +258,13 @@ export interface UpdateTaskInput {
   assigneePersonNodeId?: string | null;
 }
 
+export interface UpdateNoteInput {
+  title?: string;
+  body?: string;
+}
+
 export interface CreateProjectNoteInput {
-  title: string;
+  title?: string;
   body?: string;
   status?: SpydrNodeStatus;
   priority?: SpydrPriority;

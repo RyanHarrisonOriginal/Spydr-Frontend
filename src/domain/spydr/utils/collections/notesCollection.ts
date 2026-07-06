@@ -1,5 +1,6 @@
 import type { NoteNode } from "@/domain/spydr/utils/types";
 import { projectPriorities } from "@/domain/spydr/utils/projectPriority";
+import { richTextToPlainText } from "@/domain/spydr/utils/richText";
 import {
   distinctFacetOptions,
   joinSearchText,
@@ -12,7 +13,14 @@ export const notesCollection: CollectionConfig<NoteNode> = {
   storageKey: "notes",
   noun: "notes",
   searchPlaceholder: "Search notes…",
-  searchText: (note) => joinSearchText(note.title, note.body, note.area, note.tags),
+  searchText: (note) =>
+    joinSearchText(
+      note.title,
+      richTextToPlainText(note.body),
+      note.area,
+      note.project?.title,
+      note.tags
+    ),
   facets: [
     {
       id: "status",

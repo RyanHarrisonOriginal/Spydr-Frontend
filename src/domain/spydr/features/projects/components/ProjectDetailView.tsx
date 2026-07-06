@@ -89,6 +89,7 @@ interface ProjectDetailViewProps {
   detailSaveState: ProjectDetailSaveState;
   taskForm: ProjectTaskFormValues;
   noteForm: ProjectNoteFormValues;
+  noteFormResetKey: number;
   decisionForm: ProjectDecisionFormValues;
   ideaForm: ProjectIdeaFormValues;
   canAddTask: boolean;
@@ -156,6 +157,7 @@ export function ProjectDetailView({
   detailSaveState,
   taskForm,
   noteForm,
+  noteFormResetKey,
   decisionForm,
   ideaForm,
   canAddTask,
@@ -597,6 +599,7 @@ export function ProjectDetailView({
           <ProjectNotesLog
             notes={project.notes}
             form={noteForm}
+            formResetKey={noteFormResetKey}
             canAdd={canAddNote}
             isAdding={isAddingNote}
             error={noteError}

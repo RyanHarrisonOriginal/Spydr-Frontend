@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { RequireAuth } from "@/components/RequireAuth";
 import { ApiAuthSync } from "@/components/ApiAuthSync";
+import { OrganizationProvider } from "@/domain/spydr/features/organizations/context/OrganizationContext";
 import DashboardScreen from "@/screens/DashboardScreen";
 import WorkspaceShellScreen from "@/screens/WorkspaceShellScreen";
 import ProjectsScreen from "@/screens/ProjectsScreen";
@@ -12,6 +13,7 @@ import TaskDetailScreen from "@/screens/TaskDetailScreen";
 import IdeasScreen from "@/screens/IdeasScreen";
 import DecisionsScreen from "@/screens/DecisionsScreen";
 import NotesScreen from "@/screens/NotesScreen";
+import NoteDetailScreen from "@/screens/NoteDetailScreen";
 import PeopleScreen from "@/screens/PeopleScreen";
 import PersonDetailScreen from "@/screens/PersonDetailScreen";
 import ResourcesScreen from "@/screens/ResourcesScreen";
@@ -40,7 +42,9 @@ export default function App() {
             <Route
               element={
                 <RequireAuth>
-                  <WorkspaceShellScreen />
+                  <OrganizationProvider>
+                    <WorkspaceShellScreen />
+                  </OrganizationProvider>
                 </RequireAuth>
               }
             >
@@ -53,6 +57,7 @@ export default function App() {
               <Route path="/ideas" element={<IdeasScreen />} />
               <Route path="/decisions" element={<DecisionsScreen />} />
               <Route path="/notes" element={<NotesScreen />} />
+              <Route path="/notes/:noteId" element={<NoteDetailScreen />} />
               <Route path="/people" element={<PeopleScreen />} />
               <Route path="/people/:personId" element={<PersonDetailScreen />} />
               <Route path="/resources" element={<ResourcesScreen />} />

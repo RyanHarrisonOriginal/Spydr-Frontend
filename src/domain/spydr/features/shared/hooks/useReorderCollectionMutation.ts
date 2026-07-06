@@ -1,4 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
+import { spydrOrgKey } from "@/domain/spydr/features/shared/hooks/spydrQueryKeys";
 import { spydrApi } from "@/domain/spydr/utils/api";
 import type { SpydrNodeType } from "@/domain/spydr/utils/types";
 
@@ -7,15 +9,19 @@ export type ReorderableNodeType = Extract<
   "project" | "task" | "idea" | "note" | "decision" | "resource" | "person"
 >;
 
-const queryKeys: Record<ReorderableNodeType, readonly string[]> = {
-  project: ["spydr", "projects"],
-  task: ["spydr", "tasks"],
-  idea: ["spydr", "ideas"],
-  note: ["spydr", "notes"],
-  decision: ["spydr", "decisions"],
-  resource: ["spydr", "resources"],
-  person: ["spydr", "people"],
+const querySegments: Record<ReorderableNodeType, string> = {
+  project: "projects",
+  task: "tasks",
+  idea: "ideas",
+  note: "notes",
+  decision: "decisions",
+  resource: "resources",
+  person: "people",
 };
+
+function getQueryKey(orgId: string, nodeType: ReorderableNodeType) {
+  return spydrOrgKey(orgId, querySegments[nodeType]);
+}
 
 interface ReorderInput {
   nodeType: ReorderableNodeType;
@@ -26,12 +32,14 @@ type NodeWithOrder = { id: string; sortOrder: number };
 
 export function useReorderCollectionMutation() {
   const queryClient = useQueryClient();
+  const { activeOrgId } = useOrganizationContext();
 
   return useMutation({
     mutationFn: ({ nodeType, orderedIds }: ReorderInput) =>
       spydrApi.collections.reorder({ nodeType, orderedIds }),
     onMutate: async ({ nodeType, orderedIds }) => {
-      const queryKey = queryKeys[nodeType];
+      if (!activeOrgId) return;
+      const queryKey = getQueryKey(activeOrgId, nodeType);
       await queryClient.cancelQueries({ queryKey });
 
       const previous = queryClient.getQueryData<NodeWithOrder[]>(queryKey);
@@ -55,7 +63,8 @@ export function useReorderCollectionMutation() {
       }
     },
     onSettled: (_data, _error, { nodeType }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys[nodeType] });
+      if (!activeOrgId) return;
+      queryClient.invalidateQueries({ queryKey: getQueryKey(activeOrgId, nodeType) });
     },
   });
 }

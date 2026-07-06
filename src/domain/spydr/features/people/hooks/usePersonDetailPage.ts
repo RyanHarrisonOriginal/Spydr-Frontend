@@ -1,7 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-import { usePersonQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  usePersonQuery,
+  useProjectsQuery,
+  useTasksQuery,
+} from "@/domain/spydr/features/shared/hooks/queries";
+import { listPersonProjects, listPersonTasks } from "@/domain/spydr/utils/personWork";
 import { useUpdatePersonMutation } from "./useUpdatePersonMutation";
+import { useDeletePersonMutation } from "./useDeletePersonMutation";
 
 export interface PersonDetailFormValues {
   fullName: string;
@@ -42,13 +48,32 @@ function serializeForm(form: PersonDetailFormValues) {
 
 export function usePersonDetailPage() {
   const { personId } = useParams<{ personId: string }>();
+  const navigate = useNavigate();
   const query = usePersonQuery(personId);
+  const projectsQuery = useProjectsQuery();
+  const tasksQuery = useTasksQuery();
   const person = query.data;
   const updatePerson = useUpdatePersonMutation(personId);
+  const deletePerson = useDeletePersonMutation();
   const [form, setForm] = useState<PersonDetailFormValues>(emptyForm);
   const [saveState, setSaveState] = useState<PersonDetailSaveState>("idle");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const hydratedRef = useRef(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const projectEntries = useMemo(
+    () =>
+      personId && projectsQuery.data
+        ? listPersonProjects(projectsQuery.data, personId)
+        : [],
+    [personId, projectsQuery.data]
+  );
+
+  const assignedTasks = useMemo(
+    () =>
+      personId && tasksQuery.data ? listPersonTasks(tasksQuery.data, personId) : [],
+    [personId, tasksQuery.data]
+  );
 
   useEffect(() => {
     hydratedRef.current = false;
@@ -98,13 +123,31 @@ export function usePersonDetailPage() {
     value: PersonDetailFormValues[TField]
   ) => setForm((current) => ({ ...current, [field]: value }));
 
+  const deleteCurrentPerson = () => {
+    if (!person) return;
+    setDeleteError(null);
+    deletePerson.mutate(person.id, {
+      onSuccess: () => navigate("/people"),
+      onError: (error) => {
+        setDeleteError(
+          error instanceof Error ? error.message : "Failed to delete person"
+        );
+      },
+    });
+  };
+
   return {
     person,
     personId,
     form,
     saveState,
     updateField,
-    isLoading: query.isLoading,
+    projectEntries,
+    assignedTasks,
+    deleteCurrentPerson,
+    isDeleting: deletePerson.isPending,
+    deleteError,
+    isLoading: query.isLoading || projectsQuery.isLoading || tasksQuery.isLoading,
     isError: query.isError,
     errorMessage:
       query.error instanceof Error ? query.error.message : "Failed to load person",
