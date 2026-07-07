@@ -1,15 +1,29 @@
 import dagre from "@dagrejs/dagre";
 import type { Edge, Node } from "@xyflow/react";
-import type { GraphNodeData } from "./workspaceGraphModel";
+import type { GraphNodeData, GraphNodeKind } from "./workspaceGraphModel";
 
 /** Must match GraphNode rendered size for accurate spacing. */
-export const GRAPH_NODE_WIDTH = 148;
-export const GRAPH_NODE_HEIGHT = 52;
+export const GRAPH_NODE_WIDTH = 196;
+export const GRAPH_NODE_HEIGHT = 56;
 
-const COMPONENT_GAP_X = 140;
-const COMPONENT_GAP_Y = 100;
-const ORPHAN_GRID_GAP_X = 56;
-const ORPHAN_GRID_GAP_Y = 48;
+const COMPONENT_GAP_Y = 120;
+const ORPHAN_GRID_GAP_X = 64;
+const ORPHAN_GRID_GAP_Y = 52;
+
+/** Fixed lineage columns — same entity types share a rank (dbt-style). */
+export const graphKindRank: Record<GraphNodeKind, number> = {
+  project_area: 0,
+  project: 1,
+  task: 2,
+  person: 3,
+};
+
+export const graphRankLabels: Record<number, string> = {
+  0: "Areas",
+  1: "Projects",
+  2: "Tasks",
+  3: "People",
+};
 
 interface LayoutBounds {
   width: number;
@@ -66,8 +80,11 @@ function layoutGrid(
     return { nodes: [], bounds: { width: 0, height: 0 } };
   }
 
-  const cols = Math.max(1, Math.min(columns, nodes.length));
-  const laidOut = nodes.map((node, index) => {
+  const sorted = [...nodes].sort(
+    (a, b) => graphKindRank[a.data.kind] - graphKindRank[b.data.kind]
+  );
+  const cols = Math.max(1, Math.min(columns, sorted.length));
+  const laidOut = sorted.map((node, index) => {
     const col = index % cols;
     const row = Math.floor(index / cols);
     return {
@@ -79,7 +96,7 @@ function layoutGrid(
     };
   });
 
-  const rows = Math.ceil(nodes.length / cols);
+  const rows = Math.ceil(sorted.length / cols);
   return {
     nodes: laidOut,
     bounds: {
@@ -104,13 +121,13 @@ function layoutDagreComponent(
   const graph = new dagre.graphlib.Graph();
   graph.setDefaultEdgeLabel(() => ({}));
   graph.setGraph({
-    rankdir: "TB",
+    rankdir: "LR",
     align: "UL",
-    nodesep: 64,
-    ranksep: 96,
-    edgesep: 24,
-    marginx: 32,
-    marginy: 32,
+    nodesep: 52,
+    ranksep: 148,
+    edgesep: 20,
+    marginx: 48,
+    marginy: 56,
   });
 
   const nodeIds = new Set(nodes.map((node) => node.id));
@@ -119,6 +136,7 @@ function layoutDagreComponent(
     graph.setNode(node.id, {
       width: GRAPH_NODE_WIDTH,
       height: GRAPH_NODE_HEIGHT,
+      rank: graphKindRank[node.data.kind],
     });
   }
 
@@ -172,8 +190,8 @@ function layoutDagreComponent(
 }
 
 /**
- * Lays out workspace graph nodes with Dagre, clustering disconnected subgraphs
- * so the map stays readable as data grows or filters change.
+ * Lays out workspace lineage nodes left-to-right with Dagre, stacking disconnected
+ * subgraphs vertically so wide DAG columns stay readable.
  */
 export function layoutWorkspaceGraph(
   nodes: Node<GraphNodeData>[],
@@ -196,10 +214,7 @@ export function layoutWorkspaceGraph(
   );
 
   const positioned: Node<GraphNodeData>[] = [];
-  let offsetX = 0;
-  let rowY = 0;
-  let rowHeight = 0;
-  const maxRowWidth = 2400;
+  let offsetY = 0;
 
   for (const componentIds of components) {
     const componentIdSet = new Set(componentIds);
@@ -213,24 +228,17 @@ export function layoutWorkspaceGraph(
       componentEdges
     );
 
-    if (offsetX > 0 && offsetX + bounds.width > maxRowWidth) {
-      offsetX = 0;
-      rowY += rowHeight + COMPONENT_GAP_Y;
-      rowHeight = 0;
-    }
-
     for (const node of laidOut) {
       positioned.push({
         ...node,
         position: {
-          x: node.position.x + offsetX,
-          y: node.position.y + rowY,
+          x: node.position.x,
+          y: node.position.y + offsetY,
         },
       });
     }
 
-    offsetX += bounds.width + COMPONENT_GAP_X;
-    rowHeight = Math.max(rowHeight, bounds.height);
+    offsetY += bounds.height + COMPONENT_GAP_Y;
   }
 
   return positioned;

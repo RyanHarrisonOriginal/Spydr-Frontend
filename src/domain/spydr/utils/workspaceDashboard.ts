@@ -23,6 +23,16 @@ export interface WorkspaceDashboardPersonLoad {
 
 export type WorkspaceDashboardStatusCounts = Record<string, number>;
 
+export interface WorkspaceDashboardAreaSummary {
+  id: string | null;
+  name: string;
+  color: string;
+  projects: number;
+  activeProjects: number;
+  tasks: number;
+  openTasks: number;
+}
+
 export interface WorkspaceDashboardSummary {
   totalProjects: number;
   activeProjects: number;
@@ -40,5 +50,6 @@ export interface WorkspaceDashboard {
   summary: WorkspaceDashboardSummary;
   projectStatusCounts: WorkspaceDashboardStatusCounts;
   taskStatusCounts: WorkspaceDashboardStatusCounts;
+  areaSummaries?: WorkspaceDashboardAreaSummary[];
   personLoads: WorkspaceDashboardPersonLoad[];
 }

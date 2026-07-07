@@ -13,19 +13,26 @@ export type GraphNodeKind = Extract<
   "project" | "task" | "person" | "project_area"
 >;
 
+export type GraphEdgeKind = "lineage" | "association";
+
 export type GraphNodeFilters = Record<GraphNodeKind, boolean>;
 
 export const defaultGraphNodeFilters: GraphNodeFilters = {
+  project_area: true,
   project: true,
   task: true,
-  person: true,
-  project_area: true,
+  person: false,
 };
 
 export interface GraphNodeData extends Record<string, unknown> {
   kind: GraphNodeKind;
   label: string;
   href: string | null;
+}
+
+export interface GraphEdgeData extends Record<string, unknown> {
+  edgeKind: GraphEdgeKind;
+  label?: string;
 }
 
 export interface WorkspaceGraphInput {
@@ -91,21 +98,19 @@ function addEdge(
   seen: Set<string>,
   source: string,
   target: string,
-  kind: string
+  edgeKind: GraphEdgeKind,
+  label?: string
 ) {
   if (source === target) return;
-  const id = `${source}->${target}:${kind}`;
+  const id = `${source}->${target}:${edgeKind}:${label ?? "edge"}`;
   if (seen.has(id)) return;
   seen.add(id);
   edges.push({
     id,
     source,
     target,
-    type: "smoothstep",
-    style: {
-      stroke: "hsl(var(--connector-line))",
-      strokeWidth: 1,
-    },
+    type: "lineageEdge",
+    data: { edgeKind, label },
   });
 }
 
@@ -155,6 +160,7 @@ export function buildWorkspaceGraph(input: WorkspaceGraphInput): WorkspaceGraphR
             edgeSeen,
             nodeId("project_area", area.id),
             nodeId("project", project.id),
+            "lineage",
             "area"
           );
         }
@@ -174,6 +180,7 @@ export function buildWorkspaceGraph(input: WorkspaceGraphInput): WorkspaceGraphR
             edgeSeen,
             nodeId("project", project.id),
             nodeId("person", personId),
+            "association",
             "persona"
           );
         }
@@ -194,7 +201,8 @@ export function buildWorkspaceGraph(input: WorkspaceGraphInput): WorkspaceGraphR
           edgeSeen,
           nodeId("project", projectId),
           nodeId("task", task.id),
-          "project"
+          "lineage",
+          "contains"
         );
       }
 
@@ -205,6 +213,7 @@ export function buildWorkspaceGraph(input: WorkspaceGraphInput): WorkspaceGraphR
           edgeSeen,
           nodeId("task", task.id),
           nodeId("person", assigneeId),
+          "association",
           "assignee"
         );
       }
@@ -234,8 +243,8 @@ export function buildWorkspaceGraph(input: WorkspaceGraphInput): WorkspaceGraphR
 }
 
 export const graphKindLabels: Record<GraphNodeKind, string> = {
+  project_area: "Areas",
   project: "Projects",
   task: "Tasks",
   person: "People",
-  project_area: "Areas",
 };

@@ -15,13 +15,14 @@ import { ProjectSelect } from "@/domain/spydr/features/projects/components/Proje
 import { PersonSelect } from "@/domain/spydr/features/projects/components/PersonSelect";
 import { TaskDueDateSelect } from "./TaskDueDateSelect";
 import { TaskStatusSelect } from "./TaskStatusSelect";
+import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 
 const ROW_BASE =
-  "grid grid-cols-[36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_104px] items-center gap-3";
+  "grid grid-cols-[36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_104px_72px] items-center gap-3";
 const ROW_WITH_HANDLE =
-  "grid grid-cols-[24px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_104px] items-center gap-3";
-const ROW_MIN_WIDTH = 996;
-const ROW_MIN_WIDTH_WITH_HANDLE = 1020;
+  "grid grid-cols-[24px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_104px_72px] items-center gap-3";
+const ROW_MIN_WIDTH = 1068;
+const ROW_MIN_WIDTH_WITH_HANDLE = 1092;
 
 interface TaskListProps {
   tasks: TaskNode[];
@@ -37,6 +38,8 @@ interface TaskListProps {
   onProjectChange(taskId: string, projectNodeId: string | null): void;
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
   onDueDateChange(taskId: string, dueDate: string | null): void;
+  onDelete?(taskId: string): void;
+  deletingTaskId?: string | null;
 }
 
 function resolveAssigneeId(task: TaskNode): string | null {
@@ -55,6 +58,8 @@ function TaskRow({
   onProjectChange,
   onAssigneeChange,
   onDueDateChange,
+  onDelete,
+  deletingTaskId = null,
 }: {
   task: TaskNode;
   projects: ProjectNode[];
@@ -67,6 +72,8 @@ function TaskRow({
   onProjectChange(taskId: string, projectNodeId: string | null): void;
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
   onDueDateChange(taskId: string, dueDate: string | null): void;
+  onDelete?: (taskId: string) => void;
+  deletingTaskId?: string | null;
 }) {
   const rowClass = reorderEnabled ? ROW_WITH_HANDLE : ROW_BASE;
   const minWidth = reorderEnabled ? ROW_MIN_WIDTH_WITH_HANDLE : ROW_MIN_WIDTH;
@@ -140,6 +147,14 @@ function TaskRow({
       <span className="text-right font-mono text-[10px] text-muted-foreground">
         {formatRelativeTime(task.updatedAt)}
       </span>
+      {onDelete ? (
+        <InlineDeleteButton
+          label={task.title}
+          isDeleting={deletingTaskId === task.id}
+          disabled={Boolean(deletingTaskId && deletingTaskId !== task.id)}
+          onDelete={() => onDelete(task.id)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -158,6 +173,8 @@ export function TaskList({
   onProjectChange,
   onAssigneeChange,
   onDueDateChange,
+  onDelete,
+  deletingTaskId = null,
 }: TaskListProps) {
   const headerClass = reorderEnabled ? ROW_WITH_HANDLE : ROW_BASE;
   const minWidth = reorderEnabled ? ROW_MIN_WIDTH_WITH_HANDLE : ROW_MIN_WIDTH;
@@ -222,6 +239,7 @@ export function TaskList({
           align="end"
           onSort={onSortColumn}
         />
+        <span />
       </div>
 
       <CollectionSortableList
@@ -242,6 +260,8 @@ export function TaskList({
             onProjectChange={onProjectChange}
             onAssigneeChange={onAssigneeChange}
             onDueDateChange={onDueDateChange}
+            onDelete={onDelete}
+            deletingTaskId={deletingTaskId}
           />
         )}
       />

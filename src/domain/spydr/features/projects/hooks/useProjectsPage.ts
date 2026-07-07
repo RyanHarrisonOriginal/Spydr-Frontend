@@ -15,7 +15,8 @@ import { useRestoreProjectMutation } from "./useRestoreProjectMutation";
 import { useUpdateProjectMutation } from "./useUpdateProjectMutation";
 import { canManuallyReorderCollection } from "@/domain/spydr/utils/collections/shared";
 import { useReorderCollectionMutation } from "@/domain/spydr/features/shared/hooks/useReorderCollectionMutation";
-import { useGetPriorityRank } from "@/domain/spydr/features/shared/hooks/usePriorityRankLookup";
+import { useCollectionDisplayPriorityRank } from "@/domain/spydr/features/shared/hooks/usePriorityRankLookup";
+import { COLLECTION_ORDER_SORT_ID } from "@/domain/spydr/utils/collections/shared";
 
 export function useProjectsPage() {
   const query = useProjectsQuery();
@@ -29,7 +30,12 @@ export function useProjectsPage() {
   const listView = useProjectListView(projects, areas, people);
   const reorderMutation = useReorderCollectionMutation();
   const canReorder = canManuallyReorderCollection(listView.hasActiveFilters);
-  const getPriorityRank = useGetPriorityRank(projects);
+  const getPriorityRank = useCollectionDisplayPriorityRank(
+    projects,
+    listView.visibleProjects,
+    listView.sort.column,
+    listView.sort.direction
+  );
   const updateProject = useUpdateProjectMutation();
   const deleteProject = useDeleteProjectMutation();
   const restoreProject = useRestoreProjectMutation();
@@ -153,8 +159,8 @@ export function useProjectsPage() {
       onReorder: (orderedIds: string[]) => {
         if (!canReorder) return;
         reorderMutation.mutate({ nodeType: "project", orderedIds });
-        if (listView.sort.column !== "order") {
-          listView.setSortColumn("order", "asc");
+        if (listView.sort.column !== COLLECTION_ORDER_SORT_ID) {
+          listView.setSortColumn(COLLECTION_ORDER_SORT_ID, "asc");
         }
       },
       isReordering: reorderMutation.isPending,

@@ -30,6 +30,9 @@ export function TasksPage() {
     projectError,
     assigneeError,
     dueDateError,
+    deleteError,
+    deleteTask,
+    deletingTaskId,
     isLoading,
     isError,
     errorMessage,
@@ -91,6 +94,11 @@ export function TasksPage() {
               {dueDateError}
             </p>
           ) : null}
+          {deleteError ? (
+            <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {deleteError}
+            </p>
+          ) : null}
           {view.items.length > 0 ? (
             <TaskList
               tasks={view.items}
@@ -106,6 +114,8 @@ export function TasksPage() {
               onProjectChange={updateProject}
               onAssigneeChange={updateAssignee}
               onDueDateChange={updateDueDate}
+              onDelete={deleteTask}
+              deletingTaskId={deletingTaskId}
             />
           ) : (
             <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />

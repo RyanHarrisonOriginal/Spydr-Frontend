@@ -47,12 +47,22 @@ export function useReorderCollectionMutation() {
         if (!current) return current;
 
         const byId = new Map(current.map((item) => [item.id, item]));
-        return orderedIds
+        const reordered = orderedIds
           .map((id, index) => {
             const item = byId.get(id);
             return item ? { ...item, sortOrder: index * 1000 } : null;
           })
           .filter((item): item is NodeWithOrder => item !== null);
+
+        const reorderedIdSet = new Set(orderedIds);
+        const remainder = current
+          .filter((item) => !reorderedIdSet.has(item.id))
+          .map((item, index) => ({
+            ...item,
+            sortOrder: (reordered.length + index) * 1000,
+          }));
+
+        return [...reordered, ...remainder];
       });
 
       return { previous, queryKey };

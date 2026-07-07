@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { useResourcesQuery } from "@/domain/spydr/features/shared/hooks/queries";
 import { useCollectionView } from "@/domain/spydr/features/shared/hooks/useCollectionView";
 import { useCollectionReorder } from "@/domain/spydr/features/shared/hooks/useCollectionReorder";
-import { useGetPriorityRank } from "@/domain/spydr/features/shared/hooks/usePriorityRankLookup";
 import { resourcesCollection } from "@/domain/spydr/utils/collections/resourcesCollection";
 
 export function useResourcesPage() {
@@ -10,7 +9,6 @@ export function useResourcesPage() {
   const resources = query.data ?? [];
   const view = useCollectionView(resourcesCollection, resources);
   const reorder = useCollectionReorder("resource", view);
-  const getPriorityRank = useGetPriorityRank(resources);
 
   const groupedResourceTypes = useMemo(
     () =>
@@ -25,7 +23,7 @@ export function useResourcesPage() {
   return {
     view,
     reorder,
-    getPriorityRank,
+    getPriorityRank: view.getPriorityRank,
     groupedResourceTypes,
     totalCount: resources.length,
     isLoading: query.isLoading,

@@ -21,6 +21,7 @@ import {
   type SortDirection,
 } from "@/domain/spydr/utils/collectionView";
 import { usePersistentState } from "./usePersistentState";
+import { useCollectionDisplayPriorityRank } from "./usePriorityRankLookup";
 
 export interface CollectionFacetView {
   id: string;
@@ -47,6 +48,7 @@ export interface CollectionView<T> {
   clearFilters(): void;
   setSort(columnId: string, direction: SortDirection): void;
   toggleSort(columnId: string): void;
+  getPriorityRank(id: string): number | undefined;
 }
 
 /**
@@ -54,7 +56,7 @@ export interface CollectionView<T> {
  * a `CollectionConfig`. Returns the visible (filtered + sorted) items along
  * with everything `CollectionToolbar` needs to render.
  */
-export function useCollectionView<T>(
+export function useCollectionView<T extends { id: string; sortOrder?: number }>(
   config: CollectionConfig<T>,
   source: T[]
 ): CollectionView<T> {
@@ -88,6 +90,13 @@ export function useCollectionView<T>(
     [config, source, state]
   );
 
+  const getPriorityRank = useCollectionDisplayPriorityRank(
+    source,
+    items,
+    state.sort.columnId,
+    state.sort.direction
+  );
+
   return {
     items,
     state,
@@ -109,5 +118,6 @@ export function useCollectionView<T>(
     setSort: (columnId, direction) =>
       setState((prev) => setSort(config, prev, columnId, direction)),
     toggleSort: (columnId) => setState((prev) => toggleSortColumn(config, prev, columnId)),
+    getPriorityRank,
   };
 }

@@ -6,6 +6,7 @@ import {
 } from "@/domain/spydr/features/shared/components/ListState";
 import { CollectionToolbar } from "@/domain/spydr/features/shared/components/CollectionToolbar";
 import { CollectionNoResults } from "@/domain/spydr/features/shared/components/CollectionNoResults";
+import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import { CreatePersonDialog } from "../components/CreatePersonDialog";
 import { PersonList } from "../components/PersonList";
 import { usePeoplePage } from "../hooks/usePeoplePage";
@@ -29,6 +30,8 @@ export function PeoplePage() {
     deletePerson,
     deletingPersonId,
   } = usePeoplePage();
+  const { currentUserPerson, isReady: isCurrentUserReady, primaryClerkEmail } =
+    useCurrentUserPerson();
 
   return (
     <div>
@@ -58,6 +61,12 @@ export function PeoplePage() {
         <>
           {deleteError ? (
             <p className="px-6 pb-2 text-sm text-destructive">{deleteError}</p>
+          ) : null}
+          {isCurrentUserReady && !currentUserPerson && primaryClerkEmail ? (
+            <p className="px-6 pb-2 text-[12px] text-muted-foreground">
+              No person record matches your Clerk email ({primaryClerkEmail}). Add yourself
+              with that email to see the <span className="text-highlight">You</span> badge.
+            </p>
           ) : null}
           <CollectionToolbar view={view} />
           {view.items.length > 0 ? (

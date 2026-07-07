@@ -8,6 +8,7 @@ import {
 import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
+import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,8 @@ interface IdeaListProps {
   getPriorityRank(id: string): number | undefined;
   reorderEnabled?: boolean;
   onReorder?(orderedIds: string[]): void;
+  onDelete?(ideaId: string): void;
+  deletingIdeaId?: string | null;
 }
 
 function formatConfidence(confidence: number | null | undefined) {
@@ -28,6 +31,8 @@ export function IdeaList({
   getPriorityRank,
   reorderEnabled = false,
   onReorder,
+  onDelete,
+  deletingIdeaId = null,
 }: IdeaListProps) {
   return (
     <CollectionSortableList
@@ -64,6 +69,14 @@ export function IdeaList({
                   <h2 className="min-w-0 flex-1 text-[13px] font-semibold leading-snug">
                     {idea.title}
                   </h2>
+                  {onDelete ? (
+                    <InlineDeleteButton
+                      label={idea.title}
+                      isDeleting={deletingIdeaId === idea.id}
+                      disabled={Boolean(deletingIdeaId && deletingIdeaId !== idea.id)}
+                      onDelete={() => onDelete(idea.id)}
+                    />
+                  ) : null}
                   <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
                     {formatRelativeTime(idea.updatedAt)}
                   </span>

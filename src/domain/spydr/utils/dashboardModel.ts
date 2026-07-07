@@ -1,4 +1,8 @@
-import type { WorkspaceDashboard, WorkspaceDashboardSummary } from "./workspaceDashboard";
+import type {
+  WorkspaceDashboard,
+  WorkspaceDashboardAreaSummary,
+  WorkspaceDashboardSummary,
+} from "./workspaceDashboard";
 
 export const dashboardMetricIds = [
   "activeProjects",
@@ -95,4 +99,13 @@ export function sortedStatusEntries(
   return Object.entries(counts)
     .map(([status, count]) => ({ status, count }))
     .sort((left, right) => right.count - left.count);
+}
+
+export function sortedAreaSummaries(
+  summaries: WorkspaceDashboard["areaSummaries"] | undefined
+): WorkspaceDashboardAreaSummary[] {
+  return [...(summaries ?? [])].sort((left, right) => {
+    if (right.projects !== left.projects) return right.projects - left.projects;
+    return left.name.localeCompare(right.name);
+  });
 }

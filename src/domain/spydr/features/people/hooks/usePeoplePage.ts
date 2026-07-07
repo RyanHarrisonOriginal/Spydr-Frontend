@@ -2,7 +2,6 @@ import { useState } from "react";
 import { usePeopleQuery } from "@/domain/spydr/features/shared/hooks/queries";
 import { useCollectionView } from "@/domain/spydr/features/shared/hooks/useCollectionView";
 import { useCollectionReorder } from "@/domain/spydr/features/shared/hooks/useCollectionReorder";
-import { useGetPriorityRank } from "@/domain/spydr/features/shared/hooks/usePriorityRankLookup";
 import { peopleCollection } from "@/domain/spydr/utils/collections/peopleCollection";
 import { useCreatePersonMutation } from "./useCreatePersonMutation";
 import { useDeletePersonMutation } from "./useDeletePersonMutation";
@@ -14,7 +13,6 @@ export function usePeoplePage() {
   const people = query.data ?? [];
   const view = useCollectionView(peopleCollection, people);
   const reorder = useCollectionReorder("person", view);
-  const getPriorityRank = useGetPriorityRank(people);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -67,7 +65,7 @@ export function usePeoplePage() {
     people,
     view,
     reorder,
-    getPriorityRank,
+    getPriorityRank: view.getPriorityRank,
     totalCount,
     isLoading: query.isLoading,
     isError: query.isError,

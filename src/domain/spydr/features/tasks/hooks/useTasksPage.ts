@@ -11,8 +11,8 @@ import {
   isTaskStatus,
 } from "@/domain/spydr/utils/taskStatus";
 import { useUpdateTaskMutation } from "./useUpdateTaskMutation";
+import { useDeleteTaskMutation } from "./useDeleteTaskMutation";
 import { useCollectionReorder } from "@/domain/spydr/features/shared/hooks/useCollectionReorder";
-import { useGetPriorityRank } from "@/domain/spydr/features/shared/hooks/usePriorityRankLookup";
 
 export function useTasksPage() {
   const query = useTasksQuery();
@@ -23,9 +23,11 @@ export function useTasksPage() {
   const people = peopleQuery.data ?? [];
   const view = useCollectionView(tasksCollection, tasks);
   const reorder = useCollectionReorder("task", view);
-  const getPriorityRank = useGetPriorityRank(tasks);
   const updateTask = useUpdateTaskMutation();
+  const deleteTask = useDeleteTaskMutation();
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [projectError, setProjectError] = useState<string | null>(null);
   const [assigneeError, setAssigneeError] = useState<string | null>(null);
@@ -102,13 +104,26 @@ export function useTasksPage() {
     );
   };
 
+  const deleteTaskById = (taskId: string) => {
+    setDeleteError(null);
+    setDeletingTaskId(taskId);
+    deleteTask.mutate(taskId, {
+      onError: (error) => {
+        setDeleteError(
+          error instanceof Error ? error.message : "Failed to delete task"
+        );
+      },
+      onSettled: () => setDeletingTaskId(null),
+    });
+  };
+
   return {
     tasks,
     projects,
     people,
     view,
     reorder,
-    getPriorityRank,
+    getPriorityRank: view.getPriorityRank,
     totalCount: tasks.length,
     openCount,
     updateStatus,
@@ -120,6 +135,9 @@ export function useTasksPage() {
     projectError,
     assigneeError,
     dueDateError,
+    deleteError,
+    deleteTask: deleteTaskById,
+    deletingTaskId,
     isLoading: query.isLoading,
     isError: query.isError,
     errorMessage:

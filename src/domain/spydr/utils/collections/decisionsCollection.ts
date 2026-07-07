@@ -101,5 +101,5 @@ export const decisionsCollection: CollectionConfig<DecisionNode> = {
       defaultDirection: "asc",
     },
   ],
-  defaultSortId: "order",
+  defaultSortId: "decided",
 };

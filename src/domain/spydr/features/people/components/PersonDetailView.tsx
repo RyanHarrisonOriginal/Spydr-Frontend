@@ -3,6 +3,10 @@ import type { ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
 import type { ProjectPersonaRole } from "@/domain/spydr/utils/projectPersonas";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
+import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
+import {
+  PersonMeBadge,
+} from "@/domain/spydr/features/people/components/PersonIdentity";
 import {
   ProjectDetailField,
   ProjectDetailFormPanel,
@@ -61,6 +65,8 @@ export function PersonDetailView({
   onDelete,
 }: PersonDetailViewProps) {
   const hint = saveLabel(saveState);
+  const { isMe, primaryClerkEmail } = useCurrentUserPerson();
+  const isCurrentUser = isMe(personId);
 
   return (
     <div className="flex min-w-0">
@@ -75,7 +81,12 @@ export function PersonDetailView({
               <span>{personId.slice(0, 8)}</span>
             </span>
           }
-          title={displayName}
+          title={
+            <span className="inline-flex items-center gap-2">
+              {displayName}
+              {isCurrentUser ? <PersonMeBadge /> : null}
+            </span>
+          }
           meta={
             <span className="font-mono text-[11px] text-muted-foreground">
               updated {new Date(updatedAt).toLocaleString()}
@@ -94,6 +105,16 @@ export function PersonDetailView({
           <p className="px-6 pb-2 text-sm text-destructive">{deleteError}</p>
         ) : null}
 
+        {isCurrentUser ? (
+          <div className="person-me-banner mx-6 mb-2 flex flex-wrap items-center gap-2 rounded-lg border border-highlight/30 bg-highlight/8 px-3 py-2.5 text-[12px] text-foreground/90">
+            <PersonMeBadge compact />
+            <span>
+              This is your workspace profile, matched to{" "}
+              <span className="font-mono text-[11px] text-highlight">{primaryClerkEmail}</span>.
+            </span>
+          </div>
+        ) : null}
+
         <div className="space-y-5 px-6 pb-8 pt-2">
           <ProjectDetailSection>
             <ProjectDetailSectionHeader
@@ -103,7 +124,13 @@ export function PersonDetailView({
             />
             <ProjectDetailSectionBody className="gap-4">
               <div className="flex items-center gap-3">
-                <span className="grid h-12 w-12 place-items-center rounded-full border border-border bg-muted/30 font-mono text-lg font-semibold text-foreground/85">
+                <span
+                  className={cn(
+                    "grid h-12 w-12 place-items-center rounded-full border border-border bg-muted/30 font-mono text-lg font-semibold text-foreground/85",
+                    isCurrentUser &&
+                      "person-me-avatar border-highlight/50 bg-highlight/10 text-highlight"
+                  )}
+                >
                   {displayName.charAt(0).toUpperCase()}
                 </span>
                 <ProjectDetailField label="Full name" className="min-w-0 flex-1">

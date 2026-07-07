@@ -5,6 +5,8 @@ import {
   maxPersonOpenTasks,
 } from "@/domain/spydr/utils/dashboardModel";
 import type { WorkspaceDashboard } from "@/domain/spydr/utils/workspaceDashboard";
+import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
+import { PersonMeBadge } from "@/domain/spydr/features/people/components/PersonIdentity";
 import { cn } from "@/lib/utils";
 
 interface DashboardPersonLoadSectionProps {
@@ -14,6 +16,7 @@ interface DashboardPersonLoadSectionProps {
 export function DashboardPersonLoadSection({
   dashboard,
 }: DashboardPersonLoadSectionProps) {
+  const { isMe } = useCurrentUserPerson();
   const maxOpenTasks = maxPersonOpenTasks(dashboard);
   const loads = dashboard.personLoads.filter(
     (load) =>
@@ -65,15 +68,24 @@ export function DashboardPersonLoadSection({
                 );
 
                 return (
-                  <tr key={load.person?.id ?? "unassigned"} className="row-hover">
+                  <tr
+                    key={load.person?.id ?? "unassigned"}
+                    className={cn("row-hover", load.person && isMe(load.person.id) && "person-me-row")}
+                  >
                     <td className="px-4 py-2.5">
                       {load.person ? (
-                        <Link
-                          to={`/people/${load.person.id}`}
-                          className="font-medium hover:text-primary"
-                        >
-                          {load.person.name}
-                        </Link>
+                        <span className="inline-flex items-center gap-1.5">
+                          <Link
+                            to={`/people/${load.person.id}`}
+                            className={cn(
+                              "font-medium hover:text-primary",
+                              isMe(load.person.id) && "text-highlight"
+                            )}
+                          >
+                            {load.person.name}
+                          </Link>
+                          {isMe(load.person.id) ? <PersonMeBadge compact /> : null}
+                        </span>
                       ) : (
                         <span className="text-muted-foreground">Unassigned</span>
                       )}

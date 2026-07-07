@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { RequireAuth } from "@/components/RequireAuth";
 import { ApiAuthSync } from "@/components/ApiAuthSync";
 import { OrganizationProvider } from "@/domain/spydr/features/organizations/context/OrganizationContext";
+import { CurrentUserPersonProvider } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import DashboardScreen from "@/screens/DashboardScreen";
 import WorkspaceShellScreen from "@/screens/WorkspaceShellScreen";
 import ProjectsScreen from "@/screens/ProjectsScreen";
@@ -43,7 +44,9 @@ export default function App() {
               element={
                 <RequireAuth>
                   <OrganizationProvider>
-                    <WorkspaceShellScreen />
+                    <CurrentUserPersonProvider>
+                      <WorkspaceShellScreen />
+                    </CurrentUserPersonProvider>
                   </OrganizationProvider>
                 </RequireAuth>
               }

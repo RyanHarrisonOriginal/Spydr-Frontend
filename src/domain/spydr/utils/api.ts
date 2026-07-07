@@ -135,24 +135,32 @@ export const spydrApi = {
     get: (taskId: string) => apiRequest<TaskNode>(`/tasks/${taskId}`),
     update: (taskId: string, input: UpdateTaskInput) =>
       apiRequest<TaskNode>(`/tasks/${taskId}`, { method: "PATCH", body: input }),
+    delete: (taskId: string) =>
+      apiRequest<void>(`/tasks/${taskId}`, { method: "DELETE" }),
   },
   dashboard: {
     getWorkspace: () => apiRequest<WorkspaceDashboard>("/dashboard"),
   },
   decisions: {
     list: () => apiRequest<DecisionNode[]>("/decisions"),
+    delete: (decisionId: string) =>
+      apiRequest<void>(`/decisions/${decisionId}`, { method: "DELETE" }),
   },
   notes: {
     list: () => apiRequest<NoteNode[]>("/notes"),
     get: (noteId: string) => apiRequest<NoteNode>(`/notes/${noteId}`),
     update: (noteId: string, input: UpdateNoteInput) =>
       apiRequest<NoteNode>(`/notes/${noteId}`, { method: "PATCH", body: input }),
+    delete: (noteId: string) =>
+      apiRequest<void>(`/notes/${noteId}`, { method: "DELETE" }),
   },
   resources: {
     list: () => apiRequest<ResourceNode[]>("/resources"),
   },
   ideas: {
     list: () => apiRequest<IdeaNode[]>("/ideas"),
+    delete: (ideaId: string) =>
+      apiRequest<void>(`/ideas/${ideaId}`, { method: "DELETE" }),
   },
   collections: {
     reorder: (input: { nodeType: string; orderedIds: string[] }) =>

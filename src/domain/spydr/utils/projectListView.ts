@@ -90,7 +90,9 @@ export function sortProjects(
 
     switch (sort.column) {
       case "order":
-        result = (left.sortOrder ?? 0) - (right.sortOrder ?? 0);
+        result =
+          (left.sortOrder ?? 0) - (right.sortOrder ?? 0) ||
+          left.id.localeCompare(right.id);
         break;
       case "name":
         result = compareStrings(left.title, right.title);

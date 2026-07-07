@@ -8,6 +8,7 @@ import {
 import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
 import { useWorkspaceDashboardQuery } from "@/domain/spydr/features/shared/hooks/queries";
 import { DashboardMetricStrip } from "../components/DashboardMetricStrip";
+import { DashboardAreaSummaryChart } from "../components/DashboardAreaSummaryChart";
 import { DashboardPersonLoadSection } from "../components/DashboardPersonLoadSection";
 import { DashboardStatusBreakdown } from "../components/DashboardStatusBreakdown";
 
@@ -52,7 +53,7 @@ export function DashboardPage() {
         <>
           <DashboardMetricStrip summary={dashboard.summary} />
 
-          <div className="grid gap-5 p-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <div className="grid gap-5 px-6 pb-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             <DashboardPersonLoadSection dashboard={dashboard} />
             <div className="space-y-5">
               <DashboardStatusBreakdown
@@ -65,6 +66,10 @@ export function DashboardPage() {
                 counts={dashboard.projectStatusCounts}
                 total={dashboard.summary.totalProjects}
                 labelForStatus={(status) => status.replace(/_/g, " ")}
+              />
+              <DashboardAreaSummaryChart
+                summaries={dashboard.areaSummaries}
+                totalProjects={dashboard.summary.totalProjects}
               />
             </div>
           </div>

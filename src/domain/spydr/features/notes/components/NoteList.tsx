@@ -9,6 +9,7 @@ import {
 import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
+import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import {
   formatRelativeTime,
   formatShortDate,
@@ -21,6 +22,8 @@ interface NoteListProps {
   getPriorityRank(id: string): number | undefined;
   reorderEnabled?: boolean;
   onReorder?(orderedIds: string[]): void;
+  onDelete?(noteId: string): void;
+  deletingNoteId?: string | null;
 }
 
 export function NoteList({
@@ -28,6 +31,8 @@ export function NoteList({
   getPriorityRank,
   reorderEnabled = false,
   onReorder,
+  onDelete,
+  deletingNoteId = null,
 }: NoteListProps) {
   return (
     <CollectionSortableList
@@ -97,7 +102,7 @@ export function NoteList({
                 <Link
                   to={`/notes/${note.id}`}
                   className={cn(
-                    "ml-auto font-mono text-[9px] uppercase tracking-wider text-muted-foreground",
+                    "font-mono text-[9px] uppercase tracking-wider text-muted-foreground",
                     "hover:text-primary"
                   )}
                 >
@@ -105,6 +110,14 @@ export function NoteList({
                 </Link>
               </div>
             </div>
+            {onDelete ? (
+              <InlineDeleteButton
+                label={note.title}
+                isDeleting={deletingNoteId === note.id}
+                disabled={Boolean(deletingNoteId && deletingNoteId !== note.id)}
+                onDelete={() => onDelete(note.id)}
+              />
+            ) : null}
           </div>
         );
       }}

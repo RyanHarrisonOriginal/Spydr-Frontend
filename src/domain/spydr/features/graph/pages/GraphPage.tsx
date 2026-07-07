@@ -26,26 +26,26 @@ export function GraphPage() {
       <PageHeader
         className="shrink-0"
         eyebrow="Meta"
-        title="Graph"
+        title="Lineage"
         meta={
           !isLoading && !isError ? (
             <span>
-              {stats.nodeCount} nodes · {stats.edgeCount} connections
+              {stats.nodeCount} nodes · {stats.edgeCount} dependencies
             </span>
           ) : undefined
         }
       />
 
-      {isLoading && <LoadingState title="Mapping workspace" />}
+      {isLoading && <LoadingState title="Building lineage graph" />}
 
       {!isLoading && isError && (
-        <ErrorState title="Graph unavailable" description={errorMessage} />
+        <ErrorState title="Lineage unavailable" description={errorMessage} />
       )}
 
       {!isLoading && !isError && stats.nodeCount === 0 && (
         <EmptyState
           title="Nothing to map yet"
-          description="Add projects, tasks, or people and their connections will appear here."
+          description="Add projects, tasks, and areas — dependencies flow left to right like a dbt lineage DAG."
         />
       )}
 

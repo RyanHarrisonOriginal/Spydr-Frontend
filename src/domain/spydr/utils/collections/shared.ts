@@ -1,4 +1,4 @@
-import type { SortDef } from "@/domain/spydr/utils/collectionView";
+import type { SortDef, SortDirection } from "@/domain/spydr/utils/collectionView";
 import { projectPriorities } from "@/domain/spydr/utils/projectPriority";
 
 /** Class applied to status options/badges in filter menus. */
@@ -27,7 +27,7 @@ export function sortOrderAccessor(item: { sortOrder?: number }): number {
   return item.sortOrder ?? 0;
 }
 
-/** 1-based rank from stored sortOrder (lower sortOrder = rank 1). */
+/** 1-based rank from stored sortOrder within a single collection (node type). */
 export function buildPriorityRankLookup<T extends { id: string; sortOrder?: number }>(
   items: readonly T[]
 ): ReadonlyMap<string, number> {
@@ -37,6 +37,29 @@ export function buildPriorityRankLookup<T extends { id: string; sortOrder?: numb
       left.id.localeCompare(right.id)
   );
   return new Map(sorted.map((item, index) => [item.id, index + 1]));
+}
+
+/**
+ * When the list is sorted by manual order, rank badges should match visible row
+ * position (1 = top row). Otherwise ranks come from stored sortOrder.
+ */
+export function resolveCollectionPriorityRank<T extends { id: string; sortOrder?: number }>(
+  id: string,
+  allItems: readonly T[],
+  visibleItems: readonly T[],
+  sortColumnId: string,
+  sortDirection: SortDirection,
+  manualLookup?: ReadonlyMap<string, number>
+): number | undefined {
+  if (sortColumnId === COLLECTION_ORDER_SORT_ID) {
+    const index = visibleItems.findIndex((item) => item.id === id);
+    if (index === -1) return undefined;
+    return sortDirection === "asc"
+      ? index + 1
+      : visibleItems.length - index;
+  }
+
+  return (manualLookup ?? buildPriorityRankLookup(allItems)).get(id);
 }
 
 export function createOrderSortDef<T extends { sortOrder?: number }>(): SortDef<T> {
