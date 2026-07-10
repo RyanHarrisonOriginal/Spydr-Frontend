@@ -83,11 +83,12 @@ export function TaskDetailView({
               <span className="font-mono">{task.id.slice(0, 8)}</span>
             </span>
           }
+          titleClassName="w-full max-w-none truncate-none"
           title={
             <input
               value={form.title}
               onChange={(event) => onFieldChange("title", event.target.value)}
-              className="w-full bg-transparent text-[1.35rem] font-semibold tracking-tight outline-none ring-focus placeholder:text-muted-foreground"
+              className="w-full min-w-0 bg-transparent text-[1.35rem] font-semibold tracking-tight outline-none ring-focus placeholder:text-muted-foreground"
               placeholder="Task title"
             />
           }

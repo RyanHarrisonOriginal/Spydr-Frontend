@@ -8,6 +8,7 @@ interface PageHeaderProps {
   meta?: ReactNode;
   actions?: ReactNode;
   className?: string;
+  titleClassName?: string;
 }
 
 export function PageHeader({
@@ -16,6 +17,7 @@ export function PageHeader({
   meta,
   actions,
   className,
+  titleClassName,
 }: PageHeaderProps) {
   return (
     <div
@@ -41,13 +43,18 @@ export function PageHeader({
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/75 to-transparent" />
       </div>
       <div className="relative flex min-h-[7.5rem] items-end justify-between gap-6 px-6 py-6">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {eyebrow && (
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               {eyebrow}
             </div>
           )}
-          <h1 className="mt-1 truncate text-[20px] font-semibold leading-tight tracking-tight">
+          <h1
+            className={cn(
+              "mt-1 truncate text-[20px] font-semibold leading-tight tracking-tight",
+              titleClassName
+            )}
+          >
             {title}
           </h1>
           {meta && (
