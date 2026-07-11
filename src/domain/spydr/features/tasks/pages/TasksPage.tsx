@@ -1,4 +1,5 @@
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import {
   EmptyState,
   ErrorState,
@@ -38,11 +39,11 @@ export function TasksPage() {
     errorMessage,
   } = useTasksPage();
   const createTask = useCreateTaskForm();
+  usePageBreadcrumb("Tasks");
 
   return (
     <div>
       <PageHeader
-        eyebrow="Workspace"
         title="Tasks"
         meta={
           <span>

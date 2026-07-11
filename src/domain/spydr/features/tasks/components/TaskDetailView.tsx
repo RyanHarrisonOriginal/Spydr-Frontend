@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { ClipboardList, NotebookPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
+import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/navigationBreadcrumbs";
 import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
 import { ProjectPrioritySelect } from "@/domain/spydr/features/projects/components/ProjectPrioritySelect";
 import { ProjectSelect } from "@/domain/spydr/features/projects/components/ProjectSelect";
@@ -69,20 +72,12 @@ export function TaskDetailView({
 }: TaskDetailViewProps) {
   const hint = saveLabel(saveState);
   const { entries, preamble } = parseTaskNoteEntries(task.body);
+  usePageBreadcrumb(formatBreadcrumbEntityId(task.id));
 
   return (
     <div className="flex min-w-0">
       <div className="min-w-0 flex-1">
         <PageHeader
-          eyebrow={
-            <span className="flex items-center gap-2">
-              <Link to="/tasks" className="hover:text-foreground">
-                Tasks
-              </Link>
-              <span>/</span>
-              <span className="font-mono">{task.id.slice(0, 8)}</span>
-            </span>
-          }
           titleClassName="w-full max-w-none truncate-none"
           title={
             <input
@@ -158,11 +153,13 @@ export function TaskDetailView({
                   />
                 </ProjectDetailField>
                 <ProjectDetailField label="Due date">
-                  <input
-                    type="date"
-                    value={form.dueDate}
-                    onChange={(event) => onFieldChange("dueDate", event.target.value)}
-                    className="date-input h-8 w-full"
+                  <DatePicker
+                    value={form.dueDate || null}
+                    onChange={(dueDate) => onFieldChange("dueDate", dueDate ?? "")}
+                    panelLabel="Due date"
+                    clearLabel="Clear due date"
+                    placeholder="Select due date"
+                    ariaLabel="Task due date"
                   />
                 </ProjectDetailField>
                 <ProjectDetailField label="Estimate" hint="minutes">
@@ -181,7 +178,7 @@ export function TaskDetailView({
                   <ProjectDetailField label="Open project">
                     <Link
                       to={`/projects/${task.project.id}`}
-                      className="inline-flex h-8 items-center text-[13px] text-primary hover:underline"
+                      className="inline-flex h-8 items-center text-[13px] text-foreground/90 transition-colors hover:text-highlight hover:underline"
                     >
                       {task.project.title}
                     </Link>

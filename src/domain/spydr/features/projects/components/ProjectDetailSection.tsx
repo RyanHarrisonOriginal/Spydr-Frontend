@@ -34,11 +34,13 @@ export function ProjectDetailSectionHeader({
   label,
   hint,
   hintClassName,
+  actions,
 }: {
   icon?: ReactNode;
   label: string;
   hint?: string;
   hintClassName?: string;
+  actions?: ReactNode;
 }) {
   return (
     <div className="flex items-center gap-2 border-b border-border bg-muted/25 px-4 py-2.5">
@@ -51,6 +53,9 @@ export function ProjectDetailSectionHeader({
         {label}
       </h2>
       <span className="h-px min-w-4 flex-1 bg-border/80" aria-hidden />
+      {actions ? (
+        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+      ) : null}
       {hint ? (
         <span
           className={cn(

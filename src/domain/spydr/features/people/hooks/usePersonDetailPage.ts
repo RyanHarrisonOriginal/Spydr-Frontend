@@ -1,13 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   usePersonQuery,
+  usePersonWorkQuery,
   useProjectsQuery,
-  useTasksQuery,
+  useProjectAreasQuery,
 } from "@/domain/spydr/features/shared/hooks/queries";
-import { listPersonProjects, listPersonTasks } from "@/domain/spydr/utils/personWork";
+import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
+import { spydrOrgKey } from "@/domain/spydr/features/shared/hooks/spydrQueryKeys";
+import { useCreateProjectForm } from "@/domain/spydr/features/projects/hooks/useCreateProjectForm";
+import { useCreateTaskForm } from "@/domain/spydr/features/tasks/hooks/useCreateTaskForm";
+import { useUpdateTaskMutation } from "@/domain/spydr/features/tasks/hooks/useUpdateTaskMutation";
+import { useUpdateProjectMutation } from "@/domain/spydr/features/projects/hooks/useUpdateProjectMutation";
 import { useUpdatePersonMutation } from "./useUpdatePersonMutation";
 import { useDeletePersonMutation } from "./useDeletePersonMutation";
+import { useReorderPersonCollectionMutation } from "./useReorderPersonCollectionMutation";
 
 export interface PersonDetailFormValues {
   fullName: string;
@@ -49,31 +57,43 @@ function serializeForm(form: PersonDetailFormValues) {
 export function usePersonDetailPage() {
   const { personId } = useParams<{ personId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { activeOrgId } = useOrganizationContext();
   const query = usePersonQuery(personId);
+  const workQuery = usePersonWorkQuery(personId);
   const projectsQuery = useProjectsQuery();
-  const tasksQuery = useTasksQuery();
+  const areasQuery = useProjectAreasQuery();
   const person = query.data;
+
+  const invalidatePersonWork = useCallback(() => {
+    if (!activeOrgId || !personId) return;
+    queryClient.invalidateQueries({
+      queryKey: spydrOrgKey(activeOrgId, "people", personId, "work"),
+    });
+  }, [activeOrgId, personId, queryClient]);
+
+  const createProject = useCreateProjectForm({
+    linkPersonAsAssignee: personId,
+    onSuccess: invalidatePersonWork,
+  });
+  const createTask = useCreateTaskForm({
+    assigneePersonNodeId: personId,
+    onSuccess: invalidatePersonWork,
+  });
   const updatePerson = useUpdatePersonMutation(personId);
   const deletePerson = useDeletePersonMutation();
+  const reorderCollection = useReorderPersonCollectionMutation(personId);
+  const updateTask = useUpdateTaskMutation();
+  const updateProject = useUpdateProjectMutation();
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [updatingProjectId, setUpdatingProjectId] = useState<string | null>(null);
+  const [dueDateError, setDueDateError] = useState<string | null>(null);
+  const [targetDateError, setTargetDateError] = useState<string | null>(null);
   const [form, setForm] = useState<PersonDetailFormValues>(emptyForm);
   const [saveState, setSaveState] = useState<PersonDetailSaveState>("idle");
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const hydratedRef = useRef(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
-
-  const projectEntries = useMemo(
-    () =>
-      personId && projectsQuery.data
-        ? listPersonProjects(projectsQuery.data, personId)
-        : [],
-    [personId, projectsQuery.data]
-  );
-
-  const assignedTasks = useMemo(
-    () =>
-      personId && tasksQuery.data ? listPersonTasks(tasksQuery.data, personId) : [],
-    [personId, tasksQuery.data]
-  );
 
   useEffect(() => {
     hydratedRef.current = false;
@@ -136,18 +156,75 @@ export function usePersonDetailPage() {
     });
   };
 
+  const onReorderProjects = (orderedIds: string[]) => {
+    reorderCollection.mutate({ nodeType: "project", orderedIds });
+  };
+
+  const onReorderTasks = (orderedIds: string[]) => {
+    reorderCollection.mutate({ nodeType: "task", orderedIds });
+  };
+
+  const updateDueDate = (taskId: string, dueDate: string | null) => {
+    setDueDateError(null);
+    setUpdatingTaskId(taskId);
+    updateTask.mutate(
+      { taskId, input: { dueDate } },
+      {
+        onSuccess: () => invalidatePersonWork(),
+        onError: (error) => {
+          setDueDateError(
+            error instanceof Error ? error.message : "Failed to update task due date"
+          );
+        },
+        onSettled: () => setUpdatingTaskId(null),
+      }
+    );
+  };
+
+  const updateTargetDate = (projectId: string, targetDate: string | null) => {
+    setTargetDateError(null);
+    setUpdatingProjectId(projectId);
+    updateProject.mutate(
+      { projectId, input: { targetDate } },
+      {
+        onSuccess: () => invalidatePersonWork(),
+        onError: (error) => {
+          setTargetDateError(
+            error instanceof Error
+              ? error.message
+              : "Failed to update project target date"
+          );
+        },
+        onSettled: () => setUpdatingProjectId(null),
+      }
+    );
+  };
+
   return {
     person,
     personId,
     form,
     saveState,
     updateField,
-    projectEntries,
-    assignedTasks,
+    projectEntries: workQuery.data?.projects ?? [],
+    assignedTasks: workQuery.data?.tasks ?? [],
+    projects: projectsQuery.data ?? [],
+    projectAreas: areasQuery.data ?? [],
+    createProject,
+    createTask,
+    onReorderProjects,
+    onReorderTasks,
+    onDueDateChange: updateDueDate,
+    onTargetDateChange: updateTargetDate,
+    updatingTaskId,
+    updatingProjectId,
+    dueDateError,
+    targetDateError,
+    isReorderingCollection: reorderCollection.isPending,
     deleteCurrentPerson,
     isDeleting: deletePerson.isPending,
     deleteError,
-    isLoading: query.isLoading || projectsQuery.isLoading || tasksQuery.isLoading,
+    isLoading: query.isLoading || workQuery.isLoading,
     isError: query.isError,
     errorMessage:
       query.error instanceof Error ? query.error.message : "Failed to load person",

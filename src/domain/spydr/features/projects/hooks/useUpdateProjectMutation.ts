@@ -45,6 +45,7 @@ export function useUpdateProjectMutation(projectId?: string) {
         )
       );
       queryClient.setQueryData(spydrOrgKey(activeOrgId, "projects", project.id), project);
+      queryClient.invalidateQueries({ queryKey: spydrOrgKey(activeOrgId, "people") });
     },
   });
 }

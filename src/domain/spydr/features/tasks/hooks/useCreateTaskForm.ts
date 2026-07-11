@@ -21,7 +21,12 @@ const emptyForm: CreateTaskFormValues = {
   priority: "medium",
 };
 
-export function useCreateTaskForm() {
+export interface UseCreateTaskFormOptions {
+  assigneePersonNodeId?: string;
+  onSuccess?(): void;
+}
+
+export function useCreateTaskForm(options?: UseCreateTaskFormOptions) {
   const [isOpen, setIsOpen] = useState(false);
   const [values, setValues] = useState<CreateTaskFormValues>(emptyForm);
   const createTask = useCreateTaskMutation();
@@ -52,10 +57,12 @@ export function useCreateTaskForm() {
           dueDate: values.dueDate || null,
           status: values.status,
           priority: values.priority,
+          assigneePersonNodeId: options?.assigneePersonNodeId ?? null,
         },
       },
       {
         onSuccess: () => {
+          options?.onSuccess?.();
           reset();
           setIsOpen(false);
         },

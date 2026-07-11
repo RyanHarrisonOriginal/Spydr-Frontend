@@ -1,4 +1,6 @@
-import { GitBranch } from "lucide-react";
+import { useMemo } from "react";
+import { Link } from "react-router-dom";
+import { ArrowUpRight, FolderKanban, GitBranch, History } from "lucide-react";
 import type { DecisionNode } from "@/domain/spydr/utils/types";
 import {
   EntityTag,
@@ -55,11 +57,27 @@ function ImpactBadge({ impact }: { impact: string }) {
   );
 }
 
+function SupersedesBadge({
+  title,
+}: {
+  title: string | null;
+}) {
+  if (!title) return null;
+
+  return (
+    <span className="inline-flex max-w-full items-center gap-1 rounded border border-border/70 bg-muted/20 px-1.5 py-px font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+      <History className="h-2.5 w-2.5 shrink-0" />
+      <span className="truncate normal-case tracking-normal">Replaces {title}</span>
+    </span>
+  );
+}
+
 function DecisionRow({
   decision,
   reorderEnabled,
   getPriorityRank,
   sortable,
+  supersededTitle,
   onDelete,
   deletingDecisionId,
 }: {
@@ -67,6 +85,7 @@ function DecisionRow({
   reorderEnabled: boolean;
   getPriorityRank(id: string): number | undefined;
   sortable: { dragHandleProps: Record<string, unknown> | undefined; isDragging: boolean };
+  supersededTitle: string | null;
   onDelete?: (decisionId: string) => void;
   deletingDecisionId?: string | null;
 }) {
@@ -89,34 +108,65 @@ function DecisionRow({
         <h2 className="text-[13.5px] font-semibold leading-snug text-foreground">
           {decision.title}
         </h2>
+
+        {decision.project ? (
+          <Link
+            to={`/projects/${decision.project.id}`}
+            className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-[11px] text-muted-foreground hover:text-highlight"
+          >
+            <FolderKanban className="h-3 w-3 shrink-0" />
+            <span className="truncate">{decision.project.title}</span>
+          </Link>
+        ) : (
+          <p className="mt-1 text-[11px] italic text-muted-foreground/70">
+            No linked project
+          </p>
+        )}
+
         {rationale ? (
           <p className="mt-1.5 line-clamp-2 text-[12.5px] leading-relaxed text-muted-foreground">
             {rationale}
           </p>
         ) : (
           <p className="mt-1.5 text-[11px] italic text-muted-foreground/70">
-            No rationale recorded.
+            No rationale recorded — add context on the project decision log.
           </p>
         )}
+
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
           <StatusPill status={decision.status} />
           <PriorityBadge priority={decision.priority} />
+          <SupersedesBadge title={supersededTitle} />
           {decision.area ? <EntityTag tag={decision.area} /> : null}
           {decision.tags.slice(0, 2).map((tag) => (
             <EntityTag key={tag} tag={tag} />
           ))}
+          {decision.project ? (
+            <Link
+              to={`/projects/${decision.project.id}`}
+              className="inline-flex items-center gap-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground hover:text-highlight"
+            >
+              Open project
+              <ArrowUpRight className="h-2.5 w-2.5" />
+            </Link>
+          ) : null}
         </div>
       </div>
       <div className="pt-0.5">
         <ImpactBadge impact={impact} />
       </div>
-      <time
-        className="block pt-0.5 text-right font-mono text-[10px] tabular-nums text-muted-foreground"
-        dateTime={decidedAt}
-        title={formatShortDate(decidedAt)}
-      >
-        {formatRelativeTime(decidedAt)}
-      </time>
+      <div className="pt-0.5 text-right">
+        <time
+          className="block font-mono text-[10px] tabular-nums text-muted-foreground"
+          dateTime={decidedAt}
+          title={formatShortDate(decidedAt)}
+        >
+          {formatRelativeTime(decidedAt)}
+        </time>
+        <span className="mt-0.5 block font-mono text-[9px] tabular-nums text-muted-foreground/70">
+          {formatShortDate(decidedAt)}
+        </span>
+      </div>
       {onDelete ? (
         <InlineDeleteButton
           label={decision.title}
@@ -143,6 +193,19 @@ export function DecisionTimeline({
 }: DecisionTimelineProps) {
   const headerClass = reorderEnabled ? ROW_WITH_HANDLE : ROW_BASE;
   const minWidth = reorderEnabled ? ROW_MIN_WIDTH_WITH_HANDLE : ROW_MIN_WIDTH;
+  const supersededTitlesById = useMemo(() => {
+    const titlesById = new Map(decisions.map((decision) => [decision.id, decision.title]));
+
+    return new Map(
+      decisions.map((decision) => {
+        const supersededId = decision.details?.supersedesDecisionNodeId;
+        return [
+          decision.id,
+          supersededId ? titlesById.get(supersededId) ?? null : null,
+        ] as const;
+      })
+    );
+  }, [decisions]);
 
   return (
     <div className="overflow-x-auto">
@@ -194,6 +257,7 @@ export function DecisionTimeline({
             reorderEnabled={reorderEnabled}
             getPriorityRank={getPriorityRank}
             sortable={sortable}
+            supersededTitle={supersededTitlesById.get(decision.id) ?? null}
             onDelete={onDelete}
             deletingDecisionId={deletingDecisionId}
           />

@@ -1,4 +1,5 @@
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import {
   EmptyState,
   ErrorState,
@@ -32,11 +33,11 @@ export function PeoplePage() {
   } = usePeoplePage();
   const { currentUserPerson, isReady: isCurrentUserReady, primaryClerkEmail } =
     useCurrentUserPerson();
+  usePageBreadcrumb("People");
 
   return (
     <div>
       <PageHeader
-        eyebrow="Workspace"
         title="People"
         meta={<span>{totalCount} contacts</span>}
         actions={

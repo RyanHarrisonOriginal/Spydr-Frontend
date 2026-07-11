@@ -1,4 +1,5 @@
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import {
   EmptyState,
   ErrorState,
@@ -20,12 +21,12 @@ export function GraphPage() {
     partialErrors,
     layoutKey,
   } = useGraphPage();
+  usePageBreadcrumb("Lineage");
 
   return (
     <div className="flex h-[calc(100dvh-3rem)] flex-col overflow-hidden">
       <PageHeader
         className="shrink-0"
-        eyebrow="Meta"
         title="Lineage"
         meta={
           !isLoading && !isError ? (

@@ -7,7 +7,7 @@ import {
   PriorityBadge,
   StatusDot,
 } from "@/domain/spydr/features/shared/components/StatusPrimitives";
-import { formatRelativeTime, formatShortDate } from "@/domain/spydr/features/shared/components/time";
+import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
 import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
 import type { ProjectListSort, ProjectSortColumn } from "@/domain/spydr/utils/projectListView";
 import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
@@ -403,19 +403,17 @@ export function ProjectList({
                 className="block min-w-0 w-full"
                 onClick={(event) => event.stopPropagation()}
               >
-                {onTargetDateChange ? (
-                  <ProjectTargetDateSelect
-                    value={project.details?.targetDate}
-                    onChange={(targetDate) =>
-                      onTargetDateChange(project.id, targetDate)
+                <ProjectTargetDateSelect
+                  value={project.details?.targetDate}
+                  onChange={(targetDate) => {
+                    const current = project.details?.targetDate?.slice(0, 10) ?? null;
+                    const next = targetDate?.slice(0, 10) ?? null;
+                    if (next !== current) {
+                      onTargetDateChange?.(project.id, targetDate);
                     }
-                    disabled={updatingProjectId === project.id}
-                  />
-                ) : (
-                  <span className="block text-right font-mono text-[11px] tabular-nums text-muted-foreground">
-                    {formatShortDate(project.details?.targetDate)}
-                  </span>
-                )}
+                  }}
+                  disabled={!onTargetDateChange || updatingProjectId === project.id}
+                />
               </span>
             )}
             {hasColumn("updated") && (

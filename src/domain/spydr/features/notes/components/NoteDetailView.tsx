@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { FileText, FolderKanban } from "lucide-react";
 import type { NoteNode } from "@/domain/spydr/utils/types";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
+import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/navigationBreadcrumbs";
 import { RichTextEditor } from "@/domain/spydr/features/shared/components/RichTextEditor";
 import {
   EntityTag,
@@ -49,19 +51,11 @@ export function NoteDetailView({
 }: NoteDetailViewProps) {
   const project = note.project;
   const hint = saveLabel(saveState);
+  usePageBreadcrumb(formatBreadcrumbEntityId(note.id));
 
   return (
     <div className="min-w-0">
       <PageHeader
-        eyebrow={
-          <span className="flex items-center gap-2">
-            <Link to="/notes" className="hover:text-foreground">
-              Notes
-            </Link>
-            <span>/</span>
-            <span className="font-mono text-[10px]">{note.id.slice(0, 8)}</span>
-          </span>
-        }
         title={
           <input
             value={form.title}

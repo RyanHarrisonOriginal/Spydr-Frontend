@@ -28,8 +28,21 @@ export function PersonDetailPage() {
       updatedAt={detail.person.updatedAt}
       projectEntries={detail.projectEntries}
       assignedTasks={detail.assignedTasks}
+      projects={detail.projects}
+      projectAreas={detail.projectAreas}
+      createProject={detail.createProject}
+      createTask={detail.createTask}
       deleteError={detail.deleteError}
       isDeleting={detail.isDeleting}
+      isReorderingCollection={detail.isReorderingCollection}
+      updatingTaskId={detail.updatingTaskId}
+      updatingProjectId={detail.updatingProjectId}
+      dueDateError={detail.dueDateError}
+      targetDateError={detail.targetDateError}
+      onReorderProjects={detail.onReorderProjects}
+      onReorderTasks={detail.onReorderTasks}
+      onDueDateChange={detail.onDueDateChange}
+      onTargetDateChange={detail.onTargetDateChange}
       onFieldChange={detail.updateField}
       onDelete={detail.deleteCurrentPerson}
     />

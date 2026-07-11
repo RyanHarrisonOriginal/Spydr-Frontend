@@ -1,4 +1,5 @@
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import {
   EmptyState,
   ErrorState,
@@ -59,11 +60,11 @@ export function ProjectsPage() {
   } = useProjectsPage();
   const createProject = useCreateProjectForm();
   const projectColumns = useProjectListColumns();
+  usePageBreadcrumb("Projects");
 
   return (
     <div>
       <PageHeader
-        eyebrow="Workspace"
         title="Projects"
         meta={
           <span>

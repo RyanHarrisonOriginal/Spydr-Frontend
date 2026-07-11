@@ -1,4 +1,5 @@
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import {
   EmptyState,
   ErrorState,
@@ -13,11 +14,11 @@ export function ResourcesPage() {
   const { view, reorder, getPriorityRank, groupedResourceTypes, totalCount, isLoading, isError, errorMessage } =
     useResourcesPage();
   const typeCount = Object.keys(groupedResourceTypes).length;
+  usePageBreadcrumb("Resources");
 
   return (
     <div>
       <PageHeader
-        eyebrow="Workspace"
         title="Resources"
         meta={
           <span>

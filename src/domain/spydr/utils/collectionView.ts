@@ -10,6 +10,8 @@
  * persisted to localStorage without transformation.
  */
 
+import { parseCalendarDate } from "@/domain/spydr/utils/dateOnly";
+
 export type SortDirection = "asc" | "desc";
 
 export type SortValueType = "text" | "number" | "date";
@@ -277,7 +279,11 @@ function compareValues(
 
   let result = 0;
   if (type === "date") {
-    result = new Date(a as string).getTime() - new Date(b as string).getTime();
+    const aTime =
+      parseCalendarDate(String(a))?.getTime() ?? new Date(a as string).getTime();
+    const bTime =
+      parseCalendarDate(String(b))?.getTime() ?? new Date(b as string).getTime();
+    result = aTime - bTime;
   } else if (type === "number") {
     result = Number(a) - Number(b);
   } else {

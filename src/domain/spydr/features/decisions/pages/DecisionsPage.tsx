@@ -1,4 +1,5 @@
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import {
   EmptyState,
   ErrorState,
@@ -6,6 +7,8 @@ import {
 } from "@/domain/spydr/features/shared/components/ListState";
 import { CollectionToolbar } from "@/domain/spydr/features/shared/components/CollectionToolbar";
 import { CollectionNoResults } from "@/domain/spydr/features/shared/components/CollectionNoResults";
+import { formatDecisionHeaderMeta } from "@/domain/spydr/utils/decisionInsights";
+import { DecisionInsightsStrip } from "../components/DecisionInsightsStrip";
 import { DecisionTimeline } from "../components/DecisionTimeline";
 import { useDecisionsPage } from "../hooks/useDecisionsPage";
 
@@ -17,21 +20,29 @@ export function DecisionsPage() {
     deleteDecision,
     deletingDecisionId,
     deleteError,
+    insights,
     totalCount,
     isLoading,
     isError,
     errorMessage,
   } = useDecisionsPage();
+  usePageBreadcrumb("Decisions");
 
   return (
     <div>
       <PageHeader
-        eyebrow="Workspace"
         title="Decisions"
         meta={
-          <span>
-            {totalCount} recorded · chronological decision log across your workspace
-          </span>
+          totalCount > 0 ? (
+            <span>
+              {formatDecisionHeaderMeta(insights)}
+              {" · workspace-wide audit trail of what was chosen and why"}
+            </span>
+          ) : (
+            <span>
+              Record decisions on project pages — they surface here as a durable workspace log
+            </span>
+          )
         }
       />
       {isLoading && <LoadingState title="Loading decisions" />}
@@ -41,11 +52,12 @@ export function DecisionsPage() {
       {!isLoading && !isError && totalCount === 0 && (
         <EmptyState
           title="No decisions yet"
-          description="Record decisions on a project page — they appear here as a workspace-wide log."
+          description="Open a project and use the Decision log to record what was chosen and why. Each entry appears here so you can trace commitments across projects."
         />
       )}
       {!isLoading && !isError && totalCount > 0 && (
         <>
+          <DecisionInsightsStrip insights={insights} />
           <CollectionToolbar view={view} />
           {deleteError ? (
             <p className="px-6 pb-2 text-sm text-destructive">{deleteError}</p>

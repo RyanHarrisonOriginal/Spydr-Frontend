@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DateInput } from "@/components/ui/date-input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { RichTextEditor } from "@/domain/spydr/features/shared/components/RichTextEditor";
 import type { SpydrPriority } from "@/domain/spydr/utils/types";
 import type { UpdateProjectChildInput } from "@/domain/spydr/utils/types";
@@ -197,14 +197,18 @@ export function ProjectItemActions({
                   <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                     Due date
                   </span>
-                  <DateInput
-                    value={draft.dueDate ?? ""}
-                    onChange={(event) =>
+                  <DatePicker
+                    value={draft.dueDate || null}
+                    onChange={(dueDate) =>
                       setDraft((current) => ({
                         ...current,
-                        dueDate: event.target.value,
+                        dueDate: dueDate ?? "",
                       }))
                     }
+                    panelLabel="Due date"
+                    clearLabel="Clear due date"
+                    placeholder="Select due date"
+                    ariaLabel="Task due date"
                   />
                 </label>
                 <div className="grid grid-cols-2 gap-2">

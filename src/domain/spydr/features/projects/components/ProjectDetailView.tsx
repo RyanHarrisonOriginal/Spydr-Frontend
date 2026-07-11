@@ -12,7 +12,7 @@ import {
   Paperclip,
   Tag as TagIcon,
 } from "lucide-react";
-import { DateInput } from "@/components/ui/date-input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import type {
   PersonNode,
@@ -25,15 +25,17 @@ import type { ProjectPersonaRole } from "@/domain/spydr/utils/projectPersonas";
 import { taskStatusBucketLabels } from "@/domain/spydr/utils/taskStatus";
 import type { ProjectDetailSaveState } from "../hooks/useProjectDetailPage";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
+import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/navigationBreadcrumbs";
 import {
   EntityTag,
   PriorityBadge,
   StatusDot,
 } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
+import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
 import {
   formatRelativeTime,
-  formatShortDate,
 } from "@/domain/spydr/features/shared/components/time";
 import type {
   ProjectDecisionFormValues,
@@ -225,19 +227,12 @@ export function ProjectDetailView({
     });
   };
 
+  usePageBreadcrumb(formatBreadcrumbEntityId(project.id));
+
   return (
     <div className="flex min-w-0">
       <div className="min-w-0 flex-1">
         <PageHeader
-          eyebrow={
-            <span className="flex items-center gap-2">
-              <Link to="/projects" className="hover:text-foreground">
-                Projects
-              </Link>
-              <span>/</span>
-              <span>{project.id.slice(0, 8)}</span>
-            </span>
-          }
           title={project.title}
           meta={
             <div className="flex flex-wrap items-center gap-2">
@@ -322,11 +317,15 @@ export function ProjectDetailView({
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
                   <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-3">
                     <ProjectDetailField label="Start">
-                      <DateInput
-                        value={detailForm.startDate}
-                        onChange={(event) =>
-                          onDetailFieldChange("startDate", event.target.value)
+                      <DatePicker
+                        value={detailForm.startDate || null}
+                        onChange={(startDate) =>
+                          onDetailFieldChange("startDate", startDate ?? "")
                         }
+                        panelLabel="Start date"
+                        clearLabel="Clear start date"
+                        placeholder="Select start date"
+                        ariaLabel="Project start date"
                         className="h-8"
                       />
                     </ProjectDetailField>
@@ -335,11 +334,15 @@ export function ProjectDetailView({
                       className="mb-2 h-3.5 w-3.5 shrink-0 text-muted-foreground"
                     />
                     <ProjectDetailField label="Target">
-                      <DateInput
-                        value={detailForm.targetDate}
-                        onChange={(event) =>
-                          onDetailFieldChange("targetDate", event.target.value)
+                      <DatePicker
+                        value={detailForm.targetDate || null}
+                        onChange={(targetDate) =>
+                          onDetailFieldChange("targetDate", targetDate ?? "")
                         }
+                        panelLabel="Target date"
+                        clearLabel="Clear target date"
+                        placeholder="Select target date"
+                        ariaLabel="Project target date"
                         className="h-8"
                       />
                     </ProjectDetailField>
@@ -435,11 +438,13 @@ export function ProjectDetailView({
                 placeholder="Add a task..."
                 className={cn(detailFieldClassName, "h-8")}
               />
-              <input
-                type="date"
-                value={taskForm.dueDate}
-                onChange={(event) => onTaskFieldChange("dueDate", event.target.value)}
-                className="date-input h-8 rounded-md"
+              <DatePicker
+                value={taskForm.dueDate || null}
+                onChange={(dueDate) => onTaskFieldChange("dueDate", dueDate ?? "")}
+                panelLabel="Due date"
+                clearLabel="Clear due date"
+                placeholder="Due date"
+                ariaLabel="Task due date"
               />
               <Button type="submit" size="sm" disabled={!canAddTask}>
                 {isAddingTask ? "Adding..." : "Add"}
@@ -490,8 +495,19 @@ export function ProjectDetailView({
                       }
                     }}
                   />
-                  <span className="w-20 shrink-0 text-right font-mono text-[10px] tabular-nums text-muted-foreground">
-                    {formatShortDate(task.details?.dueDate)}
+                  <span className="w-[118px] shrink-0">
+                    <TaskDueDateSelect
+                      value={task.details?.dueDate}
+                      disabled={isUpdatingChild}
+                      className="w-full"
+                      onChange={(dueDate) => {
+                        const current = task.details?.dueDate?.slice(0, 10) ?? null;
+                        const next = dueDate?.slice(0, 10) ?? null;
+                        if (next !== current) {
+                          onUpdateChild("task", task.id, { dueDate });
+                        }
+                      }}
+                    />
                   </span>
                   <ProjectItemActions
                     fieldSet="task"

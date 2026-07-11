@@ -1,4 +1,5 @@
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import {
   EmptyState,
   ErrorState,
@@ -11,11 +12,11 @@ import { useNotesPage } from "../hooks/useNotesPage";
 
 export function NotesPage() {
   const { view, reorder, getPriorityRank, deleteNote, deletingNoteId, deleteError, totalCount, isLoading, isError, errorMessage } = useNotesPage();
+  usePageBreadcrumb("Notes");
 
   return (
     <div>
       <PageHeader
-        eyebrow="Workspace"
         title="Notes"
         meta={<span>{totalCount} documents</span>}
       />

@@ -11,6 +11,7 @@ import {
   type ProjectListFilterContext,
   type ProjectListFilters,
 } from "@/domain/spydr/utils/projectListFilterModel";
+import { parseCalendarDate } from "@/domain/spydr/utils/dateOnly";
 
 export {
   UNASSIGNED_AREA_FILTER,
@@ -58,6 +59,8 @@ const statusOrder = Object.fromEntries(
 
 function parseTimestamp(value: string | null | undefined): number | null {
   if (!value) return null;
+  const calendar = parseCalendarDate(value);
+  if (calendar) return calendar.getTime();
   const time = new Date(value).getTime();
   return Number.isNaN(time) ? null : time;
 }

@@ -138,7 +138,9 @@ export type TaskNode = SpydrNode<"task", TaskDetails> & {
 export type NoteNode = SpydrNode<"note", null> & {
   project?: TaskProjectRef | null;
 };
-export type DecisionNode = SpydrNode<"decision", DecisionDetails>;
+export type DecisionNode = SpydrNode<"decision", DecisionDetails> & {
+  project?: TaskProjectRef | null;
+};
 export type ResourceNode = SpydrNode<"resource", ResourceDetails>;
 
 export interface CreateProjectInput {

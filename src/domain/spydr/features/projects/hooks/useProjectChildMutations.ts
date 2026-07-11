@@ -29,6 +29,9 @@ export function useProjectChildMutations(projectId: string | undefined) {
     if (segment) {
       queryClient.invalidateQueries({ queryKey: spydrOrgKey(activeOrgId, segment) });
     }
+    if (kind === "task") {
+      queryClient.invalidateQueries({ queryKey: spydrOrgKey(activeOrgId, "people") });
+    }
   };
 
   const updateChild = useMutation({

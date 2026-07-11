@@ -100,14 +100,14 @@ function TaskRow({
         <div className="flex min-w-0 items-center gap-1.5">
           <Link
             to={`/tasks/${task.id}`}
-            className="min-w-0 truncate text-[13px] hover:text-primary"
+            className="min-w-0 truncate text-[13px] text-foreground/90 transition-colors hover:text-highlight"
           >
             {task.title}
           </Link>
           {task.project ? (
             <Link
               to={`/projects/${task.project.id}`}
-              className="inline-flex max-w-[9rem] shrink-0 items-center rounded border border-border/60 bg-muted/30 px-1.5 py-px text-[10px] text-muted-foreground hover:border-primary/30 hover:text-primary"
+              className="inline-flex max-w-[9rem] shrink-0 items-center rounded border border-border/60 bg-muted/30 px-1.5 py-px text-[10px] text-muted-foreground transition-colors hover:border-highlight/30 hover:bg-highlight/8 hover:text-highlight"
               title={task.project.title}
             >
               <span className="truncate">{task.project.title}</span>

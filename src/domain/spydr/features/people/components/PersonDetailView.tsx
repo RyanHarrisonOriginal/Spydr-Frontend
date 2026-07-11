@@ -1,12 +1,16 @@
-import { Link } from "react-router-dom";
-import type { ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
-import type { ProjectPersonaRole } from "@/domain/spydr/utils/projectPersonas";
+import type { PersonWorkProjectEntry, PersonWorkTaskEntry } from "@/domain/spydr/utils/personWorkApi";
+import type { ProjectAreaNode, ProjectNode } from "@/domain/spydr/utils/types";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import {
   PersonMeBadge,
 } from "@/domain/spydr/features/people/components/PersonIdentity";
+import { CreateProjectDialog } from "@/domain/spydr/features/projects/components/CreateProjectDialog";
+import { CreateTaskDialog } from "@/domain/spydr/features/tasks/components/CreateTaskDialog";
+import type { useCreateProjectForm } from "@/domain/spydr/features/projects/hooks/useCreateProjectForm";
+import type { useCreateTaskForm } from "@/domain/spydr/features/tasks/hooks/useCreateTaskForm";
 import {
   ProjectDetailField,
   ProjectDetailFormPanel,
@@ -40,10 +44,23 @@ interface PersonDetailViewProps {
   personId: string;
   displayName: string;
   updatedAt: string;
-  projectEntries: Array<{ project: ProjectNode; roles: ProjectPersonaRole[] }>;
-  assignedTasks: TaskNode[];
+  projectEntries: PersonWorkProjectEntry[];
+  assignedTasks: PersonWorkTaskEntry[];
+  projects: ProjectNode[];
+  projectAreas: ProjectAreaNode[];
+  createProject: ReturnType<typeof useCreateProjectForm>;
+  createTask: ReturnType<typeof useCreateTaskForm>;
   deleteError: string | null;
   isDeleting: boolean;
+  isReorderingCollection?: boolean;
+  updatingTaskId?: string | null;
+  updatingProjectId?: string | null;
+  dueDateError?: string | null;
+  targetDateError?: string | null;
+  onReorderProjects?(orderedIds: string[]): void;
+  onReorderTasks?(orderedIds: string[]): void;
+  onDueDateChange?(taskId: string, dueDate: string | null): void;
+  onTargetDateChange?(projectId: string, targetDate: string | null): void;
   onFieldChange<TField extends keyof PersonDetailFormValues>(
     field: TField,
     value: PersonDetailFormValues[TField]
@@ -59,28 +76,33 @@ export function PersonDetailView({
   updatedAt,
   projectEntries,
   assignedTasks,
+  projects,
+  projectAreas,
+  createProject,
+  createTask,
   deleteError,
   isDeleting,
+  isReorderingCollection = false,
+  updatingTaskId = null,
+  updatingProjectId = null,
+  dueDateError = null,
+  targetDateError = null,
+  onReorderProjects,
+  onReorderTasks,
+  onDueDateChange,
+  onTargetDateChange,
   onFieldChange,
   onDelete,
 }: PersonDetailViewProps) {
   const hint = saveLabel(saveState);
   const { isMe, primaryClerkEmail } = useCurrentUserPerson();
   const isCurrentUser = isMe(personId);
+  usePageBreadcrumb(displayName);
 
   return (
     <div className="flex min-w-0">
       <div className="min-w-0 flex-1">
         <PageHeader
-          eyebrow={
-            <span className="flex items-center gap-2">
-              <Link to="/people" className="hover:text-foreground">
-                People
-              </Link>
-              <span>/</span>
-              <span>{personId.slice(0, 8)}</span>
-            </span>
-          }
           title={
             <span className="inline-flex items-center gap-2">
               {displayName}
@@ -192,8 +214,56 @@ export function PersonDetailView({
             </ProjectDetailSectionBody>
           </ProjectDetailSection>
 
-          <PersonProjectsSection entries={projectEntries} />
-          <PersonTasksSection tasks={assignedTasks} />
+          <PersonProjectsSection
+            entries={projectEntries}
+            reorderEnabled={!isReorderingCollection}
+            updatingProjectId={updatingProjectId}
+            onReorder={onReorderProjects}
+            onTargetDateChange={onTargetDateChange}
+            headerActions={
+              <CreateProjectDialog
+                areas={projectAreas}
+                open={createProject.isOpen}
+                values={createProject.values}
+                canSubmit={createProject.canSubmit}
+                isSubmitting={createProject.isSubmitting}
+                errorMessage={createProject.errorMessage}
+                linkPersonName={displayName}
+                triggerVariant="outline"
+                onOpenChange={createProject.setIsOpen}
+                onFieldChange={createProject.updateField}
+                onSubmit={createProject.submit}
+              />
+            }
+          />
+          {targetDateError ? (
+            <p className="text-sm text-destructive">{targetDateError}</p>
+          ) : null}
+          <PersonTasksSection
+            tasks={assignedTasks}
+            reorderEnabled={!isReorderingCollection}
+            updatingTaskId={updatingTaskId}
+            onReorder={onReorderTasks}
+            onDueDateChange={onDueDateChange}
+            headerActions={
+              <CreateTaskDialog
+                projects={projects}
+                open={createTask.isOpen}
+                values={createTask.values}
+                canSubmit={createTask.canSubmit}
+                isSubmitting={createTask.isSubmitting}
+                errorMessage={createTask.errorMessage}
+                assigneeName={displayName}
+                triggerVariant="outline"
+                onOpenChange={createTask.setIsOpen}
+                onFieldChange={createTask.updateField}
+                onSubmit={createTask.submit}
+              />
+            }
+          />
+          {dueDateError ? (
+            <p className="text-sm text-destructive">{dueDateError}</p>
+          ) : null}
         </div>
       </div>
     </div>

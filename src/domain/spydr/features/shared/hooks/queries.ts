@@ -34,6 +34,17 @@ export function usePersonQuery(personId: string | undefined) {
   });
 }
 
+export function usePersonWorkQuery(personId: string | undefined) {
+  const enabled = useSpydrQueryEnabled();
+  const { activeOrgId } = useOrganizationContext();
+  return useQuery({
+    queryKey: spydrOrgKey(activeOrgId!, "people", personId ?? "", "work"),
+    queryFn: () => spydrApi.people.getWork(personId!),
+    enabled: enabled && !!activeOrgId && !!personId,
+    refetchOnMount: "always",
+  });
+}
+
 export function useProjectsQuery() {
   const enabled = useSpydrQueryEnabled();
   const { activeOrgId } = useOrganizationContext();

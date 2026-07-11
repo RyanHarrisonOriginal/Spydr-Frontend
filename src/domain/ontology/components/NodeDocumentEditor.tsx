@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { X, Bold, Italic, List, ListOrdered, Heading1, Heading2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -127,16 +128,19 @@ export function NodeDocumentEditor({ node, onClose, onSaveNotes }: NodeDocumentE
                   <span className="truncate">{f.label}</span>
                 </Label>
                 {f.type === "date" ? (
-                  <Input
-                    type="date"
-                    value={node?.fields?.[f.key] ?? ""}
-                    onChange={(e) =>
+                  <DatePicker
+                    value={(node?.fields?.[f.key] as string | undefined) ?? null}
+                    onChange={(next) =>
                       node &&
                       onUpdateNode(node.id, {
-                        fields: { ...node.fields, [f.key]: e.target.value },
+                        fields: { ...node.fields, [f.key]: next ?? "" },
                       })
                     }
-                    className="h-8 text-sm bg-background border-border w-full min-w-[160px] max-w-full"
+                    panelLabel={f.label}
+                    clearLabel={`Clear ${f.label.toLowerCase()}`}
+                    placeholder={`Select ${f.label.toLowerCase()}`}
+                    ariaLabel={f.label}
+                    className="h-8 text-sm w-full min-w-[160px] max-w-full"
                   />
                 ) : (
                   <Input

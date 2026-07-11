@@ -34,6 +34,7 @@ export function useUpdateTaskMutation(taskId?: string) {
         });
       }
       queryClient.invalidateQueries({ queryKey: spydrOrgKey(activeOrgId, "projects") });
+      queryClient.invalidateQueries({ queryKey: spydrOrgKey(activeOrgId, "people") });
     },
   });
 }

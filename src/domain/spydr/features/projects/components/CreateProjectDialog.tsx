@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 import type { ProjectAreaNode } from "@/domain/spydr/utils/types";
 import type { ProjectFormValues } from "../hooks/useCreateProjectForm";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
@@ -23,6 +24,8 @@ interface CreateProjectDialogProps {
   canSubmit: boolean;
   isSubmitting: boolean;
   errorMessage: string | null;
+  linkPersonName?: string;
+  triggerVariant?: "default" | "outline";
   onOpenChange(open: boolean): void;
   onFieldChange<TField extends keyof ProjectFormValues>(
     field: TField,
@@ -41,6 +44,8 @@ export function CreateProjectDialog({
   canSubmit,
   isSubmitting,
   errorMessage,
+  linkPersonName,
+  triggerVariant = "default",
   onOpenChange,
   onFieldChange,
   onSubmit,
@@ -48,7 +53,7 @@ export function CreateProjectDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-1.5">
+        <Button size="sm" variant={triggerVariant} className="gap-1.5">
           <Plus className="h-3.5 w-3.5" />
           New Project
         </Button>
@@ -64,6 +69,12 @@ export function CreateProjectDialog({
             <DialogTitle>Create project</DialogTitle>
             <DialogDescription>
               Capture the core project node fields and project-specific planning details.
+              {linkPersonName ? (
+                <>
+                  {" "}
+                  <strong>{linkPersonName}</strong> will be set as assignee.
+                </>
+              ) : null}
             </DialogDescription>
           </DialogHeader>
 
@@ -161,20 +172,26 @@ export function CreateProjectDialog({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="project-start-date">Start date</Label>
-                <Input
+                <DatePicker
                   id="project-start-date"
-                  type="date"
-                  value={values.startDate}
-                  onChange={(event) => onFieldChange("startDate", event.target.value)}
+                  value={values.startDate || null}
+                  onChange={(startDate) => onFieldChange("startDate", startDate ?? "")}
+                  panelLabel="Start date"
+                  clearLabel="Clear start date"
+                  placeholder="Select start date"
+                  ariaLabel="Project start date"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="project-target-date">Target date</Label>
-                <Input
+                <DatePicker
                   id="project-target-date"
-                  type="date"
-                  value={values.targetDate}
-                  onChange={(event) => onFieldChange("targetDate", event.target.value)}
+                  value={values.targetDate || null}
+                  onChange={(targetDate) => onFieldChange("targetDate", targetDate ?? "")}
+                  panelLabel="Target date"
+                  clearLabel="Clear target date"
+                  placeholder="Select target date"
+                  ariaLabel="Project target date"
                 />
               </div>
             </div>

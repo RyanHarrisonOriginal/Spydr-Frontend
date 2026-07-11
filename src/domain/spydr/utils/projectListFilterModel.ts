@@ -10,6 +10,7 @@ import { projectPriorities } from "@/domain/spydr/utils/projectPriority";
 import { projectStatuses } from "@/domain/spydr/utils/projectStatus";
 import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
 import { personDisplayName } from "@/domain/spydr/utils/projectPersonas";
+import { parseCalendarDate } from "@/domain/spydr/utils/dateOnly";
 
 export const UNASSIGNED_AREA_FILTER = "__unassigned__";
 export const UNASSIGNED_ASSIGNEE_FILTER = "__unassigned_assignee__";
@@ -88,6 +89,8 @@ export interface ProjectListActiveFilterChip {
 
 function parseTimestamp(value: string | null | undefined): Date | null {
   if (!value) return null;
+  const calendar = parseCalendarDate(value);
+  if (calendar) return calendar;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }

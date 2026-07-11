@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 import { ProjectPrioritySelect } from "@/domain/spydr/features/projects/components/ProjectPrioritySelect";
 import { ProjectSelect } from "@/domain/spydr/features/projects/components/ProjectSelect";
 import type { ProjectNode, SpydrPriority } from "@/domain/spydr/utils/types";
@@ -26,6 +27,8 @@ interface CreateTaskDialogProps {
   canSubmit: boolean;
   isSubmitting: boolean;
   errorMessage: string | null;
+  assigneeName?: string;
+  triggerVariant?: "default" | "outline";
   onOpenChange(open: boolean): void;
   onFieldChange<TField extends keyof CreateTaskFormValues>(
     field: TField,
@@ -41,6 +44,8 @@ export function CreateTaskDialog({
   canSubmit,
   isSubmitting,
   errorMessage,
+  assigneeName,
+  triggerVariant = "default",
   onOpenChange,
   onFieldChange,
   onSubmit,
@@ -50,7 +55,7 @@ export function CreateTaskDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-1.5">
+        <Button size="sm" variant={triggerVariant} className="gap-1.5">
           <Plus className="h-3.5 w-3.5" />
           New Task
         </Button>
@@ -67,6 +72,12 @@ export function CreateTaskDialog({
             <DialogDescription>
               Add a task and link it to a project. It will appear in both the
               tasks list and the project&apos;s task panel.
+              {assigneeName ? (
+                <>
+                  {" "}
+                  Assigned to <strong>{assigneeName}</strong>.
+                </>
+              ) : null}
             </DialogDescription>
           </DialogHeader>
 
@@ -115,13 +126,15 @@ export function CreateTaskDialog({
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="task-due">Due date</Label>
-                <Input
+                <DatePicker
                   id="task-due"
-                  type="date"
-                  value={values.dueDate}
-                  onChange={(event) => onFieldChange("dueDate", event.target.value)}
-                  className="date-input"
+                  value={values.dueDate || null}
+                  onChange={(dueDate) => onFieldChange("dueDate", dueDate ?? "")}
                   disabled={isSubmitting || noProjects}
+                  panelLabel="Due date"
+                  clearLabel="Clear due date"
+                  placeholder="Select due date"
+                  ariaLabel="Task due date"
                 />
               </div>
               <div className="space-y-2">

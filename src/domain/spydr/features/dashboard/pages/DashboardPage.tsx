@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import {
   ErrorState,
   LoadingState,
@@ -15,11 +16,11 @@ import { DashboardStatusBreakdown } from "../components/DashboardStatusBreakdown
 export function DashboardPage() {
   const query = useWorkspaceDashboardQuery();
   const dashboard = query.data;
+  usePageBreadcrumb("Dashboard");
 
   return (
     <div>
       <PageHeader
-        eyebrow="Mission control"
         title="Dashboard"
         meta={
           dashboard ? (

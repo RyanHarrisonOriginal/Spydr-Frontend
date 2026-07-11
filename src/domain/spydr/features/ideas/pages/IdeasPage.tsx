@@ -1,4 +1,5 @@
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import { Button } from "@/components/ui/button";
 import {
   EmptyState,
@@ -15,11 +16,11 @@ export function IdeasPage() {
     useIdeasPage();
   const showInitialLoading = isLoading && totalCount === 0;
   const showEmpty = !showInitialLoading && !isError && totalCount === 0;
+  usePageBreadcrumb("Ideas");
 
   return (
     <div>
       <PageHeader
-        eyebrow="Workspace"
         title="Ideas"
         meta={
           <span>

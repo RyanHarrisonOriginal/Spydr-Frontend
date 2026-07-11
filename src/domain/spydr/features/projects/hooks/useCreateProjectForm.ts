@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { CreateProjectInput, SpydrNodeStatus, SpydrPriority } from "@/domain/spydr/utils/types";
 import { useCreateProjectMutation } from "./useCreateProjectMutation";
+import { useUpdateProjectMutation } from "./useUpdateProjectMutation";
 
 export interface ProjectFormValues {
   title: string;
@@ -28,10 +29,16 @@ const initialValues: ProjectFormValues = {
   riskLevel: "medium",
 };
 
-export function useCreateProjectForm() {
+export interface UseCreateProjectFormOptions {
+  linkPersonAsAssignee?: string;
+  onSuccess?(): void;
+}
+
+export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
   const [isOpen, setIsOpen] = useState(false);
   const [values, setValues] = useState<ProjectFormValues>(initialValues);
   const mutation = useCreateProjectMutation();
+  const updateProject = useUpdateProjectMutation();
 
   const updateField = <TField extends keyof ProjectFormValues>(
     field: TField,
@@ -65,12 +72,30 @@ export function useCreateProjectForm() {
     if (!input.title) return;
 
     mutation.mutate(input, {
-      onSuccess: () => {
-        reset();
-        setIsOpen(false);
+      onSuccess: (project) => {
+        const personId = options?.linkPersonAsAssignee;
+        if (!personId) {
+          options?.onSuccess?.();
+          reset();
+          setIsOpen(false);
+          return;
+        }
+
+        updateProject.mutate(
+          { projectId: project.id, input: { assigneePersonNodeId: personId } },
+          {
+            onSuccess: () => {
+              options?.onSuccess?.();
+              reset();
+              setIsOpen(false);
+            },
+          }
+        );
       },
     });
   };
+
+  const isSubmitting = mutation.isPending || updateProject.isPending;
 
   return {
     isOpen,
@@ -78,9 +103,11 @@ export function useCreateProjectForm() {
     values,
     updateField,
     submit,
-    canSubmit: values.title.trim().length > 0 && !mutation.isPending,
-    isSubmitting: mutation.isPending,
+    canSubmit: values.title.trim().length > 0 && !isSubmitting,
+    isSubmitting,
     errorMessage:
-      mutation.error instanceof Error ? mutation.error.message : null,
+      (mutation.error ?? updateProject.error) instanceof Error
+        ? ((mutation.error ?? updateProject.error) as Error).message
+        : null,
   };
 }

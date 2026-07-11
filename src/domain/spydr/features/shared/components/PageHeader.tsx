@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { BreadcrumbTrail } from "@/domain/spydr/features/shared/components/BreadcrumbTrail";
 import heroSpiderWeb from "@/assets/hero-spider-web.png";
 
 interface PageHeaderProps {
   eyebrow?: ReactNode;
+  showBreadcrumbs?: boolean;
   title: ReactNode;
   meta?: ReactNode;
   actions?: ReactNode;
@@ -13,12 +15,15 @@ interface PageHeaderProps {
 
 export function PageHeader({
   eyebrow,
+  showBreadcrumbs = true,
   title,
   meta,
   actions,
   className,
   titleClassName,
 }: PageHeaderProps) {
+  const breadcrumb = showBreadcrumbs && !eyebrow ? <BreadcrumbTrail /> : null;
+
   return (
     <div
       className={cn(
@@ -44,11 +49,16 @@ export function PageHeader({
       </div>
       <div className="relative flex min-h-[7.5rem] items-end justify-between gap-6 px-6 py-6">
         <div className="min-w-0 flex-1">
-          {eyebrow && (
-            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              {eyebrow}
+          {(eyebrow ?? breadcrumb) ? (
+            <div
+              className={cn(
+                "font-mono text-[10px] tracking-[0.14em] text-muted-foreground",
+                eyebrow ? "uppercase tracking-[0.18em]" : "normal-case"
+              )}
+            >
+              {eyebrow ?? breadcrumb}
             </div>
-          )}
+          ) : null}
           <h1
             className={cn(
               "mt-1 truncate text-[20px] font-semibold leading-tight tracking-tight",

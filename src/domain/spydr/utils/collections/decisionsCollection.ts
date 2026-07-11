@@ -26,6 +26,7 @@ export const decisionsCollection: CollectionConfig<DecisionNode> = {
       decision.body,
       decision.details?.rationale,
       decision.area,
+      decision.project?.title,
       decision.tags
     ),
   facets: [
@@ -35,6 +36,20 @@ export const decisionsCollection: CollectionConfig<DecisionNode> = {
       options: () =>
         staticFacetOptions(decisionImpacts, { itemClassName: STATUS_ITEM_CLASS }),
       valueOf: (decision) => decision.details?.impact ?? null,
+    },
+    {
+      id: "project",
+      label: "Project",
+      options: (items) =>
+        distinctFacetOptions(
+          items,
+          (decision) =>
+            decision.project
+              ? { value: decision.project.id, label: decision.project.title }
+              : null,
+          { includeUnassigned: true }
+        ),
+      valueOf: (decision) => decision.project?.id ?? null,
     },
     {
       id: "status",
