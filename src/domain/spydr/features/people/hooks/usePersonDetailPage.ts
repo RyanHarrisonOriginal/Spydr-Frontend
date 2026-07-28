@@ -13,6 +13,8 @@ import { useCreateProjectForm } from "@/domain/spydr/features/projects/hooks/use
 import { useCreateTaskForm } from "@/domain/spydr/features/tasks/hooks/useCreateTaskForm";
 import { useUpdateTaskMutation } from "@/domain/spydr/features/tasks/hooks/useUpdateTaskMutation";
 import { useUpdateProjectMutation } from "@/domain/spydr/features/projects/hooks/useUpdateProjectMutation";
+import { isProjectStatus } from "@/domain/spydr/utils/projectStatus";
+import { isTaskStatus } from "@/domain/spydr/utils/taskStatus";
 import { useUpdatePersonMutation } from "./useUpdatePersonMutation";
 import { useDeletePersonMutation } from "./useDeletePersonMutation";
 import { useReorderPersonCollectionMutation } from "./useReorderPersonCollectionMutation";
@@ -89,6 +91,8 @@ export function usePersonDetailPage() {
   const [updatingProjectId, setUpdatingProjectId] = useState<string | null>(null);
   const [dueDateError, setDueDateError] = useState<string | null>(null);
   const [targetDateError, setTargetDateError] = useState<string | null>(null);
+  const [taskStatusError, setTaskStatusError] = useState<string | null>(null);
+  const [projectStatusError, setProjectStatusError] = useState<string | null>(null);
   const [form, setForm] = useState<PersonDetailFormValues>(emptyForm);
   const [saveState, setSaveState] = useState<PersonDetailSaveState>("idle");
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -181,6 +185,24 @@ export function usePersonDetailPage() {
     );
   };
 
+  const updateTaskStatus = (taskId: string, status: string) => {
+    if (!isTaskStatus(status)) return;
+    setTaskStatusError(null);
+    setUpdatingTaskId(taskId);
+    updateTask.mutate(
+      { taskId, input: { status } },
+      {
+        onSuccess: () => invalidatePersonWork(),
+        onError: (error) => {
+          setTaskStatusError(
+            error instanceof Error ? error.message : "Failed to update task status"
+          );
+        },
+        onSettled: () => setUpdatingTaskId(null),
+      }
+    );
+  };
+
   const updateTargetDate = (projectId: string, targetDate: string | null) => {
     setTargetDateError(null);
     setUpdatingProjectId(projectId);
@@ -193,6 +215,26 @@ export function usePersonDetailPage() {
             error instanceof Error
               ? error.message
               : "Failed to update project target date"
+          );
+        },
+        onSettled: () => setUpdatingProjectId(null),
+      }
+    );
+  };
+
+  const updateProjectStatus = (projectId: string, status: string) => {
+    if (!isProjectStatus(status)) return;
+    setProjectStatusError(null);
+    setUpdatingProjectId(projectId);
+    updateProject.mutate(
+      { projectId, input: { status } },
+      {
+        onSuccess: () => invalidatePersonWork(),
+        onError: (error) => {
+          setProjectStatusError(
+            error instanceof Error
+              ? error.message
+              : "Failed to update project status"
           );
         },
         onSettled: () => setUpdatingProjectId(null),
@@ -215,11 +257,15 @@ export function usePersonDetailPage() {
     onReorderProjects,
     onReorderTasks,
     onDueDateChange: updateDueDate,
+    onTaskStatusChange: updateTaskStatus,
     onTargetDateChange: updateTargetDate,
+    onProjectStatusChange: updateProjectStatus,
     updatingTaskId,
     updatingProjectId,
     dueDateError,
+    taskStatusError,
     targetDateError,
+    projectStatusError,
     isReorderingCollection: reorderCollection.isPending,
     deleteCurrentPerson,
     isDeleting: deletePerson.isPending,

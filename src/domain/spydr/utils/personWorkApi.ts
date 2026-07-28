@@ -4,6 +4,8 @@ import type { ProjectPersonaRole } from "./projectPersonas";
 export interface PersonWorkProjectEntry {
   project: ProjectNode;
   roles: ProjectPersonaRole[];
+  /** Open tasks assigned to this person on the project. */
+  openTaskCount: number;
   sortOrder: number;
   personSortOrder: number | null;
   globalRank: number;

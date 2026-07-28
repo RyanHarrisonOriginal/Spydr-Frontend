@@ -16,7 +16,7 @@ export function DashboardMetricStrip({ summary }: DashboardMetricStripProps) {
         return (
           <div
             key={metric.id}
-            className="group relative border-r border-border px-6 py-5 transition-colors last:border-r-0 hover:bg-muted/15"
+            className="group relative border-r border-border px-8 py-7 transition-colors last:border-r-0 hover:bg-muted/10"
           >
             <span
               aria-hidden
@@ -25,8 +25,8 @@ export function DashboardMetricStrip({ summary }: DashboardMetricStripProps) {
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               {metric.label}
             </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <div className="text-3xl font-semibold tracking-tight tabular-nums">
+              <div className="mt-3 flex items-baseline gap-2">
+              <div className="text-[2rem] font-semibold tracking-[-0.03em] tabular-nums">
                 {value}
               </div>
               {hint ? (

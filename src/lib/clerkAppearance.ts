@@ -1,28 +1,34 @@
 /**
- * Clerk theme aligned with app design: warm paper, primary blue, neo-brutal radius.
- * Use in ClerkProvider (global) and extend in SignIn/SignUp when needed.
+ * Clerk theme — charcoal void, electric-blue signal, crimson action.
+ * Matches the Spydr tactical surface (dark by default).
  */
 export const clerkAppearance = {
   variables: {
-    colorPrimary: "hsl(220, 85%, 55%)",
-    colorBackground: "hsl(38, 20%, 99%)",
-    colorInputBackground: "hsl(40, 10%, 94%)",
-    colorText: "hsl(30, 10%, 15%)",
-    colorTextSecondary: "hsl(30, 8%, 48%)",
-    borderRadius: "0.625rem",
+    colorPrimary: "hsl(351, 64%, 49%)",
+    colorBackground: "hsl(222, 14%, 10%)",
+    colorInputBackground: "hsl(222, 16%, 7%)",
+    colorText: "hsl(220, 14%, 92%)",
+    colorTextSecondary: "hsl(220, 9%, 56%)",
+    colorDanger: "hsl(2, 74%, 54%)",
+    colorInputText: "hsl(220, 14%, 92%)",
+    colorNeutral: "hsl(220, 12%, 16%)",
+    borderRadius: "0.375rem",
     fontFamily: "var(--font-sans)",
   },
   elements: {
-    card: "shadow-none border border-border rounded-lg bg-card",
+    card: "shadow-none border border-border rounded-md bg-card",
     cardBox: "shadow-none",
-    headerTitle: "text-foreground font-semibold",
+    headerTitle: "text-foreground font-semibold tracking-tight",
     headerSubtitle: "text-muted-foreground",
-    socialButtonsBlockButton: "border-border bg-secondary hover:bg-muted text-foreground",
-    formFieldLabel: "text-foreground",
-    formFieldInput: "border-border bg-background text-foreground",
-    footerActionLink: "text-primary hover:text-primary/90",
-    formButtonPrimary: "bg-primary hover:bg-primary/90 text-primary-foreground",
+    socialButtonsBlockButton:
+      "border-border bg-secondary hover:bg-muted text-foreground shadow-none",
+    formFieldLabel: "text-foreground font-mono text-[10px] uppercase tracking-[0.14em]",
+    formFieldInput:
+      "border-border bg-background text-foreground shadow-none ring-offset-background",
+    footerActionLink: "text-highlight hover:text-highlight/90",
+    formButtonPrimary:
+      "bg-primary hover:bg-primary/90 text-primary-foreground shadow-none",
     dividerLine: "bg-border",
-    dividerText: "text-muted-foreground",
+    dividerText: "text-muted-foreground font-mono text-[10px] uppercase tracking-[0.14em]",
   },
 };

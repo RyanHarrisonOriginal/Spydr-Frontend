@@ -54,7 +54,7 @@ export function DashboardPage() {
         <>
           <DashboardMetricStrip summary={dashboard.summary} />
 
-          <div className="grid gap-5 px-6 pb-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <div className="grid gap-6 px-8 pb-10 pt-2 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             <DashboardPersonLoadSection dashboard={dashboard} />
             <div className="space-y-5">
               <DashboardStatusBreakdown

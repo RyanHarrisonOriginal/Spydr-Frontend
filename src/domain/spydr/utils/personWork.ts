@@ -57,3 +57,8 @@ export function listPersonTasks(tasks: TaskNode[], personId: string) {
 export function isOpenTask(task: TaskNode): boolean {
   return task.status !== "completed" && task.status !== "archived";
 }
+
+/** Owned = assignee — primary person doing the work. */
+export function isPersonOwnedProject(roles: ProjectPersonaRole[]): boolean {
+  return roles.includes("assignee");
+}

@@ -22,14 +22,14 @@ export function EmptyState({ title, description, children }: ListStateProps) {
   return (
     <div className="grid min-h-[240px] place-items-center px-6 py-12 text-center">
       <div className="max-w-sm">
-        <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl border border-border/60 bg-muted/20 text-muted-foreground/70 spydr-radial">
-          <SpydrMark size={24} strokeWidth={1.3} />
+        <div className="mx-auto mb-5 grid h-11 w-11 place-items-center rounded-sm border border-border bg-muted/15 text-highlight/80 spydr-radial">
+          <SpydrMark size={22} strokeWidth={1.25} />
         </div>
-        <h2 className="text-[14px] font-semibold">{title}</h2>
+        <h2 className="text-[14px] font-semibold tracking-tight">{title}</h2>
         {description && (
-          <p className="mt-2 text-[12.5px] text-muted-foreground">{description}</p>
+          <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{description}</p>
         )}
-        {children && <div className="mt-4">{children}</div>}
+        {children && <div className="mt-5">{children}</div>}
       </div>
     </div>
   );

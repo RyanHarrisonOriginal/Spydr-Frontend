@@ -5,220 +5,146 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* Light Mode - warm paper, journal-like */
-    --background: 38 25% 97%;
-    --foreground: 30 10% 15%;
+  /*
+   * Spydr — dark tactical web intelligence.
+   * Charcoal void · cool off-white type · electric blue (signal) · crimson (action).
+   * Built from line and space, not glow and cards.
+   */
+  :root,
+  .dark {
+    color-scheme: dark;
 
-    --card: 38 20% 99%;
-    --card-foreground: 30 10% 15%;
+    --background: 222 18% 5%;
+    --foreground: 220 14% 90%;
 
-    --canvas: 36 10% 85%;
+    --card: 222 16% 8%;
+    --card-foreground: 220 14% 90%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 10% 12%;
+    --canvas: 222 20% 4%;
 
-    --primary: 220 85% 55%;
+    --popover: 222 16% 8%;
+    --popover-foreground: 220 14% 90%;
+
+    /* Crimson — action / primary CTA (used sparingly) */
+    --primary: 351 64% 49%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 40 10% 96%;
-    --secondary-foreground: 30 10% 25%;
+    --secondary: 220 12% 12%;
+    --secondary-foreground: 220 12% 78%;
 
-    --muted: 40 8% 94%;
-    --muted-foreground: 30 8% 48%;
+    --muted: 220 12% 11%;
+    --muted-foreground: 220 8% 52%;
 
-    --accent: 220 85% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 220 12% 13%;
+    --accent-foreground: 220 14% 90%;
 
-    --destructive: 0 65% 52%;
+    --destructive: 2 74% 54%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Light mode: stronger borders (neo-brutal) for clearer perception */
-    --border: 30 10% 72%;
-    --input: 40 10% 94%;
-    --ring: 220 85% 55%;
+    --border: 220 12% 14%;
+    --input: 220 12% 11%;
+    /* Electric blue — focus / signal / navigation */
+    --ring: 214 95% 58%;
 
-    --radius: 0.625rem;
+    --radius: 0.375rem;
 
-    --highlight: 220 85% 55%;
-    --highlight-muted: 220 60% 70%;
-    --highlight-secondary: 18 94% 50%;
-    --highlight-secondary-muted: 18 72% 62%;
+    --highlight: 214 95% 58%;
+    --highlight-muted: 214 45% 58%;
+    --highlight-secondary: 351 72% 56%;
+    --highlight-secondary-muted: 351 42% 54%;
 
-    /* Node type colors - present, iconic (second-brain daily driver) */
-    --thought: 222 58% 42%;
-    --thought-bg: 222 28% 97%;
-    --thought-border: 222 32% 88%;
+    /* Entity types — cool slate family; blue for thought, crimson for question.
+       No purple, no warm journal rainbow. */
+    --thought: 214 70% 62%;
+    --thought-bg: 214 28% 12%;
+    --thought-border: 214 22% 20%;
 
-    --idea: 38 92% 44%;
-    --idea-bg: 38 48% 97%;
-    --idea-border: 38 42% 88%;
+    --idea: 220 12% 68%;
+    --idea-bg: 220 10% 12%;
+    --idea-border: 220 10% 20%;
 
-    --project: 158 52% 38%;
-    --project-bg: 158 32% 96%;
-    --project-border: 158 28% 85%;
+    --project: 200 28% 58%;
+    --project-bg: 200 16% 11%;
+    --project-border: 200 14% 20%;
 
-    --article: 262 52% 48%;
-    --article-bg: 262 28% 97%;
-    --article-border: 262 24% 88%;
+    --article: 220 14% 64%;
+    --article-bg: 220 12% 11%;
+    --article-border: 220 10% 20%;
 
-    --article-section: 238 52% 48%;
-    --article-section-bg: 238 28% 97%;
-    --article-section-border: 238 24% 88%;
+    --article-section: 214 32% 58%;
+    --article-section-bg: 214 18% 11%;
+    --article-section-border: 214 14% 20%;
 
-    --paragraph: 195 28% 42%;
-    --paragraph-bg: 195 18% 96%;
-    --paragraph-border: 195 14% 88%;
+    --paragraph: 220 8% 58%;
+    --paragraph-bg: 220 10% 11%;
+    --paragraph-border: 220 8% 18%;
 
-    --question: 6 72% 48%;
-    --question-bg: 6 42% 97%;
-    --question-border: 6 38% 88%;
+    --question: 351 55% 58%;
+    --question-bg: 351 28% 11%;
+    --question-border: 351 22% 20%;
 
-    --connector-line: 40 10% 85%;
-    --node-fill-opacity: 0.11;
+    --connector-line: 220 12% 18%;
+    --node-fill-opacity: 0.06;
 
-    --action-add: 160 55% 42%;
-    --action-move: 220 85% 55%;
-    --action-doc: 275 45% 55%;
-    --action-delete: 0 65% 52%;
+    --action-add: 214 70% 55%;
+    --action-move: 214 95% 58%;
+    --action-doc: 220 14% 64%;
+    --action-delete: 2 74% 54%;
 
-    --panel-bg: 0 0% 100%;
-    --panel-border: 30 10% 72%;
+    --panel-bg: 222 16% 7%;
+    --panel-border: 220 12% 14%;
 
-    --tree-hover: 40 15% 97%;
-    --tree-active: 220 85% 55%;
-    --tree-line: 40 10% 88%;
+    --tree-hover: 220 12% 10%;
+    --tree-active: 214 95% 58%;
+    --tree-line: 220 12% 16%;
 
-    --shadow-sm: 0 1px 2px 0 hsl(30 20% 20% / 0.04), 0 1px 3px 0 hsl(30 20% 20% / 0.02);
-    --shadow-md: 0 4px 8px -2px hsl(30 20% 20% / 0.06), 0 2px 4px -2px hsl(30 20% 20% / 0.03);
-    --shadow-lg: 0 12px 24px -4px hsl(30 20% 20% / 0.08), 0 4px 8px -2px hsl(30 20% 20% / 0.04);
-    --shadow-glow: 0 0 48px -12px hsl(var(--highlight) / 0.15);
-    --shadow-glow-secondary: 0 0 48px -12px hsl(var(--highlight-secondary) / 0.18);
+    --status-todo: 220 8% 52%;
+    --status-active: 214 95% 60%;
+    --status-doing: 38 40% 55%;
+    --status-done: 152 35% 44%;
+    --status-blocked: 351 64% 54%;
 
-    --sidebar-background: 40 15% 99%;
-    --sidebar-foreground: 30 10% 12%;
-    --sidebar-primary: 220 85% 55%;
+    --priority-critical: 351 64% 54%;
+    --priority-high: 24 55% 52%;
+    --priority-medium: 220 8% 55%;
+    --priority-low: 214 20% 48%;
+
+    /* Depth from hairlines, not soft elevation */
+    --shadow-sm: 0 1px 0 0 hsl(0 0% 0% / 0.35);
+    --shadow-md: 0 1px 0 0 hsl(0 0% 0% / 0.45), 0 8px 24px -16px hsl(0 0% 0% / 0.5);
+    --shadow-lg: 0 1px 0 0 hsl(0 0% 0% / 0.5), 0 16px 40px -20px hsl(0 0% 0% / 0.55);
+    --shadow-glow: 0 0 0 1px hsl(var(--highlight) / 0.12);
+    --shadow-glow-secondary: 0 0 0 1px hsl(var(--highlight-secondary) / 0.14);
+    --shadow-2xs: 0 1px 0 0 hsl(0 0% 0% / 0.2);
+    --shadow-xs: 0 1px 0 0 hsl(0 0% 0% / 0.28);
+    --shadow: var(--shadow-sm);
+    --shadow-xl: 0 20px 48px -24px hsl(0 0% 0% / 0.6);
+    --shadow-2xl: 0 28px 64px -28px hsl(0 0% 0% / 0.65);
+
+    --sidebar-background: 224 20% 4%;
+    --sidebar-foreground: 220 10% 68%;
+    --sidebar-primary: 351 64% 49%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 10% 96%;
-    --sidebar-accent-foreground: 30 10% 25%;
-    --sidebar-border: 30 10% 72%;
-    --sidebar-ring: 220 85% 55%;
+    --sidebar-accent: 220 12% 10%;
+    --sidebar-accent-foreground: 220 14% 90%;
+    --sidebar-border: 220 12% 11%;
+    --sidebar-ring: 214 95% 58%;
 
-    --chart-1: 222 58% 42%;
-    --chart-2: 158 52% 38%;
-    --chart-3: 38 92% 44%;
-    --chart-4: 262 52% 48%;
-    --chart-5: 6 72% 48%;
+    --chart-1: 214 70% 58%;
+    --chart-2: 200 28% 55%;
+    --chart-3: 220 12% 62%;
+    --chart-4: 351 55% 54%;
+    --chart-5: 152 35% 44%;
 
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
     --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
-
-    --shadow-2xs: 0 1px 1px 0 hsl(30 20% 20% / 0.02);
-    --shadow-xs: 0 1px 2px 0 hsl(30 20% 20% / 0.03);
-    --shadow: var(--shadow-sm);
-    --shadow-xl: 0 16px 32px -8px hsl(30 20% 20% / 0.10);
-    --shadow-2xl: 0 24px 48px -12px hsl(30 20% 20% / 0.12);
-  }
-
-  .dark {
-    --background: 30 8% 7%;
-    --foreground: 38 12% 92%;
-
-    --card: 30 6% 12%;
-    --card-foreground: 38 12% 92%;
-
-    --canvas: 30 6% 6%;
-
-    --popover: 240 10% 7%;
-    --popover-foreground: 40 10% 94%;
-
-    --primary: 220 75% 62%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 30 6% 13%;
-    --secondary-foreground: 38 8% 78%;
-
-    --muted: 30 5% 15%;
-    --muted-foreground: 38 6% 50%;
-
-    --accent: 30 5% 15%;
-    --accent-foreground: 38 10% 92%;
-
-    --border: 30 6% 16%;
-    --input: 30 6% 13%;
-    --ring: 220 75% 62%;
-
-    --highlight: 220 75% 62%;
-    --highlight-muted: 220 55% 65%;
-    --highlight-secondary: 18 90% 56%;
-    --highlight-secondary-muted: 18 68% 62%;
-
-    --connector-line: 30 5% 22%;
-    --node-fill-opacity: 0.08;
-
-    --panel-bg: 30 6% 10%;
-    --panel-border: 30 6% 16%;
-
-    --tree-hover: 30 5% 13%;
-    --tree-active: 220 75% 62%;
-    --tree-line: 30 5% 20%;
-
-    /* Node type colors - dark mode (readable, not harsh) */
-    --thought: 218 55% 62%;
-    --thought-bg: 218 22% 14%;
-    --thought-border: 218 20% 22%;
-
-    --idea: 38 85% 58%;
-    --idea-bg: 38 25% 14%;
-    --idea-border: 38 22% 22%;
-
-    --project: 158 45% 52%;
-    --project-bg: 158 22% 14%;
-    --project-border: 158 20% 22%;
-
-    --article: 262 50% 62%;
-    --article-bg: 262 22% 14%;
-    --article-border: 262 20% 22%;
-
-    --article-section: 238 50% 62%;
-    --article-section-bg: 238 22% 14%;
-    --article-section-border: 238 20% 22%;
-
-    --paragraph: 195 25% 58%;
-    --paragraph-bg: 195 18% 14%;
-    --paragraph-border: 195 16% 22%;
-
-    --question: 6 65% 58%;
-    --question-bg: 6 28% 14%;
-    --question-border: 6 25% 22%;
-
-    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.35);
-    --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.45);
-    --shadow-lg: 0 12px 28px -4px hsl(0 0% 0% / 0.5);
-    --shadow-glow: 0 0 48px -12px hsl(var(--highlight) / 0.2);
-    --shadow-glow-secondary: 0 0 48px -12px hsl(var(--highlight-secondary) / 0.22);
-
-    --sidebar-background: 30 8% 7%;
-    --sidebar-foreground: 38 12% 92%;
-    --sidebar-border: 30 6% 16%;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
-  }
-
-  /* Light mode only: slightly thicker borders (neo-brutal) for clarity */
-  html:not(.dark) .border {
-    border-width: 2px;
-  }
-  html:not(.dark) .border-t,
-  html:not(.dark) .border-b,
-  html:not(.dark) .border-l,
-  html:not(.dark) .border-r {
-    border-width: 2px;
   }
 
   body {
@@ -305,7 +231,7 @@
   }
 
   .node-badge {
-    @apply inline-flex items-center px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] rounded-md;
+    @apply inline-flex items-center rounded-sm border px-2 py-0.5 font-mono text-[9px] font-medium uppercase tracking-[0.14em];
   }
 
   .node-badge-thought {
@@ -359,12 +285,10 @@
   }
 
   .card-interactive {
-    @apply transition-all duration-300;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    @apply transition-colors duration-200;
   }
   .card-interactive:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    border-color: hsl(var(--highlight) / 0.35);
   }
 
   .divider {
@@ -372,11 +296,11 @@
   }
 
   .glow-hover:hover {
-    box-shadow: 0 0 32px -8px hsl(var(--highlight) / 0.18);
+    box-shadow: 0 0 0 1px hsl(var(--highlight) / 0.2);
   }
 
   .glow-hover-secondary:hover {
-    box-shadow: 0 0 32px -8px hsl(var(--highlight-secondary) / 0.22);
+    box-shadow: 0 0 0 1px hsl(var(--highlight-secondary) / 0.22);
   }
 
   /* react-colorful: match app theme (borders, radius) */
@@ -495,83 +419,9 @@
   cursor: default !important;
 }
 
-@layer base {
-  /*
-   * Spydr theme — "modern tactical web dashboard".
-   * Charcoal / near-black / slate neutrals with restrained crimson + deep
-   * electric-blue accents. Blue = signal / focus / navigation (the cool
-   * "intelligence" accent). Red = action / primary CTA (used sparingly).
-   */
-  :root,
-  .dark {
-    color-scheme: dark;
-
-    --background: 222 16% 7%;
-    --foreground: 220 14% 92%;
-
-    --card: 222 14% 10%;
-    --card-foreground: 220 14% 92%;
-
-    --canvas: 222 18% 6%;
-
-    --popover: 222 16% 9%;
-    --popover-foreground: 220 14% 92%;
-
-    /* Primary CTA — restrained crimson */
-    --primary: 351 64% 49%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 220 12% 14%;
-    --secondary-foreground: 220 14% 86%;
-
-    --muted: 220 12% 13%;
-    --muted-foreground: 220 9% 56%;
-
-    --accent: 220 12% 15%;
-    --accent-foreground: 220 14% 92%;
-
-    --destructive: 2 74% 54%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 220 12% 16%;
-    --input: 220 12% 13%;
-    /* Focus / signal ring — electric blue */
-    --ring: 214 95% 58%;
-
-    /* highlight = electric blue (signal), highlight-secondary = crimson (accent) */
-    --highlight: 214 95% 58%;
-    --highlight-muted: 214 60% 60%;
-    --highlight-secondary: 351 72% 56%;
-    --highlight-secondary-muted: 351 50% 58%;
-
-    --status-todo: 220 10% 55%;
-    --status-active: 214 95% 60%;
-    --status-doing: 38 92% 58%;
-    --status-done: 152 56% 46%;
-    --status-blocked: 351 72% 58%;
-
-    --priority-critical: 351 72% 58%;
-    --priority-high: 24 90% 56%;
-    --priority-medium: 220 10% 60%;
-    --priority-low: 210 24% 48%;
-
-    --sidebar-background: 224 18% 5%;
-    --sidebar-foreground: 220 12% 75%;
-    --sidebar-primary: 351 64% 49%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 12% 12%;
-    --sidebar-accent-foreground: 220 14% 92%;
-    --sidebar-border: 220 12% 12%;
-    --sidebar-ring: 214 95% 58%;
-
-    --shadow-glow: 0 0 48px -12px hsl(var(--highlight) / 0.22);
-    --shadow-glow-secondary: 0 0 48px -12px hsl(var(--highlight-secondary) / 0.24);
-  }
-}
-
 @layer components {
   .kbd {
-    @apply inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground;
+    @apply inline-flex h-5 min-w-5 items-center justify-center rounded-sm border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground;
   }
 
   .row-hover {
@@ -623,35 +473,36 @@
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
- * Spydr theme — web-intelligence design language
- * Subtle web/grid geometry, radial focus glows, and crisp accent treatments.
- * Kept restrained: thin lines, faint glows, no loud gradients.
+ * Spydr — web-intelligence surface language
+ * Structure from hairlines and space. Signal from thin blue. Pulse from crimson.
  * ────────────────────────────────────────────────────────────────────────── */
 @layer utilities {
-  /* Main application surface: fine tactical dot-grid + faint radial signal
-     glows (blue top-right, crimson bottom-left). Reads as a quiet web map. */
+  /* Void + faint blueprint grid. No wash gradients. */
   .spydr-surface {
     background-color: hsl(var(--background));
     background-image:
-      radial-gradient(900px circle at 88% -12%, hsl(var(--highlight) / 0.06), transparent 55%),
-      radial-gradient(720px circle at -8% 112%, hsl(var(--highlight-secondary) / 0.05), transparent 52%),
-      radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.035) 1px, transparent 0);
-    background-size: 100% 100%, 100% 100%, 26px 26px;
-    background-attachment: fixed, fixed, fixed;
+      linear-gradient(hsl(var(--foreground) / 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--foreground) / 0.018) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: -1px -1px;
   }
 
-  /* Sidebar / panel rails: faint vertical web strands. */
+  /* Sidebar rail — quieter, almost flat. */
   .spydr-rail {
-    background-image:
-      linear-gradient(180deg, hsl(var(--highlight) / 0.04), transparent 28%),
-      radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.025) 1px, transparent 0);
-    background-size: 100% 100%, 22px 22px;
+    background-image: linear-gradient(
+      180deg,
+      hsl(var(--highlight) / 0.03),
+      transparent 20%
+    );
   }
 
-  /* Radial focus indicator — a quiet "you are here" web ping. */
+  /* Quiet radial ping for empty states. */
   .spydr-radial {
-    background-image:
-      radial-gradient(closest-side, hsl(var(--highlight) / 0.10), transparent 70%);
+    background-image: radial-gradient(
+      closest-side,
+      hsl(var(--highlight) / 0.07),
+      transparent 72%
+    );
   }
 }
 
@@ -681,30 +532,20 @@
     background: hsl(var(--highlight) / 0.7);
   }
 
-  /* Interactive card with a crisp accent on hover: thin blue border + soft
-     signal glow + lift. Opt-in so static cards stay calm. */
+  /* Interactive panel: hairline signal only — no lift, no glow bloom. */
   .card-accent {
-    @apply transition-all duration-300 ease-out;
-    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    @apply transition-colors duration-200;
   }
   .card-accent:hover {
-    border-color: hsl(var(--highlight) / 0.45);
-    box-shadow: 0 0 0 1px hsl(var(--highlight) / 0.12),
-      0 0 32px -10px hsl(var(--highlight) / 0.28);
-    transform: translateY(-1px);
+    border-color: hsl(var(--highlight) / 0.4);
   }
 
-  /* Crimson-accent variant for primary/critical surfaces. */
   .card-accent-primary:hover {
-    border-color: hsl(var(--highlight-secondary) / 0.5);
-    box-shadow: 0 0 0 1px hsl(var(--highlight-secondary) / 0.14),
-      0 0 32px -10px hsl(var(--highlight-secondary) / 0.3);
+    border-color: hsl(var(--highlight-secondary) / 0.45);
   }
 
-  /* Primary CTA glow — restrained crimson signal on hover. */
   .glow-primary:hover {
-    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.35),
-      0 6px 24px -10px hsl(var(--primary) / 0.65);
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.4);
   }
 
   /* Thin left-edge signal accent for active control-panel rows. */
@@ -740,25 +581,16 @@
   }
 
   .person-me-row {
-    background: linear-gradient(
-      90deg,
-      hsl(var(--highlight) / 0.1) 0%,
-      hsl(var(--highlight) / 0.03) 42%,
-      transparent 100%
-    );
-    box-shadow: inset 3px 0 0 hsl(var(--highlight));
+    background: hsl(var(--highlight) / 0.06);
+    box-shadow: inset 2px 0 0 hsl(var(--highlight));
   }
 
   .person-me-card {
-    box-shadow:
-      inset 0 0 0 1px hsl(var(--highlight) / 0.18),
-      0 0 18px hsl(var(--highlight) / 0.08);
+    box-shadow: inset 0 0 0 1px hsl(var(--highlight) / 0.22);
   }
 
   .person-me-avatar {
-    box-shadow:
-      0 0 0 2px hsl(var(--highlight) / 0.55),
-      0 0 14px hsl(var(--highlight) / 0.22);
+    box-shadow: 0 0 0 1px hsl(var(--highlight) / 0.55);
   }
 
   .person-me-banner {

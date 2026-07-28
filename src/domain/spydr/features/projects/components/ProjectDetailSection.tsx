@@ -20,7 +20,7 @@ export function ProjectDetailSection({
   return (
     <section
       className={cn(
-        "flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm",
+        "flex min-h-0 flex-col overflow-hidden rounded-md border border-border bg-card",
         className
       )}
     >

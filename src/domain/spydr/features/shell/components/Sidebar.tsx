@@ -70,7 +70,7 @@ function Item({ to, icon: Icon, label, badge, disabled }: NavigationItem) {
 
   if (disabled || !to) {
     return (
-      <div className="group flex h-7 cursor-not-allowed items-center gap-2 rounded-md px-2 text-[13px] text-sidebar-foreground/35">
+      <div className="group flex h-7 cursor-not-allowed items-center gap-2 rounded-sm px-2 text-[13px] text-sidebar-foreground/35">
         {content()}
       </div>
     );
@@ -81,7 +81,7 @@ function Item({ to, icon: Icon, label, badge, disabled }: NavigationItem) {
       to={to}
       className={({ isActive }) =>
         cn(
-          "group flex h-7 items-center gap-2 rounded-md px-2 text-[13px] text-sidebar-foreground/80 transition-colors ring-focus hover:bg-muted/40 hover:text-foreground",
+          "group flex h-7 items-center gap-2 rounded-sm px-2 text-[13px] text-sidebar-foreground/80 transition-colors ring-focus hover:bg-muted/40 hover:text-foreground",
           isActive && "nav-active text-foreground"
         )
       }
@@ -116,10 +116,10 @@ export function Sidebar() {
   return (
     <aside className="spydr-rail hidden h-full w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
       <div className="flex h-12 items-center gap-2.5 border-b border-sidebar-border px-4">
-        <div className="grid h-6 w-6 place-items-center rounded-md bg-primary/12 text-highlight ring-1 ring-highlight/25">
-          <SpydrMark size={15} strokeWidth={1.5} />
+        <div className="grid h-6 w-6 place-items-center rounded-sm bg-[hsl(var(--highlight-secondary)/0.12)] text-highlight ring-1 ring-[hsl(var(--highlight-secondary)/0.28)]">
+          <SpydrMark size={15} strokeWidth={1.35} />
         </div>
-        <span className="text-[13px] font-semibold tracking-tight">
+        <span className="text-[13px] font-semibold tracking-[-0.03em]">
           Spydr<span className="text-highlight-secondary">.</span>
         </span>
         <span className="ml-auto max-w-[5.5rem] truncate font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground/80">
@@ -154,12 +154,12 @@ export function Sidebar() {
         <div className="web-divider" />
       </div>
       <div className="border-t border-sidebar-border p-3">
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
           <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[hsl(var(--status-done))] opacity-60" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[hsl(var(--status-done))] opacity-40" />
             <span className="dot relative bg-[hsl(var(--status-done))]" />
           </span>
-          <span>Workspace online</span>
+          <span>All systems nominal</span>
         </div>
       </div>
     </aside>

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BreadcrumbTrail } from "@/domain/spydr/features/shared/components/BreadcrumbTrail";
-import heroSpiderWeb from "@/assets/hero-spider-web.png";
+import { WebField } from "@/components/WebField";
 
 interface PageHeaderProps {
   eyebrow?: ReactNode;
@@ -11,6 +11,8 @@ interface PageHeaderProps {
   actions?: ReactNode;
   className?: string;
   titleClassName?: string;
+  /** Tighter chrome for operator detail pages. */
+  dense?: boolean;
 }
 
 export function PageHeader({
@@ -21,6 +23,7 @@ export function PageHeader({
   actions,
   className,
   titleClassName,
+  dense = false,
 }: PageHeaderProps) {
   const breadcrumb = showBreadcrumbs && !eyebrow ? <BreadcrumbTrail /> : null;
 
@@ -31,29 +34,31 @@ export function PageHeader({
         className
       )}
     >
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div
-          className="absolute inset-y-0 right-0 h-full w-[min(100%,62.4rem)]"
-          style={{
-            WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 28%)",
-            maskImage: "linear-gradient(to right, transparent 0%, black 28%)",
-          }}
-        >
-          <img
-            src={heroSpiderWeb}
-            alt=""
-            className="h-full w-full object-cover object-right"
-          />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/75 to-transparent" />
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-y-0 right-0 opacity-90",
+          dense ? "w-[min(100%,28rem)]" : "w-[min(100%,36rem)]"
+        )}
+        aria-hidden
+      >
+        <WebField className="h-full w-full" intensity="ambient" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-background/20" />
       </div>
-      <div className="relative flex min-h-[7.5rem] items-end justify-between gap-6 px-6 py-6">
+
+      <div
+        className={cn(
+          "relative flex items-end justify-between gap-6",
+          dense
+            ? "min-h-0 px-6 py-4"
+            : "min-h-[6.5rem] gap-8 px-8 py-7"
+        )}
+      >
         <div className="min-w-0 flex-1">
           {(eyebrow ?? breadcrumb) ? (
             <div
               className={cn(
-                "font-mono text-[10px] tracking-[0.14em] text-muted-foreground",
-                eyebrow ? "uppercase tracking-[0.18em]" : "normal-case"
+                "font-mono text-[10px] tracking-[0.16em] text-muted-foreground",
+                eyebrow ? "uppercase tracking-[0.2em]" : "normal-case"
               )}
             >
               {eyebrow ?? breadcrumb}
@@ -61,20 +66,26 @@ export function PageHeader({
           ) : null}
           <h1
             className={cn(
-              "mt-1 truncate text-[20px] font-semibold leading-tight tracking-tight",
+              "truncate font-semibold leading-none tracking-[-0.03em]",
+              dense ? "mt-1 text-[18px]" : "mt-2 text-[22px]",
               titleClassName
             )}
           >
             {title}
           </h1>
           {meta && (
-            <div className="mt-1.5 flex items-center gap-2 text-[12px] text-muted-foreground">
+            <div
+              className={cn(
+                "flex items-center gap-2 text-muted-foreground",
+                dense ? "mt-1.5 text-[11px]" : "mt-2.5 text-[12px]"
+              )}
+            >
               {meta}
             </div>
           )}
         </div>
         {actions && (
-          <div className="flex shrink-0 items-center gap-2">{actions}</div>
+          <div className="flex shrink-0 items-center gap-2 pb-0.5">{actions}</div>
         )}
       </div>
     </div>
