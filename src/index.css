@@ -139,6 +139,23 @@
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
     --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+    /* Clerk — keep auth chrome on the Spydr charcoal surface */
+    --clerk-color-primary: #cd2d4d;
+    --clerk-color-primary-foreground: #ffffff;
+    --clerk-color-background: #0a0c0f;
+    --clerk-color-foreground: #e2e5eb;
+    --clerk-color-muted: #14171c;
+    --clerk-color-muted-foreground: #7a808c;
+    --clerk-color-input: #111318;
+    --clerk-color-input-foreground: #e2e5eb;
+    --clerk-color-neutral: #e2e5eb;
+    --clerk-color-border: #1f2228;
+    --clerk-color-ring: #308cfc;
+    --clerk-color-danger: #df3430;
+    --clerk-color-shadow: #000000;
+    --clerk-color-modal-backdrop: rgba(8, 10, 14, 0.78);
+    --clerk-border-radius: 0.375rem;
   }
 }
 
@@ -171,6 +188,35 @@
     #root {
       height: 100dvh;
     }
+  }
+
+  /* Clerk: kill leftover light strips / default link blue */
+  .cl-footer,
+  .cl-cardBox .cl-footer {
+    background: transparent !important;
+  }
+
+  .cl-footerActionLink,
+  .cl-formResendCodeLink,
+  .cl-identityPreviewEditButton {
+    color: hsl(var(--highlight)) !important;
+  }
+
+  .cl-footerActionLink:hover,
+  .cl-formResendCodeLink:hover,
+  .cl-identityPreviewEditButton:hover {
+    color: hsl(var(--highlight) / 0.9) !important;
+  }
+
+  .cl-userButtonPopoverCard,
+  .cl-userButtonPopoverMain {
+    background: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border)) !important;
+    color: hsl(var(--popover-foreground)) !important;
+  }
+
+  .cl-userButtonPopoverActionButton:hover {
+    background: hsl(var(--muted)) !important;
   }
 
   h1, h2, h3, h4, h5, h6 {

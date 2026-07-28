@@ -44,6 +44,10 @@ export function TopBar() {
           appearance={{
             elements: {
               avatarBox: "h-7 w-7 rounded-sm border border-border",
+              userButtonPopoverCard:
+                "border border-border bg-popover shadow-md",
+              userButtonPopoverActionButton:
+                "text-foreground hover:bg-muted",
             },
           }}
         />

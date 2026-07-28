@@ -49,7 +49,7 @@ export function PageHeader({
         className={cn(
           "relative flex items-end justify-between gap-6",
           dense
-            ? "min-h-0 px-6 py-4"
+            ? "min-h-0 px-6 py-3"
             : "min-h-[6.5rem] gap-8 px-8 py-7"
         )}
       >

@@ -50,7 +50,7 @@ export default function SignInScreen() {
               elements: {
                 ...(clerkAppearance.elements ?? {}),
                 rootBox: "mx-auto w-full",
-                card: "shadow-none border border-border rounded-md bg-card w-full",
+                card: "shadow-none border border-border/80 rounded-md bg-background w-full",
               },
             }}
           />

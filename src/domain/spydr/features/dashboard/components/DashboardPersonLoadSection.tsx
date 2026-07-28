@@ -26,34 +26,36 @@ export function DashboardPersonLoadSection({
   );
 
   return (
-    <div className="card-accent rounded-md border border-border bg-card">
-      <div className="flex items-center gap-2 border-b border-border bg-muted/25 px-4 py-2.5">
-        <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-foreground/80">
+    <section className="border-b border-border">
+      <div className="flex items-center gap-3 px-6 py-3">
+        <h2 className="text-[13px] font-medium text-foreground">
           Load by person
         </h2>
-        <span className="h-px min-w-4 flex-1 bg-border/80" aria-hidden />
         <span className="font-mono text-[10px] text-muted-foreground">
-          assignee workload
+          {loads.length}
         </span>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] text-left text-[12px]">
-          <thead className="border-b border-border/80 bg-muted/10 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+        <table className="w-full min-w-[640px] text-left text-[13px]">
+          <thead className="border-y border-border/70 bg-muted/20 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             <tr>
-              <th className="px-4 py-2 font-medium">Person</th>
+              <th className="px-6 py-2 font-medium">Person</th>
               <th className="px-3 py-2 text-right font-medium">Projects</th>
-              <th className="px-3 py-2 text-right font-medium">Open tasks</th>
-              <th className="min-w-[10rem] px-3 py-2 font-medium">Load</th>
+              <th className="px-3 py-2 text-right font-medium">Open</th>
+              <th className="min-w-[7rem] px-3 py-2 font-medium">Load</th>
               <th className="px-3 py-2 text-right font-medium">Blocked</th>
               <th className="px-3 py-2 text-right font-medium">Overdue</th>
-              <th className="px-4 py-2 font-medium">Roles</th>
+              <th className="px-6 py-2 font-medium">Roles</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/70">
+          <tbody className="divide-y divide-border/50">
             {loads.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                <td
+                  colSpan={7}
+                  className="px-6 py-8 text-center text-muted-foreground"
+                >
                   Assign people on projects to see workload distribution.
                 </td>
               </tr>
@@ -70,38 +72,45 @@ export function DashboardPersonLoadSection({
                 return (
                   <tr
                     key={load.person?.id ?? "unassigned"}
-                    className={cn("row-hover", load.person && isMe(load.person.id) && "person-me-row")}
+                    className={cn(
+                      "row-hover",
+                      load.person && isMe(load.person.id) && "person-me-row"
+                    )}
                   >
-                    <td className="px-4 py-2.5">
+                    <td className="px-6 py-2.5">
                       {load.person ? (
                         <span className="inline-flex items-center gap-1.5">
                           <Link
                             to={`/people/${load.person.id}`}
                             className={cn(
-                              "font-medium hover:text-primary",
+                              "font-medium hover:text-highlight",
                               isMe(load.person.id) && "text-highlight"
                             )}
                           >
                             {load.person.name}
                           </Link>
-                          {isMe(load.person.id) ? <PersonMeBadge compact /> : null}
+                          {isMe(load.person.id) ? (
+                            <PersonMeBadge compact />
+                          ) : null}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">Unassigned</span>
                       )}
                     </td>
-                    <td className="px-3 py-2.5 text-right font-mono tabular-nums">
+                    <td className="px-3 py-2.5 text-right font-mono tabular-nums text-muted-foreground">
                       {load.projects}
                     </td>
                     <td className="px-3 py-2.5 text-right font-mono tabular-nums">
                       {load.openTasks}
                     </td>
                     <td className="px-3 py-2.5">
-                      <div className="h-2 overflow-hidden rounded-full bg-muted/50">
+                      <div className="h-1.5 overflow-hidden rounded-sm bg-muted/50">
                         <div
                           className={cn(
-                            "h-full rounded-full",
-                            load.openTasks > 0 ? "bg-primary/75" : "bg-transparent"
+                            "h-full rounded-sm",
+                            load.openTasks > 0
+                              ? "bg-highlight/75"
+                              : "bg-transparent"
                           )}
                           style={{ width: `${width}%` }}
                         />
@@ -110,7 +119,9 @@ export function DashboardPersonLoadSection({
                     <td
                       className={cn(
                         "px-3 py-2.5 text-right font-mono tabular-nums",
-                        load.blockedTasks > 0 && "text-[hsl(var(--status-blocked))]"
+                        load.blockedTasks > 0
+                          ? "text-[hsl(var(--status-blocked))]"
+                          : "text-muted-foreground"
                       )}
                     >
                       {load.blockedTasks}
@@ -118,12 +129,14 @@ export function DashboardPersonLoadSection({
                     <td
                       className={cn(
                         "px-3 py-2.5 text-right font-mono tabular-nums",
-                        load.overdueTasks > 0 && "text-[hsl(var(--status-blocked))]"
+                        load.overdueTasks > 0
+                          ? "text-[hsl(var(--status-blocked))]"
+                          : "text-muted-foreground"
                       )}
                     >
                       {load.overdueTasks}
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-6 py-2.5">
                       <div className="flex flex-wrap gap-1">
                         {roles.length === 0 ? (
                           <span className="text-muted-foreground">—</span>
@@ -131,9 +144,10 @@ export function DashboardPersonLoadSection({
                           roles.map((role) => (
                             <span
                               key={role}
-                              className="rounded border border-border/70 bg-muted/30 px-1.5 py-px font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+                              className="rounded-sm border border-border/70 bg-muted/20 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
                             >
-                              {dashboardPersonRoleLabels[role]} {load.roleCounts[role]}
+                              {dashboardPersonRoleLabels[role]}{" "}
+                              {load.roleCounts[role]}
                             </span>
                           ))
                         )}
@@ -148,11 +162,11 @@ export function DashboardPersonLoadSection({
       </div>
 
       {dashboard.summary.unassignedProjects > 0 ? (
-        <p className="border-t border-border/70 px-4 py-2 font-mono text-[10px] text-muted-foreground">
+        <p className="border-t border-border/70 px-6 py-2 text-[12px] text-muted-foreground">
           {dashboard.summary.unassignedProjects} projects and{" "}
           {dashboard.summary.unassignedProjectTasks} tasks have no assignee.
         </p>
       ) : null}
-    </div>
+    </section>
   );
 }

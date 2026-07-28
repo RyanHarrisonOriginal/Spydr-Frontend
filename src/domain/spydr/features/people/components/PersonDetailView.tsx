@@ -211,7 +211,7 @@ export function PersonDetailView({
             {displayName.charAt(0).toUpperCase()}
           </span>
 
-          <div className="grid min-w-0 flex-1 gap-x-3 gap-y-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="grid min-w-0 flex-1 gap-x-3 gap-y-2 sm:grid-cols-2 lg:grid-cols-4">
             <CompactField label="Full name">
               <input
                 value={form.fullName}
@@ -241,24 +241,6 @@ export function PersonDetailView({
                 value={form.organization}
                 onChange={(event) => onFieldChange("organization", event.target.value)}
                 placeholder="Org"
-                className={fieldClass}
-              />
-            </CompactField>
-            <CompactField label="Context">
-              <input
-                value={form.relationshipContext}
-                onChange={(event) =>
-                  onFieldChange("relationshipContext", event.target.value)
-                }
-                placeholder="Partner, vendor…"
-                className={fieldClass}
-              />
-            </CompactField>
-            <CompactField label="Notes" className="sm:col-span-2 lg:col-span-3 xl:col-span-1">
-              <input
-                value={form.body}
-                onChange={(event) => onFieldChange("body", event.target.value)}
-                placeholder="Working notes…"
                 className={fieldClass}
               />
             </CompactField>

@@ -25,9 +25,11 @@ export function WorkspaceShell() {
       <Sidebar />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar />
-        <main className="spydr-surface min-h-0 min-w-0 flex-1 overflow-y-auto animate-in-fade">
+        <main className="spydr-surface flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden animate-in-fade">
           <NavigationBreadcrumbProvider>
-            <Outlet />
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+              <Outlet />
+            </div>
           </NavigationBreadcrumbProvider>
         </main>
       </div>
