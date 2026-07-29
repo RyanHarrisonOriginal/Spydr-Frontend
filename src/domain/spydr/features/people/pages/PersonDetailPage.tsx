@@ -37,16 +37,19 @@ export function PersonDetailPage() {
       isReorderingCollection={detail.isReorderingCollection}
       updatingTaskId={detail.updatingTaskId}
       updatingProjectId={detail.updatingProjectId}
+      creatingTaskProjectId={detail.creatingTaskProjectId}
       dueDateError={detail.dueDateError}
       taskStatusError={detail.taskStatusError}
       targetDateError={detail.targetDateError}
       projectStatusError={detail.projectStatusError}
+      createTaskError={detail.createTaskError}
       onReorderProjects={detail.onReorderProjects}
       onReorderTasks={detail.onReorderTasks}
       onDueDateChange={detail.onDueDateChange}
       onTaskStatusChange={detail.onTaskStatusChange}
       onTargetDateChange={detail.onTargetDateChange}
       onProjectStatusChange={detail.onProjectStatusChange}
+      onCreateTask={detail.createProjectTask}
       onFieldChange={detail.updateField}
       onDelete={detail.deleteCurrentPerson}
     />

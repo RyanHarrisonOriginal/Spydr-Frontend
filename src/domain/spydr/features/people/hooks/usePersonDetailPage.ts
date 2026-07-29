@@ -11,6 +11,7 @@ import { useOrganizationContext } from "@/domain/spydr/features/organizations/co
 import { spydrOrgKey } from "@/domain/spydr/features/shared/hooks/spydrQueryKeys";
 import { useCreateProjectForm } from "@/domain/spydr/features/projects/hooks/useCreateProjectForm";
 import { useCreateTaskForm } from "@/domain/spydr/features/tasks/hooks/useCreateTaskForm";
+import { useCreateTaskMutation } from "@/domain/spydr/features/tasks/hooks/useCreateTaskMutation";
 import { useUpdateTaskMutation } from "@/domain/spydr/features/tasks/hooks/useUpdateTaskMutation";
 import { useUpdateProjectMutation } from "@/domain/spydr/features/projects/hooks/useUpdateProjectMutation";
 import { isProjectStatus } from "@/domain/spydr/utils/projectStatus";
@@ -82,6 +83,7 @@ export function usePersonDetailPage() {
     assigneePersonNodeId: personId,
     onSuccess: invalidatePersonWork,
   });
+  const createTaskMutation = useCreateTaskMutation();
   const updatePerson = useUpdatePersonMutation(personId);
   const deletePerson = useDeletePersonMutation();
   const reorderCollection = useReorderPersonCollectionMutation(personId);
@@ -89,10 +91,14 @@ export function usePersonDetailPage() {
   const updateProject = useUpdateProjectMutation();
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [updatingProjectId, setUpdatingProjectId] = useState<string | null>(null);
+  const [creatingTaskProjectId, setCreatingTaskProjectId] = useState<string | null>(
+    null
+  );
   const [dueDateError, setDueDateError] = useState<string | null>(null);
   const [targetDateError, setTargetDateError] = useState<string | null>(null);
   const [taskStatusError, setTaskStatusError] = useState<string | null>(null);
   const [projectStatusError, setProjectStatusError] = useState<string | null>(null);
+  const [createTaskError, setCreateTaskError] = useState<string | null>(null);
   const [form, setForm] = useState<PersonDetailFormValues>(emptyForm);
   const [saveState, setSaveState] = useState<PersonDetailSaveState>("idle");
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -242,6 +248,40 @@ export function usePersonDetailPage() {
     );
   };
 
+  const createProjectTask = (
+    projectId: string,
+    title: string,
+    onSuccess?: () => void
+  ) => {
+    const trimmed = title.trim();
+    if (!trimmed || !personId) return;
+    setCreateTaskError(null);
+    setCreatingTaskProjectId(projectId);
+    createTaskMutation.mutate(
+      {
+        projectId,
+        input: {
+          title: trimmed,
+          status: "active",
+          priority: "medium",
+          assigneePersonNodeId: personId,
+        },
+      },
+      {
+        onSuccess: () => {
+          invalidatePersonWork();
+          onSuccess?.();
+        },
+        onError: (error) => {
+          setCreateTaskError(
+            error instanceof Error ? error.message : "Failed to create task"
+          );
+        },
+        onSettled: () => setCreatingTaskProjectId(null),
+      }
+    );
+  };
+
   return {
     person,
     personId,
@@ -254,6 +294,8 @@ export function usePersonDetailPage() {
     projectAreas: areasQuery.data ?? [],
     createProject,
     createTask,
+    createProjectTask,
+    creatingTaskProjectId,
     onReorderProjects,
     onReorderTasks,
     onDueDateChange: updateDueDate,
@@ -266,6 +308,7 @@ export function usePersonDetailPage() {
     taskStatusError,
     targetDateError,
     projectStatusError,
+    createTaskError,
     isReorderingCollection: reorderCollection.isPending,
     deleteCurrentPerson,
     isDeleting: deletePerson.isPending,

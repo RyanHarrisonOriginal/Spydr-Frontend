@@ -63,16 +63,19 @@ interface PersonDetailViewProps {
   isReorderingCollection?: boolean;
   updatingTaskId?: string | null;
   updatingProjectId?: string | null;
+  creatingTaskProjectId?: string | null;
   dueDateError?: string | null;
   taskStatusError?: string | null;
   targetDateError?: string | null;
   projectStatusError?: string | null;
+  createTaskError?: string | null;
   onReorderProjects?(orderedIds: string[]): void;
   onReorderTasks?(orderedIds: string[]): void;
   onDueDateChange?(taskId: string, dueDate: string | null): void;
   onTaskStatusChange?(taskId: string, status: string): void;
   onTargetDateChange?(projectId: string, targetDate: string | null): void;
   onProjectStatusChange?(projectId: string, status: string): void;
+  onCreateTask?(projectId: string, title: string, onSuccess?: () => void): void;
   onFieldChange<TField extends keyof PersonDetailFormValues>(
     field: TField,
     value: PersonDetailFormValues[TField]
@@ -97,16 +100,19 @@ export function PersonDetailView({
   isReorderingCollection = false,
   updatingTaskId = null,
   updatingProjectId = null,
+  creatingTaskProjectId = null,
   dueDateError = null,
   taskStatusError = null,
   targetDateError = null,
   projectStatusError = null,
+  createTaskError = null,
   onReorderProjects,
   onReorderTasks,
   onDueDateChange,
   onTaskStatusChange,
   onTargetDateChange,
   onProjectStatusChange,
+  onCreateTask,
   onFieldChange,
   onDelete,
 }: PersonDetailViewProps) {
@@ -121,7 +127,11 @@ export function PersonDetailView({
   ).length;
 
   const workError =
-    taskStatusError ?? dueDateError ?? projectStatusError ?? targetDateError;
+    taskStatusError ??
+    dueDateError ??
+    projectStatusError ??
+    targetDateError ??
+    createTaskError;
 
   return (
     <div className="flex min-h-0 min-w-0 flex-col">
@@ -255,12 +265,14 @@ export function PersonDetailView({
           reorderEnabled={!isReorderingCollection}
           updatingTaskId={updatingTaskId}
           updatingProjectId={updatingProjectId}
+          creatingTaskProjectId={creatingTaskProjectId}
           onReorderProjects={onReorderProjects}
           onReorderTasks={onReorderTasks}
           onDueDateChange={onDueDateChange}
           onTaskStatusChange={onTaskStatusChange}
           onTargetDateChange={onTargetDateChange}
           onProjectStatusChange={onProjectStatusChange}
+          onCreateTask={onCreateTask}
           headerActions={
             <CreateProjectDialog
               areas={projectAreas}

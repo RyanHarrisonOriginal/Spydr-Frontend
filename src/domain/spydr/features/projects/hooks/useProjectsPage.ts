@@ -4,26 +4,51 @@ import {
   usePeopleQuery,
   useProjectAreasQuery,
   useProjectsQuery,
+  useTasksQuery,
 } from "@/domain/spydr/features/shared/hooks/queries";
 import { isProjectPriority } from "@/domain/spydr/utils/projectPriority";
 import { isProjectStatus } from "@/domain/spydr/utils/projectStatus";
 import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
-import type { UpdateProjectInput } from "@/domain/spydr/utils/types";
+import { isTaskStatus } from "@/domain/spydr/utils/taskStatus";
+import type { TaskNode, UpdateProjectInput } from "@/domain/spydr/utils/types";
 import { useProjectListView } from "./useProjectListView";
 import { useDeleteProjectMutation } from "./useDeleteProjectMutation";
 import { useRestoreProjectMutation } from "./useRestoreProjectMutation";
 import { useUpdateProjectMutation } from "./useUpdateProjectMutation";
+import { useUpdateTaskMutation } from "@/domain/spydr/features/tasks/hooks/useUpdateTaskMutation";
+import { useCreateTaskMutation } from "@/domain/spydr/features/tasks/hooks/useCreateTaskMutation";
 import { canManuallyReorderCollection } from "@/domain/spydr/utils/collections/shared";
 import { useReorderCollectionMutation } from "@/domain/spydr/features/shared/hooks/useReorderCollectionMutation";
 import { useCollectionDisplayPriorityRank } from "@/domain/spydr/features/shared/hooks/usePriorityRankLookup";
 import { COLLECTION_ORDER_SORT_ID } from "@/domain/spydr/utils/collections/shared";
 
+function groupTasksByProjectId(tasks: TaskNode[]) {
+  const map = new Map<string, TaskNode[]>();
+  for (const task of tasks) {
+    const projectId = task.project?.id;
+    if (!projectId) continue;
+    const list = map.get(projectId) ?? [];
+    list.push(task);
+    map.set(projectId, list);
+  }
+  for (const list of map.values()) {
+    list.sort(
+      (left, right) =>
+        (left.sortOrder ?? 0) - (right.sortOrder ?? 0) ||
+        left.title.localeCompare(right.title)
+    );
+  }
+  return map;
+}
+
 export function useProjectsPage() {
   const query = useProjectsQuery();
+  const tasksQuery = useTasksQuery();
   const trashQuery = useDeletedProjectsQuery();
   const areasQuery = useProjectAreasQuery();
   const peopleQuery = usePeopleQuery();
   const projects = query.data ?? [];
+  const tasks = tasksQuery.data ?? [];
   const deletedProjects = trashQuery.data ?? [];
   const areas = areasQuery.data ?? [];
   const people = peopleQuery.data ?? [];
@@ -37,19 +62,27 @@ export function useProjectsPage() {
     listView.sort.direction
   );
   const updateProject = useUpdateProjectMutation();
+  const updateTask = useUpdateTaskMutation();
+  const createTask = useCreateTaskMutation();
   const deleteProject = useDeleteProjectMutation();
   const restoreProject = useRestoreProjectMutation();
   const activeCount = useMemo(
     () => projects.filter((project) => project.status === "active").length,
     [projects]
   );
+  const tasksByProjectId = useMemo(() => groupTasksByProjectId(tasks), [tasks]);
 
   const [updatingProjectId, setUpdatingProjectId] = useState<string | null>(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [creatingTaskProjectId, setCreatingTaskProjectId] = useState<string | null>(
+    null
+  );
   const [statusError, setStatusError] = useState<string | null>(null);
   const [areaError, setAreaError] = useState<string | null>(null);
   const [priorityError, setPriorityError] = useState<string | null>(null);
   const [targetError, setTargetError] = useState<string | null>(null);
   const [assigneeError, setAssigneeError] = useState<string | null>(null);
+  const [taskError, setTaskError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
@@ -96,6 +129,69 @@ export function useProjectsPage() {
     runUpdate(projectId, { assigneePersonNodeId }, setAssigneeError);
   };
 
+  const updateTaskStatus = (taskId: string, status: string) => {
+    if (!isTaskStatus(status)) return;
+    setTaskError(null);
+    setUpdatingTaskId(taskId);
+    updateTask.mutate(
+      { taskId, input: { status } },
+      {
+        onError: (error) => {
+          setTaskError(
+            error instanceof Error ? error.message : "Failed to update task"
+          );
+        },
+        onSettled: () => setUpdatingTaskId(null),
+      }
+    );
+  };
+
+  const updateTaskDueDate = (taskId: string, dueDate: string | null) => {
+    setTaskError(null);
+    setUpdatingTaskId(taskId);
+    updateTask.mutate(
+      { taskId, input: { dueDate } },
+      {
+        onError: (error) => {
+          setTaskError(
+            error instanceof Error ? error.message : "Failed to update task"
+          );
+        },
+        onSettled: () => setUpdatingTaskId(null),
+      }
+    );
+  };
+
+  const createProjectTask = (
+    projectId: string,
+    title: string,
+    onSuccess?: () => void
+  ) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    setTaskError(null);
+    setCreatingTaskProjectId(projectId);
+    createTask.mutate(
+      {
+        projectId,
+        input: {
+          title: trimmed,
+          status: "active",
+          priority: "medium",
+        },
+      },
+      {
+        onSuccess: () => onSuccess?.(),
+        onError: (error) => {
+          setTaskError(
+            error instanceof Error ? error.message : "Failed to create task"
+          );
+        },
+        onSettled: () => setCreatingTaskProjectId(null),
+      }
+    );
+  };
+
   const deleteProjectById = (projectId: string) => {
     setDeleteError(null);
     setDeletingProjectId(projectId);
@@ -132,6 +228,7 @@ export function useProjectsPage() {
   return {
     projects: listView.visibleProjects,
     allProjects: projects,
+    tasksByProjectId,
     deletedProjects,
     deletedCount: deletedProjects.length,
     areas,
@@ -140,11 +237,16 @@ export function useProjectsPage() {
     filteredCount: listView.filteredCount,
     activeCount,
     updatingProjectId,
+    updatingTaskId,
+    creatingTaskProjectId,
     updateStatus,
     updateArea,
     updatePriority,
     updateTargetDate,
     updateAssignee,
+    updateTaskStatus,
+    updateTaskDueDate,
+    createProjectTask,
     deleteProject: deleteProjectById,
     restoreProject: restoreProjectById,
     deletingProjectId,
@@ -174,9 +276,10 @@ export function useProjectsPage() {
     priorityError,
     targetError,
     assigneeError,
+    taskError,
     deleteError,
     restoreError,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || tasksQuery.isLoading,
     isTrashLoading: trashQuery.isLoading,
     isAreasLoading: areasQuery.isLoading,
     isError: query.isError,

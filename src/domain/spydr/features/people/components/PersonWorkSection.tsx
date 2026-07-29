@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, X } from "lucide-react";
 import type {
   PersonWorkProjectEntry,
   PersonWorkTaskEntry,
@@ -32,12 +32,14 @@ interface PersonWorkSectionProps {
   reorderEnabled?: boolean;
   updatingTaskId?: string | null;
   updatingProjectId?: string | null;
+  creatingTaskProjectId?: string | null;
   onReorderProjects?(orderedIds: string[]): void;
   onReorderTasks?(orderedIds: string[]): void;
   onDueDateChange?(taskId: string, dueDate: string | null): void;
   onTaskStatusChange?(taskId: string, status: string): void;
   onTargetDateChange?(projectId: string, targetDate: string | null): void;
   onProjectStatusChange?(projectId: string, status: string): void;
+  onCreateTask?(projectId: string, title: string, onSuccess?: () => void): void;
   headerActions?: ReactNode;
 }
 
@@ -105,9 +107,12 @@ function ProjectRow({
   showExpand,
   expanded,
   tone = "flat",
+  composing = false,
+  createBusy = false,
   onToggleExpand,
   onTargetDateChange,
   onStatusChange,
+  onCreateClick,
 }: {
   entry: PersonWorkProjectEntry;
   busy: boolean;
@@ -117,9 +122,12 @@ function ProjectRow({
   expanded?: boolean;
   /** Tree parents use a filled rail; flat lists stay quieter. */
   tone?: "flat" | "parent";
+  composing?: boolean;
+  createBusy?: boolean;
   onToggleExpand?(): void;
   onTargetDateChange?(projectId: string, targetDate: string | null): void;
   onStatusChange?(projectId: string, status: string): void;
+  onCreateClick?(): void;
 }) {
   const owned = isPersonOwnedProject(entry.roles);
 
@@ -232,7 +240,90 @@ function ProjectRow({
           }
         />
       </span>
+
+      {onCreateClick ? (
+        <button
+          type="button"
+          aria-label={`Add task to ${entry.project.title}`}
+          aria-pressed={composing}
+          disabled={createBusy}
+          onClick={onCreateClick}
+          className={cn(
+            "grid h-7 w-7 shrink-0 place-items-center rounded-sm transition-colors disabled:opacity-50",
+            composing
+              ? "bg-highlight/15 text-highlight"
+              : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+          )}
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      ) : null}
     </div>
+  );
+}
+
+function ProjectTaskComposer({
+  projectTitle,
+  draft,
+  busy,
+  onCancel,
+  onDraftChange,
+  onSubmit,
+}: {
+  projectTitle: string;
+  draft: string;
+  busy: boolean;
+  onCancel(): void;
+  onDraftChange(value: string): void;
+  onSubmit(): void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  return (
+    <form
+      className="ml-7 flex items-center gap-2 rounded-sm border border-highlight/25 bg-background px-2 py-1"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit();
+      }}
+    >
+      <Plus className="h-3.5 w-3.5 shrink-0 text-highlight/80" aria-hidden />
+      <input
+        ref={inputRef}
+        value={draft}
+        onChange={(event) => onDraftChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            onCancel();
+          }
+        }}
+        placeholder={`New task on ${projectTitle}…`}
+        disabled={busy}
+        aria-label={`New task for ${projectTitle}`}
+        className="h-7 min-w-0 flex-1 bg-transparent px-1 text-[13px] text-foreground outline-none placeholder:text-muted-foreground/70 disabled:opacity-60"
+      />
+      <button
+        type="submit"
+        disabled={busy || draft.trim().length === 0}
+        className="h-7 shrink-0 rounded-sm bg-primary px-2.5 font-mono text-[10px] uppercase tracking-[0.12em] text-primary-foreground transition-opacity disabled:opacity-40"
+      >
+        {busy ? "…" : "Add"}
+      </button>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={onCancel}
+        aria-label="Cancel"
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground disabled:opacity-50"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </form>
   );
 }
 
@@ -314,17 +405,21 @@ export function PersonWorkSection({
   reorderEnabled = false,
   updatingTaskId = null,
   updatingProjectId = null,
+  creatingTaskProjectId = null,
   onReorderProjects,
   onReorderTasks,
   onDueDateChange,
   onTaskStatusChange,
   onTargetDateChange,
   onProjectStatusChange,
+  onCreateTask,
   headerActions,
 }: PersonWorkSectionProps) {
   const [viewMode, setViewMode] = useState<PersonWorkViewMode>("tree");
   const [showCompleted, setShowCompleted] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [composingProjectId, setComposingProjectId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
   const seededExpandRef = useRef(false);
 
   useEffect(() => {
@@ -411,6 +506,33 @@ export function PersonWorkSection({
     });
   };
 
+  const startCompose = (projectId: string) => {
+    setComposingProjectId(projectId);
+    setDraftTitle("");
+    setExpandedIds((current) => {
+      const next = new Set(current);
+      next.add(projectId);
+      return next;
+    });
+  };
+
+  const cancelCompose = () => {
+    setComposingProjectId(null);
+    setDraftTitle("");
+  };
+
+  const submitCompose = (projectId: string) => {
+    if (!onCreateTask || draftTitle.trim().length === 0) return;
+    onCreateTask(projectId, draftTitle, () => {
+      setDraftTitle("");
+      setExpandedIds((current) => {
+        const next = new Set(current);
+        next.add(projectId);
+        return next;
+      });
+    });
+  };
+
   const sectionLabel =
     viewMode === "projects"
       ? "Projects"
@@ -454,16 +576,41 @@ export function PersonWorkSection({
               enabled={reorderEnabled}
               className="space-y-1"
               onReorder={(orderedIds) => onReorderProjects?.(orderedIds)}
-              renderItem={(entry, sortable) => (
-                <ProjectRow
-                  entry={entry}
-                  busy={updatingProjectId === entry.project.id}
-                  reorderEnabled={reorderEnabled}
-                  dragHandleProps={sortable.dragHandleProps}
-                  onTargetDateChange={onTargetDateChange}
-                  onStatusChange={onProjectStatusChange}
-                />
-              )}
+              renderItem={(entry, sortable) => {
+                const composing = composingProjectId === entry.project.id;
+                return (
+                  <div className="space-y-1">
+                    <ProjectRow
+                      entry={entry}
+                      busy={updatingProjectId === entry.project.id}
+                      reorderEnabled={reorderEnabled}
+                      dragHandleProps={sortable.dragHandleProps}
+                      composing={composing}
+                      createBusy={creatingTaskProjectId === entry.project.id}
+                      onTargetDateChange={onTargetDateChange}
+                      onStatusChange={onProjectStatusChange}
+                      onCreateClick={
+                        onCreateTask
+                          ? () => {
+                              if (composing) cancelCompose();
+                              else startCompose(entry.project.id);
+                            }
+                          : undefined
+                      }
+                    />
+                    {composing && onCreateTask ? (
+                      <ProjectTaskComposer
+                        projectTitle={entry.project.title}
+                        draft={draftTitle}
+                        busy={creatingTaskProjectId === entry.project.id}
+                        onCancel={cancelCompose}
+                        onDraftChange={setDraftTitle}
+                        onSubmit={() => submitCompose(entry.project.id)}
+                      />
+                    ) : null}
+                  </div>
+                );
+              }}
             />
           )
         ) : null}
@@ -515,14 +662,16 @@ export function PersonWorkSection({
                 onReorder={(orderedIds) => onReorderProjects?.(orderedIds)}
                 renderItem={(entry, sortable) => {
                   const projectTasks = tasksByProjectId.get(entry.project.id) ?? [];
-                  const expanded = expandedIds.has(entry.project.id);
-                  const canExpand = projectTasks.length > 0;
+                  const composing = composingProjectId === entry.project.id;
+                  const canExpand = projectTasks.length > 0 || composing;
+                  const expanded = expandedIds.has(entry.project.id) && canExpand;
+                  const showChildren = expanded || composing;
 
                   return (
                     <div
                       className={cn(
                         "overflow-hidden rounded-sm",
-                        expanded && canExpand && "bg-muted/15 ring-1 ring-border/60"
+                        showChildren && "bg-muted/15 ring-1 ring-border/60"
                       )}
                     >
                       <div className="space-y-0">
@@ -534,24 +683,46 @@ export function PersonWorkSection({
                           showExpand={canExpand}
                           expanded={expanded}
                           tone="parent"
+                          composing={composing}
+                          createBusy={creatingTaskProjectId === entry.project.id}
                           onToggleExpand={() => toggleExpanded(entry.project.id)}
                           onTargetDateChange={onTargetDateChange}
                           onStatusChange={onProjectStatusChange}
+                          onCreateClick={
+                            onCreateTask
+                              ? () => {
+                                  if (composing) cancelCompose();
+                                  else startCompose(entry.project.id);
+                                }
+                              : undefined
+                          }
                         />
-                        {expanded && canExpand ? (
+                        {showChildren ? (
                           <div className="space-y-1 border-t border-border/50 bg-canvas/80 px-1.5 py-1.5">
-                            {projectTasks.map((taskEntry) => (
-                              <TaskRow
-                                key={taskEntry.task.id}
-                                entry={taskEntry}
-                                busy={updatingTaskId === taskEntry.task.id}
-                                reorderEnabled={false}
-                                nested
-                                hideProjectLink
-                                onDueDateChange={onDueDateChange}
-                                onStatusChange={onTaskStatusChange}
+                            {expanded
+                              ? projectTasks.map((taskEntry) => (
+                                  <TaskRow
+                                    key={taskEntry.task.id}
+                                    entry={taskEntry}
+                                    busy={updatingTaskId === taskEntry.task.id}
+                                    reorderEnabled={false}
+                                    nested
+                                    hideProjectLink
+                                    onDueDateChange={onDueDateChange}
+                                    onStatusChange={onTaskStatusChange}
+                                  />
+                                ))
+                              : null}
+                            {composing && onCreateTask ? (
+                              <ProjectTaskComposer
+                                projectTitle={entry.project.title}
+                                draft={draftTitle}
+                                busy={creatingTaskProjectId === entry.project.id}
+                                onCancel={cancelCompose}
+                                onDraftChange={setDraftTitle}
+                                onSubmit={() => submitCompose(entry.project.id)}
                               />
-                            ))}
+                            ) : null}
                           </div>
                         ) : null}
                       </div>

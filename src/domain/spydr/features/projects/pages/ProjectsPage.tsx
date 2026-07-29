@@ -22,17 +22,23 @@ export function ProjectsPage() {
   const {
     projects,
     allProjects,
+    tasksByProjectId,
     areas,
     people,
     totalCount,
     filteredCount,
     activeCount,
     updatingProjectId,
+    updatingTaskId,
+    creatingTaskProjectId,
     updateStatus,
     updateArea,
     updatePriority,
     updateTargetDate,
     updateAssignee,
+    updateTaskStatus,
+    updateTaskDueDate,
+    createProjectTask,
     deleteProject,
     restoreProject,
     deletingProjectId,
@@ -50,6 +56,7 @@ export function ProjectsPage() {
     priorityError,
     targetError,
     assigneeError,
+    taskError,
     deleteError,
     restoreError,
     isLoading,
@@ -158,10 +165,16 @@ export function ProjectsPage() {
               {assigneeError}
             </p>
           )}
+          {taskError && (
+            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {taskError}
+            </p>
+          )}
           <ProjectList
             projects={projects}
             areas={areas}
             people={people}
+            tasksByProjectId={tasksByProjectId}
             visibleColumns={projectColumns.visibleColumns}
             sort={listView.sort}
             reorderEnabled={reorder.canReorder}
@@ -169,6 +182,8 @@ export function ProjectsPage() {
             onReorder={reorder.onReorder}
             hasActiveFilters={listView.hasActiveFilters}
             updatingProjectId={updatingProjectId}
+            updatingTaskId={updatingTaskId}
+            creatingTaskProjectId={creatingTaskProjectId}
             onSortColumn={listView.toggleSortColumn}
             onClearFilters={listView.clearFilters}
             onStatusChange={updateStatus}
@@ -176,6 +191,9 @@ export function ProjectsPage() {
             onPriorityChange={updatePriority}
             onTargetDateChange={updateTargetDate}
             onAssigneeChange={updateAssignee}
+            onTaskStatusChange={updateTaskStatus}
+            onTaskDueDateChange={updateTaskDueDate}
+            onCreateTask={createProjectTask}
             onDelete={deleteProject}
             deletingProjectId={deletingProjectId}
           />
