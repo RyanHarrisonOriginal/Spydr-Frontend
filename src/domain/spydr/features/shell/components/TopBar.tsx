@@ -1,33 +1,17 @@
-import { Bell, Search } from "lucide-react";
+import { Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { UserButton } from "@clerk/react";
 import { OrganizationSwitcher } from "@/domain/spydr/features/organizations/components/OrganizationSwitcher";
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import { PersonMeBadge } from "@/domain/spydr/features/people/components/PersonIdentity";
 import { personDisplayName } from "@/domain/spydr/utils/projectPersonas";
-import { useCommandPalette } from "./CommandPalette";
 
 export function TopBar() {
   const { currentUserPerson } = useCurrentUserPerson();
-  const { open } = useCommandPalette();
 
   return (
     <header className="z-30 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-sm">
       <OrganizationSwitcher />
-
-      <button
-        type="button"
-        onClick={open}
-        className="group flex h-8 w-full max-w-xl items-center gap-2 rounded-sm border border-border bg-muted/20 px-2.5 text-left text-[13px] text-muted-foreground transition-colors hover:border-highlight/35 hover:bg-muted/35 ring-focus"
-        aria-label="Search workspace"
-      >
-        <Search className="h-3.5 w-3.5 opacity-70 transition-colors group-hover:text-highlight" />
-        <span>Search projects, tasks, people…</span>
-        <span className="ml-auto hidden items-center gap-1 sm:flex">
-          <span className="kbd">⌘</span>
-          <span className="kbd">K</span>
-        </span>
-      </button>
 
       <div className="ml-auto flex items-center gap-2">
         {currentUserPerson ? (

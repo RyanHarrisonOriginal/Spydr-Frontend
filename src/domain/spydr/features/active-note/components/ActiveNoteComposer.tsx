@@ -90,20 +90,24 @@ export function ActiveNoteComposer({
 
       <div className="relative z-[1] flex min-w-0 flex-1 items-center px-6 py-10 md:px-10 lg:px-14">
         <div className="mx-auto w-full max-w-3xl">
-          <div className="mb-8 flex items-start gap-4">
-            <SpydrMark size={56} className="mt-0.5 shrink-0" />
-            <div className="min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-highlight">
-                Active Note
-              </p>
-              <h1 className="mt-2 text-[1.75rem] font-semibold tracking-[-0.04em] text-foreground md:text-[2.15rem]">
-                What’s moving?
-              </h1>
-              <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-muted-foreground">
-                Drop a raw note. Spydr will propose projects, tasks, people, and
-                decisions — you choose what to keep.
-              </p>
+          <div className="mb-10">
+            <div className="flex items-center gap-2.5">
+              <SpydrMark size={40} className="shrink-0" alt="Spydr" />
+              <span className="text-[1.35rem] font-semibold leading-none tracking-[-0.04em] text-foreground">
+                Spydr<span className="text-highlight-secondary">.</span>
+              </span>
             </div>
+
+            <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.18em] text-highlight">
+              Active Note
+            </p>
+            <h1 className="mt-2 text-[1.75rem] font-semibold tracking-[-0.04em] text-foreground md:text-[2.15rem]">
+              What’s moving?
+            </h1>
+            <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-muted-foreground">
+              Drop a raw note. Spydr will propose projects, tasks, people, and
+              decisions — you choose what to keep.
+            </p>
           </div>
 
           <div className="rounded-md border border-border/80 bg-background/80 p-4 shadow-sm backdrop-blur-sm md:p-5">
