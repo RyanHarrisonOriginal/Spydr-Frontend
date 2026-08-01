@@ -15,10 +15,10 @@ import IdeasScreen from "@/screens/IdeasScreen";
 import DecisionsScreen from "@/screens/DecisionsScreen";
 import NotesScreen from "@/screens/NotesScreen";
 import NoteDetailScreen from "@/screens/NoteDetailScreen";
+import ActiveNoteScreen from "@/screens/ActiveNoteScreen";
 import PeopleScreen from "@/screens/PeopleScreen";
 import PersonDetailScreen from "@/screens/PersonDetailScreen";
 import ResourcesScreen from "@/screens/ResourcesScreen";
-import GraphScreen from "@/screens/GraphScreen";
 import SignInScreen from "@/screens/SignInScreen";
 import SignUpScreen from "@/screens/SignUpScreen";
 import NotFoundScreen from "@/screens/NotFoundScreen";
@@ -51,7 +51,8 @@ export default function App() {
                 </RequireAuth>
               }
             >
-              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route index element={<Navigate to="/active-note" replace />} />
+              <Route path="/active-note" element={<ActiveNoteScreen />} />
               <Route path="/dashboard" element={<DashboardScreen />} />
               <Route path="/projects" element={<ProjectsScreen />} />
               <Route path="/projects/:projectId" element={<ProjectDetailScreen />} />
@@ -64,7 +65,6 @@ export default function App() {
               <Route path="/people" element={<PeopleScreen />} />
               <Route path="/people/:personId" element={<PersonDetailScreen />} />
               <Route path="/resources" element={<ResourcesScreen />} />
-              <Route path="/graph" element={<GraphScreen />} />
             </Route>
             <Route
               path="/ontology/:ontologyId"

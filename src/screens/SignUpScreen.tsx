@@ -16,8 +16,8 @@ export default function SignUpScreen() {
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
       </div>
 
-      <header className="relative z-10 sticky top-0 flex h-14 items-center justify-between border-b border-border bg-background/80 px-6 backdrop-blur-sm md:px-10">
-        <Logo size="sm" />
+      <header className="relative z-10 sticky top-0 flex h-20 items-center justify-between border-b border-border bg-background/80 px-6 backdrop-blur-sm md:px-10">
+        <Logo size="md" />
         <Link
           to="/sign-in"
           className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-foreground"
@@ -28,7 +28,7 @@ export default function SignUpScreen() {
 
       <main className="relative z-10 flex min-h-[calc(100vh-3.5rem)] flex-1 flex-col items-center justify-center gap-14 p-8 md:flex-row md:gap-20 md:p-12">
         <section className="order-2 w-full max-w-sm text-center md:order-1 md:text-left">
-          <Logo size="xl" showTagline className="mb-8 justify-center md:justify-start" />
+          <Logo size="xl" className="mb-8 justify-center md:justify-start" />
           <h1 className="mb-3 text-2xl font-semibold tracking-[-0.03em] text-foreground md:text-[2rem]">
             Spin your web
           </h1>

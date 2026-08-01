@@ -9,8 +9,8 @@ import {
   GitBranch,
   Inbox,
   Lightbulb,
-  Network,
   LayoutDashboard,
+  PenLine,
   Sun,
   Users,
 } from "lucide-react";
@@ -26,11 +26,12 @@ interface NavigationItem {
   disabled?: boolean;
 }
 
-const outlooks: NavigationItem[] = [
-  { icon: Sun, label: "Today", badge: "later", disabled: true },
+const home: NavigationItem[] = [
+  { to: "/active-note", icon: PenLine, label: "Active Note" },
 ];
 
-const operate: NavigationItem[] = [
+const outlooks: NavigationItem[] = [
+  { icon: Sun, label: "Today", badge: "later", disabled: true },
   { icon: Inbox, label: "Inbox", badge: "later", disabled: true },
 ];
 
@@ -46,7 +47,6 @@ const workspace: NavigationItem[] = [
 ];
 
 const meta: NavigationItem[] = [
-  { to: "/graph", icon: Network, label: "Lineage" },
   { icon: Archive, label: "Archived", badge: "later", disabled: true },
 ];
 
@@ -115,26 +115,24 @@ export function Sidebar() {
 
   return (
     <aside className="spydr-rail hidden h-full w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
-      <div className="flex h-12 items-center gap-2.5 border-b border-sidebar-border px-4">
-        <div className="grid h-6 w-6 place-items-center rounded-sm bg-[hsl(var(--highlight-secondary)/0.12)] text-highlight ring-1 ring-[hsl(var(--highlight-secondary)/0.28)]">
-          <SpydrMark size={15} strokeWidth={1.35} />
-        </div>
-        <span className="text-[13px] font-semibold tracking-[-0.03em]">
+      <div className="flex h-[4.5rem] items-center gap-1.5 border-b border-sidebar-border px-3">
+        <SpydrMark size={52} className="shrink-0" />
+        <span className="min-w-0 flex-1 text-[16px] font-semibold leading-none tracking-[-0.03em]">
           Spydr<span className="text-highlight-secondary">.</span>
         </span>
-        <span className="ml-auto max-w-[5.5rem] truncate font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground/80">
+        <span className="max-w-[4.5rem] truncate font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground/80">
           {activeOrg?.name ?? "org"}
         </span>
       </div>
 
       <nav className="mt-2 flex-1 overflow-y-auto">
-        <Section label="Outlooks">
-          {outlooks.map((item) => (
+        <Section label="Home">
+          {home.map((item) => (
             <Item key={item.label} {...item} />
           ))}
         </Section>
-        <Section label="Operate">
-          {operate.map((item) => (
+        <Section label="Outlooks">
+          {outlooks.map((item) => (
             <Item key={item.label} {...item} />
           ))}
         </Section>

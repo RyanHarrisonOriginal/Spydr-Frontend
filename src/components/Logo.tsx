@@ -4,23 +4,17 @@ import { SpydrMark } from "@/components/SpydrMark";
 interface LogoProps {
   className?: string;
   size?: "sm" | "md" | "lg" | "xl";
-  /** Show mono tagline under the wordmark (auth surfaces). */
-  showTagline?: boolean;
 }
 
-export function Logo({
-  className = "",
-  size = "md",
-  showTagline = false,
-}: LogoProps) {
+export function Logo({ className = "", size = "md" }: LogoProps) {
   const sizes = {
-    sm: { icon: 22, fontSize: 15, gap: 8, tile: "rounded-sm" },
-    md: { icon: 26, fontSize: 17, gap: 10, tile: "rounded-sm" },
-    lg: { icon: 34, fontSize: 22, gap: 12, tile: "rounded-md" },
-    xl: { icon: 44, fontSize: 28, gap: 14, tile: "rounded-md" },
+    sm: { icon: 40, fontSize: 18, gap: 6 },
+    md: { icon: 48, fontSize: 20, gap: 7 },
+    lg: { icon: 64, fontSize: 26, gap: 8 },
+    xl: { icon: 88, fontSize: 34, gap: 10 },
   };
 
-  const { icon: iconSize, fontSize, gap, tile } = sizes[size];
+  const { icon: iconSize, fontSize, gap } = sizes[size];
 
   return (
     <Link
@@ -28,25 +22,12 @@ export function Logo({
       className={`flex shrink-0 items-center ${className}`}
       style={{ gap: `${gap}px` }}
     >
-      {/* Soft crimson-tinted tile · electric blue mark */}
-      <div
-        className={`relative flex items-center justify-center bg-[hsl(var(--highlight-secondary)/0.12)] text-highlight ring-1 ring-[hsl(var(--highlight-secondary)/0.28)] ${tile}`}
-        style={{ width: iconSize, height: iconSize }}
+      <SpydrMark size={iconSize} className="shrink-0" />
+      <span
+        className="font-semibold tracking-[-0.04em] text-foreground"
+        style={{ fontSize: `${fontSize}px`, lineHeight: 1 }}
       >
-        <SpydrMark size={iconSize * 0.62} strokeWidth={1.35} className="shrink-0" />
-      </div>
-      <span className="flex flex-col">
-        <span
-          className="font-semibold tracking-[-0.04em] text-foreground"
-          style={{ fontSize: `${fontSize}px` }}
-        >
-          Spydr<span className="text-highlight-secondary">.</span>
-        </span>
-        {showTagline ? (
-          <span className="mt-1 font-mono text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
-            Structured thinking engine
-          </span>
-        ) : null}
+        Spydr<span className="text-highlight-secondary">.</span>
       </span>
     </Link>
   );

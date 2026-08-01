@@ -8,7 +8,7 @@ export default function NotFoundScreen() {
         <h1 className="text-2xl font-semibold tracking-tight">Not found</h1>
         <p className="text-muted-foreground mt-2 text-[15px]">This page does not exist.</p>
         <Button asChild className="mt-4">
-          <Link to="/">Go to dashboard</Link>
+          <Link to="/">Go to Active Note</Link>
         </Button>
       </div>
     </div>

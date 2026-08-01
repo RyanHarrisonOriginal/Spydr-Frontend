@@ -22,8 +22,8 @@ export function EmptyState({ title, description, children }: ListStateProps) {
   return (
     <div className="grid min-h-[240px] place-items-center px-6 py-12 text-center">
       <div className="max-w-sm">
-        <div className="mx-auto mb-5 grid h-11 w-11 place-items-center rounded-sm border border-border bg-muted/15 text-highlight/80 spydr-radial">
-          <SpydrMark size={22} strokeWidth={1.25} />
+        <div className="mx-auto mb-5 grid place-items-center">
+          <SpydrMark size={72} className="shrink-0" />
         </div>
         <h2 className="text-[14px] font-semibold tracking-tight">{title}</h2>
         {description && (
