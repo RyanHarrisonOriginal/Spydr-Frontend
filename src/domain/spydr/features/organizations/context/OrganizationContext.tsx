@@ -1,11 +1,30 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@clerk/react";
+import { useAuth, useUser } from "@clerk/react";
 import { useOrganizationsQuery } from "@/domain/spydr/features/organizations/hooks/useOrganizationsQuery";
 import { useCreateOrganizationMutation } from "@/domain/spydr/features/organizations/hooks/useCreateOrganizationMutation";
 import type { Organization } from "@/domain/spydr/utils/types";
 import { getStored, setStored } from "@/lib/browserStorage";
 import { setOrgIdGetter } from "@/lib/apiClient";
+
+function resolveCreatorProfile(user: {
+  fullName: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  primaryEmailAddress?: { emailAddress: string } | null;
+} | null | undefined): { fullName: string; email: string | null } | null {
+  if (!user) return null;
+
+  const email = user.primaryEmailAddress?.emailAddress?.trim() || null;
+  const fullName =
+    user.fullName?.trim() ||
+    [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
+    email?.split("@")[0]?.trim() ||
+    null;
+
+  if (!fullName) return null;
+  return { fullName, email };
+}
 
 const ACTIVE_ORG_STORAGE_KEY = "spydr:active-org-id";
 
@@ -25,6 +44,7 @@ const OrganizationContext = createContext<OrganizationContextValue | null>(null)
 export function OrganizationProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const { isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
   const { data: organizations = [], isLoading } = useOrganizationsQuery();
   const createMutation = useCreateOrganizationMutation();
   const [activeOrgId, setActiveOrgIdState] = useState<string | null>(() =>
@@ -75,11 +95,15 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   const createOrganization = useCallback(
     async (name: string) => {
-      const org = await createMutation.mutateAsync({ name });
+      const creator = resolveCreatorProfile(user);
+      const org = await createMutation.mutateAsync({
+        name,
+        ...(creator ? { creator } : {}),
+      });
       setActiveOrgId(org.id);
       return org;
     },
-    [createMutation, setActiveOrgId]
+    [createMutation, setActiveOrgId, user]
   );
 
   const value = useMemo<OrganizationContextValue>(

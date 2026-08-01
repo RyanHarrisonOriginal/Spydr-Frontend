@@ -31,8 +31,14 @@ export interface Organization {
   updatedAt: string;
 }
 
+export interface CreateOrganizationCreatorInput {
+  fullName: string;
+  email?: string | null;
+}
+
 export interface CreateOrganizationInput {
   name: string;
+  creator?: CreateOrganizationCreatorInput;
 }
 
 export interface SpydrNode<TType extends SpydrNodeType = SpydrNodeType, TDetails = unknown> {

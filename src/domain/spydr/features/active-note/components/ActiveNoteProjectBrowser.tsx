@@ -86,7 +86,7 @@ export function ActiveNoteProjectBrowser({
 
   if (!panelOpen) {
     return (
-      <aside className="flex w-11 shrink-0 flex-col items-center border-r border-border/70 bg-muted/10 py-3">
+      <aside className="relative z-[1] flex h-full w-11 shrink-0 flex-col items-center border-r border-border/70 bg-muted/10 py-3">
         <Button
           type="button"
           variant="ghost"
@@ -119,8 +119,8 @@ export function ActiveNoteProjectBrowser({
   }
 
   return (
-    <aside className="flex w-[17.5rem] shrink-0 flex-col border-r border-border/70 bg-muted/[0.07]">
-      <div className="flex items-start justify-between gap-2 border-b border-border/60 px-3 py-3">
+    <aside className="relative z-[1] flex h-full min-h-0 w-[17.5rem] shrink-0 flex-col overflow-hidden border-r border-border/70 bg-muted/[0.07]">
+      <div className="flex shrink-0 items-start justify-between gap-2 border-b border-border/60 px-3 py-3">
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
             Projects
@@ -142,7 +142,7 @@ export function ActiveNoteProjectBrowser({
         </Button>
       </div>
 
-      <div className="border-b border-border/50 px-3 py-2">
+      <div className="shrink-0 border-b border-border/50 px-3 py-2">
         <button
           type="button"
           onClick={() => onSelectProject(null)}
@@ -283,7 +283,7 @@ export function ActiveNoteProjectBrowser({
       </div>
 
       {selectedProject ? (
-        <div className="border-t border-border/60 px-3 py-2.5">
+        <div className="shrink-0 border-t border-border/60 px-3 py-2.5">
           <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             Linked to
           </p>

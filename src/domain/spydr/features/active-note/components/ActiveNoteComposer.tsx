@@ -63,7 +63,7 @@ export function ActiveNoteComposer({
   const selectedProject = projects.find((project) => project.id === projectId);
 
   return (
-    <div className="relative flex min-h-[calc(100vh-3rem)]">
+    <div className="relative flex h-full min-h-0 overflow-hidden">
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.55]"
         aria-hidden
@@ -88,7 +88,7 @@ export function ActiveNoteComposer({
         onSelectProject={onProjectChange}
       />
 
-      <div className="relative z-[1] flex min-w-0 flex-1 items-center px-6 py-10 md:px-10 lg:px-14">
+      <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden px-6 py-10 md:px-10 lg:px-14">
         <div className="mx-auto w-full max-w-3xl">
           <div className="mb-10">
             <div className="flex items-center gap-2.5">

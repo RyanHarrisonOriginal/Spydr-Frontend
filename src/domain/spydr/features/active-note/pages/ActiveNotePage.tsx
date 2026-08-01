@@ -64,7 +64,9 @@ export function ActiveNotePage() {
       <div
         className={cn(
           "min-h-0 flex-1",
-          page.phase === "review" ? "overflow-hidden" : "overflow-y-auto"
+          page.phase === "compose" || page.phase === "review"
+            ? "overflow-hidden"
+            : "overflow-y-auto"
         )}
       >
         {page.phase === "compose" && (
