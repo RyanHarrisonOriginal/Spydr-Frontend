@@ -16,6 +16,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import type {
   PersonNode,
+  ProjectAreaNode,
   ProjectChildKind,
   ProjectDetailNode,
   SpydrPriority,
@@ -27,11 +28,7 @@ import type { ProjectDetailSaveState } from "../hooks/useProjectDetailPage";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/navigationBreadcrumbs";
-import {
-  EntityTag,
-  PriorityBadge,
-  StatusDot,
-} from "@/domain/spydr/features/shared/components/StatusPrimitives";
+import { PriorityBadge } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
 import {
@@ -66,10 +63,14 @@ import {
 import { ProjectItemActions } from "./ProjectItemActions";
 import { ProjectPersonasPanel } from "./ProjectPersonasPanel";
 import { PersonSelect } from "./PersonSelect";
+import { ProjectAreaSelect } from "./ProjectAreaSelect";
+import { ProjectStatusSelect } from "./ProjectStatusSelect";
 
 interface ProjectDetailViewProps {
   project: ProjectDetailNode;
   people: PersonNode[];
+  areas: ProjectAreaNode[];
+  areaNodeId: string;
   deleted: ProjectDetailNode["deleted"];
   stats: {
     connected: {
@@ -137,6 +138,10 @@ interface ProjectDetailViewProps {
     childId: string,
     input: UpdateProjectChildInput
   ): void;
+  onStatusChange(status: string): void;
+  isUpdatingStatus?: boolean;
+  onAreaChange(areaNodeId: string | null): void;
+  isUpdatingArea?: boolean;
   onPersonaChange(role: ProjectPersonaRole, personNodeId: string | null): void;
   isUpdatingPersona?: boolean;
   onDeleteChild(kind: ProjectChildKind, childId: string): void;
@@ -153,6 +158,8 @@ const priorityOptions: SpydrPriority[] = ["low", "medium", "high", "critical"];
 export function ProjectDetailView({
   project,
   people,
+  areas,
+  areaNodeId,
   deleted,
   stats,
   detailForm,
@@ -186,6 +193,10 @@ export function ProjectDetailView({
   onAddDecision,
   onAddIdea,
   onUpdateChild,
+  onStatusChange,
+  isUpdatingStatus = false,
+  onAreaChange,
+  isUpdatingArea = false,
   onPersonaChange,
   isUpdatingPersona = false,
   onDeleteChild,
@@ -236,11 +247,20 @@ export function ProjectDetailView({
           title={project.title}
           meta={
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[11px] capitalize">
-                <StatusDot status={project.status} /> {project.status.replace(/_/g, " ")}
-              </span>
+              <ProjectStatusSelect
+                value={project.status}
+                onChange={onStatusChange}
+                disabled={isUpdatingStatus}
+                className="w-[110px]"
+              />
               <PriorityBadge priority={project.priority} />
-              {project.area && <EntityTag tag={project.area} />}
+              <ProjectAreaSelect
+                areas={areas}
+                value={areaNodeId}
+                onChange={onAreaChange}
+                disabled={isUpdatingArea}
+                className="w-[140px]"
+              />
               {project.tags.map((tag) => (
                 <span
                   key={tag}

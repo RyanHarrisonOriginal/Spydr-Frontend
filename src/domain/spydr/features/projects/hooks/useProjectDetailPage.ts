@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useProjectQuery, usePeopleQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import {
+  useProjectQuery,
+  usePeopleQuery,
+  useProjectAreasQuery,
+} from "@/domain/spydr/features/shared/hooks/queries";
 import type { PersonNode, ProjectDetailNode, SpydrPriority } from "@/domain/spydr/utils/types";
 import {
   projectPersonaField,
   type ProjectPersonaRole,
 } from "@/domain/spydr/utils/projectPersonas";
+import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
+import { isProjectStatus } from "@/domain/spydr/utils/projectStatus";
 import { countTasksByBucket } from "@/domain/spydr/utils/taskStatus";
 import { useCreateProjectTaskMutation } from "./useCreateProjectTaskMutation";
 import { useCreateProjectNoteMutation } from "./useCreateProjectNoteMutation";
@@ -94,8 +100,10 @@ export function useProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const query = useProjectQuery(projectId);
   const peopleQuery = usePeopleQuery();
+  const areasQuery = useProjectAreasQuery();
   const project = query.data;
   const people = peopleQuery.data ?? [];
+  const areas = areasQuery.data ?? [];
   const updateProject = useUpdateProjectMutation(projectId);
   const createTask = useCreateProjectTaskMutation(projectId);
   const createNote = useCreateProjectNoteMutation(projectId);
@@ -105,6 +113,8 @@ export function useProjectDetailPage() {
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [personaError, setPersonaError] = useState<string | null>(null);
   const [isUpdatingPersona, setIsUpdatingPersona] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isUpdatingArea, setIsUpdatingArea] = useState(false);
   const [detailForm, setDetailForm] =
     useState<ProjectDetailFormValues>(emptyDetailForm);
   const [taskForm, setTaskForm] = useState<ProjectTaskFormValues>(emptyTaskForm);
@@ -286,6 +296,30 @@ export function useProjectDetailPage() {
     );
   };
 
+  const updateStatus = (status: string) => {
+    if (!projectId || !isProjectStatus(status)) return;
+
+    setIsUpdatingStatus(true);
+    updateProject.mutate(
+      { status },
+      {
+        onSettled: () => setIsUpdatingStatus(false),
+      }
+    );
+  };
+
+  const updateArea = (areaNodeId: string | null) => {
+    if (!projectId) return;
+
+    setIsUpdatingArea(true);
+    updateProject.mutate(
+      { areaNodeId },
+      {
+        onSettled: () => setIsUpdatingArea(false),
+      }
+    );
+  };
+
   const updatePersona = (role: ProjectPersonaRole, personNodeId: string | null) => {
     if (!projectId) return;
 
@@ -316,6 +350,8 @@ export function useProjectDetailPage() {
     projectId,
     project,
     people,
+    areas,
+    areaNodeId: project ? resolveProjectAreaId(project, areas) : "",
     deleted,
     stats,
     detailForm,
@@ -334,6 +370,8 @@ export function useProjectDetailPage() {
     addDecision,
     addIdea,
     updateChild,
+    updateStatus,
+    updateArea,
     updatePersona,
     deleteChild,
     restoreChild,
@@ -362,6 +400,8 @@ export function useProjectDetailPage() {
     detailError:
       updateProject.error instanceof Error ? updateProject.error.message : null,
     personaError,
+    isUpdatingStatus,
+    isUpdatingArea,
     isUpdatingPersona,
     taskError: createTask.error instanceof Error ? createTask.error.message : null,
     noteError: createNote.error instanceof Error ? createNote.error.message : null,

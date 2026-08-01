@@ -38,6 +38,8 @@ export function ProjectDetailPage() {
     <ProjectDetailView
       project={project}
       people={detailPage.people}
+      areas={detailPage.areas}
+      areaNodeId={detailPage.areaNodeId}
       deleted={detailPage.deleted}
       stats={stats}
       detailForm={detailPage.detailForm}
@@ -71,6 +73,10 @@ export function ProjectDetailPage() {
       onAddDecision={detailPage.addDecision}
       onAddIdea={detailPage.addIdea}
       onUpdateChild={detailPage.updateChild}
+      onStatusChange={detailPage.updateStatus}
+      isUpdatingStatus={detailPage.isUpdatingStatus}
+      onAreaChange={detailPage.updateArea}
+      isUpdatingArea={detailPage.isUpdatingArea}
       onPersonaChange={detailPage.updatePersona}
       isUpdatingPersona={detailPage.isUpdatingPersona}
       onDeleteChild={detailPage.deleteChild}
