@@ -98,7 +98,9 @@ export function ActiveNoteReview({
   );
   const projectTitleById = new Map(projects.map((project) => [project.id, project.title]));
   const candidateTitleById = new Map(
-    (proposal.candidateProjects ?? []).map((candidate) => [candidate.id, candidate.title])
+    (proposal.relatedObjects ?? [])
+      .filter((object) => object.type === "project")
+      .map((candidate) => [candidate.id, candidate.title])
   );
 
   function routeProjectLabel(route: (typeof routes)[number]): string | null {

@@ -404,7 +404,7 @@ function buildLogNoteProposal(activeNote: ActiveNote): ActiveNoteProposal {
           type: "project",
           id: MOCK_PROJECTS.muayThai.id,
         },
-        suggestedProjectId: MOCK_PROJECTS.muayThai.id,
+        selectedProjectId: MOCK_PROJECTS.muayThai.id,
         payload: {
           kind: "note",
           title,
