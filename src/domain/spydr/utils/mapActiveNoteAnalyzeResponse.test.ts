@@ -104,4 +104,114 @@ describe("mapActiveNoteAnalyzeResponse", () => {
       false
     );
   });
+
+  it("assigns distinct selectedProjectIds per segment route", () => {
+    const mapped = mapActiveNoteAnalyzeResponse({
+      response: {
+        routing: {
+          destination: "existing_project",
+          projectId: null,
+          relatedTaskId: null,
+          reason: "Multi-project note with 2 contexts: Vital Pak; ABL Automation",
+          confidence: 0.84,
+        },
+        impact: null,
+        summary: "Two project contexts.",
+        segments: [
+          {
+            ref: "seg_1",
+            text: "Waiting for QuickBooks for Vital Pak",
+            subject: "Vital Pak",
+          },
+          {
+            ref: "seg_2",
+            text: "ABL Automation has taken a back seat",
+            subject: "ABL Automation",
+          },
+        ],
+        routes: [
+          {
+            segmentRef: "seg_1",
+            destination: "existing_project",
+            projectId: "proj-vital",
+            relatedTaskId: null,
+            reason: "Vital Pak",
+            confidence: 0.9,
+            impact: { type: "project_context", reason: "Status" },
+          },
+          {
+            segmentRef: "seg_2",
+            destination: "existing_project",
+            projectId: "proj-abl",
+            relatedTaskId: null,
+            reason: "ABL",
+            confidence: 0.88,
+            impact: { type: "project_context", reason: "Status" },
+          },
+        ],
+        warnings: [],
+        candidateProjects: [
+          {
+            id: "proj-vital",
+            title: "Vital Pak",
+            relevanceReason: "Vital Pak",
+          },
+          {
+            id: "proj-abl",
+            title: "ABL Automation",
+            relevanceReason: "ABL",
+          },
+        ],
+        proposals: [
+          {
+            ref: "note_1",
+            operationType: "create",
+            objectType: "note",
+            parent: null,
+            attachment: null,
+            payload: {
+              title: "Vital Pak wait",
+              content: "Waiting for QuickBooks for Vital Pak",
+            },
+            explicitlyStated: true,
+            confidence: 0.9,
+            evidence: ["Vital Pak"],
+            reason: "Segment note",
+            segmentRef: "seg_1",
+            requiresProject: true,
+          },
+          {
+            ref: "note_2",
+            operationType: "create",
+            objectType: "note",
+            parent: null,
+            attachment: null,
+            payload: {
+              title: "ABL deprioritized",
+              content: "ABL Automation has taken a back seat",
+            },
+            explicitlyStated: true,
+            confidence: 0.9,
+            evidence: ["ABL Automation"],
+            reason: "Segment note",
+            segmentRef: "seg_2",
+            requiresProject: true,
+          },
+        ],
+      },
+      content:
+        "Waiting for QuickBooks for Vital Pak\n\nABL Automation has taken a back seat",
+    });
+
+    expect(mapped.segments).toHaveLength(2);
+    expect(mapped.routes).toHaveLength(2);
+    expect(mapped.operations.map((op) => op.segmentRef)).toEqual([
+      "seg_1",
+      "seg_2",
+    ]);
+    expect(mapped.operations.map((op) => op.selectedProjectId)).toEqual([
+      "proj-vital",
+      "proj-abl",
+    ]);
+  });
 });

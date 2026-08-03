@@ -1,5 +1,6 @@
 import type {
   ActiveNoteProposalOperation,
+  ActiveNoteSegment,
   OperationType,
   ProposalPresentationKind,
   SpydrObjectType,
@@ -295,15 +296,14 @@ export function routingDestinationLabel(
 export interface ProposalCardGroup {
   root: ActiveNoteProposalOperation;
   children: ActiveNoteProposalOperation[];
+  segmentRef?: string | null;
+  segmentSubject?: string | null;
 }
 
-/**
- * Group operations into one card per highest-level object.
- * Ops with `projectRef` pointing at another op in the list nest under that parent.
- * Orphans (missing parent) remain their own cards. Order follows first appearance.
- */
-export function groupProposalOperations(
-  operations: ActiveNoteProposalOperation[]
+function nestByProjectRef(
+  operations: ActiveNoteProposalOperation[],
+  segmentRef?: string | null,
+  segmentSubject?: string | null
 ): ProposalCardGroup[] {
   const byId = new Map(operations.map((op) => [op.id, op]));
   const childIds = new Set<string>();
@@ -324,7 +324,64 @@ export function groupProposalOperations(
     groups.push({
       root: op,
       children: childrenByParent.get(op.id) ?? [],
+      segmentRef: segmentRef ?? op.segmentRef ?? null,
+      segmentSubject: segmentSubject ?? null,
     });
   }
+  return groups;
+}
+
+/**
+ * Group operations into one card per highest-level object.
+ * Multi-segment notes are ordered by segment, then nested by projectRef within each segment.
+ * Ops with `projectRef` pointing at another op in the list nest under that parent.
+ * Orphans (missing parent) remain their own cards. Order follows first appearance.
+ */
+export function groupProposalOperations(
+  operations: ActiveNoteProposalOperation[],
+  segments: ActiveNoteSegment[] = []
+): ProposalCardGroup[] {
+  const segmentRefs = [
+    ...new Set(
+      operations
+        .map((op) => op.segmentRef?.trim() || "")
+        .filter(Boolean)
+    ),
+  ];
+  const multiSegment = segmentRefs.length > 1;
+  if (!multiSegment) {
+    return nestByProjectRef(operations);
+  }
+
+  const subjectByRef = new Map(
+    segments.map((segment) => [segment.ref, segment.subject])
+  );
+  const orderedRefs = [
+    ...segments.map((segment) => segment.ref).filter((ref) => segmentRefs.includes(ref)),
+    ...segmentRefs.filter((ref) => !segments.some((segment) => segment.ref === ref)),
+  ];
+
+  const groups: ProposalCardGroup[] = [];
+  const used = new Set<string>();
+
+  for (const segmentRef of orderedRefs) {
+    const segmentOps = operations.filter(
+      (op) => (op.segmentRef?.trim() || "") === segmentRef
+    );
+    for (const op of segmentOps) used.add(op.id);
+    groups.push(
+      ...nestByProjectRef(
+        segmentOps,
+        segmentRef,
+        subjectByRef.get(segmentRef) ?? segmentRef
+      )
+    );
+  }
+
+  const unassigned = operations.filter((op) => !used.has(op.id));
+  if (unassigned.length > 0) {
+    groups.push(...nestByProjectRef(unassigned));
+  }
+
   return groups;
 }

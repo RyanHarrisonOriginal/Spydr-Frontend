@@ -77,7 +77,10 @@ export function ActiveNoteReview({
   const onlyNoAction =
     actionable.length === 0 &&
     operations.some((op) => op.operationType === "no_action");
-  const cardGroups = groupProposalOperations(onlyNoAction ? [] : actionable);
+  const cardGroups = groupProposalOperations(
+    onlyNoAction ? [] : actionable,
+    proposal.segments ?? []
+  );
   const reviewCountLabel = onlyNoAction
     ? "Nothing to review"
     : cardGroups.length === 1
@@ -88,6 +91,27 @@ export function ActiveNoteReview({
   const noteBusy = isApplying || isReanalyzing;
   const canReanalyze =
     content.trim().length > 0 && !overLimit && !noteBusy;
+  const routes = proposal.routes ?? [];
+  const multiRoute = routes.length > 1;
+  const subjectBySegment = new Map(
+    (proposal.segments ?? []).map((segment) => [segment.ref, segment.subject])
+  );
+  const projectTitleById = new Map(projects.map((project) => [project.id, project.title]));
+  const candidateTitleById = new Map(
+    (proposal.candidateProjects ?? []).map((candidate) => [candidate.id, candidate.title])
+  );
+
+  function routeProjectLabel(route: (typeof routes)[number]): string | null {
+    if (route.destination === "new_project") return null;
+    const projectId = route.projectId?.trim();
+    if (!projectId) return null;
+    return projectTitleById.get(projectId) ?? candidateTitleById.get(projectId) ?? null;
+  }
+
+  function routeConfidenceLabel(confidence: number | null | undefined): string {
+    if (confidence == null || Number.isNaN(confidence)) return "";
+    return ` (${Math.round(confidence * 100)}%)`;
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
@@ -141,13 +165,48 @@ export function ActiveNoteReview({
             </div>
           </section>
 
-          {proposal.routing ? (
+          {multiRoute ? (
+            <section className="shrink-0 rounded-md border border-border bg-background p-4">
+              <h2 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Routing
+              </h2>
+              <p className="mt-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                {proposal.routing?.reason ??
+                  `${routes.length} project contexts detected`}
+              </p>
+              <ul className="mt-3 space-y-2.5">
+                {routes.map((route) => {
+                  const projectLabel = routeProjectLabel(route);
+                  return (
+                  <li key={route.segmentRef} className="min-w-0">
+                    <p className="text-[13px] font-medium text-foreground">
+                      {projectLabel ??
+                        subjectBySegment.get(route.segmentRef) ??
+                        route.segmentRef}
+                      {projectLabel &&
+                      subjectBySegment.get(route.segmentRef) &&
+                      projectLabel !== subjectBySegment.get(route.segmentRef)
+                        ? ` — ${subjectBySegment.get(route.segmentRef)}`
+                        : null}
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">
+                      {routingDestinationLabel(route.destination)}
+                      {routeConfidenceLabel(route.confidence)}
+                      {route.reason ? ` — ${route.reason}` : ""}
+                    </p>
+                  </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ) : proposal.routing ? (
             <section className="shrink-0 rounded-md border border-border bg-background p-4">
               <h2 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                 Routing
               </h2>
               <p className="mt-3 text-[13px] font-medium text-foreground">
                 {routingDestinationLabel(proposal.routing.destination)}
+                {routeConfidenceLabel(proposal.routing.confidence)}
               </p>
               <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
                 {proposal.routing.reason}
@@ -198,20 +257,34 @@ export function ActiveNoteReview({
                 </p>
               </div>
             ) : (
-              cardGroups.map((group) => (
-                <ActiveNoteProposalCard
-                  key={group.root.id}
-                  operation={group.root}
-                  nestedOperations={group.children}
-                  validationErrors={validationErrors}
-                  disabled={noteBusy}
-                  onToggleSelected={onToggleSelected}
-                  onReject={onReject}
-                  onEdit={onEdit}
-                  onDuplicateResolution={onDuplicateResolution}
-                  onProjectChange={onProjectChange}
-                />
-              ))
+              cardGroups.map((group, index) => {
+                const previous = cardGroups[index - 1];
+                const showSegmentHeading =
+                  multiRoute &&
+                  Boolean(group.segmentSubject) &&
+                  group.segmentRef !== previous?.segmentRef;
+
+                return (
+                  <div key={group.root.id} className="space-y-2">
+                    {showSegmentHeading ? (
+                      <h3 className="pt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {group.segmentSubject}
+                      </h3>
+                    ) : null}
+                    <ActiveNoteProposalCard
+                      operation={group.root}
+                      nestedOperations={group.children}
+                      validationErrors={validationErrors}
+                      disabled={noteBusy}
+                      onToggleSelected={onToggleSelected}
+                      onReject={onReject}
+                      onEdit={onEdit}
+                      onDuplicateResolution={onDuplicateResolution}
+                      onProjectChange={onProjectChange}
+                    />
+                  </div>
+                );
+              })
             )}
 
             {applyError ? (

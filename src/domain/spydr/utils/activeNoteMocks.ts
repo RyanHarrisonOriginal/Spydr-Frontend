@@ -371,33 +371,46 @@ function buildNewProjectProposal(activeNote: ActiveNote): ActiveNoteProposal {
   };
 }
 
-function buildNoActionProposal(activeNote: ActiveNote): ActiveNoteProposal {
+function buildLogNoteProposal(activeNote: ActiveNote): ActiveNoteProposal {
+  const title =
+    activeNote.content.trim().split(/\r?\n/)[0]?.trim().slice(0, 80) ||
+    "Active note";
   return {
     activeNote,
-    summary: "No useful Spydr change detected from this note.",
+    summary: "Logged this note on the most likely existing project.",
     routing: {
-      destination: "no_action",
-      projectId: null,
+      destination: "existing_project",
+      projectId: MOCK_PROJECTS.muayThai.id,
       relatedTaskId: null,
-      reason: "No useful execution change detected",
-      confidence: 0.8,
+      reason: "Most likely project for preserving this Active Note",
+      confidence: 0.55,
     },
-    impact: null,
+    impact: {
+      type: "project_context",
+      reason: "Status or observation logged as project context",
+    },
     warnings: [],
-    relatedObjects: [],
+    relatedObjects: [MOCK_PROJECTS.muayThai],
     operations: [
       op({
-        id: "op-no-action",
-        operationType: "no_action",
-        explicitlyStated: false,
+        id: "op-note-log",
+        operationType: "attach_context",
+        objectType: "note",
+        explicitlyStated: true,
         confidence: 0.55,
-        evidence: [],
-        selected: false,
-        payload: {
-          kind: "no_action",
-          message:
-            "This note can remain as written without creating additional tasks, projects, or relationships.",
+        evidence: [activeNote.content.trim().slice(0, 200)],
+        reasoningSummary: "Preserve the Active Note on the most likely project.",
+        attachment: {
+          type: "project",
+          id: MOCK_PROJECTS.muayThai.id,
         },
+        suggestedProjectId: MOCK_PROJECTS.muayThai.id,
+        payload: {
+          kind: "note",
+          title,
+          content: activeNote.content,
+        },
+        selected: true,
       }),
     ],
   };
@@ -443,7 +456,7 @@ export function selectMockProposalForContent(
     return buildNewProjectProposal(activeNote);
   }
 
-  return buildNoActionProposal(activeNote);
+  return buildLogNoteProposal(activeNote);
 }
 
 export async function mockCreateActiveNote(

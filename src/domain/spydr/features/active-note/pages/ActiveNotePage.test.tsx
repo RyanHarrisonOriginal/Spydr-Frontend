@@ -130,6 +130,14 @@ describe("ActiveNotePage", () => {
     resetActiveNoteMocks();
   });
 
+  it("shows an agent capability disclaimer", () => {
+    renderPage();
+
+    expect(
+      screen.getByLabelText(/active note agent disclaimer/i)
+    ).toHaveTextContent(/still working on the Active Note agent/i);
+  });
+
   it("lists active projects with open-task drill-down and optional project linking", async () => {
     const user = userEvent.setup();
     renderPage();

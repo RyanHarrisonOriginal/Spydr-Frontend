@@ -18,6 +18,16 @@ export function isUserFacingWarning(warning: string): boolean {
   if (/empty payload/i.test(text)) return false;
   if (/vague person/i.test(text)) return false;
   if (/no_action|new_project routing/i.test(text)) return false;
+  if (/^remapped\b/i.test(text)) return false;
+  if (/^synthesized\b/i.test(text)) return false;
+  if (/^filled missing title\b/i.test(text)) return false;
+  if (/^assigned\b/i.test(text)) return false;
+  if (/segment/i.test(text) && /^(removed|kept|added|limited)\b/i.test(text)) {
+    return false;
+  }
+  if (/force-picked|confidence below floor|mandatory note/i.test(text)) {
+    return false;
+  }
   return true;
 }
 

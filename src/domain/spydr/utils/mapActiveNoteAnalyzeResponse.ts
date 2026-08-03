@@ -21,6 +21,15 @@ function resolveProjectId(
   if (proposal.suggestedProjectId) return proposal.suggestedProjectId;
   if (proposal.parent?.projectId) return proposal.parent.projectId;
   if (proposal.parent?.projectRef) return null;
+
+  const segmentRef = proposal.segmentRef?.trim();
+  if (segmentRef && response.routes?.length) {
+    const route = response.routes.find((item) => item.segmentRef === segmentRef);
+    if (route?.destination === "existing_project" && route.projectId) {
+      return route.projectId;
+    }
+  }
+
   if (response.routing.destination === "existing_project") {
     return response.routing.projectId ?? null;
   }
@@ -66,7 +75,10 @@ function toPayload(
     case "note":
       return {
         kind: "note",
-        title: payload.title?.trim() || "Untitled note",
+        title:
+          payload.title?.trim() ||
+          payload.content?.trim().split(/\r?\n/)[0]?.trim().slice(0, 80) ||
+          "Active note",
         content: payload.content ?? payload.description ?? "",
         projectId,
       };
@@ -109,11 +121,26 @@ function toPayload(
     default:
       return {
         kind: "note",
-        title: payload.title?.trim() || "Untitled",
+        title:
+          payload.title?.trim() ||
+          payload.content?.trim().split(/\r?\n/)[0]?.trim().slice(0, 80) ||
+          "Active note",
         content: payload.content ?? payload.description ?? "",
         projectId,
       };
   }
+}
+
+function relatedTaskIdForProposal(
+  proposal: BackendActiveNoteProposal,
+  response: BackendActiveNoteAnalyzeResponse
+): string | null {
+  const segmentRef = proposal.segmentRef?.trim();
+  if (segmentRef && response.routes?.length) {
+    const route = response.routes.find((item) => item.segmentRef === segmentRef);
+    if (route?.relatedTaskId) return route.relatedTaskId;
+  }
+  return response.routing.relatedTaskId ?? null;
 }
 
 function toAttachment(
@@ -128,14 +155,15 @@ function toAttachment(
     };
   }
 
+  const relatedTaskId = relatedTaskIdForProposal(proposal, response);
   if (
     (proposal.objectType === "note" ||
       proposal.operationType === "attach_context") &&
-    response.routing.relatedTaskId
+    relatedTaskId
   ) {
     return {
       type: "task",
-      id: response.routing.relatedTaskId,
+      id: relatedTaskId,
       ref: null,
     };
   }
@@ -162,9 +190,10 @@ function toOperation(
       : undefined;
 
   const attachment = toAttachment(proposal, response);
+  const relatedTaskId = relatedTaskIdForProposal(proposal, response);
   const targetObjectId =
     attachment?.type === "task"
-      ? attachment.id ?? response.routing.relatedTaskId ?? null
+      ? attachment.id ?? relatedTaskId
       : projectId;
 
   return {
@@ -173,6 +202,7 @@ function toOperation(
     objectType,
     targetObjectId,
     projectRef,
+    segmentRef: proposal.segmentRef?.trim() || null,
     attachment,
     payload: toPayload(proposal, projectId),
     confidence: proposal.confidence,
@@ -262,6 +292,8 @@ export function mapActiveNoteAnalyzeResponse(input: {
     summary: input.response.summary,
     routing: input.response.routing,
     impact: input.response.impact ?? null,
+    segments: input.response.segments ?? [],
+    routes: input.response.routes ?? [],
     operations,
     warnings: filterUserFacingWarnings(input.response.warnings ?? []),
     relatedObjects,

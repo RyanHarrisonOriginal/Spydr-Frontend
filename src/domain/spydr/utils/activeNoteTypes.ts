@@ -51,6 +51,22 @@ export interface ActiveNoteImpact {
   reason: string;
 }
 
+export interface ActiveNoteSegment {
+  ref: string;
+  text: string;
+  subject: string;
+}
+
+export interface ActiveNoteSegmentRoute {
+  segmentRef: string;
+  destination: ActiveNoteRoutingDestination;
+  projectId?: string | null;
+  relatedTaskId?: string | null;
+  reason: string;
+  confidence: number;
+  impact?: ActiveNoteImpact | null;
+}
+
 export interface ActiveNoteProposalAttachment {
   type: "project" | "task";
   id?: string | null;
@@ -184,6 +200,8 @@ export interface ActiveNoteProposalOperation {
   relationshipType?: string | null;
   /** When set, this op depends on a Project proposal ref in the same plan. */
   projectRef?: string | null;
+  /** Ties this op to a multi-subject note segment. */
+  segmentRef?: string | null;
   attachment?: ActiveNoteProposalAttachment | null;
   payload: OperationPayload;
   confidence: number;
@@ -204,6 +222,8 @@ export interface ActiveNoteProposal {
   summary: string;
   routing?: ActiveNoteRoutingDecision | null;
   impact?: ActiveNoteImpact | null;
+  segments?: ActiveNoteSegment[];
+  routes?: ActiveNoteSegmentRoute[];
   operations: ActiveNoteProposalOperation[];
   warnings: string[];
   relatedObjects?: RelatedSpydrObject[];

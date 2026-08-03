@@ -38,6 +38,25 @@ export interface BackendActiveNoteProposalPayload {
   dueDate?: string | null;
 }
 
+export interface BackendActiveNoteSegment {
+  ref: string;
+  text: string;
+  subject: string;
+}
+
+export interface BackendActiveNoteSegmentRoute {
+  segmentRef: string;
+  destination: BackendActiveNoteRoutingDestination;
+  projectId?: string | null;
+  relatedTaskId?: string | null;
+  reason: string;
+  confidence: number;
+  impact?: {
+    type: BackendExistingProjectImpact;
+    reason: string;
+  } | null;
+}
+
 export interface BackendActiveNoteProposal {
   ref: string;
   operationType: BackendActiveNoteOperationType;
@@ -56,6 +75,7 @@ export interface BackendActiveNoteProposal {
   confidence: number;
   evidence: string[];
   reason: string;
+  segmentRef?: string | null;
   requiresProject?: boolean;
   suggestedProjectId?: string | null;
 }
@@ -79,6 +99,8 @@ export interface BackendActiveNoteAnalyzeResponse {
     reason: string;
   } | null;
   summary: string;
+  segments?: BackendActiveNoteSegment[];
+  routes?: BackendActiveNoteSegmentRoute[];
   proposals: BackendActiveNoteProposal[];
   candidateProjects: BackendActiveNoteCandidateProject[];
   warnings: string[];

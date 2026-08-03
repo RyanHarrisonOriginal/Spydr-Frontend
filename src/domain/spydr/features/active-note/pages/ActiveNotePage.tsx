@@ -4,6 +4,7 @@ import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import { cn } from "@/lib/utils";
 import { ActiveNoteAnalysisState } from "../components/ActiveNoteAnalysisState";
+import { ActiveNoteAgentDisclaimer } from "../components/ActiveNoteAgentDisclaimer";
 import { ActiveNoteCompletionSummary } from "../components/ActiveNoteCompletionSummary";
 import { ActiveNoteComposer } from "../components/ActiveNoteComposer";
 import { ActiveNoteReview } from "../components/ActiveNoteReview";
@@ -20,6 +21,7 @@ export function ActiveNotePage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <ActiveNoteAgentDisclaimer className="shrink-0" />
       {!isCompose ? (
         <PageHeader
           className="shrink-0"

@@ -265,4 +265,73 @@ describe("proposalPresentation", () => {
     expect(groups[1]?.children).toEqual([]);
     expect(groups[2]?.root.id).toBe("task_orphan");
   });
+
+  it("groups multi-segment operations by segment then projectRef", () => {
+    const noteA = makeOp({
+      id: "note_a",
+      operationType: "create",
+      explicitlyStated: true,
+      objectType: "note",
+      segmentRef: "seg_1",
+      selectedProjectId: "proj-vital",
+      payload: {
+        kind: "note",
+        title: "Vital Pak wait",
+        content: "Waiting for QuickBooks",
+      },
+    });
+    const projectB = makeOp({
+      id: "project_b",
+      operationType: "suggest_create",
+      explicitlyStated: false,
+      objectType: "project",
+      segmentRef: "seg_2",
+      payload: { kind: "project", title: "ABL Automation" },
+    });
+    const noteB = makeOp({
+      id: "note_b",
+      operationType: "create",
+      explicitlyStated: true,
+      objectType: "note",
+      segmentRef: "seg_2",
+      projectRef: "project_b",
+      payload: {
+        kind: "note",
+        title: "ABL deprioritized",
+        content: "Taken a back seat",
+      },
+    });
+    const noteC = makeOp({
+      id: "note_c",
+      operationType: "create",
+      explicitlyStated: true,
+      objectType: "note",
+      segmentRef: "seg_3",
+      selectedProjectId: "proj-review",
+      payload: {
+        kind: "note",
+        title: "Handoff",
+        content: "Kai Li takes over",
+      },
+    });
+
+    const groups = groupProposalOperations(
+      [noteA, projectB, noteB, noteC],
+      [
+        { ref: "seg_1", text: "Waiting for QuickBooks", subject: "Vital Pak" },
+        { ref: "seg_2", text: "Taken a back seat", subject: "ABL Automation" },
+        { ref: "seg_3", text: "Kai Li takes over", subject: "Customer business review" },
+      ]
+    );
+
+    expect(groups.map((group) => group.root.id)).toEqual([
+      "note_a",
+      "project_b",
+      "note_c",
+    ]);
+    expect(groups[0]?.segmentSubject).toBe("Vital Pak");
+    expect(groups[1]?.children.map((child) => child.id)).toEqual(["note_b"]);
+    expect(groups[1]?.segmentSubject).toBe("ABL Automation");
+    expect(groups[2]?.segmentSubject).toBe("Customer business review");
+  });
 });
