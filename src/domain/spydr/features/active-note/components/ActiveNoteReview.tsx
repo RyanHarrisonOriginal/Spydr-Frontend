@@ -219,14 +219,14 @@ export function ActiveNoteReview({
               ) : null}
             </section>
           ) : null}
-
+{/*  
           {userWarnings.length > 0 ? (
             <div className="shrink-0 space-y-2 overflow-hidden">
               {userWarnings.slice(0, 3).map((warning) => (
                 <ActiveNoteWarning key={warning} message={warning} />
               ))}
             </div>
-          ) : null}
+          ) : null} */}
         </aside>
 
         <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-md border border-border bg-muted/5">
