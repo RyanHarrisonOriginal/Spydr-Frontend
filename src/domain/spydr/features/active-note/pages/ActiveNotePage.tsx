@@ -106,6 +106,7 @@ export function ActiveNotePage() {
             proposal={page.proposal}
             operations={page.operations}
             projects={page.projects}
+            tasks={page.tasks}
             content={page.content}
             characterCount={page.characterCount}
             selectedCount={page.selectedCount}
@@ -126,6 +127,8 @@ export function ActiveNotePage() {
             onSaveEditedPayload={page.saveEditedPayload}
             onDuplicateResolution={page.setDuplicateResolution}
             onProjectChange={page.setSelectedProjectId}
+            onObjectTypeChange={page.setObjectType}
+            onAttachmentChange={page.setAttachment}
             onApply={() => void page.handleApply()}
           />
         )}

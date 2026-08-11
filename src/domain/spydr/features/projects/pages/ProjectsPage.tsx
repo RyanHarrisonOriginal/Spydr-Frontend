@@ -32,6 +32,7 @@ export function ProjectsPage() {
     updatingTaskId,
     creatingTaskProjectId,
     updateStatus,
+    updateTitle,
     updateArea,
     updatePriority,
     updateTargetDate,
@@ -52,6 +53,7 @@ export function ProjectsPage() {
     reorder,
     getPriorityRank,
     statusError,
+    titleError,
     areaError,
     priorityError,
     targetError,
@@ -140,6 +142,11 @@ export function ProjectsPage() {
               {statusError}
             </p>
           )}
+          {titleError && (
+            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {titleError}
+            </p>
+          )}
           {areaError && (
             <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {areaError}
@@ -186,6 +193,7 @@ export function ProjectsPage() {
             creatingTaskProjectId={creatingTaskProjectId}
             onSortColumn={listView.toggleSortColumn}
             onClearFilters={listView.clearFilters}
+            onTitleChange={updateTitle}
             onStatusChange={updateStatus}
             onAreaChange={updateArea}
             onPriorityChange={updatePriority}

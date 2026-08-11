@@ -1,109 +1,126 @@
 /** Backend analyze contract (POST /active-notes/analyze). */
 
-export type BackendActiveNoteOperationType =
-  | "create"
-  | "suggest_create"
-  | "attach_context"
-  | "no_action";
-
-export type BackendActiveNoteObjectType =
-  | "project"
-  | "task"
-  | "note"
+export type BackendSegmentIntent =
+  | "progress_update"
+  | "task_action"
   | "decision"
   | "idea"
-  | "person";
-
-export type BackendActiveNoteRoutingDestination =
-  | "existing_project"
-  | "new_project"
-  | "idea_only"
-  | "no_action";
-
-export type BackendExistingProjectImpact =
-  | "task_context"
-  | "new_task"
   | "project_context"
-  | "decision"
-  | "idea"
   | "mixed";
 
-export interface BackendActiveNoteProposalPayload {
-  title?: string;
-  description?: string;
-  content?: string;
-  rationale?: string;
-  name?: string;
-  priority?: "low" | "medium" | "high";
-  dueDate?: string | null;
-}
+export type BackendPlannedActionType =
+  | "create_task"
+  | "create_note"
+  | "attach_note_to_task"
+  | "create_decision"
+  | "create_idea"
+  | "use_existing_task";
+
+export type BackendProjectAssignmentDestination =
+  | "new_project_candidate"
+  | "unassigned";
 
 export interface BackendActiveNoteSegment {
-  ref: string;
-  text: string;
-  subject: string;
+  topic: string;
+  sourceText: string;
+  contextualText: string;
 }
 
-export interface BackendActiveNoteSegmentRoute {
-  segmentRef: string;
-  destination: BackendActiveNoteRoutingDestination;
-  projectId?: string | null;
-  relatedTaskId?: string | null;
-  reason: string;
+export interface BackendExistingProjectActionPlan {
+  originalText: string;
+  contextualText?: string;
+  topic?: string;
+  projectId: string;
+  projectName: string;
+  taskId?: string;
+  intent: BackendSegmentIntent;
+  action:
+    | {
+        type: "create_task";
+        confidence: number;
+        reason: string;
+        payload: {
+          title: string;
+          description?: string | null;
+        };
+      }
+    | {
+        type: "create_note";
+        confidence: number;
+        reason: string;
+        payload: {
+          subject: string;
+          content: string;
+        };
+      }
+    | {
+        type: "attach_note_to_task";
+        confidence: number;
+        reason: string;
+        targetTaskId: string;
+        targetTaskTitle: string;
+        payload: {
+          subject: string;
+          content: string;
+        };
+      }
+    | {
+        type: "create_decision";
+        confidence: number;
+        reason: string;
+        payload: {
+          title: string;
+          rationale?: string | null;
+        };
+      }
+    | {
+        type: "create_idea";
+        confidence: number;
+        reason: string;
+        payload: {
+          title: string;
+          description?: string | null;
+        };
+      }
+    | {
+        type: "use_existing_task";
+        confidence: number;
+        reason: string;
+        targetTaskId: string;
+        targetTaskTitle: string;
+      };
+}
+
+export interface BackendNewProjectCandidateActionPlan {
+  destination: "new_project_candidate";
+  originalText: string;
+  contextualText?: string;
+  topic?: string;
+  projectId: null;
+  projectName: string;
   confidence: number;
-  impact?: {
-    type: BackendExistingProjectImpact;
-    reason: string;
-  } | null;
-}
-
-export interface BackendActiveNoteProposal {
-  ref: string;
-  operationType: BackendActiveNoteOperationType;
-  objectType: BackendActiveNoteObjectType;
-  parent?: {
-    projectId?: string | null;
-    projectRef?: string | null;
-  } | null;
-  attachment?: {
-    type: "project" | "task";
-    id?: string | null;
-    ref?: string | null;
-  } | null;
-  payload: BackendActiveNoteProposalPayload;
-  explicitlyStated: boolean;
-  confidence: number;
-  evidence: string[];
   reason: string;
-  segmentRef?: string | null;
-  requiresProject?: boolean;
-  suggestedProjectId?: string | null;
 }
 
-export interface BackendActiveNoteCandidateProject {
-  id: string;
-  title: string;
-  relevanceReason?: string;
+export interface BackendUnassignedActionPlan {
+  destination: "unassigned";
+  originalText: string;
+  contextualText?: string;
+  topic?: string;
+  projectId: null;
+  projectName: null;
+  confidence: number;
+  reason: string;
 }
+
+export type BackendSegmentActionPlan =
+  | BackendExistingProjectActionPlan
+  | BackendNewProjectCandidateActionPlan
+  | BackendUnassignedActionPlan;
 
 export interface BackendActiveNoteAnalyzeResponse {
-  routing: {
-    destination: BackendActiveNoteRoutingDestination;
-    projectId?: string | null;
-    relatedTaskId?: string | null;
-    reason: string;
-    confidence: number;
-  };
-  impact?: {
-    type: BackendExistingProjectImpact;
-    reason: string;
-  } | null;
-  summary: string;
-  segments?: BackendActiveNoteSegment[];
-  routes?: BackendActiveNoteSegmentRoute[];
-  proposals: BackendActiveNoteProposal[];
-  candidateProjects: BackendActiveNoteCandidateProject[];
-  warnings: string[];
+  segments: BackendActiveNoteSegment[];
+  actionPlans: BackendSegmentActionPlan[];
 }
 
 export interface AnalyzeActiveNoteInput {

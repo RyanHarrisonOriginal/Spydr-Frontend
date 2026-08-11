@@ -3,6 +3,7 @@ import { ClipboardList, NotebookPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/navigationBreadcrumbs";
 import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
@@ -94,6 +95,14 @@ export function TaskDetailView({
                 ? ` · completed ${formatRelativeTime(task.details.completedAt)}`
                 : null}
             </span>
+          }
+          actions={
+            <EntityTransformMenu
+              nodeId={task.id}
+              sourceType="task"
+              sourceTitle={task.title}
+              projects={projects}
+            />
           }
         />
 

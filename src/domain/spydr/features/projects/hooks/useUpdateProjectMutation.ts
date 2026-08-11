@@ -32,6 +32,7 @@ export function useUpdateProjectMutation(projectId?: string) {
           item.id === project.id
             ? {
                 ...item,
+                title: project.title,
                 status: project.status,
                 priority: project.priority,
                 body: project.body,

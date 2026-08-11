@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { FileText, FolderKanban } from "lucide-react";
-import type { NoteNode } from "@/domain/spydr/utils/types";
+import type { NoteNode, ProjectNode } from "@/domain/spydr/utils/types";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/navigationBreadcrumbs";
 import { RichTextEditor } from "@/domain/spydr/features/shared/components/RichTextEditor";
@@ -35,6 +36,7 @@ function saveLabel(state: NoteDetailSaveState) {
 
 interface NoteDetailViewProps {
   note: NoteNode;
+  projects: ProjectNode[];
   form: NoteDetailFormValues;
   saveState: NoteDetailSaveState;
   onFieldChange<TField extends keyof NoteDetailFormValues>(
@@ -45,6 +47,7 @@ interface NoteDetailViewProps {
 
 export function NoteDetailView({
   note,
+  projects,
   form,
   saveState,
   onFieldChange,
@@ -69,6 +72,15 @@ export function NoteDetailView({
             Updated {formatRelativeTime(note.updatedAt)}
             {hint ? ` · ${hint}` : null}
           </span>
+        }
+        actions={
+          <EntityTransformMenu
+            nodeId={note.id}
+            sourceType="note"
+            sourceTitle={note.title}
+            projects={projects}
+            defaultProjectId={project?.id ?? null}
+          />
         }
       />
 

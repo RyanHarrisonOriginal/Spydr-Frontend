@@ -237,9 +237,6 @@ describe("ActiveNotePage", () => {
     expect(suggestedAccept).not.toBeChecked();
 
     await user.click(
-      within(suggestedCard).getByRole("button", { name: /^expand /i })
-    );
-    await user.click(
       within(suggestedCard).getByRole("radio", {
         name: /create a new task/i,
       })
@@ -255,18 +252,13 @@ describe("ActiveNotePage", () => {
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     expect(
-      await screen.findByRole("heading", {
-        name: /Drill teep setups vs larger partners/i,
-      })
+      await screen.findByText(/Drill teep setups vs larger partners/i)
     ).toBeInTheDocument();
 
     const linkCard = document.querySelector(
       'article[data-operation-type="link"]'
     ) as HTMLElement;
     expect(linkCard).toBeTruthy();
-    await user.click(
-      within(linkCard).getByRole("button", { name: /^expand /i })
-    );
     await user.click(within(linkCard).getByRole("button", { name: "Reject" }));
 
     const applyButton = screen.getByRole("button", {
@@ -325,18 +317,14 @@ describe("ActiveNotePage", () => {
       );
       await user.click(screen.getByRole("button", { name: "Analyze note" }));
 
-      await screen.findByRole(
-        "heading",
-        { name: /Practice teep setups before Thursday sparring/i },
-        { timeout: 4000 }
-      );
-      const taskCard = document.querySelector(
-        'article[data-operation-type="create"]'
-      ) as HTMLElement;
-      expect(taskCard).toBeTruthy();
-      await user.click(
-        within(taskCard).getByRole("button", { name: /^expand /i })
-      );
+      await screen.findByText(/active note review/i, {}, { timeout: 4000 });
+      const taskCard = await waitFor(() => {
+        const card = document.querySelector(
+          'article[data-operation-id="op-task-explicit"]'
+        ) as HTMLElement | null;
+        if (!card) throw new Error("Task proposal card not found");
+        return card;
+      });
       await user.click(within(taskCard).getByRole("button", { name: "Edit" }));
       const titleInput = await screen.findByLabelText("Title");
       await user.clear(titleInput);
@@ -352,7 +340,7 @@ describe("ActiveNotePage", () => {
         await screen.findByText(/apply failed|could not apply/i)
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("heading", { name: /Edited explicit task/i })
+        screen.getByText(/Edited explicit task/i)
       ).toBeInTheDocument();
       expect(screen.getByText(/active note review/i)).toBeInTheDocument();
     } finally {

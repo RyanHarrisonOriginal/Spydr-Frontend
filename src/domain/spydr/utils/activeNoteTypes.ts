@@ -51,10 +51,20 @@ export interface ActiveNoteImpact {
   reason: string;
 }
 
+export type ActiveNoteRoutingDestinationKind =
+  | "existing_project"
+  | "new_project_candidate"
+  | "unassigned";
+
 export interface ActiveNoteSegment {
   ref: string;
-  text: string;
+  topic: string;
+  sourceText: string;
+  contextualText: string;
+  /** Legacy alias for topic */
   subject: string;
+  /** Legacy alias for sourceText */
+  text: string;
 }
 
 export interface ActiveNoteSegmentRoute {
@@ -215,6 +225,22 @@ export interface ActiveNoteProposalOperation {
   candidateProjects?: RelatedSpydrObject[];
   duplicateResolution?: DuplicateResolution | null;
   selectedProjectId?: string | null;
+  /** Segment topic from analysis */
+  segmentTopic?: string;
+  /** Original segment text from the note */
+  segmentText?: string;
+  /** Contextualized segment text */
+  contextualText?: string;
+  /** Backend segment intent (progress_update, task_action, etc.) */
+  intent?: string;
+  /** How the segment was routed to a project */
+  routingDestination?: ActiveNoteRoutingDestinationKind;
+  /** Suggested or matched project name */
+  suggestedProjectName?: string;
+  /** Target task title when attaching to a task */
+  targetTaskTitle?: string;
+  /** Unassigned segments need the user to pick an action */
+  needsUserDecision?: boolean;
 }
 
 export interface ActiveNoteProposal {

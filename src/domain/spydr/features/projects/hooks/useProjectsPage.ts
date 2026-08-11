@@ -77,6 +77,7 @@ export function useProjectsPage() {
   const [creatingTaskProjectId, setCreatingTaskProjectId] = useState<string | null>(
     null
   );
+  const [titleError, setTitleError] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [areaError, setAreaError] = useState<string | null>(null);
   const [priorityError, setPriorityError] = useState<string | null>(null);
@@ -110,6 +111,12 @@ export function useProjectsPage() {
   const updateStatus = (projectId: string, status: string) => {
     if (!isProjectStatus(status)) return;
     runUpdate(projectId, { status }, setStatusError);
+  };
+
+  const updateTitle = (projectId: string, title: string) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    runUpdate(projectId, { title: trimmed }, setTitleError);
   };
 
   const updateArea = (projectId: string, areaNodeId: string | null) => {
@@ -240,6 +247,7 @@ export function useProjectsPage() {
     updatingTaskId,
     creatingTaskProjectId,
     updateStatus,
+    updateTitle,
     updateArea,
     updatePriority,
     updateTargetDate,
@@ -272,6 +280,7 @@ export function useProjectsPage() {
       return project ? resolveProjectAreaId(project, areas) : "";
     },
     statusError,
+    titleError,
     areaError,
     priorityError,
     targetError,

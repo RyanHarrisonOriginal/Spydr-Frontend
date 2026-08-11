@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, ChevronRight, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ArrowUpRight, ChevronDown, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { ProjectAreaNode, ProjectNode, PersonNode, TaskNode } from "@/domain/spydr/utils/types";
@@ -41,6 +41,7 @@ interface ProjectListProps {
   hasActiveFilters?: boolean;
   onSortColumn?(column: ProjectSortColumn): void;
   onClearFilters?(): void;
+  onTitleChange?(projectId: string, title: string): void;
   onStatusChange?(projectId: string, status: string): void;
   onAreaChange?(projectId: string, areaNodeId: string | null): void;
   onPriorityChange?(projectId: string, priority: string): void;
@@ -62,7 +63,8 @@ const columnWidths: Record<ProjectColumnId, string> = {
   updated: "128px",
 };
 
-const actionsColumnWidth = "72px";
+const actionsColumnWidth = "48px";
+const actionsColumnWidthWithCreate = "76px";
 const rankColumnWidth = "36px";
 const expandColumnWidth = "28px";
 
@@ -71,7 +73,7 @@ function getProjectListGrid(
   reorderEnabled = false,
   showCreateTask = false
 ) {
-  const actionWidth = showCreateTask ? "96px" : actionsColumnWidth;
+  const actionWidth = showCreateTask ? actionsColumnWidthWithCreate : actionsColumnWidth;
   return [
     ...(reorderEnabled ? ["24px"] : []),
     expandColumnWidth,
@@ -194,6 +196,97 @@ function OpenTaskCount({ count }: { count: number }) {
     >
       {count} open
     </span>
+  );
+}
+
+function ProjectOpenDetailButton({
+  projectId,
+  projectTitle,
+}: {
+  projectId: string;
+  projectTitle: string;
+}) {
+  return (
+    <Link
+      to={`/projects/${projectId}`}
+      onClick={(event) => event.stopPropagation()}
+      aria-label={`Open ${projectTitle}`}
+      className={cn(
+        "group inline-flex h-6 shrink-0 items-center gap-0.5 rounded-md",
+        "border border-highlight/30 bg-highlight/[0.07] px-1.5",
+        "text-[10px] font-medium text-highlight/90",
+        "transition-all duration-200",
+        "hover:border-highlight/55 hover:bg-highlight/12 hover:text-highlight",
+        "hover:shadow-[inset_0_0_0_1px_hsl(var(--highlight)/0.12)]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight/30"
+      )}
+    >
+      <span className="font-mono text-[10px] uppercase tracking-[0.08em]">Open</span>
+      <ArrowUpRight
+        className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-px group-hover:-translate-y-px"
+        aria-hidden
+      />
+    </Link>
+  );
+}
+
+function ProjectListTitleInput({
+  projectId,
+  title,
+  disabled,
+  onTitleChange,
+}: {
+  projectId: string;
+  title: string;
+  disabled?: boolean;
+  onTitleChange?(projectId: string, title: string): void;
+}) {
+  const [draft, setDraft] = useState(title);
+
+  useEffect(() => {
+    setDraft(title);
+  }, [title]);
+
+  const commit = () => {
+    const trimmed = draft.trim();
+    if (!trimmed || trimmed === title) {
+      setDraft(title);
+      return;
+    }
+    onTitleChange?.(projectId, trimmed);
+  };
+
+  if (!onTitleChange) {
+    return (
+      <Link
+        to={`/projects/${projectId}`}
+        className="min-w-0 truncate text-[13px] font-medium hover:text-highlight"
+      >
+        {title}
+      </Link>
+    );
+  }
+
+  return (
+    <input
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.currentTarget.blur();
+        }
+        if (event.key === "Escape") {
+          setDraft(title);
+          event.currentTarget.blur();
+        }
+      }}
+      onClick={(event) => event.stopPropagation()}
+      disabled={disabled}
+      aria-label="Project name"
+      className="min-w-0 flex-1 truncate bg-transparent text-[13px] font-medium outline-none ring-focus placeholder:text-muted-foreground disabled:opacity-60"
+    />
   );
 }
 
@@ -322,6 +415,7 @@ export function ProjectList({
   hasActiveFilters = false,
   onSortColumn,
   onClearFilters,
+  onTitleChange,
   onStatusChange,
   onAreaChange,
   onPriorityChange,
@@ -346,7 +440,7 @@ export function ProjectList({
   const minWidth =
     504 +
     visibleColumns.length * 112 +
-    (onCreateTask ? 96 : 72) +
+    (onCreateTask ? 144 : 108) +
     (reorderEnabled ? 24 : 0);
   const hasColumn = (columnId: ProjectColumnId) => visibleColumns.includes(columnId);
 
@@ -555,13 +649,28 @@ export function ProjectList({
                   </span>
                   <div className="min-w-0">
                     <div className="flex min-w-0 items-center gap-2">
-                      <StatusDot status={project.status} />
-                      <Link
-                        to={`/projects/${project.id}`}
-                        className="min-w-0 truncate text-[13px] font-medium hover:text-highlight"
-                      >
-                        {project.title}
-                      </Link>
+                      {!hasColumn("status") && onStatusChange ? (
+                        <span onClick={(event) => event.stopPropagation()}>
+                          <ProjectStatusSelect
+                            value={project.status}
+                            onChange={(status) => onStatusChange(project.id, status)}
+                            disabled={updatingProjectId === project.id}
+                            className="w-[100px] shrink-0"
+                          />
+                        </span>
+                      ) : (
+                        <StatusDot status={project.status} />
+                      )}
+                      <ProjectListTitleInput
+                        projectId={project.id}
+                        title={project.title}
+                        disabled={updatingProjectId === project.id}
+                        onTitleChange={onTitleChange}
+                      />
+                      <ProjectOpenDetailButton
+                        projectId={project.id}
+                        projectTitle={project.title}
+                      />
                       <OpenTaskCount count={openCount} />
                     </div>
                     <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -688,7 +797,7 @@ export function ProjectList({
                       {formatRelativeTime(project.updatedAt)}
                     </span>
                   )}
-                  <div className="flex shrink-0 items-center justify-end gap-1">
+                  <div className="flex shrink-0 items-center justify-end gap-1.5">
                     {onCreateTask ? (
                       <button
                         type="button"

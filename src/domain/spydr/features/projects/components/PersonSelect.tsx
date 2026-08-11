@@ -48,6 +48,7 @@ export function PersonSelect({
         ariaLabel={ariaLabel}
         menuLabel="People"
         emptyValue=""
+        searchable
         leading={
           selected ? (
             <PersonAvatar person={selected} size="sm" className="h-4 w-4 text-[8px]" />

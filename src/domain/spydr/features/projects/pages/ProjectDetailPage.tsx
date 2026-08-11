@@ -37,6 +37,7 @@ export function ProjectDetailPage() {
   return (
     <ProjectDetailView
       project={project}
+      projects={detailPage.projects}
       people={detailPage.people}
       areas={detailPage.areas}
       areaNodeId={detailPage.areaNodeId}

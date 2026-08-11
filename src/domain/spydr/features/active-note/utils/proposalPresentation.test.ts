@@ -5,13 +5,19 @@ import {
   isUserFacingWarning,
 } from "@/domain/spydr/utils/activeNoteWarnings";
 import {
+  actionDetailFacts,
   groupProposalOperations,
   operationActionLabel,
+  operationBodyText,
   operationDescription,
   operationDetailFacts,
+  operationReason,
+  operationRoutingSummary,
   operationSourceLabel,
   operationTypeLabel,
   presentationKind,
+  segmentContent,
+  segmentSummary,
   shouldPreselect,
 } from "./proposalPresentation";
 
@@ -333,5 +339,72 @@ describe("proposalPresentation", () => {
     expect(groups[1]?.children.map((child) => child.id)).toEqual(["note_b"]);
     expect(groups[1]?.segmentSubject).toBe("ABL Automation");
     expect(groups[2]?.segmentSubject).toBe("Customer business review");
+  });
+
+  it("resolves project and task routing for compact card summaries", () => {
+    const createTask = makeOp({
+      operationType: "create",
+      explicitlyStated: true,
+      objectType: "task",
+      selectedProjectId: "proj-1",
+      suggestedProjectName: "Muay Thai Development",
+      candidateProjects: [{ id: "proj-1", type: "project", title: "Muay Thai Development" }],
+      payload: {
+        kind: "task",
+        title: "Practice teep setups",
+        projectId: "proj-1",
+      },
+    });
+
+    expect(
+      operationRoutingSummary(createTask).project
+    ).toBe("Muay Thai Development");
+    expect(operationRoutingSummary(createTask).task).toBeNull();
+
+    const attachNote = makeOp({
+      operationType: "attach_context",
+      explicitlyStated: true,
+      objectType: "note",
+      selectedProjectId: "proj-1",
+      targetTaskTitle: "Present scorecard to Amy",
+      attachment: { type: "task", id: "task-1", ref: null },
+      candidateProjects: [{ id: "proj-1", type: "project", title: "Commercial Scorecard" }],
+      payload: {
+        kind: "note",
+        title: "Meeting update",
+        content: "Met with Amy",
+        projectId: "proj-1",
+      },
+    });
+
+    expect(operationRoutingSummary(attachNote)).toEqual({
+      project: "Commercial Scorecard",
+      task: "Present scorecard to Amy",
+    });
+  });
+
+  it("deduplicates segment content from action body and reason", () => {
+    const op = makeOp({
+      operationType: "attach_context",
+      explicitlyStated: true,
+      objectType: "note",
+      segmentTopic: "Meeting with Amy",
+      segmentText: "Met with Amy today about the Commercial Scorecard rollout.",
+      reasoningSummary:
+        "The segment provides an update on a meeting with Amy regarding the Commercial Scorecard rollout.",
+      payload: {
+        kind: "note",
+        title: "Meeting update with Amy",
+        content: "Met with Amy today about the Commercial Scorecard rollout.",
+        projectId: "proj-1",
+      },
+    });
+
+    expect(segmentSummary(op)).toBe("Meeting with Amy");
+    expect(segmentContent(op)).toBe(
+      "Met with Amy today about the Commercial Scorecard rollout."
+    );
+    expect(operationBodyText(op)).toBeNull();
+    expect(operationReason(op)).toContain("update on a meeting");
   });
 });

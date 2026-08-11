@@ -25,16 +25,16 @@ export function ProjectResourcesList({
   isDeleting = false,
 }: ProjectResourcesListProps) {
   return (
-    <ProjectDetailSection>
+    <ProjectDetailSection className="min-h-[360px]">
       <ProjectDetailSectionHeader
         icon={<Paperclip className="h-3.5 w-3.5" />}
         label="Resources"
         hint={`${resources.length} linked`}
       />
 
-      <ProjectDetailSectionBody>
+      <ProjectDetailSectionBody className="min-h-0 flex-1 gap-3 p-3">
         {resources.length > 0 ? (
-          <ul className="space-y-2">
+          <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
             {resources.map((resource) => (
               <ProjectDetailEntry key={resource.id}>
                 <div className="flex items-center gap-2">

@@ -21,6 +21,7 @@ export function NoteDetailPage() {
   return (
     <NoteDetailView
       note={detail.note}
+      projects={detail.projects}
       form={detail.form}
       saveState={detail.saveState}
       onFieldChange={detail.updateField}

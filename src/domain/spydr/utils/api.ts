@@ -25,6 +25,8 @@ import type {
   PersonNode,
   Organization,
   CreateOrganizationInput,
+  TransformNodeTypeInput,
+  TransformNodeTypeResult,
 } from "./types";
 import type { PersonWork } from "./personWorkApi";
 import type { WorkspaceDashboard } from "./workspaceDashboard";
@@ -175,5 +177,12 @@ export const spydrApi = {
   collections: {
     reorder: (input: { nodeType: string; orderedIds: string[] }) =>
       apiRequest<void>("/collections/reorder", { method: "POST", body: input }),
+  },
+  entities: {
+    transform: (input: TransformNodeTypeInput) =>
+      apiRequest<TransformNodeTypeResult>("/entities/transform", {
+        method: "POST",
+        body: input,
+      }),
   },
 };

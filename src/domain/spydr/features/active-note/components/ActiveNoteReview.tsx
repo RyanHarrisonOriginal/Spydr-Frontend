@@ -3,26 +3,24 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type {
   ActiveNoteProposal,
+  ActiveNoteProposalAttachment,
   ActiveNoteProposalOperation,
   DuplicateResolution,
   OperationPayload,
+  SpydrObjectType,
 } from "@/domain/spydr/utils/activeNoteTypes";
 import { ACTIVE_NOTE_MAX_LENGTH } from "@/domain/spydr/utils/activeNoteTypes";
-import type { ProjectNode } from "@/domain/spydr/utils/types";
+import type { ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
 import { cn } from "@/lib/utils";
-import { filterUserFacingWarnings } from "@/domain/spydr/utils/activeNoteWarnings";
-import {
-  groupProposalOperations,
-  routingDestinationLabel,
-} from "../utils/proposalPresentation";
+import { groupProposalOperations } from "../utils/proposalPresentation";
 import { ActiveNoteProposalCard } from "./ActiveNoteProposalCard";
 import { ActiveNoteProposalEditor } from "./ActiveNoteProposalEditor";
-import { ActiveNoteWarning } from "./ActiveNoteWarning";
 
 interface ActiveNoteReviewProps {
   proposal: ActiveNoteProposal;
   operations: ActiveNoteProposalOperation[];
   projects: ProjectNode[];
+  tasks: TaskNode[];
   content: string;
   characterCount: number;
   selectedCount: number;
@@ -44,6 +42,11 @@ interface ActiveNoteReviewProps {
     resolution: DuplicateResolution
   ): void;
   onProjectChange(operationId: string, projectId: string | null): void;
+  onObjectTypeChange(operationId: string, objectType: SpydrObjectType): void;
+  onAttachmentChange(
+    operationId: string,
+    attachment: ActiveNoteProposalAttachment | null
+  ): void;
   onApply(): void;
 }
 
@@ -51,6 +54,7 @@ export function ActiveNoteReview({
   proposal,
   operations,
   projects,
+  tasks,
   content,
   characterCount,
   selectedCount,
@@ -69,6 +73,8 @@ export function ActiveNoteReview({
   onSaveEditedPayload,
   onDuplicateResolution,
   onProjectChange,
+  onObjectTypeChange,
+  onAttachmentChange,
   onApply,
 }: ActiveNoteReviewProps) {
   const editingOperation =
@@ -82,38 +88,12 @@ export function ActiveNoteReview({
     proposal.segments ?? []
   );
   const reviewCountLabel = onlyNoAction
-    ? "Nothing to review"
-    : cardGroups.length === 1
-      ? "1 suggestion to review"
-      : `${cardGroups.length} suggestions to review`;
-  const userWarnings = filterUserFacingWarnings(proposal.warnings);
+    ? "None"
+    : String(cardGroups.length);
   const overLimit = characterCount > ACTIVE_NOTE_MAX_LENGTH;
   const noteBusy = isApplying || isReanalyzing;
   const canReanalyze =
     content.trim().length > 0 && !overLimit && !noteBusy;
-  const routes = proposal.routes ?? [];
-  const multiRoute = routes.length > 1;
-  const subjectBySegment = new Map(
-    (proposal.segments ?? []).map((segment) => [segment.ref, segment.subject])
-  );
-  const projectTitleById = new Map(projects.map((project) => [project.id, project.title]));
-  const candidateTitleById = new Map(
-    (proposal.relatedObjects ?? [])
-      .filter((object) => object.type === "project")
-      .map((candidate) => [candidate.id, candidate.title])
-  );
-
-  function routeProjectLabel(route: (typeof routes)[number]): string | null {
-    if (route.destination === "new_project") return null;
-    const projectId = route.projectId?.trim();
-    if (!projectId) return null;
-    return projectTitleById.get(projectId) ?? candidateTitleById.get(projectId) ?? null;
-  }
-
-  function routeConfidenceLabel(confidence: number | null | undefined): string {
-    if (confidence == null || Number.isNaN(confidence)) return "";
-    return ` (${Math.round(confidence * 100)}%)`;
-  }
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
@@ -151,7 +131,7 @@ export function ActiveNoteReview({
                   `Notes can be at most ${ACTIVE_NOTE_MAX_LENGTH.toLocaleString()} characters.`}
               </p>
             )}
-            <div className="mt-3 flex shrink-0 flex-wrap items-center gap-2">
+            <div className="mt-3 flex shrink-0">
               <Button
                 type="button"
                 variant="outline"
@@ -161,132 +141,45 @@ export function ActiveNoteReview({
               >
                 {isReanalyzing ? "Re-analyzing…" : "Re-analyze"}
               </Button>
-              <p className="text-[11.5px] text-muted-foreground">
-                Edit the note, then re-analyze to refresh suggestions.
-              </p>
             </div>
           </section>
-
-          {multiRoute ? (
-            <section className="shrink-0 rounded-md border border-border bg-background p-4">
-              <h2 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Routing
-              </h2>
-              <p className="mt-3 text-[12.5px] leading-relaxed text-muted-foreground">
-                {proposal.routing?.reason ??
-                  `${routes.length} project contexts detected`}
-              </p>
-              <ul className="mt-3 space-y-2.5">
-                {routes.map((route) => {
-                  const projectLabel = routeProjectLabel(route);
-                  return (
-                  <li key={route.segmentRef} className="min-w-0">
-                    <p className="text-[13px] font-medium text-foreground">
-                      {projectLabel ??
-                        subjectBySegment.get(route.segmentRef) ??
-                        route.segmentRef}
-                      {projectLabel &&
-                      subjectBySegment.get(route.segmentRef) &&
-                      projectLabel !== subjectBySegment.get(route.segmentRef)
-                        ? ` — ${subjectBySegment.get(route.segmentRef)}`
-                        : null}
-                    </p>
-                    <p className="mt-0.5 text-[12px] text-muted-foreground">
-                      {routingDestinationLabel(route.destination)}
-                      {routeConfidenceLabel(route.confidence)}
-                      {route.reason ? ` — ${route.reason}` : ""}
-                    </p>
-                  </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ) : proposal.routing ? (
-            <section className="shrink-0 rounded-md border border-border bg-background p-4">
-              <h2 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Routing
-              </h2>
-              <p className="mt-3 text-[13px] font-medium text-foreground">
-                {routingDestinationLabel(proposal.routing.destination)}
-                {routeConfidenceLabel(proposal.routing.confidence)}
-              </p>
-              <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
-                {proposal.routing.reason}
-              </p>
-              {proposal.impact ? (
-                <p className="mt-2 text-[11.5px] text-muted-foreground">
-                  Impact: {proposal.impact.type.replace(/_/g, " ")} —{" "}
-                  {proposal.impact.reason}
-                </p>
-              ) : null}
-            </section>
-          ) : null}
-{/*  
-          {userWarnings.length > 0 ? (
-            <div className="shrink-0 space-y-2 overflow-hidden">
-              {userWarnings.slice(0, 3).map((warning) => (
-                <ActiveNoteWarning key={warning} message={warning} />
-              ))}
-            </div>
-          ) : null} */}
         </aside>
 
         <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-md border border-border bg-muted/5">
-          <div className="flex shrink-0 items-end justify-between gap-3 border-b border-border px-4 py-3">
-            <div className="min-w-0">
-              <h2 className="text-[15px] font-semibold tracking-tight">
-                Suggested changes
-              </h2>
-              <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
-                {proposal.summary}
-              </p>
-            </div>
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2.5">
+            <h2 className="text-[14px] font-semibold tracking-tight">Suggestions</h2>
             <p
-              className="shrink-0 rounded-md border border-border bg-background px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-foreground/80"
+              className="font-mono text-[11px] tabular-nums text-muted-foreground"
               aria-live="polite"
             >
-              {reviewCountLabel}
+              {onlyNoAction ? "0" : reviewCountLabel}
             </p>
           </div>
 
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3">
             {onlyNoAction ? (
-              <div className="rounded-md border border-border bg-muted/10 p-5">
-                <h3 className="text-[14px] font-semibold">No new objects detected</h3>
-                <p className="mt-2 text-[13px] text-muted-foreground">
-                  This note can remain as written without creating additional tasks,
-                  projects, or relationships.
-                </p>
-              </div>
+              <p className="py-6 text-center text-[13px] text-muted-foreground">
+                Nothing to capture from this note.
+              </p>
             ) : (
-              cardGroups.map((group, index) => {
-                const previous = cardGroups[index - 1];
-                const showSegmentHeading =
-                  multiRoute &&
-                  Boolean(group.segmentSubject) &&
-                  group.segmentRef !== previous?.segmentRef;
-
-                return (
-                  <div key={group.root.id} className="space-y-2">
-                    {showSegmentHeading ? (
-                      <h3 className="pt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                        {group.segmentSubject}
-                      </h3>
-                    ) : null}
-                    <ActiveNoteProposalCard
-                      operation={group.root}
-                      nestedOperations={group.children}
-                      validationErrors={validationErrors}
-                      disabled={noteBusy}
-                      onToggleSelected={onToggleSelected}
-                      onReject={onReject}
-                      onEdit={onEdit}
-                      onDuplicateResolution={onDuplicateResolution}
-                      onProjectChange={onProjectChange}
-                    />
-                  </div>
-                );
-              })
+              cardGroups.map((group) => (
+                <ActiveNoteProposalCard
+                  key={group.root.id}
+                  operation={group.root}
+                  nestedOperations={group.children}
+                  projects={projects}
+                  tasks={tasks}
+                  validationErrors={validationErrors}
+                  disabled={noteBusy}
+                  onToggleSelected={onToggleSelected}
+                  onReject={onReject}
+                  onEdit={onEdit}
+                  onDuplicateResolution={onDuplicateResolution}
+                  onProjectChange={onProjectChange}
+                  onObjectTypeChange={onObjectTypeChange}
+                  onAttachmentChange={onAttachmentChange}
+                />
+              ))
             )}
 
             {applyError ? (
@@ -296,14 +189,13 @@ export function ActiveNoteReview({
             ) : null}
           </div>
 
-          <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border bg-background/95 px-4 py-3">
-            <p className="text-[12.5px] text-muted-foreground">
-              {selectedCount === 0
-                ? "Nothing selected yet"
-                : `${selectedCount} change${selectedCount === 1 ? "" : "s"} ready to apply`}
+          <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border bg-background/95 px-4 py-2.5">
+            <p className="text-[12px] text-muted-foreground">
+              {selectedCount === 0 ? "None selected" : `${selectedCount} selected`}
             </p>
             <Button
               type="button"
+              size="sm"
               onClick={onApply}
               disabled={selectedCount === 0 || noteBusy || onlyNoAction}
               aria-label={
@@ -312,11 +204,7 @@ export function ActiveNoteReview({
                   : `Apply ${selectedCount} selected changes`
               }
             >
-              {isApplying
-                ? "Applying…"
-                : selectedCount === 0
-                  ? "Apply changes"
-                  : `Apply ${selectedCount} change${selectedCount === 1 ? "" : "s"}`}
+              {isApplying ? "Applying…" : selectedCount === 0 ? "Apply" : `Apply (${selectedCount})`}
             </Button>
           </div>
         </section>

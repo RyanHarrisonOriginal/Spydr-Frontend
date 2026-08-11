@@ -19,6 +19,7 @@ import type {
   ProjectAreaNode,
   ProjectChildKind,
   ProjectDetailNode,
+  ProjectNode,
   SpydrPriority,
   UpdateProjectChildInput,
 } from "@/domain/spydr/utils/types";
@@ -65,9 +66,11 @@ import { ProjectPersonasPanel } from "./ProjectPersonasPanel";
 import { PersonSelect } from "./PersonSelect";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
 import { ProjectStatusSelect } from "./ProjectStatusSelect";
+import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
 
 interface ProjectDetailViewProps {
   project: ProjectDetailNode;
+  projects: ProjectNode[];
   people: PersonNode[];
   areas: ProjectAreaNode[];
   areaNodeId: string;
@@ -157,6 +160,7 @@ const priorityOptions: SpydrPriority[] = ["low", "medium", "high", "critical"];
 
 export function ProjectDetailView({
   project,
+  projects,
   people,
   areas,
   areaNodeId,
@@ -244,7 +248,15 @@ export function ProjectDetailView({
     <div className="flex min-w-0">
       <div className="min-w-0 flex-1">
         <PageHeader
-          title={project.title}
+          titleClassName="w-full max-w-none truncate-none"
+          title={
+            <input
+              value={detailForm.title}
+              onChange={(event) => onDetailFieldChange("title", event.target.value)}
+              className="w-full min-w-0 bg-transparent text-[1.35rem] font-semibold tracking-tight outline-none ring-focus placeholder:text-muted-foreground"
+              placeholder="Project name"
+            />
+          }
           meta={
             <div className="flex flex-wrap items-center gap-2">
               <ProjectStatusSelect
@@ -272,25 +284,37 @@ export function ProjectDetailView({
               <span className="text-border">·</span>
               <span className="font-mono text-[11px]">
                 updated {formatRelativeTime(project.updatedAt)}
+                {detailSaveLabel(detailSaveState)
+                  ? ` · ${detailSaveLabel(detailSaveState)}`
+                  : null}
               </span>
             </div>
           }
           actions={
-            deletedCount > 0 ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                onClick={openTrash}
-              >
-                <ArchiveRestore className="h-3 w-3" />
-                Trash
-                <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[9px] font-semibold tabular-nums leading-none text-foreground/80">
-                  {deletedCount}
-                </span>
-              </Button>
-            ) : undefined
+            <div className="flex items-center gap-2">
+              <EntityTransformMenu
+                nodeId={project.id}
+                sourceType="project"
+                sourceTitle={project.title}
+                projects={projects}
+                excludeProjectId={project.id}
+              />
+              {deletedCount > 0 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                  onClick={openTrash}
+                >
+                  <ArchiveRestore className="h-3 w-3" />
+                  Trash
+                  <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[9px] font-semibold tabular-nums leading-none text-foreground/80">
+                    {deletedCount}
+                  </span>
+                </Button>
+              ) : null}
+            </div>
           }
         />
 
@@ -307,7 +331,7 @@ export function ProjectDetailView({
           </div>
         )}
 
-        <div className="space-y-5 px-6 pb-5 pt-2">
+        <div className="space-y-3 px-6 pb-3 pt-2">
           <ProjectDetailSection>
             <ProjectDetailSectionHeader
               label="Overview"
@@ -316,114 +340,108 @@ export function ProjectDetailView({
                 detailSaveState === "error" ? "text-destructive" : undefined
               }
             />
-            <ProjectDetailSectionBody className="gap-5">
-              <div className={detailInsetPanelClassName}>
-                <ConnectedSummary connected={stats.connected} />
-              </div>
+            <ProjectDetailSectionBody className="gap-3 p-3">
+              <ConnectedSummary
+                connected={stats.connected}
+                progressPercent={stats.progressPercent}
+              />
 
-              <ProjectDetailField label="Brief">
+              <ProjectDetailField label="Brief" className="space-y-1">
                 <textarea
                   value={detailForm.body}
                   onChange={(event) =>
                     onDetailFieldChange("body", event.target.value)
                   }
                   placeholder="Describe the project brief, context, and intent."
-                  rows={4}
-                  className={detailTextareaClassName}
+                  rows={2}
+                  className={cn(detailTextareaClassName, "min-h-[3.25rem]")}
                 />
               </ProjectDetailField>
 
-              <ProjectDetailFormPanel label="Timeline">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-                  <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-3">
-                    <ProjectDetailField label="Start">
-                      <DatePicker
-                        value={detailForm.startDate || null}
-                        onChange={(startDate) =>
-                          onDetailFieldChange("startDate", startDate ?? "")
-                        }
-                        panelLabel="Start date"
-                        clearLabel="Clear start date"
-                        placeholder="Select start date"
-                        ariaLabel="Project start date"
-                        className="h-8"
+              <div className="grid gap-3 lg:grid-cols-2">
+                <ProjectDetailFormPanel label="Timeline" className="p-2.5">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                    <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-2">
+                      <ProjectDetailField label="Start" className="space-y-1">
+                        <DatePicker
+                          value={detailForm.startDate || null}
+                          onChange={(startDate) =>
+                            onDetailFieldChange("startDate", startDate ?? "")
+                          }
+                          panelLabel="Start date"
+                          clearLabel="Clear start date"
+                          placeholder="Select start date"
+                          ariaLabel="Project start date"
+                          className="h-7"
+                        />
+                      </ProjectDetailField>
+                      <ArrowRight
+                        aria-hidden
+                        className="mb-1.5 h-3 w-3 shrink-0 text-muted-foreground"
                       />
-                    </ProjectDetailField>
-                    <ArrowRight
-                      aria-hidden
-                      className="mb-2 h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                    />
-                    <ProjectDetailField label="Target">
-                      <DatePicker
-                        value={detailForm.targetDate || null}
-                        onChange={(targetDate) =>
-                          onDetailFieldChange("targetDate", targetDate ?? "")
+                      <ProjectDetailField label="Target" className="space-y-1">
+                        <DatePicker
+                          value={detailForm.targetDate || null}
+                          onChange={(targetDate) =>
+                            onDetailFieldChange("targetDate", targetDate ?? "")
+                          }
+                          panelLabel="Target date"
+                          clearLabel="Clear target date"
+                          placeholder="Select target date"
+                          ariaLabel="Project target date"
+                          className="h-7"
+                        />
+                      </ProjectDetailField>
+                    </div>
+                    <ProjectDetailField
+                      label="Risk"
+                      className="space-y-1 sm:w-28"
+                    >
+                      <select
+                        value={detailForm.riskLevel}
+                        onChange={(event) =>
+                          onDetailFieldChange(
+                            "riskLevel",
+                            event.target.value as SpydrPriority
+                          )
                         }
-                        panelLabel="Target date"
-                        clearLabel="Clear target date"
-                        placeholder="Select target date"
-                        ariaLabel="Project target date"
-                        className="h-8"
-                      />
+                        className="h-7 w-full rounded-md border border-input bg-background px-2 text-[11px] ring-focus"
+                      >
+                        {priorityOptions.map((priority) => (
+                          <option key={priority} value={priority}>
+                            {priority}
+                          </option>
+                        ))}
+                      </select>
                     </ProjectDetailField>
                   </div>
-                  <ProjectDetailField
-                    label="Delivery risk"
-                    hint="Likelihood this project slips or fails"
-                    className="lg:w-44"
-                  >
-                    <select
-                      value={detailForm.riskLevel}
-                      onChange={(event) =>
-                        onDetailFieldChange(
-                          "riskLevel",
-                          event.target.value as SpydrPriority
-                        )
-                      }
-                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-[12px] ring-focus"
-                    >
-                      {priorityOptions.map((priority) => (
-                        <option key={priority} value={priority}>
-                          {priority}
-                        </option>
-                      ))}
-                    </select>
-                  </ProjectDetailField>
-                </div>
-              </ProjectDetailFormPanel>
+                </ProjectDetailFormPanel>
 
-              <ProjectPersonasPanel
-                people={people}
-                personas={personas}
-                disabled={isUpdatingPersona}
-                onChange={onPersonaChange}
-              />
-              {personaError ? (
-                <ProjectDetailInlineError>{personaError}</ProjectDetailInlineError>
-              ) : null}
+                <div>
+                  <ProjectPersonasPanel
+                    people={people}
+                    personas={personas}
+                    disabled={isUpdatingPersona}
+                    onChange={onPersonaChange}
+                  />
+                  {personaError ? (
+                    <p className="mt-2 rounded-md border border-destructive/25 bg-destructive/8 px-3 py-2 text-[12px] text-destructive">
+                      {personaError}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
 
               {project.details?.outcome && (
-                <div className={detailInsetPanelClassName}>
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                <div className={cn(detailInsetPanelClassName, "p-2.5")}>
+                  <p className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
                     Outcome
                   </p>
-                  <p className="mt-1.5 line-clamp-3 text-[13px] leading-relaxed">
+                  <p className="mt-1 line-clamp-2 text-[12px] leading-snug">
                     {project.details.outcome}
                   </p>
                 </div>
               )}
-
-              <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/15 px-3 py-2.5">
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-highlight-secondary transition-[width]"
-                    style={{ width: `${stats.progressPercent}%` }}
-                  />
-                </div>
-                <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
-                  {stats.progressPercent}% tasks closed
-                </span>
-              </div>
 
               {detailError && (
                 <ProjectDetailInlineError>{detailError}</ProjectDetailInlineError>
@@ -436,14 +454,14 @@ export function ProjectDetailView({
           )}
         </div>
 
-        <div className="grid gap-5 px-6 pb-8 xl:grid-cols-2">
-          <ProjectDetailSection>
+        <div className="grid gap-4 px-6 pb-8 xl:grid-cols-2">
+          <ProjectDetailSection className="min-h-[360px]">
             <ProjectDetailSectionHeader
               icon={<Activity className="h-3.5 w-3.5" />}
               label="In motion"
               hint={`${stats.openTaskCount} open`}
             />
-            <ProjectDetailSectionBody>
+            <ProjectDetailSectionBody className="min-h-0 flex-1 gap-3 p-3">
             <ProjectDetailFormPanel>
             <form
               className="grid gap-2 md:grid-cols-[1fr_118px_auto]"
@@ -472,7 +490,7 @@ export function ProjectDetailView({
             </form>
             </ProjectDetailFormPanel>
             {taskError && <ProjectDetailInlineError>{taskError}</ProjectDetailInlineError>}
-            <ul className="max-h-[280px] space-y-2 overflow-y-auto">
+            <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
               {project.tasks.map((task) => (
                 <li
                   key={task.id}
@@ -568,13 +586,13 @@ export function ProjectDetailView({
             isDeleting={isDeletingChild}
           />
 
-          <ProjectDetailSection>
+          <ProjectDetailSection className="min-h-[360px]">
             <ProjectDetailSectionHeader
               icon={<Lightbulb className="h-3.5 w-3.5" />}
               label="Thinking"
               hint={`${project.ideas.length} ideas`}
             />
-            <ProjectDetailSectionBody>
+            <ProjectDetailSectionBody className="min-h-0 flex-1 gap-3 p-3">
             <ProjectDetailFormPanel>
             <form
               className="grid gap-2 md:grid-cols-[1fr_auto]"
@@ -595,7 +613,7 @@ export function ProjectDetailView({
             </form>
             </ProjectDetailFormPanel>
             {ideaError && <ProjectDetailInlineError>{ideaError}</ProjectDetailInlineError>}
-            <div className="max-h-[220px] space-y-2 overflow-y-auto">
+            <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
               {project.ideas.map((idea) => (
                 <div
                   key={idea.id}
@@ -617,6 +635,14 @@ export function ProjectDetailView({
                       isSaving={isUpdatingChild}
                       isDeleting={isDeletingChild}
                     />
+                    <EntityTransformMenu
+                      nodeId={idea.id}
+                      sourceType="idea"
+                      sourceTitle={idea.title}
+                      projects={projects}
+                      defaultProjectId={project.id}
+                      compact
+                    />
                   </div>
                   <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
                     {idea.body}
@@ -634,6 +660,8 @@ export function ProjectDetailView({
 
           <ProjectNotesLog
             notes={project.notes}
+            projects={projects}
+            projectId={project.id}
             form={noteForm}
             formResetKey={noteFormResetKey}
             canAdd={canAddNote}
@@ -677,15 +705,17 @@ function detailSaveLabel(state: ProjectDetailSaveState) {
 
 function ConnectedSummary({
   connected,
+  progressPercent,
 }: {
   connected: ProjectDetailViewProps["stats"]["connected"];
+  progressPercent: number;
 }) {
   const items = [
     {
       label: "Tasks",
       icon: Activity,
       value: String(connected.tasks.total),
-      detail: `${connected.tasks.open} ${taskStatusBucketLabels.open.toLowerCase()} · ${connected.tasks.blocked} ${taskStatusBucketLabels.blocked.toLowerCase()} · ${connected.tasks.closed} ${taskStatusBucketLabels.closed.toLowerCase()}`,
+      title: `${connected.tasks.open} ${taskStatusBucketLabels.open.toLowerCase()} · ${connected.tasks.blocked} ${taskStatusBucketLabels.blocked.toLowerCase()} · ${connected.tasks.closed} ${taskStatusBucketLabels.closed.toLowerCase()}`,
     },
     {
       label: "Decisions",
@@ -710,28 +740,33 @@ function ConnectedSummary({
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-      {items.map(({ label, icon: Icon, value, detail }) => (
+    <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-border/50 bg-muted/15 px-2 py-1.5">
+      {items.map(({ label, icon: Icon, value, title }) => (
         <div
           key={label}
-          className="min-w-0 rounded-md border border-border/50 bg-background/70 px-2.5 py-2"
+          title={title}
+          className="inline-flex min-w-0 items-center gap-1 rounded border border-border/40 bg-background/80 px-1.5 py-0.5"
         >
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Icon className="h-3 w-3 shrink-0" />
-            <span className="font-mono text-[9px] uppercase tracking-wider">
-              {label}
-            </span>
-          </div>
-          <div className="mt-1 text-xl font-semibold tabular-nums leading-none">
+          <Icon className="h-2.5 w-2.5 shrink-0 text-muted-foreground" />
+          <span className="font-mono text-[8px] uppercase tracking-wider text-muted-foreground">
+            {label}
+          </span>
+          <span className="font-semibold tabular-nums text-[12px] leading-none">
             {value}
-          </div>
-          {detail && (
-            <p className="mt-1 text-[10px] leading-snug text-muted-foreground">
-              {detail}
-            </p>
-          )}
+          </span>
         </div>
       ))}
+      <div className="ml-auto flex min-w-[120px] max-w-full items-center gap-2 pl-1 sm:min-w-[160px]">
+        <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-highlight-secondary transition-[width]"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+        <span className="shrink-0 font-mono text-[9px] tabular-nums text-muted-foreground">
+          {progressPercent}%
+        </span>
+      </div>
     </div>
   );
 }

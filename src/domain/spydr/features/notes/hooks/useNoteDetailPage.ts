@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useNoteQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import { useNoteQuery, useProjectsQuery } from "@/domain/spydr/features/shared/hooks/queries";
 import type { NoteNode } from "@/domain/spydr/utils/types";
 import { useUpdateNoteMutation } from "./useUpdateNoteMutation";
 
@@ -39,7 +39,9 @@ function formToInput(form: NoteDetailFormValues) {
 export function useNoteDetailPage() {
   const { noteId } = useParams<{ noteId: string }>();
   const query = useNoteQuery(noteId);
+  const projectsQuery = useProjectsQuery();
   const note = query.data;
+  const projects = projectsQuery.data ?? [];
   const updateNote = useUpdateNoteMutation(noteId);
   const [form, setForm] = useState<NoteDetailFormValues>(emptyForm);
   const [saveState, setSaveState] = useState<NoteDetailSaveState>("idle");
@@ -87,6 +89,7 @@ export function useNoteDetailPage() {
   return {
     note,
     noteId,
+    projects,
     form,
     saveState,
     updateField,

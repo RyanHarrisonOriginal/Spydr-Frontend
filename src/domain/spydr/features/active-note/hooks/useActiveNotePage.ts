@@ -12,12 +12,18 @@ import {
 import type {
   ActiveNote,
   ActiveNoteProposal,
+  ActiveNoteProposalAttachment,
   ActiveNoteProposalOperation,
   ActiveNoteUiPhase,
   ApplyActiveNoteProposalResult,
   DuplicateResolution,
   OperationPayload,
+  SpydrObjectType,
 } from "@/domain/spydr/utils/activeNoteTypes";
+import {
+  buildPayloadForObjectType,
+  operationTypeForObjectType,
+} from "../utils/buildOperationPayload";
 import {
   friendlyApiError,
   validateNoteContent,
@@ -397,14 +403,89 @@ export function useActiveNotePage() {
             ? { ...op.payload, projectId: nextProjectId }
             : op.payload;
 
+      const attachment =
+        op.attachment?.type === "task" &&
+        nextProjectId &&
+        op.attachment.id
+          ? op.attachment
+          : op.attachment?.type === "task" && !nextProjectId
+            ? null
+            : op.attachment;
+
       return {
         ...op,
         selectedProjectId: nextProjectId,
-        targetObjectId: nextProjectId,
+        targetObjectId:
+          attachment?.type === "task" ? attachment.id ?? null : nextProjectId,
+        attachment,
         payload,
+        operationType: operationTypeForObjectType(
+          op.objectType ?? "note",
+          attachment?.type === "task"
+        ),
         status: "edited",
+        needsUserDecision: false,
       };
     });
+  }
+
+  function setObjectType(operationId: string, objectType: SpydrObjectType) {
+    updateOperation(operationId, (op) => {
+      const segment = {
+        topic: op.segmentTopic ?? "",
+        sourceText: op.segmentText ?? "",
+        contextualText: op.contextualText ?? op.segmentText ?? "",
+      };
+      const projectId = op.selectedProjectId ?? null;
+      const attachment =
+        objectType === "note" ? op.attachment : null;
+      const payload = buildPayloadForObjectType(
+        objectType,
+        segment,
+        projectId
+      );
+
+      return {
+        ...op,
+        objectType,
+        payload,
+        attachment,
+        operationType: operationTypeForObjectType(
+          objectType,
+          attachment?.type === "task"
+        ),
+        targetObjectId:
+          attachment?.type === "task"
+            ? attachment.id ?? null
+            : projectId,
+        selected: objectType === "project" ? op.selected : true,
+        status: "edited",
+        needsUserDecision: false,
+      };
+    });
+  }
+
+  function setAttachment(
+    operationId: string,
+    attachment: ActiveNoteProposalAttachment | null
+  ) {
+    updateOperation(operationId, (op) => ({
+      ...op,
+      attachment,
+      operationType: operationTypeForObjectType(
+        op.objectType ?? "note",
+        attachment?.type === "task"
+      ),
+      targetObjectId:
+        attachment?.type === "task"
+          ? attachment.id ?? null
+          : op.selectedProjectId ?? null,
+      targetTaskTitle:
+        attachment?.type === "task" && attachment.id
+          ? undefined
+          : op.targetTaskTitle,
+      status: "edited",
+    }));
   }
 
   function saveEditedPayload(operationId: string, payload: OperationPayload) {
@@ -585,6 +666,8 @@ export function useActiveNotePage() {
     acceptOperation,
     setDuplicateResolution,
     setSelectedProjectId,
+    setObjectType,
+    setAttachment,
     saveEditedPayload,
     handleApply,
     resetToCompose,

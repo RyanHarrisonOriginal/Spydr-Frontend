@@ -91,7 +91,6 @@ export function validateSelectedOperations(
       operation.objectType === "task" ||
       operation.objectType === "note" ||
       operation.objectType === "decision" ||
-      operation.objectType === "idea" ||
       operation.operationType === "attach_context";
 
     const hasProject =

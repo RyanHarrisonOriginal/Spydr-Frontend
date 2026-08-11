@@ -46,6 +46,7 @@ export function ProjectAreaSelect({
       menuLabel="Area"
       placeholder="Unassigned"
       emptyValue=""
+      searchable
       leading={
         hasValue && selectedColor ? (
           <AreaColorSwatch color={selectedColor} />

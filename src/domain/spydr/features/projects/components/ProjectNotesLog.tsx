@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { FileText, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { NoteNode, UpdateProjectChildInput } from "@/domain/spydr/utils/types";
+import type { NoteNode, ProjectNode, UpdateProjectChildInput } from "@/domain/spydr/utils/types";
 import { RichTextEditor } from "@/domain/spydr/features/shared/components/RichTextEditor";
 import {
   formatRelativeTime,
@@ -21,9 +21,12 @@ import {
   detailFieldClassName,
 } from "./ProjectDetailSection";
 import { ProjectItemActions } from "./ProjectItemActions";
+import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
 
 interface ProjectNotesLogProps {
   notes: NoteNode[];
+  projects: ProjectNode[];
+  projectId: string;
   form: ProjectNoteFormValues;
   formResetKey?: number;
   canAdd: boolean;
@@ -42,6 +45,8 @@ interface ProjectNotesLogProps {
 
 export function ProjectNotesLog({
   notes,
+  projects,
+  projectId,
   form,
   formResetKey = 0,
   canAdd,
@@ -63,14 +68,14 @@ export function ProjectNotesLog({
   );
 
   return (
-    <ProjectDetailSection>
+    <ProjectDetailSection className="min-h-[360px]">
       <ProjectDetailSectionHeader
         icon={<FileText className="h-3.5 w-3.5" />}
         label="Notes"
         hint={`${notes.length} linked`}
       />
 
-      <ProjectDetailSectionBody>
+      <ProjectDetailSectionBody className="min-h-0 flex-1 gap-3 p-3">
         <ProjectDetailFormPanel label="Add note">
           <form
             className="space-y-3"
@@ -109,11 +114,13 @@ export function ProjectNotesLog({
         </ProjectDetailFormPanel>
 
         {orderedNotes.length > 0 ? (
-          <ul className="space-y-2">
+          <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
             {orderedNotes.map((note) => (
               <NoteEntry
                 key={note.id}
                 note={note}
+                projects={projects}
+                projectId={projectId}
                 onUpdate={(input) => onUpdate(note.id, input)}
                 onDelete={() => onDelete(note.id)}
                 isUpdating={isUpdating}
@@ -134,12 +141,16 @@ export function ProjectNotesLog({
 
 function NoteEntry({
   note,
+  projects,
+  projectId,
   onUpdate,
   onDelete,
   isUpdating,
   isDeleting,
 }: {
   note: NoteNode;
+  projects: ProjectNode[];
+  projectId: string;
   onUpdate: (input: UpdateProjectChildInput) => void;
   onDelete: () => void;
   isUpdating: boolean;
@@ -167,6 +178,14 @@ function NoteEntry({
           onDelete={onDelete}
           isSaving={isUpdating}
           isDeleting={isDeleting}
+        />
+        <EntityTransformMenu
+          nodeId={note.id}
+          sourceType="note"
+          sourceTitle={note.title}
+          projects={projects}
+          defaultProjectId={projectId}
+          compact
         />
       </div>
       {hasBody ? (

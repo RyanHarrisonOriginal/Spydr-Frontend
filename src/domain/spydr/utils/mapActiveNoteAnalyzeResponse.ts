@@ -1,219 +1,300 @@
 import type {
   BackendActiveNoteAnalyzeResponse,
-  BackendActiveNoteProposal,
+  BackendExistingProjectActionPlan,
+  BackendNewProjectCandidateActionPlan,
+  BackendSegmentActionPlan,
+  BackendUnassignedActionPlan,
 } from "./activeNoteAnalyzeTypes";
 import type {
   ActiveNote,
   ActiveNoteProposal,
   ActiveNoteProposalAttachment,
   ActiveNoteProposalOperation,
+  ActiveNoteSegment,
   OperationPayload,
   OperationType,
   RelatedSpydrObject,
   SpydrObjectType,
 } from "./activeNoteTypes";
-import { filterUserFacingWarnings } from "./activeNoteWarnings";
 
-function resolveProjectId(
-  proposal: BackendActiveNoteProposal,
-  response: BackendActiveNoteAnalyzeResponse
-): string | null {
-  if (proposal.suggestedProjectId) return proposal.suggestedProjectId;
-  if (proposal.parent?.projectId) return proposal.parent.projectId;
-  if (proposal.parent?.projectRef) return null;
+function isExistingProjectPlan(
+  plan: BackendSegmentActionPlan
+): plan is BackendExistingProjectActionPlan {
+  return !("destination" in plan);
+}
 
-  const segmentRef = proposal.segmentRef?.trim();
-  if (segmentRef && response.routes?.length) {
-    const route = response.routes.find((item) => item.segmentRef === segmentRef);
-    if (route?.destination === "existing_project" && route.projectId) {
-      return route.projectId;
+function isNewProjectCandidatePlan(
+  plan: BackendSegmentActionPlan
+): plan is BackendNewProjectCandidateActionPlan {
+  return "destination" in plan && plan.destination === "new_project_candidate";
+}
+
+function isUnassignedPlan(
+  plan: BackendSegmentActionPlan
+): plan is BackendUnassignedActionPlan {
+  return "destination" in plan && plan.destination === "unassigned";
+}
+
+function toSegment(
+  segment: BackendActiveNoteAnalyzeResponse["segments"][number],
+  index: number
+): ActiveNoteSegment {
+  const ref = `seg-${index}`;
+  return {
+    ref,
+    topic: segment.topic,
+    sourceText: segment.sourceText,
+    contextualText: segment.contextualText,
+    subject: segment.topic,
+    text: segment.sourceText,
+  };
+}
+
+function intentLabel(intent: string): string {
+  return intent.replace(/_/g, " ");
+}
+
+function buildSummary(actionPlans: BackendSegmentActionPlan[]): string {
+  const actionable = actionPlans.filter((plan) => !isUnassignedPlan(plan));
+  if (actionable.length === 0) {
+    return "Your note was read, but nothing needs to be captured in Spydr yet.";
+  }
+  if (actionable.length === 1) {
+    return "One segment from your note is ready to review.";
+  }
+  return `${actionable.length} segments from your note are ready to review.`;
+}
+
+function collectRelatedProjects(
+  actionPlans: BackendSegmentActionPlan[]
+): RelatedSpydrObject[] {
+  const byId = new Map<string, RelatedSpydrObject>();
+  for (const plan of actionPlans) {
+    if (isExistingProjectPlan(plan) && plan.projectId) {
+      byId.set(plan.projectId, {
+        id: plan.projectId,
+        type: "project",
+        title: plan.projectName,
+        relevanceReason: "Matched from your note",
+      });
+    }
+    if (isNewProjectCandidatePlan(plan)) {
+      byId.set(`candidate:${plan.projectName}`, {
+        id: `candidate:${plan.projectName}`,
+        type: "project",
+        title: plan.projectName,
+        relevanceReason: "Suggested new project",
+      });
     }
   }
-
-  if (response.routing.destination === "existing_project") {
-    return response.routing.projectId ?? null;
-  }
-  return null;
+  return [...byId.values()];
 }
 
-function toUiOperationType(
-  proposal: BackendActiveNoteProposal
-): OperationType {
-  if (proposal.operationType === "attach_context") return "attach_context";
-  if (proposal.operationType === "no_action") return "no_action";
-  if (proposal.operationType === "suggest_create") return "suggest_create";
-  return "create";
-}
-
-function isSelected(proposal: BackendActiveNoteProposal): boolean {
-  if (proposal.operationType === "no_action") return false;
-  if (proposal.operationType === "suggest_create") return false;
-  return (
-    proposal.explicitlyStated ||
-    proposal.operationType === "create" ||
-    proposal.operationType === "attach_context"
-  );
-}
-
-function toPayload(
-  proposal: BackendActiveNoteProposal,
-  projectId: string | null
-): OperationPayload {
-  const { payload, objectType, operationType } = proposal;
-
-  if (operationType === "no_action") {
-    return {
-      kind: "no_action",
-      message:
-        payload.description ||
-        payload.title ||
-        "No useful Spydr change should result from this note.",
-    };
-  }
-
-  switch (objectType) {
-    case "note":
-      return {
-        kind: "note",
-        title:
-          payload.title?.trim() ||
-          payload.content?.trim().split(/\r?\n/)[0]?.trim().slice(0, 80) ||
-          "Active note",
-        content: payload.content ?? payload.description ?? "",
-        projectId,
-      };
-    case "task":
-      return {
-        kind: "task",
-        title: payload.title?.trim() || "Untitled task",
-        description: payload.description,
-        priority: payload.priority,
-        dueDate: payload.dueDate ?? null,
-        projectId,
-      };
-    case "decision":
-      return {
-        kind: "decision",
-        title: payload.title?.trim() || "Untitled decision",
-        description: payload.description,
-        rationale: payload.rationale,
-        projectId,
-      };
-    case "idea":
-      return {
-        kind: "idea",
-        title: payload.title?.trim() || "Untitled idea",
-        description: payload.description,
-        projectId,
-      };
-    case "project":
-      return {
-        kind: "project",
-        title: payload.title?.trim() || "Untitled project",
-        description: payload.description,
-      };
-    case "person":
-      return {
-        kind: "person",
-        title: (payload.name ?? payload.title)?.trim() || "Untitled person",
-        description: payload.description,
-      };
-    default:
-      return {
-        kind: "note",
-        title:
-          payload.title?.trim() ||
-          payload.content?.trim().split(/\r?\n/)[0]?.trim().slice(0, 80) ||
-          "Active note",
-        content: payload.content ?? payload.description ?? "",
-        projectId,
-      };
-  }
-}
-
-function relatedTaskIdForProposal(
-  proposal: BackendActiveNoteProposal,
-  response: BackendActiveNoteAnalyzeResponse
-): string | null {
-  const segmentRef = proposal.segmentRef?.trim();
-  if (segmentRef && response.routes?.length) {
-    const route = response.routes.find((item) => item.segmentRef === segmentRef);
-    if (route?.relatedTaskId) return route.relatedTaskId;
-  }
-  return response.routing.relatedTaskId ?? null;
-}
-
-function toAttachment(
-  proposal: BackendActiveNoteProposal,
-  response: BackendActiveNoteAnalyzeResponse
-): ActiveNoteProposalAttachment | null {
-  if (proposal.attachment) {
-    return {
-      type: proposal.attachment.type,
-      id: proposal.attachment.id ?? null,
-      ref: proposal.attachment.ref ?? null,
-    };
-  }
-
-  const relatedTaskId = relatedTaskIdForProposal(proposal, response);
-  if (
-    (proposal.objectType === "note" ||
-      proposal.operationType === "attach_context") &&
-    relatedTaskId
-  ) {
-    return {
-      type: "task",
-      id: relatedTaskId,
-      ref: null,
-    };
-  }
-
-  return null;
-}
-
-function toOperation(
-  proposal: BackendActiveNoteProposal,
+function mapExistingProjectPlan(
+  plan: BackendExistingProjectActionPlan,
   index: number,
-  response: BackendActiveNoteAnalyzeResponse,
-  candidateProjects: RelatedSpydrObject[]
+  segmentRef: string,
+  relatedProjects: RelatedSpydrObject[]
 ): ActiveNoteProposalOperation {
-  const objectType = proposal.objectType as SpydrObjectType;
-  const operationType = toUiOperationType(proposal);
-  const projectId = resolveProjectId(proposal, response);
-  const projectRef = proposal.parent?.projectRef?.trim() || null;
-  const requiresProject =
-    proposal.requiresProject ??
-    ["task", "note", "decision", "idea"].includes(proposal.objectType);
-  const projectCandidates =
-    requiresProject && !projectRef && candidateProjects.length > 0
-      ? candidateProjects
-      : undefined;
+  const { action } = plan;
+  const confidence = action.confidence;
+  const reason = action.reason;
+  const projectId = plan.projectId;
 
-  const attachment = toAttachment(proposal, response);
-  const relatedTaskId = relatedTaskIdForProposal(proposal, response);
-  const targetObjectId =
-    attachment?.type === "task"
-      ? attachment.id ?? relatedTaskId
-      : projectId;
+  let objectType: SpydrObjectType;
+  let operationType: OperationType;
+  let payload: OperationPayload;
+  let attachment: ActiveNoteProposalAttachment | null = null;
+  let targetObjectId: string | null = projectId;
+  let targetTaskTitle: string | undefined;
+  let selected = true;
+  let explicitlyStated = plan.intent === "task_action" || plan.intent === "progress_update";
+
+  switch (action.type) {
+    case "create_task":
+      objectType = "task";
+      operationType = "create";
+      payload = {
+        kind: "task",
+        title: action.payload.title,
+        description: action.payload.description ?? undefined,
+        projectId,
+      };
+      break;
+    case "create_note":
+      objectType = "note";
+      operationType = "create";
+      payload = {
+        kind: "note",
+        title: action.payload.subject,
+        content: action.payload.content,
+        projectId,
+      };
+      break;
+    case "attach_note_to_task":
+      objectType = "note";
+      operationType = "attach_context";
+      payload = {
+        kind: "note",
+        title: action.payload.subject,
+        content: action.payload.content,
+        projectId,
+      };
+      attachment = { type: "task", id: action.targetTaskId, ref: null };
+      targetObjectId = action.targetTaskId;
+      targetTaskTitle = action.targetTaskTitle;
+      explicitlyStated = true;
+      break;
+    case "create_decision":
+      objectType = "decision";
+      operationType = "create";
+      payload = {
+        kind: "decision",
+        title: action.payload.title,
+        rationale: action.payload.rationale ?? undefined,
+        projectId,
+      };
+      break;
+    case "create_idea":
+      objectType = "idea";
+      operationType = "create";
+      payload = {
+        kind: "idea",
+        title: action.payload.title,
+        description: action.payload.description ?? undefined,
+        projectId,
+      };
+      break;
+    case "use_existing_task":
+      objectType = "task";
+      operationType = "update";
+      payload = {
+        kind: "task",
+        title: action.targetTaskTitle,
+        projectId,
+      };
+      targetObjectId = action.targetTaskId;
+      targetTaskTitle = action.targetTaskTitle;
+      attachment = { type: "task", id: action.targetTaskId, ref: null };
+      break;
+    default:
+      objectType = "note";
+      operationType = "create";
+      payload = {
+        kind: "note",
+        title: plan.topic ?? "Note",
+        content: plan.originalText,
+        projectId,
+      };
+  }
+
+  const candidateProjects = relatedProjects.filter((p) => !p.id.startsWith("candidate:"));
 
   return {
-    id: proposal.ref || `op-${index}-${proposal.objectType}`,
+    id: `op-${index}`,
     operationType,
     objectType,
     targetObjectId,
-    projectRef,
-    segmentRef: proposal.segmentRef?.trim() || null,
+    segmentRef,
     attachment,
-    payload: toPayload(proposal, projectId),
-    confidence: proposal.confidence,
-    evidence: proposal.evidence ?? [],
-    reasoningSummary: proposal.reason,
-    explicitlyStated: proposal.explicitlyStated,
+    payload,
+    confidence,
+    evidence: [plan.originalText],
+    reasoningSummary: reason,
+    explicitlyStated,
     status: "proposed",
-    selected: isSelected(proposal),
-    candidateProjects: projectCandidates,
+    selected,
+    candidateProjects: candidateProjects.length > 0 ? candidateProjects : undefined,
     selectedProjectId: projectId,
+    segmentTopic: plan.topic ?? undefined,
+    segmentText: plan.originalText,
+    contextualText: plan.contextualText ?? plan.originalText,
+    intent: plan.intent,
+    routingDestination: "existing_project",
+    suggestedProjectName: plan.projectName,
+    targetTaskTitle,
   };
+}
+
+function mapNewProjectCandidatePlan(
+  plan: BackendNewProjectCandidateActionPlan,
+  index: number,
+  segmentRef: string
+): ActiveNoteProposalOperation {
+  return {
+    id: `op-${index}`,
+    operationType: "create",
+    objectType: "project",
+    targetObjectId: null,
+    segmentRef,
+    attachment: null,
+    payload: {
+      kind: "project",
+      title: plan.projectName,
+      description: plan.contextualText ?? plan.originalText,
+    },
+    confidence: plan.confidence,
+    evidence: [plan.originalText],
+    reasoningSummary: plan.reason,
+    explicitlyStated: false,
+    status: "proposed",
+    selected: true,
+    selectedProjectId: null,
+    segmentTopic: plan.topic ?? undefined,
+    segmentText: plan.originalText,
+    contextualText: plan.contextualText ?? plan.originalText,
+    routingDestination: "new_project_candidate",
+    suggestedProjectName: plan.projectName,
+  };
+}
+
+function mapUnassignedPlan(
+  plan: BackendUnassignedActionPlan,
+  index: number,
+  segmentRef: string
+): ActiveNoteProposalOperation {
+  const title = plan.topic?.trim() || plan.originalText.trim().slice(0, 80) || "Untitled";
+  return {
+    id: `op-${index}`,
+    operationType: "suggest_create",
+    objectType: "idea",
+    targetObjectId: null,
+    segmentRef,
+    attachment: null,
+    payload: {
+      kind: "idea",
+      title,
+      description: plan.contextualText ?? plan.originalText,
+      projectId: null,
+    },
+    confidence: plan.confidence,
+    evidence: [plan.originalText],
+    reasoningSummary: plan.reason,
+    explicitlyStated: false,
+    status: "proposed",
+    selected: false,
+    selectedProjectId: null,
+    segmentTopic: plan.topic ?? undefined,
+    segmentText: plan.originalText,
+    contextualText: plan.contextualText ?? plan.originalText,
+    routingDestination: "unassigned",
+    needsUserDecision: true,
+  };
+}
+
+function mapActionPlan(
+  plan: BackendSegmentActionPlan,
+  index: number,
+  segmentRef: string,
+  relatedProjects: RelatedSpydrObject[]
+): ActiveNoteProposalOperation {
+  if (isUnassignedPlan(plan)) {
+    return mapUnassignedPlan(plan, index, segmentRef);
+  }
+  if (isNewProjectCandidatePlan(plan)) {
+    return mapNewProjectCandidatePlan(plan, index, segmentRef);
+  }
+  return mapExistingProjectPlan(plan, index, segmentRef, relatedProjects);
 }
 
 interface AnalyzeActiveNoteDraft {
@@ -258,44 +339,30 @@ export function mapActiveNoteAnalyzeResponse(input: {
   projectId?: string | null;
   activeNote?: AnalyzeActiveNoteDraft | null;
 }): ActiveNoteProposal {
-  const relatedObjects: RelatedSpydrObject[] = (
-    input.response.candidateProjects ?? []
-  ).map((project) => ({
-    id: project.id,
-    type: "project" as const,
-    title: project.title,
-    relevanceReason: project.relevanceReason,
-  }));
+  const segments = (input.response.segments ?? []).map(toSegment);
+  const relatedObjects = collectRelatedProjects(input.response.actionPlans ?? []);
 
-  if (input.response.routing.relatedTaskId) {
-    relatedObjects.push({
-      id: input.response.routing.relatedTaskId,
-      type: "task",
-      title: "Related task",
-      relevanceReason: "Identified as the best existing task attachment",
-    });
-  }
-
-  const routedProjectId =
-    input.projectId ?? input.response.routing.projectId ?? null;
-
-  const operations = (input.response.proposals ?? []).map((proposal, index) =>
-    toOperation(proposal, index, input.response, relatedObjects)
+  const operations = (input.response.actionPlans ?? []).map((plan, index) =>
+    mapActionPlan(plan, index, segments[index]?.ref ?? `seg-${index}`, relatedObjects)
   );
+
+  const summary = buildSummary(input.response.actionPlans ?? []);
 
   return {
     activeNote: toActiveNote(
       input.activeNote,
       input.content,
-      routedProjectId
+      input.projectId
     ),
-    summary: input.response.summary,
-    routing: input.response.routing,
-    impact: input.response.impact ?? null,
-    segments: input.response.segments ?? [],
-    routes: input.response.routes ?? [],
+    summary,
+    routing: null,
+    impact: null,
+    segments,
+    routes: [],
     operations,
-    warnings: filterUserFacingWarnings(input.response.warnings ?? []),
+    warnings: [],
     relatedObjects,
   };
 }
+
+export { intentLabel };

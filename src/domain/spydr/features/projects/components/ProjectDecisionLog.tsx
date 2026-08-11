@@ -67,14 +67,14 @@ export function ProjectDecisionLog({
   );
 
   return (
-    <ProjectDetailSection>
+    <ProjectDetailSection className="min-h-[360px]">
       <ProjectDetailSectionHeader
         icon={<GitBranch className="h-3.5 w-3.5" />}
         label="Decision log"
         hint={`${decisions.length} recorded`}
       />
 
-      <ProjectDetailSectionBody>
+      <ProjectDetailSectionBody className="min-h-0 flex-1 gap-3 p-3">
         <ProjectDetailFormPanel label="Record decision">
           <form
             className="space-y-2"
@@ -111,7 +111,7 @@ export function ProjectDecisionLog({
         </ProjectDetailFormPanel>
 
         {orderedDecisions.length > 0 ? (
-          <ol className="space-y-2">
+          <ol className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
             {orderedDecisions.map((decision) => (
               <DecisionEntry
                 key={decision.id}

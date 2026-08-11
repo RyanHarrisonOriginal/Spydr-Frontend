@@ -4,6 +4,7 @@ import {
   useProjectQuery,
   usePeopleQuery,
   useProjectAreasQuery,
+  useProjectsQuery,
 } from "@/domain/spydr/features/shared/hooks/queries";
 import type { PersonNode, ProjectDetailNode, SpydrPriority } from "@/domain/spydr/utils/types";
 import {
@@ -22,6 +23,7 @@ import { useProjectChildMutations } from "./useProjectChildMutations";
 import type { ProjectChildKind, UpdateProjectChildInput } from "@/domain/spydr/utils/types";
 
 export interface ProjectDetailFormValues {
+  title: string;
   body: string;
   startDate: string;
   targetDate: string;
@@ -53,6 +55,7 @@ export interface ProjectIdeaFormValues {
 export type ProjectDetailSaveState = "idle" | "pending" | "saving" | "saved" | "error";
 
 const emptyDetailForm: ProjectDetailFormValues = {
+  title: "",
   body: "",
   startDate: "",
   targetDate: "",
@@ -85,6 +88,7 @@ const DETAIL_SAVE_DEBOUNCE_MS = 700;
 
 function projectToDetailForm(project: ProjectDetailNode): ProjectDetailFormValues {
   return {
+    title: project.title,
     body: project.body,
     startDate: project.details?.startDate ?? "",
     targetDate: project.details?.targetDate ?? "",
@@ -99,9 +103,11 @@ function serializeDetailForm(form: ProjectDetailFormValues) {
 export function useProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const query = useProjectQuery(projectId);
+  const projectsQuery = useProjectsQuery();
   const peopleQuery = usePeopleQuery();
   const areasQuery = useProjectAreasQuery();
   const project = query.data;
+  const projects = projectsQuery.data ?? [];
   const people = peopleQuery.data ?? [];
   const areas = areasQuery.data ?? [];
   const updateProject = useUpdateProjectMutation(projectId);
@@ -147,6 +153,10 @@ export function useProjectDetailPage() {
       return;
     }
 
+    if (!detailForm.title.trim()) {
+      return;
+    }
+
     setDetailSaveState("pending");
     clearTimeout(detailSaveTimerRef.current);
 
@@ -154,6 +164,7 @@ export function useProjectDetailPage() {
       setDetailSaveState("saving");
       updateProject.mutate(
         {
+          title: detailForm.title.trim(),
           body: detailForm.body,
           startDate: detailForm.startDate || null,
           targetDate: detailForm.targetDate || null,
@@ -349,6 +360,7 @@ export function useProjectDetailPage() {
   return {
     projectId,
     project,
+    projects,
     people,
     areas,
     areaNodeId: project ? resolveProjectAreaId(project, areas) : "",

@@ -106,6 +106,7 @@ export interface TaskDetails {
   isBlocked: boolean;
   estimatedMinutes: number | null;
   assigneePersonNodeId: string | null;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -204,6 +205,7 @@ export type IdeaDetails = {
 export type IdeaNode = SpydrNode<"idea", IdeaDetails>;
 
 export interface UpdateProjectInput {
+  title?: string;
   body?: string;
   status?: SpydrNodeStatus;
   priority?: SpydrPriority;
@@ -294,4 +296,41 @@ export interface CreateProjectIdeaInput {
   potentialValue?: SpydrPriority;
   status?: SpydrNodeStatus;
   priority?: SpydrPriority;
+}
+
+export type SpawnSourceType = TransformableNodeType;
+export type SpawnTargetType = TransformTargetType;
+
+export type TransformableNodeType = "project" | "task" | "note" | "idea";
+export type TransformTargetType = "project" | "task" | "note";
+
+export interface TransformNodeTypeInput {
+  nodeId: string;
+  targetType: TransformTargetType;
+  projectId?: string | null;
+}
+
+export interface TransformNodeTypeResult {
+  nodeId: string;
+  previousType: TransformableNodeType;
+  currentType: TransformTargetType;
+  projectId: string | null;
+  transformedAt: string;
+}
+
+/** @deprecated Use TransformNodeTypeInput */
+export type SpawnEntityInput = TransformNodeTypeInput & {
+  sourceType?: TransformableNodeType;
+  sourceId?: string;
+  archiveSource?: boolean;
+};
+
+/** @deprecated Use TransformNodeTypeResult */
+export interface SpawnEntityResult {
+  sourceType: TransformableNodeType;
+  sourceId: string;
+  targetType: TransformTargetType;
+  targetId: string;
+  projectId: string | null;
+  sourceArchived: boolean;
 }

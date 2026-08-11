@@ -3,72 +3,96 @@ import type { BackendActiveNoteAnalyzeResponse } from "./activeNoteAnalyzeTypes"
 import { mapActiveNoteAnalyzeResponse } from "./mapActiveNoteAnalyzeResponse";
 
 const response: BackendActiveNoteAnalyzeResponse = {
-  routing: {
-    destination: "existing_project",
-    projectId: "proj-muay-thai",
-    relatedTaskId: "task-teep",
-    reason: "Matches Muay Thai Development",
-    confidence: 0.9,
-  },
-  impact: {
-    type: "mixed",
-    reason: "Observation with optional follow-up",
-  },
-  summary: "A sparring observation about teep difficulty.",
-  warnings: [],
-  candidateProjects: [
+  segments: [
     {
-      id: "proj-muay-thai",
-      title: "Muay Thai Development",
-      relevanceReason: "Technique overlap",
+      topic: "Meeting with Amy",
+      sourceText:
+        "Met with Amy today about the Commercial Scorecard rollout.",
+      contextualText:
+        "I met with Amy today about the Commercial Scorecard rollout.",
+    },
+    {
+      topic: "Rep-level trend view",
+      sourceText:
+        "I need to add a rep-level trend view and validate the quarter-to-date calculations one more time before presenting the final version.",
+      contextualText:
+        "I need to add a rep-level trend view for the Commercial Scorecard and validate the quarter-to-date calculations one more time before presenting the final version.",
+    },
+    {
+      topic: "Querying Snowflake",
+      sourceText:
+        "I decided that querying Snowflake directly should remain our preferred fallback whenever the Power BI semantic models become too restrictive.",
+      contextualText:
+        "I decided that querying Snowflake directly should remain our preferred fallback whenever the Power BI semantic models become too restrictive.",
     },
   ],
-  proposals: [
+  actionPlans: [
     {
-      ref: "note_1",
-      operationType: "attach_context",
-      objectType: "note",
-      parent: { projectId: "proj-muay-thai", projectRef: null },
-      attachment: { type: "task", id: "task-teep", ref: null },
-      payload: {
-        title: "Difficulty landing teeps against a larger opponent",
-        content: "Had problems landing a teep.",
+      originalText:
+        "Met with Amy today about the Commercial Scorecard rollout.",
+      projectId: "proj-scorecard",
+      projectName: "Commercial Scorecard v2",
+      intent: "progress_update",
+      topic: "Meeting with Amy",
+      contextualText:
+        "I met with Amy today about the Commercial Scorecard rollout.",
+      action: {
+        type: "attach_note_to_task",
+        confidence: 0.9,
+        reason: "Progress update on sign-off task.",
+        targetTaskId: "task-signoff",
+        targetTaskTitle: "Present Commercial Scorecard v2 to Amy for final sign off",
+        payload: {
+          subject: "Meeting update with Amy",
+          content:
+            "Met with Amy today about the Commercial Scorecard rollout.",
+        },
       },
-      explicitlyStated: true,
-      confidence: 0.95,
-      evidence: ["had problems landing a teep"],
-      reason: "Project observation",
-      requiresProject: true,
-      suggestedProjectId: "proj-muay-thai",
     },
     {
-      ref: "task_1",
-      operationType: "suggest_create",
-      objectType: "task",
-      parent: { projectId: "proj-muay-thai", projectRef: null },
-      attachment: null,
-      payload: {
-        title: "Practice teep setups against larger opponents",
+      originalText:
+        "I need to add a rep-level trend view and validate the quarter-to-date calculations one more time before presenting the final version.",
+      projectId: "proj-scorecard",
+      projectName: "Commercial Scorecard v2",
+      intent: "task_action",
+      topic: "Rep-level trend view",
+      contextualText:
+        "I need to add a rep-level trend view for the Commercial Scorecard and validate the quarter-to-date calculations one more time before presenting the final version.",
+      action: {
+        type: "create_task",
+        confidence: 0.9,
+        reason: "Distinct concrete work not covered by an existing task.",
+        payload: {
+          title: "Add rep-level trend view and validate QTD calculations",
+          description:
+            "Add a rep-level trend view and validate the quarter-to-date calculations before presenting the final version.",
+        },
       },
-      explicitlyStated: false,
-      confidence: 0.7,
-      evidence: ["had problems landing a teep"],
-      reason: "Implied drill",
-      requiresProject: true,
-      suggestedProjectId: "proj-muay-thai",
+    },
+    {
+      destination: "unassigned",
+      originalText:
+        "I decided that querying Snowflake directly should remain our preferred fallback whenever the Power BI semantic models become too restrictive.",
+      projectId: null,
+      projectName: null,
+      confidence: 0.65,
+      reason: "Lacks sufficient detail to justify a new Project.",
+      topic: "Querying Snowflake",
+      contextualText:
+        "I decided that querying Snowflake directly should remain our preferred fallback whenever the Power BI semantic models become too restrictive.",
     },
   ],
 };
 
 describe("mapActiveNoteAnalyzeResponse", () => {
-  it("maps backend analyze output into UI proposal operations", () => {
+  it("maps segments and action plans into UI proposal operations", () => {
     const mapped = mapActiveNoteAnalyzeResponse({
       response,
-      content: "Last night I sparred a big guy and had problems landing a teep.",
+      content: "Multi-topic active note",
       projectId: null,
       activeNote: {
         id: "draft-1",
-        content: "Last night I sparred a big guy and had problems landing a teep.",
+        content: "Multi-topic active note",
         projectId: null,
         status: "draft",
         createdAt: "2026-01-01T00:00:00.000Z",
@@ -76,142 +100,80 @@ describe("mapActiveNoteAnalyzeResponse", () => {
       },
     });
 
-    expect(mapped.summary).toContain("sparring observation");
-    expect(mapped.activeNote.id).toBe("draft-1");
+    expect(mapped.segments).toHaveLength(3);
+    expect(mapped.segments[0]).toMatchObject({
+      ref: "seg-0",
+      topic: "Meeting with Amy",
+      sourceText: response.segments[0].sourceText,
+    });
+    expect(mapped.operations).toHaveLength(3);
     expect(mapped.activeNote.status).toBe("review");
-    expect(mapped.relatedObjects?.[0]?.id).toBe("proj-muay-thai");
-    expect(mapped.routing?.destination).toBe("existing_project");
-    expect(mapped.impact?.type).toBe("mixed");
+    expect(mapped.relatedObjects?.[0]?.id).toBe("proj-scorecard");
 
-    const noteOp = mapped.operations.find((op) => op.objectType === "note");
-    expect(noteOp?.selected).toBe(true);
-    expect(noteOp?.operationType).toBe("attach_context");
-    expect(noteOp?.attachment).toMatchObject({
+    const noteOp = mapped.operations[0];
+    expect(noteOp.operationType).toBe("attach_context");
+    expect(noteOp.objectType).toBe("note");
+    expect(noteOp.selected).toBe(true);
+    expect(noteOp.attachment).toMatchObject({
       type: "task",
-      id: "task-teep",
+      id: "task-signoff",
     });
-    expect(noteOp?.payload).toMatchObject({
-      kind: "note",
-      title: "Difficulty landing teeps against a larger opponent",
-      projectId: "proj-muay-thai",
-    });
-    expect(noteOp?.candidateProjects?.[0]?.id).toBe("proj-muay-thai");
-
-    const taskOp = mapped.operations.find((op) => op.objectType === "task");
-    expect(taskOp?.selected).toBe(false);
-    expect(taskOp?.operationType).toBe("suggest_create");
-    expect(mapped.operations.some((op) => op.objectType === "person")).toBe(
-      false
+    expect(noteOp.targetTaskTitle).toBe(
+      "Present Commercial Scorecard v2 to Amy for final sign off"
     );
+    expect(noteOp.selectedProjectId).toBe("proj-scorecard");
+
+    const taskOp = mapped.operations[1];
+    expect(taskOp.operationType).toBe("create");
+    expect(taskOp.objectType).toBe("task");
+    expect(taskOp.payload).toMatchObject({
+      kind: "task",
+      title: "Add rep-level trend view and validate QTD calculations",
+      projectId: "proj-scorecard",
+    });
+
+    const unassignedOp = mapped.operations[2];
+    expect(unassignedOp.needsUserDecision).toBe(true);
+    expect(unassignedOp.selected).toBe(false);
+    expect(unassignedOp.objectType).toBe("idea");
+    expect(unassignedOp.routingDestination).toBe("unassigned");
   });
 
-  it("assigns distinct selectedProjectIds per segment route", () => {
+  it("maps new project candidates to project create operations", () => {
     const mapped = mapActiveNoteAnalyzeResponse({
       response: {
-        routing: {
-          destination: "existing_project",
-          projectId: null,
-          relatedTaskId: null,
-          reason: "Multi-project note with 2 contexts: Vital Pak; ABL Automation",
-          confidence: 0.84,
-        },
-        impact: null,
-        summary: "Two project contexts.",
         segments: [
           {
-            ref: "seg_1",
-            text: "Waiting for QuickBooks for Vital Pak",
-            subject: "Vital Pak",
-          },
-          {
-            ref: "seg_2",
-            text: "ABL Automation has taken a back seat",
-            subject: "ABL Automation",
+            topic: "Inventory app",
+            sourceText: "Align with the Florida team.",
+            contextualText: "We need to align with the Florida team.",
           },
         ],
-        routes: [
+        actionPlans: [
           {
-            segmentRef: "seg_1",
-            destination: "existing_project",
-            projectId: "proj-vital",
-            relatedTaskId: null,
-            reason: "Vital Pak",
-            confidence: 0.9,
-            impact: { type: "project_context", reason: "Status" },
-          },
-          {
-            segmentRef: "seg_2",
-            destination: "existing_project",
-            projectId: "proj-abl",
-            relatedTaskId: null,
-            reason: "ABL",
-            confidence: 0.88,
-            impact: { type: "project_context", reason: "Status" },
-          },
-        ],
-        warnings: [],
-        candidateProjects: [
-          {
-            id: "proj-vital",
-            title: "Vital Pak",
-            relevanceReason: "Vital Pak",
-          },
-          {
-            id: "proj-abl",
-            title: "ABL Automation",
-            relevanceReason: "ABL",
-          },
-        ],
-        proposals: [
-          {
-            ref: "note_1",
-            operationType: "create",
-            objectType: "note",
-            parent: null,
-            attachment: null,
-            payload: {
-              title: "Vital Pak wait",
-              content: "Waiting for QuickBooks for Vital Pak",
-            },
-            explicitlyStated: true,
-            confidence: 0.9,
-            evidence: ["Vital Pak"],
-            reason: "Segment note",
-            segmentRef: "seg_1",
-            requiresProject: true,
-          },
-          {
-            ref: "note_2",
-            operationType: "create",
-            objectType: "note",
-            parent: null,
-            attachment: null,
-            payload: {
-              title: "ABL deprioritized",
-              content: "ABL Automation has taken a back seat",
-            },
-            explicitlyStated: true,
-            confidence: 0.9,
-            evidence: ["ABL Automation"],
-            reason: "Segment note",
-            segmentRef: "seg_2",
-            requiresProject: true,
+            destination: "new_project_candidate",
+            originalText: "Align with the Florida team.",
+            contextualText: "We need to align with the Florida team.",
+            topic: "Inventory app",
+            projectId: null,
+            projectName: "Inventory App Alignment",
+            confidence: 0.75,
+            reason: "Distinct project effort.",
           },
         ],
       },
-      content:
-        "Waiting for QuickBooks for Vital Pak\n\nABL Automation has taken a back seat",
+      content: "Align with the Florida team.",
     });
 
-    expect(mapped.segments).toHaveLength(2);
-    expect(mapped.routes).toHaveLength(2);
-    expect(mapped.operations.map((op) => op.segmentRef)).toEqual([
-      "seg_1",
-      "seg_2",
-    ]);
-    expect(mapped.operations.map((op) => op.selectedProjectId)).toEqual([
-      "proj-vital",
-      "proj-abl",
-    ]);
+    expect(mapped.operations[0]).toMatchObject({
+      objectType: "project",
+      operationType: "create",
+      selected: true,
+      routingDestination: "new_project_candidate",
+      payload: {
+        kind: "project",
+        title: "Inventory App Alignment",
+      },
+    });
   });
 });
