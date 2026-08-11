@@ -324,9 +324,30 @@ describe("proposalPresentation", () => {
     const groups = groupProposalOperations(
       [noteA, projectB, noteB, noteC],
       [
-        { ref: "seg_1", text: "Waiting for QuickBooks", subject: "Vital Pak" },
-        { ref: "seg_2", text: "Taken a back seat", subject: "ABL Automation" },
-        { ref: "seg_3", text: "Kai Li takes over", subject: "Customer business review" },
+        {
+          ref: "seg_1",
+          topic: "Vital Pak",
+          sourceText: "Waiting for QuickBooks",
+          contextualText: "Waiting for QuickBooks",
+          subject: "Vital Pak",
+          text: "Waiting for QuickBooks",
+        },
+        {
+          ref: "seg_2",
+          topic: "ABL Automation",
+          sourceText: "Taken a back seat",
+          contextualText: "Taken a back seat",
+          subject: "ABL Automation",
+          text: "Taken a back seat",
+        },
+        {
+          ref: "seg_3",
+          topic: "Customer business review",
+          sourceText: "Kai Li takes over",
+          contextualText: "Kai Li takes over",
+          subject: "Customer business review",
+          text: "Kai Li takes over",
+        },
       ]
     );
 

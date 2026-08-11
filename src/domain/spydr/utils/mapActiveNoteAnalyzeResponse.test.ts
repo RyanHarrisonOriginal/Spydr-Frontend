@@ -100,8 +100,9 @@ describe("mapActiveNoteAnalyzeResponse", () => {
       },
     });
 
-    expect(mapped.segments).toHaveLength(3);
-    expect(mapped.segments[0]).toMatchObject({
+    const segments = mapped.segments ?? [];
+    expect(segments).toHaveLength(3);
+    expect(segments[0]).toMatchObject({
       ref: "seg-0",
       topic: "Meeting with Amy",
       sourceText: response.segments[0].sourceText,

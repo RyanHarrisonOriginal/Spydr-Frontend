@@ -305,8 +305,7 @@ export function resolveOperationProjectLabel(
   }
 
   if (
-    (operation.routingDestination === "new_project" ||
-      operation.routingDestination === "new_project_candidate") &&
+    operation.routingDestination === "new_project_candidate" &&
     payload.kind === "project" &&
     "title" in payload &&
     payload.title?.trim()
