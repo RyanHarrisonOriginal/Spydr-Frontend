@@ -115,6 +115,13 @@ describe("mapActiveNoteAnalyzeResponse", () => {
     expect(noteOp.operationType).toBe("attach_context");
     expect(noteOp.objectType).toBe("note");
     expect(noteOp.selected).toBe(true);
+    expect(noteOp.payload).toEqual({
+      kind: "note",
+      title: "Meeting update with Amy",
+      content:
+        "Met with Amy today about the Commercial Scorecard rollout.",
+      projectId: "proj-scorecard",
+    });
     expect(noteOp.attachment).toMatchObject({
       type: "task",
       id: "task-signoff",
@@ -174,6 +181,124 @@ describe("mapActiveNoteAnalyzeResponse", () => {
       payload: {
         kind: "project",
         title: "Inventory App Alignment",
+      },
+    });
+  });
+
+  it("maps remaining action payload kinds into apply-ready operations", () => {
+    const mapped = mapActiveNoteAnalyzeResponse({
+      response: {
+        segments: [
+          {
+            topic: "Scorecard context",
+            sourceText: "Keep the current scorecard layout.",
+            contextualText: "Keep the current scorecard layout.",
+          },
+          {
+            topic: "Snowflake fallback",
+            sourceText: "Snowflake should remain the fallback.",
+            contextualText: "Snowflake should remain the fallback.",
+          },
+          {
+            topic: "Shared framework",
+            sourceText: "Maybe a shared app framework.",
+            contextualText: "Maybe a shared app framework.",
+          },
+          {
+            topic: "Existing metrics work",
+            sourceText: "Keep validating the metrics.",
+            contextualText: "Keep validating the metrics.",
+          },
+        ],
+        actionPlans: [
+          {
+            originalText: "Keep the current scorecard layout.",
+            projectId: "proj-scorecard",
+            projectName: "Commercial Scorecard v2",
+            intent: "project_context",
+            action: {
+              type: "create_note",
+              confidence: 0.8,
+              reason: "Preserve context.",
+              payload: {
+                subject: "Scorecard layout",
+                content: "Keep the current scorecard layout.",
+              },
+            },
+          },
+          {
+            originalText: "Snowflake should remain the fallback.",
+            projectId: "proj-scorecard",
+            projectName: "Commercial Scorecard v2",
+            intent: "decision",
+            action: {
+              type: "create_decision",
+              confidence: 0.82,
+              reason: "Committed choice.",
+              payload: {
+                title: "Use Snowflake fallback",
+                rationale: "Power BI models are too restrictive.",
+              },
+            },
+          },
+          {
+            originalText: "Maybe a shared app framework.",
+            projectId: "proj-scorecard",
+            projectName: "Commercial Scorecard v2",
+            intent: "idea",
+            action: {
+              type: "create_idea",
+              confidence: 0.7,
+              reason: "Uncommitted possibility.",
+              payload: {
+                title: "Shared app framework",
+                description: "Standardize auth and deployment.",
+              },
+            },
+          },
+          {
+            originalText: "Keep validating the metrics.",
+            projectId: "proj-scorecard",
+            projectName: "Commercial Scorecard v2",
+            intent: "task_action",
+            action: {
+              type: "use_existing_task",
+              confidence: 0.85,
+              reason: "Work already tracked.",
+              targetTaskId: "task-metrics",
+              targetTaskTitle: "Validate metrics",
+            },
+          },
+        ],
+      },
+      content: "Mixed action payloads",
+    });
+
+    expect(mapped.operations[0].payload).toEqual({
+      kind: "note",
+      title: "Scorecard layout",
+      content: "Keep the current scorecard layout.",
+      projectId: "proj-scorecard",
+    });
+    expect(mapped.operations[1].payload).toMatchObject({
+      kind: "decision",
+      title: "Use Snowflake fallback",
+      rationale: "Power BI models are too restrictive.",
+    });
+    expect(mapped.operations[2].payload).toMatchObject({
+      kind: "idea",
+      title: "Shared app framework",
+      description: "Standardize auth and deployment.",
+    });
+    expect(mapped.operations[3]).toMatchObject({
+      objectType: "task",
+      operationType: "update",
+      targetObjectId: "task-metrics",
+      duplicateResolution: "attach_existing",
+      payload: {
+        kind: "task",
+        title: "Validate metrics",
+        projectId: "proj-scorecard",
       },
     });
   });

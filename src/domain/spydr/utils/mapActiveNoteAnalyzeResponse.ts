@@ -11,6 +11,8 @@ import type {
   ActiveNoteProposalAttachment,
   ActiveNoteProposalOperation,
   ActiveNoteSegment,
+  DuplicateResolution,
+  NoteOperationPayload,
   OperationPayload,
   OperationType,
   RelatedSpydrObject,
@@ -52,6 +54,24 @@ function toSegment(
 
 function intentLabel(intent: string): string {
   return intent.replace(/_/g, " ");
+}
+
+function applyNotePayload(
+  payload: { subject?: string; title?: string; content?: string },
+  projectId: string
+): NoteOperationPayload {
+  const content = payload.content?.trim() || "";
+  const title =
+    payload.subject?.trim() ||
+    payload.title?.trim() ||
+    content.split(/\r?\n/)[0]?.trim().slice(0, 80) ||
+    "Note";
+  return {
+    kind: "note",
+    title,
+    content,
+    projectId,
+  };
 }
 
 function buildSummary(actionPlans: BackendSegmentActionPlan[]): string {
@@ -108,6 +128,7 @@ function mapExistingProjectPlan(
   let targetObjectId: string | null = projectId;
   let targetTaskTitle: string | undefined;
   let selected = true;
+  let duplicateResolution: DuplicateResolution | null = null;
   let explicitlyStated = plan.intent === "task_action" || plan.intent === "progress_update";
 
   switch (action.type) {
@@ -124,22 +145,12 @@ function mapExistingProjectPlan(
     case "create_note":
       objectType = "note";
       operationType = "create";
-      payload = {
-        kind: "note",
-        title: action.payload.subject,
-        content: action.payload.content,
-        projectId,
-      };
+      payload = applyNotePayload(action.payload, projectId);
       break;
     case "attach_note_to_task":
       objectType = "note";
       operationType = "attach_context";
-      payload = {
-        kind: "note",
-        title: action.payload.subject,
-        content: action.payload.content,
-        projectId,
-      };
+      payload = applyNotePayload(action.payload, projectId);
       attachment = { type: "task", id: action.targetTaskId, ref: null };
       targetObjectId = action.targetTaskId;
       targetTaskTitle = action.targetTaskTitle;
@@ -176,6 +187,7 @@ function mapExistingProjectPlan(
       targetObjectId = action.targetTaskId;
       targetTaskTitle = action.targetTaskTitle;
       attachment = { type: "task", id: action.targetTaskId, ref: null };
+      duplicateResolution = "attach_existing";
       break;
     default:
       objectType = "note";
@@ -204,6 +216,7 @@ function mapExistingProjectPlan(
     explicitlyStated,
     status: "proposed",
     selected,
+    duplicateResolution,
     candidateProjects: candidateProjects.length > 0 ? candidateProjects : undefined,
     selectedProjectId: projectId,
     segmentTopic: plan.topic ?? undefined,
