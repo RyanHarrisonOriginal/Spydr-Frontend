@@ -33,7 +33,8 @@ export function TasksPage() {
     dueDateError,
     deleteError,
     deleteTask,
-    deletingTaskId,
+    deleteSelectedTasks,
+    deletingTaskIds,
     isLoading,
     isError,
     errorMessage,
@@ -116,7 +117,8 @@ export function TasksPage() {
               onAssigneeChange={updateAssignee}
               onDueDateChange={updateDueDate}
               onDelete={deleteTask}
-              deletingTaskId={deletingTaskId}
+              onDeleteSelected={deleteSelectedTasks}
+              deletingTaskIds={deletingTaskIds}
             />
           ) : (
             <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />

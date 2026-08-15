@@ -81,11 +81,13 @@ export function ProjectDetailPage() {
       onPersonaChange={detailPage.updatePersona}
       isUpdatingPersona={detailPage.isUpdatingPersona}
       onDeleteChild={detailPage.deleteChild}
+      onDeleteSelectedChildren={detailPage.deleteSelectedChildren}
       onRestoreChild={detailPage.restoreChild}
       isUpdatingChild={detailPage.isUpdatingChild}
       isDeletingChild={detailPage.isDeletingChild}
       isRestoringChild={detailPage.isRestoringChild}
       restoringId={detailPage.restoringId}
+      deletingChildIds={detailPage.deletingChildIds}
       childMutationError={detailPage.childMutationError}
     />
   );

@@ -24,6 +24,7 @@ interface ActiveNoteComposerProps {
   onProjectChange(projectId: string | null): void;
   onSave(): void;
   onAnalyze(): void;
+  onLoadTestSuggestions(): void;
 }
 
 function saveLabel(saveState: ActiveNoteSaveState): string {
@@ -57,6 +58,7 @@ export function ActiveNoteComposer({
   onProjectChange,
   onSave,
   onAnalyze,
+  onLoadTestSuggestions,
 }: ActiveNoteComposerProps) {
   const overLimit = characterCount > ACTIVE_NOTE_MAX_LENGTH;
   const canSubmit = content.trim().length > 0 && !overLimit && !isBusy;
@@ -179,6 +181,16 @@ export function ActiveNoteComposer({
                 >
                   Save draft
                 </Button>
+                {import.meta.env.DEV ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onLoadTestSuggestions}
+                    disabled={isBusy}
+                  >
+                    Load test suggestions
+                  </Button>
+                ) : null}
                 <Button
                   type="button"
                   onClick={onAnalyze}

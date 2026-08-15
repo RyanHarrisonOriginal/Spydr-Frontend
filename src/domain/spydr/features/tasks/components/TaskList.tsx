@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import type { PersonNode, ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
 import { PriorityBadge } from "@/domain/spydr/features/shared/components/StatusPrimitives";
@@ -16,13 +17,16 @@ import { PersonSelect } from "@/domain/spydr/features/projects/components/Person
 import { TaskDueDateSelect } from "./TaskDueDateSelect";
 import { TaskStatusSelect } from "./TaskStatusSelect";
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
+import { SelectionCheckbox } from "@/domain/spydr/features/shared/components/SelectionCheckbox";
+import { BulkDeleteBar } from "@/domain/spydr/features/shared/components/BulkDeleteBar";
+import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSelection";
 
 const ROW_BASE =
-  "grid grid-cols-[36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_104px_72px] items-center gap-3";
+  "grid grid-cols-[28px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_104px_72px] items-center gap-3";
 const ROW_WITH_HANDLE =
-  "grid grid-cols-[24px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_104px_72px] items-center gap-3";
-const ROW_MIN_WIDTH = 1068;
-const ROW_MIN_WIDTH_WITH_HANDLE = 1092;
+  "grid grid-cols-[24px_28px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_104px_72px] items-center gap-3";
+const ROW_MIN_WIDTH = 1096;
+const ROW_MIN_WIDTH_WITH_HANDLE = 1120;
 
 interface TaskListProps {
   tasks: TaskNode[];
@@ -39,7 +43,8 @@ interface TaskListProps {
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
   onDueDateChange(taskId: string, dueDate: string | null): void;
   onDelete?(taskId: string): void;
-  deletingTaskId?: string | null;
+  onDeleteSelected?(taskIds: string[]): void;
+  deletingTaskIds?: string[];
 }
 
 function resolveAssigneeId(task: TaskNode): string | null {
@@ -59,7 +64,9 @@ function TaskRow({
   onAssigneeChange,
   onDueDateChange,
   onDelete,
-  deletingTaskId = null,
+  deletingTaskIds = [],
+  selected = false,
+  onToggleSelected,
 }: {
   task: TaskNode;
   projects: ProjectNode[];
@@ -73,7 +80,9 @@ function TaskRow({
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
   onDueDateChange(taskId: string, dueDate: string | null): void;
   onDelete?: (taskId: string) => void;
-  deletingTaskId?: string | null;
+  deletingTaskIds?: string[];
+  selected?: boolean;
+  onToggleSelected?(id: string): void;
 }) {
   const rowClass = reorderEnabled ? ROW_WITH_HANDLE : ROW_BASE;
   const minWidth = reorderEnabled ? ROW_MIN_WIDTH_WITH_HANDLE : ROW_MIN_WIDTH;
@@ -85,6 +94,16 @@ function TaskRow({
       {reorderEnabled ? (
         <CollectionDragHandle {...sortable.dragHandleProps} />
       ) : null}
+      {onToggleSelected ? (
+        <SelectionCheckbox
+          checked={selected}
+          disabled={deletingTaskIds.length > 0}
+          label={`Select ${task.title}`}
+          onChange={() => onToggleSelected(task.id)}
+        />
+      ) : (
+        <span aria-hidden />
+      )}
       <CollectionPriorityRank rank={getPriorityRank(task.id)} />
       <TaskStatusSelect
         value={task.status}
@@ -161,8 +180,8 @@ function TaskRow({
       {onDelete ? (
         <InlineDeleteButton
           label={task.title}
-          isDeleting={deletingTaskId === task.id}
-          disabled={Boolean(deletingTaskId && deletingTaskId !== task.id)}
+          isDeleting={deletingTaskIds.includes(task.id)}
+          disabled={deletingTaskIds.length > 0 && !deletingTaskIds.includes(task.id)}
           onDelete={() => onDelete(task.id)}
         />
       ) : null}
@@ -185,13 +204,42 @@ export function TaskList({
   onAssigneeChange,
   onDueDateChange,
   onDelete,
-  deletingTaskId = null,
+  onDeleteSelected,
+  deletingTaskIds = [],
 }: TaskListProps) {
   const headerClass = reorderEnabled ? ROW_WITH_HANDLE : ROW_BASE;
   const minWidth = reorderEnabled ? ROW_MIN_WIDTH_WITH_HANDLE : ROW_MIN_WIDTH;
+  const taskIds = useMemo(() => tasks.map((task) => task.id), [tasks]);
+  const selection = useItemSelection(taskIds);
+  const canSelect = Boolean(onDeleteSelected);
 
   return (
     <div className="overflow-x-auto">
+      {canSelect && selection.selectedCount > 0 ? (
+        <div
+          className="flex items-center gap-3 border-b border-border bg-destructive/5 px-6 py-1.5"
+          style={{ minWidth }}
+        >
+          <SelectionCheckbox
+            checked={selection.allSelected}
+            indeterminate={selection.someSelected}
+            disabled={deletingTaskIds.length > 0}
+            label="Select all tasks"
+            onChange={selection.setAll}
+          />
+          <BulkDeleteBar
+            count={selection.selectedCount}
+            noun="task"
+            isDeleting={
+              deletingTaskIds.length > 0 &&
+              selection.selectedIds.some((id) => deletingTaskIds.includes(id))
+            }
+            disabled={deletingTaskIds.length > 0}
+            onDelete={() => onDeleteSelected?.(selection.selectedIds)}
+            onClear={selection.clear}
+          />
+        </div>
+      ) : null}
       <div
         className={cn(
           headerClass,
@@ -200,6 +248,17 @@ export function TaskList({
         style={{ minWidth }}
       >
         {reorderEnabled ? <span aria-hidden /> : null}
+        {canSelect ? (
+          <SelectionCheckbox
+            checked={selection.allSelected}
+            indeterminate={selection.someSelected}
+            disabled={deletingTaskIds.length > 0 || tasks.length === 0}
+            label="Select all tasks"
+            onChange={selection.setAll}
+          />
+        ) : (
+          <span aria-hidden />
+        )}
         <CollectionSortableHeader
           label="Rank"
           column="order"
@@ -272,7 +331,9 @@ export function TaskList({
             onAssigneeChange={onAssigneeChange}
             onDueDateChange={onDueDateChange}
             onDelete={onDelete}
-            deletingTaskId={deletingTaskId}
+            deletingTaskIds={deletingTaskIds}
+            selected={selection.isSelected(task.id)}
+            onToggleSelected={canSelect ? selection.toggle : undefined}
           />
         )}
       />

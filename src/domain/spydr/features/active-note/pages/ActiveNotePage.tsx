@@ -86,6 +86,7 @@ export function ActiveNotePage() {
             onProjectChange={page.setProjectId}
             onSave={() => void page.handleSave()}
             onAnalyze={() => void page.handleAnalyze()}
+            onLoadTestSuggestions={page.handleLoadTestSuggestions}
           />
         )}
 

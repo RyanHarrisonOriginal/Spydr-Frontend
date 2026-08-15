@@ -24,6 +24,7 @@ import {
   buildPayloadForObjectType,
   operationTypeForObjectType,
 } from "../utils/buildOperationPayload";
+import { buildTestApplyProposal } from "../utils/buildTestApplyProposal";
 import {
   friendlyApiError,
   validateNoteContent,
@@ -548,6 +549,10 @@ export function useActiveNotePage() {
 
     setApplyError(null);
     setIsApplying(true);
+    console.info("[active-note.apply] ui.start", {
+      activeNoteId: activeNote.id,
+      selectedCount: selected.length,
+    });
 
     try {
       const result = await activeNoteApi.apply(activeNote.id, {
@@ -559,6 +564,7 @@ export function useActiveNotePage() {
       setActiveNote(result.activeNote);
 
       if (result.failed.length > 0 && result.applied.length === 0) {
+        console.warn("[active-note.apply] ui.all-failed", result.failed);
         setApplyError(
           result.failed[0]?.message ??
             "Could not apply the selected proposals. Your edits were kept."
@@ -572,34 +578,43 @@ export function useActiveNotePage() {
         );
       }
 
-      if (activeOrgId) {
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: spydrOrgKey(activeOrgId, "projects"),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: spydrOrgKey(activeOrgId, "tasks"),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: spydrOrgKey(activeOrgId, "notes"),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: spydrOrgKey(activeOrgId, "people"),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: spydrOrgKey(activeOrgId, "decisions"),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: spydrOrgKey(activeOrgId, "ideas"),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: spydrOrgKey(activeOrgId, "dashboard"),
-          }),
-        ]);
-      }
-
       setPhase("completed");
+      console.info("[active-note.apply] ui.completed", {
+        applied: result.applied.length,
+        failed: result.failed.length,
+      });
+
+      if (activeOrgId) {
+        try {
+          await Promise.all([
+            queryClient.invalidateQueries({
+              queryKey: spydrOrgKey(activeOrgId, "projects"),
+            }),
+            queryClient.invalidateQueries({
+              queryKey: spydrOrgKey(activeOrgId, "tasks"),
+            }),
+            queryClient.invalidateQueries({
+              queryKey: spydrOrgKey(activeOrgId, "notes"),
+            }),
+            queryClient.invalidateQueries({
+              queryKey: spydrOrgKey(activeOrgId, "people"),
+            }),
+            queryClient.invalidateQueries({
+              queryKey: spydrOrgKey(activeOrgId, "decisions"),
+            }),
+            queryClient.invalidateQueries({
+              queryKey: spydrOrgKey(activeOrgId, "ideas"),
+            }),
+            queryClient.invalidateQueries({
+              queryKey: spydrOrgKey(activeOrgId, "dashboard"),
+            }),
+          ]);
+        } catch (error) {
+          console.warn("[active-note.apply] cache invalidate failed", error);
+        }
+      }
     } catch (error) {
+      console.error("[active-note.apply] ui.error", error);
       setApplyError(
         friendlyApiError(
           error,
@@ -645,6 +660,35 @@ export function useActiveNotePage() {
     }
   }
 
+  function handleLoadTestSuggestions() {
+    const noteContent =
+      content.trim() ||
+      "Test apply: add a follow-up task, capture a note, and attach progress to an existing task.";
+    const proposal = buildTestApplyProposal({
+      projects: projectsQuery.data ?? [],
+      tasks: tasksQuery.data ?? [],
+      preferredProjectId: projectId,
+      content: noteContent,
+    });
+
+    setContent(noteContent);
+    setActiveNote(proposal.activeNote);
+    setProposal(proposal);
+    setOperations(proposal.operations);
+    setApplyResult(null);
+    setAnalysisError(null);
+    setApplyError(null);
+    setValidationErrors({});
+    setEditingOperationId(null);
+    setComposeError(null);
+    setPhase("review");
+    lastSavedSnapshotRef.current = serializeDraft(
+      noteContent,
+      proposal.activeNote.projectId ?? null
+    );
+    setSaveState("saved");
+  }
+
   return {
     phase,
     content,
@@ -672,6 +716,7 @@ export function useActiveNotePage() {
     handleContentChange,
     handleSave,
     handleAnalyze,
+    handleLoadTestSuggestions,
     handleCancelAnalysis,
     handleRetryAnalysis,
     toggleOperationSelected,

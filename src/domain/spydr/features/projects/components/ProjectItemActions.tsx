@@ -38,6 +38,7 @@ interface ProjectItemActionsProps {
   onDelete: () => void;
   isSaving?: boolean;
   isDeleting?: boolean;
+  showDelete?: boolean;
   className?: string;
 }
 
@@ -50,6 +51,7 @@ export function ProjectItemActions({
   onDelete,
   isSaving = false,
   isDeleting = false,
+  showDelete = true,
   className,
 }: ProjectItemActionsProps) {
   const [editOpen, setEditOpen] = useState(false);
@@ -111,15 +113,17 @@ export function ProjectItemActions({
         >
           <Pencil className="h-3 w-3" />
         </button>
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={isSaving || isDeleting}
-          className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
-          aria-label="Delete"
-        >
-          <Trash2 className="h-3 w-3" />
-        </button>
+        {showDelete ? (
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isSaving || isDeleting}
+            className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+            aria-label="Delete"
+          >
+            <Trash2 className="h-3 w-3" />
+          </button>
+        ) : null}
       </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>

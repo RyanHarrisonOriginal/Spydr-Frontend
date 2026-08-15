@@ -117,6 +117,7 @@ export function useProjectDetailPage() {
   const createIdea = useCreateProjectIdeaMutation(projectId);
   const childMutations = useProjectChildMutations(projectId);
   const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [deletingChildIds, setDeletingChildIds] = useState<string[]>([]);
   const [personaError, setPersonaError] = useState<string | null>(null);
   const [isUpdatingPersona, setIsUpdatingPersona] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -296,7 +297,20 @@ export function useProjectDetailPage() {
   };
 
   const deleteChild = (kind: ProjectChildKind, childId: string) => {
-    childMutations.deleteChild.mutate({ kind, childId });
+    setDeletingChildIds([childId]);
+    childMutations.deleteChild.mutate(
+      { kind, childId },
+      { onSettled: () => setDeletingChildIds([]) }
+    );
+  };
+
+  const deleteSelectedChildren = (kind: ProjectChildKind, childIds: string[]) => {
+    if (childIds.length === 0) return;
+    setDeletingChildIds(childIds);
+    childMutations.deleteChildren.mutate(
+      { kind, childIds },
+      { onSettled: () => setDeletingChildIds([]) }
+    );
   };
 
   const restoreChild = (kind: ProjectChildKind, childId: string) => {
@@ -386,19 +400,25 @@ export function useProjectDetailPage() {
     updateArea,
     updatePersona,
     deleteChild,
+    deleteSelectedChildren,
     restoreChild,
     isUpdatingChild: childMutations.updateChild.isPending,
-    isDeletingChild: childMutations.deleteChild.isPending,
+    isDeletingChild:
+      childMutations.deleteChild.isPending ||
+      childMutations.deleteChildren.isPending,
     isRestoringChild: childMutations.restoreChild.isPending,
     restoringId,
+    deletingChildIds,
     childMutationError:
       childMutations.updateChild.error instanceof Error
         ? childMutations.updateChild.error.message
         : childMutations.deleteChild.error instanceof Error
           ? childMutations.deleteChild.error.message
-          : childMutations.restoreChild.error instanceof Error
-            ? childMutations.restoreChild.error.message
-            : null,
+          : childMutations.deleteChildren.error instanceof Error
+            ? childMutations.deleteChildren.error.message
+            : childMutations.restoreChild.error instanceof Error
+              ? childMutations.restoreChild.error.message
+              : null,
     canAddTask: taskForm.title.trim().length > 0 && !createTask.isPending,
     canAddNote: !createNote.isPending,
     noteFormResetKey,

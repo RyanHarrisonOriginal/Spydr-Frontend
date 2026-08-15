@@ -116,10 +116,41 @@ export async function applyActiveNoteProposal(
     return mockApplyActiveNoteProposal(activeNoteId, input);
   }
 
-  return apiRequest<ApplyActiveNoteProposalResult>("/active-notes/apply", {
-    method: "POST",
-    body: buildActiveNoteApplyRequestBody(activeNoteId, input),
+  const body = buildActiveNoteApplyRequestBody(activeNoteId, input);
+  console.info("[active-note.apply] request", {
+    path: "/active-notes/apply",
+    activeNoteId,
+    projectId: body.projectId,
+    operations: (body.operations as Array<{ operationId: string; selected: boolean; objectType?: string | null; payload?: { kind?: string } }>).map(
+      (operation) => ({
+        operationId: operation.operationId,
+        selected: operation.selected,
+        objectType: operation.objectType ?? null,
+        kind: operation.payload?.kind ?? null,
+      })
+    ),
   });
+
+  try {
+    const result = await apiRequest<ApplyActiveNoteProposalResult>(
+      "/active-notes/apply",
+      {
+        method: "POST",
+        body,
+        signal: AbortSignal.timeout(45_000),
+      }
+    );
+    console.info("[active-note.apply] response", {
+      applied: result.applied.length,
+      failed: result.failed.length,
+      partial: result.partial,
+      failedMessages: result.failed,
+    });
+    return result;
+  } catch (error) {
+    console.error("[active-note.apply] request failed", error);
+    throw error;
+  }
 }
 
 function emptyToNull(value: string | null | undefined): string | null {

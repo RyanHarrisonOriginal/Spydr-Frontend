@@ -11,19 +11,33 @@ export function useNotesPage() {
   const view = useCollectionView(notesCollection, notes);
   const reorder = useCollectionReorder("note", view);
   const deleteNote = useDeleteNoteMutation();
-  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+  const [deletingNoteIds, setDeletingNoteIds] = useState<string[]>([]);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const deleteNoteById = (noteId: string) => {
     setDeleteError(null);
-    setDeletingNoteId(noteId);
+    setDeletingNoteIds([noteId]);
     deleteNote.mutate(noteId, {
       onError: (error) => {
         setDeleteError(
           error instanceof Error ? error.message : "Failed to delete note"
         );
       },
-      onSettled: () => setDeletingNoteId(null),
+      onSettled: () => setDeletingNoteIds([]),
+    });
+  };
+
+  const deleteSelectedNotes = (noteIds: string[]) => {
+    if (noteIds.length === 0) return;
+    setDeleteError(null);
+    setDeletingNoteIds(noteIds);
+    deleteNote.mutate(noteIds, {
+      onError: (error) => {
+        setDeleteError(
+          error instanceof Error ? error.message : "Failed to delete selected notes"
+        );
+      },
+      onSettled: () => setDeletingNoteIds([]),
     });
   };
 
@@ -32,7 +46,8 @@ export function useNotesPage() {
     reorder,
     getPriorityRank: view.getPriorityRank,
     deleteNote: deleteNoteById,
-    deletingNoteId,
+    deleteSelectedNotes,
+    deletingNoteIds,
     deleteError,
     totalCount: notes.length,
     isLoading: query.isLoading,

@@ -11,7 +11,7 @@ import { NoteList } from "../components/NoteList";
 import { useNotesPage } from "../hooks/useNotesPage";
 
 export function NotesPage() {
-  const { view, reorder, getPriorityRank, deleteNote, deletingNoteId, deleteError, totalCount, isLoading, isError, errorMessage } = useNotesPage();
+  const { view, reorder, getPriorityRank, deleteNote, deleteSelectedNotes, deletingNoteIds, deleteError, totalCount, isLoading, isError, errorMessage } = useNotesPage();
   usePageBreadcrumb("Notes");
 
   return (
@@ -41,7 +41,8 @@ export function NotesPage() {
               reorderEnabled={reorder.canReorder}
               onReorder={reorder.onReorder}
               onDelete={deleteNote}
-              deletingNoteId={deletingNoteId}
+              onDeleteSelected={deleteSelectedNotes}
+              deletingNoteIds={deletingNoteIds}
             />
           ) : (
             <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />

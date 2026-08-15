@@ -4,6 +4,7 @@ import { spydrOrgKey } from "@/domain/spydr/features/shared/hooks/spydrQueryKeys
 import { spydrApi } from "@/domain/spydr/utils/api";
 import type {
   ProjectChildKind,
+  ProjectDetailNode,
   UpdateProjectChildInput,
 } from "@/domain/spydr/utils/types";
 
@@ -58,6 +59,23 @@ export function useProjectChildMutations(projectId: string | undefined) {
     onSuccess: (_data, variables) => invalidate(variables.kind),
   });
 
+  const deleteChildren = useMutation({
+    mutationFn: async ({
+      kind,
+      childIds,
+    }: {
+      kind: ProjectChildKind;
+      childIds: string[];
+    }) => {
+      let last: ProjectDetailNode | null = null;
+      for (const childId of childIds) {
+        last = await spydrApi.projects.deleteChild(projectId!, kind, childId);
+      }
+      return last;
+    },
+    onSuccess: (_data, variables) => invalidate(variables.kind),
+  });
+
   const restoreChild = useMutation({
     mutationFn: ({
       kind,
@@ -69,5 +87,5 @@ export function useProjectChildMutations(projectId: string | undefined) {
     onSuccess: (_data, variables) => invalidate(variables.kind),
   });
 
-  return { updateChild, deleteChild, restoreChild };
+  return { updateChild, deleteChild, deleteChildren, restoreChild };
 }

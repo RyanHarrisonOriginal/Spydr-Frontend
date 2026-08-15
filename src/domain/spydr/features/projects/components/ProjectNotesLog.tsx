@@ -22,6 +22,10 @@ import {
 } from "./ProjectDetailSection";
 import { ProjectItemActions } from "./ProjectItemActions";
 import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
+import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
+import { SelectionCheckbox } from "@/domain/spydr/features/shared/components/SelectionCheckbox";
+import { BulkDeleteBar } from "@/domain/spydr/features/shared/components/BulkDeleteBar";
+import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSelection";
 
 interface ProjectNotesLogProps {
   notes: NoteNode[];
@@ -39,8 +43,10 @@ interface ProjectNotesLogProps {
   onAdd(): void;
   onUpdate(childId: string, input: UpdateProjectChildInput): void;
   onDelete(childId: string): void;
+  onDeleteSelected(childIds: string[]): void;
   isUpdating?: boolean;
   isDeleting?: boolean;
+  deletingChildIds?: string[];
 }
 
 export function ProjectNotesLog({
@@ -56,8 +62,9 @@ export function ProjectNotesLog({
   onAdd,
   onUpdate,
   onDelete,
+  onDeleteSelected,
   isUpdating = false,
-  isDeleting = false,
+  deletingChildIds = [],
 }: ProjectNotesLogProps) {
   const orderedNotes = useMemo(
     () =>
@@ -66,6 +73,14 @@ export function ProjectNotesLog({
       ),
     [notes]
   );
+  const noteIds = useMemo(
+    () => orderedNotes.map((note) => note.id),
+    [orderedNotes]
+  );
+  const selection = useItemSelection(noteIds);
+  const isDeletingSelected =
+    deletingChildIds.length > 0 &&
+    selection.selectedIds.some((id) => deletingChildIds.includes(id));
 
   return (
     <ProjectDetailSection className="min-h-[360px]">
@@ -114,20 +129,52 @@ export function ProjectNotesLog({
         </ProjectDetailFormPanel>
 
         {orderedNotes.length > 0 ? (
-          <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
-            {orderedNotes.map((note) => (
-              <NoteEntry
-                key={note.id}
-                note={note}
-                projects={projects}
-                projectId={projectId}
-                onUpdate={(input) => onUpdate(note.id, input)}
-                onDelete={() => onDelete(note.id)}
-                isUpdating={isUpdating}
-                isDeleting={isDeleting}
+          <>
+            <div className="flex items-center gap-2 px-0.5">
+              <SelectionCheckbox
+                checked={selection.allSelected}
+                indeterminate={selection.someSelected}
+                disabled={deletingChildIds.length > 0}
+                label="Select all notes"
+                onChange={selection.setAll}
               />
-            ))}
-          </ul>
+              {selection.selectedCount > 0 ? (
+                <BulkDeleteBar
+                  count={selection.selectedCount}
+                  noun="note"
+                  isDeleting={isDeletingSelected}
+                  disabled={deletingChildIds.length > 0}
+                  onDelete={() => onDeleteSelected(selection.selectedIds)}
+                  onClear={selection.clear}
+                />
+              ) : (
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  Select notes to delete
+                </span>
+              )}
+            </div>
+            <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
+              {orderedNotes.map((note) => (
+                <NoteEntry
+                  key={note.id}
+                  note={note}
+                  projects={projects}
+                  projectId={projectId}
+                  selected={selection.isSelected(note.id)}
+                  onToggleSelected={() => selection.toggle(note.id)}
+                  onUpdate={(input) => onUpdate(note.id, input)}
+                  onDelete={() => onDelete(note.id)}
+                  isUpdating={isUpdating}
+                  isDeleting={deletingChildIds.includes(note.id)}
+                  deleteDisabled={
+                    deletingChildIds.length > 0 &&
+                    !deletingChildIds.includes(note.id)
+                  }
+                  selectDisabled={deletingChildIds.length > 0}
+                />
+              ))}
+            </ul>
+          </>
         ) : (
           <ProjectDetailEmpty
             title="No notes linked to this project yet."
@@ -143,24 +190,39 @@ function NoteEntry({
   note,
   projects,
   projectId,
+  selected,
+  onToggleSelected,
   onUpdate,
   onDelete,
   isUpdating,
   isDeleting,
+  deleteDisabled,
+  selectDisabled,
 }: {
   note: NoteNode;
   projects: ProjectNode[];
   projectId: string;
+  selected: boolean;
+  onToggleSelected: () => void;
   onUpdate: (input: UpdateProjectChildInput) => void;
   onDelete: () => void;
   isUpdating: boolean;
   isDeleting: boolean;
+  deleteDisabled: boolean;
+  selectDisabled: boolean;
 }) {
   const hasBody = !isRichTextEmpty(note.body);
 
   return (
     <ProjectDetailEntry>
-      <div className="flex flex-wrap items-start gap-x-2 gap-y-1">
+      <div className="flex min-w-0 items-start gap-x-2 gap-y-1">
+        <SelectionCheckbox
+          className="mt-0.5"
+          checked={selected}
+          disabled={selectDisabled}
+          label={`Select ${note.title || "note"}`}
+          onChange={onToggleSelected}
+        />
         <h3 className="min-w-0 flex-1 text-[13px] font-semibold leading-snug">
           {note.title}
         </h3>
@@ -171,22 +233,31 @@ function NoteEntry({
         >
           {formatRelativeTime(note.updatedAt)}
         </time>
-        <ProjectItemActions
-          fieldSet="note"
-          values={{ title: note.title, body: note.body }}
-          onSave={onUpdate}
-          onDelete={onDelete}
-          isSaving={isUpdating}
-          isDeleting={isDeleting}
-        />
-        <EntityTransformMenu
-          nodeId={note.id}
-          sourceType="note"
-          sourceTitle={note.title}
-          projects={projects}
-          defaultProjectId={projectId}
-          compact
-        />
+        <div className="flex shrink-0 items-center gap-0.5">
+          <ProjectItemActions
+            fieldSet="note"
+            values={{ title: note.title, body: note.body }}
+            onSave={onUpdate}
+            onDelete={onDelete}
+            isSaving={isUpdating}
+            isDeleting={isDeleting}
+            showDelete={false}
+          />
+          <InlineDeleteButton
+            label={note.title || "note"}
+            isDeleting={isDeleting}
+            disabled={deleteDisabled}
+            onDelete={onDelete}
+          />
+          <EntityTransformMenu
+            nodeId={note.id}
+            sourceType="note"
+            sourceTitle={note.title}
+            projects={projects}
+            defaultProjectId={projectId}
+            compact
+          />
+        </div>
       </div>
       {hasBody ? (
         <div

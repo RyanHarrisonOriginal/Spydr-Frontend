@@ -26,7 +26,7 @@ export function useTasksPage() {
   const updateTask = useUpdateTaskMutation();
   const deleteTask = useDeleteTaskMutation();
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
-  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
+  const [deletingTaskIds, setDeletingTaskIds] = useState<string[]>([]);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [projectError, setProjectError] = useState<string | null>(null);
@@ -106,14 +106,28 @@ export function useTasksPage() {
 
   const deleteTaskById = (taskId: string) => {
     setDeleteError(null);
-    setDeletingTaskId(taskId);
+    setDeletingTaskIds([taskId]);
     deleteTask.mutate(taskId, {
       onError: (error) => {
         setDeleteError(
           error instanceof Error ? error.message : "Failed to delete task"
         );
       },
-      onSettled: () => setDeletingTaskId(null),
+      onSettled: () => setDeletingTaskIds([]),
+    });
+  };
+
+  const deleteSelectedTasks = (taskIds: string[]) => {
+    if (taskIds.length === 0) return;
+    setDeleteError(null);
+    setDeletingTaskIds(taskIds);
+    deleteTask.mutate(taskIds, {
+      onError: (error) => {
+        setDeleteError(
+          error instanceof Error ? error.message : "Failed to delete selected tasks"
+        );
+      },
+      onSettled: () => setDeletingTaskIds([]),
     });
   };
 
@@ -137,7 +151,8 @@ export function useTasksPage() {
     dueDateError,
     deleteError,
     deleteTask: deleteTaskById,
-    deletingTaskId,
+    deleteSelectedTasks,
+    deletingTaskIds,
     isLoading: query.isLoading,
     isError: query.isError,
     errorMessage:

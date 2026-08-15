@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -67,6 +67,10 @@ import { PersonSelect } from "./PersonSelect";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
 import { ProjectStatusSelect } from "./ProjectStatusSelect";
 import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
+import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
+import { SelectionCheckbox } from "@/domain/spydr/features/shared/components/SelectionCheckbox";
+import { BulkDeleteBar } from "@/domain/spydr/features/shared/components/BulkDeleteBar";
+import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSelection";
 
 interface ProjectDetailViewProps {
   project: ProjectDetailNode;
@@ -148,11 +152,13 @@ interface ProjectDetailViewProps {
   onPersonaChange(role: ProjectPersonaRole, personNodeId: string | null): void;
   isUpdatingPersona?: boolean;
   onDeleteChild(kind: ProjectChildKind, childId: string): void;
+  onDeleteSelectedChildren(kind: ProjectChildKind, childIds: string[]): void;
   onRestoreChild(kind: ProjectChildKind, childId: string): void;
   isUpdatingChild: boolean;
   isDeletingChild: boolean;
   isRestoringChild: boolean;
   restoringId: string | null;
+  deletingChildIds: string[];
   childMutationError: string | null;
 }
 
@@ -204,11 +210,13 @@ export function ProjectDetailView({
   onPersonaChange,
   isUpdatingPersona = false,
   onDeleteChild,
+  onDeleteSelectedChildren,
   onRestoreChild,
   isUpdatingChild,
   isDeletingChild,
   isRestoringChild,
   restoringId,
+  deletingChildIds,
   childMutationError,
 }: ProjectDetailViewProps) {
   const deletedCount = getDeletedItemCount(deleted);
@@ -219,6 +227,14 @@ export function ProjectDetailView({
     reviewer: null,
   };
   const [trashExpanded, setTrashExpanded] = useState(false);
+  const taskIds = useMemo(
+    () => project.tasks.map((task) => task.id),
+    [project.tasks]
+  );
+  const taskSelection = useItemSelection(taskIds);
+  const isDeletingTasks =
+    deletingChildIds.length > 0 &&
+    taskSelection.selectedIds.some((id) => deletingChildIds.includes(id));
   const prevDeletedCountRef = useRef(deletedCount);
 
   useEffect(() => {
@@ -490,12 +506,45 @@ export function ProjectDetailView({
             </form>
             </ProjectDetailFormPanel>
             {taskError && <ProjectDetailInlineError>{taskError}</ProjectDetailInlineError>}
+            {project.tasks.length > 0 ? (
+              <div className="flex items-center gap-2 px-0.5">
+                <SelectionCheckbox
+                  checked={taskSelection.allSelected}
+                  indeterminate={taskSelection.someSelected}
+                  disabled={deletingChildIds.length > 0}
+                  label="Select all tasks"
+                  onChange={taskSelection.setAll}
+                />
+                {taskSelection.selectedCount > 0 ? (
+                  <BulkDeleteBar
+                    count={taskSelection.selectedCount}
+                    noun="task"
+                    isDeleting={isDeletingTasks}
+                    disabled={deletingChildIds.length > 0}
+                    onDelete={() =>
+                      onDeleteSelectedChildren("task", taskSelection.selectedIds)
+                    }
+                    onClear={taskSelection.clear}
+                  />
+                ) : (
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    Select tasks to delete
+                  </span>
+                )}
+              </div>
+            ) : null}
             <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
               {project.tasks.map((task) => (
                 <li
                   key={task.id}
-                  className="flex items-center gap-2 rounded-md border border-border/60 bg-background px-3 py-2 shadow-sm"
+                  className="flex min-w-0 items-center gap-2 rounded-md border border-border/60 bg-background px-3 py-2 shadow-sm"
                 >
+                  <SelectionCheckbox
+                    checked={taskSelection.isSelected(task.id)}
+                    disabled={deletingChildIds.length > 0}
+                    label={`Select ${task.title}`}
+                    onChange={() => taskSelection.toggle(task.id)}
+                  />
                   <TaskStatusSelect
                     value={task.status}
                     disabled={isUpdatingChild}
@@ -547,20 +596,32 @@ export function ProjectDetailView({
                       }}
                     />
                   </span>
-                  <ProjectItemActions
-                    fieldSet="task"
-                    values={{
-                      title: task.title,
-                      body: task.body,
-                      dueDate: task.details?.dueDate?.slice(0, 10) ?? "",
-                      priority: task.priority as SpydrPriority,
-                      status: task.status,
-                    }}
-                    onSave={(input) => onUpdateChild("task", task.id, input)}
-                    onDelete={() => onDeleteChild("task", task.id)}
-                    isSaving={isUpdatingChild}
-                    isDeleting={isDeletingChild}
-                  />
+                  <div className="ml-auto flex shrink-0 items-center gap-0.5">
+                    <ProjectItemActions
+                      fieldSet="task"
+                      values={{
+                        title: task.title,
+                        body: task.body,
+                        dueDate: task.details?.dueDate?.slice(0, 10) ?? "",
+                        priority: task.priority as SpydrPriority,
+                        status: task.status,
+                      }}
+                      onSave={(input) => onUpdateChild("task", task.id, input)}
+                      onDelete={() => onDeleteChild("task", task.id)}
+                      isSaving={isUpdatingChild}
+                      isDeleting={deletingChildIds.includes(task.id)}
+                      showDelete={false}
+                    />
+                    <InlineDeleteButton
+                      label={task.title}
+                      isDeleting={deletingChildIds.includes(task.id)}
+                      disabled={
+                        deletingChildIds.length > 0 &&
+                        !deletingChildIds.includes(task.id)
+                      }
+                      onDelete={() => onDeleteChild("task", task.id)}
+                    />
+                  </div>
                 </li>
               ))}
               {!project.tasks.length && (
@@ -671,8 +732,12 @@ export function ProjectDetailView({
             onAdd={onAddNote}
             onUpdate={(childId, input) => onUpdateChild("note", childId, input)}
             onDelete={(childId) => onDeleteChild("note", childId)}
+            onDeleteSelected={(childIds) =>
+              onDeleteSelectedChildren("note", childIds)
+            }
             isUpdating={isUpdatingChild}
             isDeleting={isDeletingChild}
+            deletingChildIds={deletingChildIds}
           />
 
           <ProjectResourcesList

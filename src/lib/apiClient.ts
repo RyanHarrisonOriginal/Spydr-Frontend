@@ -50,7 +50,8 @@ export async function apiRequest<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error((err as { message?: string }).message ?? "Request failed");
+    const message = (err as { message?: string }).message ?? "Request failed";
+    throw new Error(`HTTP ${res.status}: ${message}`);
   }
 
   if (res.status === 204) return undefined as T;

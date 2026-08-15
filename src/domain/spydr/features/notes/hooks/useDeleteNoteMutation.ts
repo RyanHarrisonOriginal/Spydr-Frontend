@@ -9,15 +9,24 @@ export function useDeleteNoteMutation() {
   const { activeOrgId } = useOrganizationContext();
 
   return useMutation({
-    mutationFn: (noteId: string) => spydrApi.notes.delete(noteId),
-    onSuccess: (_data, noteId) => {
+    mutationFn: async (noteIdOrIds: string | string[]) => {
+      const ids = Array.isArray(noteIdOrIds) ? noteIdOrIds : [noteIdOrIds];
+      for (const noteId of ids) {
+        await spydrApi.notes.delete(noteId);
+      }
+      return ids;
+    },
+    onSuccess: (ids) => {
       if (!activeOrgId) return;
+      const removed = new Set(ids);
       queryClient.setQueryData<NoteNode[]>(spydrOrgKey(activeOrgId, "notes"), (current) =>
-        current?.filter((note) => note.id !== noteId)
+        current?.filter((note) => !removed.has(note.id))
       );
-      queryClient.removeQueries({
-        queryKey: spydrOrgKey(activeOrgId, "notes", noteId),
-      });
+      for (const noteId of ids) {
+        queryClient.removeQueries({
+          queryKey: spydrOrgKey(activeOrgId, "notes", noteId),
+        });
+      }
       queryClient.invalidateQueries({ queryKey: spydrOrgKey(activeOrgId, "projects") });
       queryClient.invalidateQueries({ queryKey: spydrOrgKey(activeOrgId, "dashboard") });
     },
