@@ -416,7 +416,7 @@ export function useActiveNotePage() {
         ...op,
         selectedProjectId: nextProjectId,
         targetObjectId:
-          attachment?.type === "task" ? attachment.id ?? null : nextProjectId,
+          attachment?.type === "task" ? attachment.id ?? null : op.targetObjectId,
         attachment,
         payload,
         operationType: operationTypeForObjectType(
@@ -458,7 +458,9 @@ export function useActiveNotePage() {
         targetObjectId:
           attachment?.type === "task"
             ? attachment.id ?? null
-            : projectId,
+            : objectType === "relationship"
+              ? projectId
+              : null,
         selected: objectType === "project" ? op.selected : true,
         status: "edited",
         needsUserDecision: false,
@@ -480,7 +482,7 @@ export function useActiveNotePage() {
       targetObjectId:
         attachment?.type === "task"
           ? attachment.id ?? null
-          : op.selectedProjectId ?? null,
+          : null,
       targetTaskTitle:
         attachment?.type === "task" && attachment.id
           ? undefined
@@ -514,16 +516,20 @@ export function useActiveNotePage() {
       duplicateResolution:
         op.duplicateResolution ??
         (op.operationType === "update" &&
-        Boolean(op.targetObjectId ?? op.attachment?.id ?? op.duplicateOf?.id)
+        Boolean(op.attachment?.id ?? op.duplicateOf?.id)
           ? "attach_existing"
           : null),
       selectedProjectId: op.selectedProjectId ?? null,
       projectRef: op.projectRef ?? null,
       targetObjectId:
-        op.targetObjectId ??
-        op.attachment?.id ??
-        op.duplicateOf?.id ??
-        null,
+        op.attachment?.type === "task"
+          ? op.attachment.id ?? null
+          : op.payload.kind === "link"
+            ? op.payload.targetObjectId || null
+            : op.duplicateResolution === "attach_existing" ||
+                op.operationType === "update"
+              ? op.targetObjectId ?? op.duplicateOf?.id ?? null
+              : null,
       attachment: op.attachment ?? null,
     }));
 

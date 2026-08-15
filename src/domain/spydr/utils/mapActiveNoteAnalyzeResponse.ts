@@ -11,7 +11,6 @@ import type {
   ActiveNoteProposalAttachment,
   ActiveNoteProposalOperation,
   ActiveNoteSegment,
-  DuplicateResolution,
   NoteOperationPayload,
   OperationPayload,
   OperationType,
@@ -125,10 +124,9 @@ function mapExistingProjectPlan(
   let operationType: OperationType;
   let payload: OperationPayload;
   let attachment: ActiveNoteProposalAttachment | null = null;
-  let targetObjectId: string | null = projectId;
+  let targetObjectId: string | null = null;
   let targetTaskTitle: string | undefined;
   let selected = true;
-  let duplicateResolution: DuplicateResolution | null = null;
   let explicitlyStated = plan.intent === "task_action" || plan.intent === "progress_update";
 
   switch (action.type) {
@@ -177,17 +175,19 @@ function mapExistingProjectPlan(
       };
       break;
     case "use_existing_task":
-      objectType = "task";
-      operationType = "update";
-      payload = {
-        kind: "task",
-        title: action.targetTaskTitle,
-        projectId,
-      };
+      objectType = "note";
+      operationType = "attach_context";
+      payload = applyNotePayload(
+        {
+          subject: action.targetTaskTitle,
+          content: plan.contextualText ?? plan.originalText,
+        },
+        projectId
+      );
       targetObjectId = action.targetTaskId;
       targetTaskTitle = action.targetTaskTitle;
       attachment = { type: "task", id: action.targetTaskId, ref: null };
-      duplicateResolution = "attach_existing";
+      explicitlyStated = true;
       break;
     default:
       objectType = "note";
@@ -216,7 +216,7 @@ function mapExistingProjectPlan(
     explicitlyStated,
     status: "proposed",
     selected,
-    duplicateResolution,
+    duplicateResolution: null,
     candidateProjects: candidateProjects.length > 0 ? candidateProjects : undefined,
     selectedProjectId: projectId,
     segmentTopic: plan.topic ?? undefined,

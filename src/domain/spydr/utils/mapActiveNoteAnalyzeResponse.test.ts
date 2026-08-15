@@ -291,13 +291,14 @@ describe("mapActiveNoteAnalyzeResponse", () => {
       description: "Standardize auth and deployment.",
     });
     expect(mapped.operations[3]).toMatchObject({
-      objectType: "task",
-      operationType: "update",
+      objectType: "note",
+      operationType: "attach_context",
       targetObjectId: "task-metrics",
-      duplicateResolution: "attach_existing",
+      attachment: { type: "task", id: "task-metrics" },
       payload: {
-        kind: "task",
+        kind: "note",
         title: "Validate metrics",
+        content: "Keep validating the metrics.",
         projectId: "proj-scorecard",
       },
     });

@@ -15,6 +15,7 @@ import type {
   ApplyActiveNoteProposalInput,
   ApplyActiveNoteProposalResult,
   CreateActiveNoteInput,
+  OperationPayload,
   UpdateActiveNoteInput,
 } from "./activeNoteTypes";
 
@@ -117,23 +118,68 @@ export async function applyActiveNoteProposal(
 
   return apiRequest<ApplyActiveNoteProposalResult>("/active-notes/apply", {
     method: "POST",
-    body: {
-      activeNoteId,
-      content: input.content,
-      projectId: input.projectId ?? null,
-      operations: input.operations.map((operation) => ({
-        operationId: operation.operationId,
-        selected: operation.selected,
-        objectType: operation.objectType ?? null,
-        payload: operation.payload,
-        selectedProjectId: operation.selectedProjectId ?? null,
-        projectRef: operation.projectRef ?? null,
-        duplicateResolution: operation.duplicateResolution ?? null,
-        targetObjectId: operation.targetObjectId ?? null,
-        attachment: operation.attachment ?? null,
-      })),
-    },
+    body: buildActiveNoteApplyRequestBody(activeNoteId, input),
   });
+}
+
+function emptyToNull(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function toApplyPayload(payload: OperationPayload): Record<string, unknown> {
+  const projectId =
+    "projectId" in payload ? emptyToNull(payload.projectId) : undefined;
+
+  if (payload.kind === "person") {
+    return {
+      ...payload,
+      name: payload.title,
+    };
+  }
+
+  if (payload.kind === "link") {
+    return {
+      ...payload,
+      sourceObjectId: emptyToNull(payload.sourceObjectId),
+      targetObjectId: emptyToNull(payload.targetObjectId),
+    };
+  }
+
+  if (projectId !== undefined) {
+    return { ...payload, projectId };
+  }
+
+  return { ...payload };
+}
+
+export function buildActiveNoteApplyRequestBody(
+  activeNoteId: string,
+  input: ApplyActiveNoteProposalInput
+): Record<string, unknown> {
+  return {
+    activeNoteId: emptyToNull(activeNoteId) ?? emptyToNull(input.activeNoteId),
+    content: input.content,
+    projectId: emptyToNull(input.projectId),
+    operations: input.operations.map((operation) => ({
+      operationId: operation.operationId,
+      selected: operation.selected,
+      objectType: operation.objectType ?? null,
+      payload: toApplyPayload(operation.payload),
+      selectedProjectId: emptyToNull(operation.selectedProjectId),
+      projectRef: emptyToNull(operation.projectRef),
+      duplicateResolution: operation.duplicateResolution ?? null,
+      targetObjectId: emptyToNull(operation.targetObjectId),
+      attachment: operation.attachment
+        ? {
+            type: operation.attachment.type,
+            id: emptyToNull(operation.attachment.id),
+            ref: emptyToNull(operation.attachment.ref),
+          }
+        : null,
+    })),
+  };
 }
 
 export const activeNoteApi = {

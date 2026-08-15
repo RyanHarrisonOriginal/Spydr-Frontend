@@ -269,7 +269,7 @@ export interface ApplyActiveNoteOperationInput {
   operationId: string;
   selected: boolean;
   objectType?: SpydrObjectType | null;
-  payload?: OperationPayload;
+  payload: OperationPayload;
   duplicateResolution?: DuplicateResolution | null;
   selectedProjectId?: string | null;
   projectRef?: string | null;
