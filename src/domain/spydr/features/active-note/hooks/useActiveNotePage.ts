@@ -423,6 +423,7 @@ export function useActiveNotePage() {
           op.objectType ?? "note",
           attachment?.type === "task"
         ),
+        selected: true,
         status: "edited",
         needsUserDecision: false,
       };
@@ -484,6 +485,7 @@ export function useActiveNotePage() {
         attachment?.type === "task" && attachment.id
           ? undefined
           : op.targetTaskTitle,
+      selected: true,
       status: "edited",
     }));
   }
