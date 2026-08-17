@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Show, UserButton, useUser } from "@clerk/react";
 import { Button } from "@/components/ui/button";
+import { clerkUserButtonProps } from "@/lib/clerkAppearance";
 
 export function AuthControls() {
   return (
@@ -26,13 +27,12 @@ function ProfileBadge() {
     user?.firstName ?? user?.primaryEmailAddress?.emailAddress ?? "Account";
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-border/50 bg-card/60 pl-1 pr-2 py-1 shadow-sm">
+    <div className="flex items-center gap-2 rounded-md border border-border/50 bg-card/60 pl-1 pr-2 py-1">
       <UserButton
-        appearance={{
-          elements: {
-            avatarBox: "h-8 w-8",
-          },
-        }}
+        {...clerkUserButtonProps({
+          avatarBox: "h-8 w-8 rounded-sm border border-border",
+          userButtonAvatarBox: "h-8 w-8 rounded-sm border border-border",
+        })}
       />
       <span className="text-sm font-medium text-foreground/90 max-w-[140px] truncate">
         {display}

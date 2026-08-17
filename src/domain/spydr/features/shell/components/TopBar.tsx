@@ -1,6 +1,7 @@
 import { Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { UserButton } from "@clerk/react";
+import { clerkUserButtonProps } from "@/lib/clerkAppearance";
 import { OrganizationSwitcher } from "@/domain/spydr/features/organizations/components/OrganizationSwitcher";
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import { PersonMeBadge } from "@/domain/spydr/features/people/components/PersonIdentity";
@@ -32,15 +33,10 @@ export function TopBar() {
           <Bell className="h-3.5 w-3.5" />
         </button>
         <UserButton
-          appearance={{
-            elements: {
-              avatarBox: "h-7 w-7 rounded-sm border border-border",
-              userButtonPopoverCard:
-                "border border-border bg-popover shadow-md",
-              userButtonPopoverActionButton:
-                "text-foreground hover:bg-muted",
-            },
-          }}
+          {...clerkUserButtonProps({
+            avatarBox: "h-7 w-7 rounded-sm border border-border",
+            userButtonAvatarBox: "h-7 w-7 rounded-sm border border-border",
+          })}
         />
       </div>
     </header>

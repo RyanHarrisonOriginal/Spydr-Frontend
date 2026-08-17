@@ -45,14 +45,7 @@ export default function SignUpScreen() {
           <SignUp
             fallbackRedirectUrl="/"
             signInUrl={authRoutes.signInUrl}
-            appearance={{
-              ...clerkAppearance,
-              elements: {
-                ...(clerkAppearance.elements ?? {}),
-                rootBox: "mx-auto w-full",
-                card: "shadow-none border border-border/80 rounded-md bg-background w-full",
-              },
-            }}
+            appearance={clerkAppearance}
           />
         </section>
       </main>

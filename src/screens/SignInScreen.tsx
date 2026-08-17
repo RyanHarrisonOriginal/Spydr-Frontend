@@ -45,14 +45,7 @@ export default function SignInScreen() {
           <SignIn
             fallbackRedirectUrl="/"
             signUpUrl={authRoutes.signUpUrl}
-            appearance={{
-              ...clerkAppearance,
-              elements: {
-                ...(clerkAppearance.elements ?? {}),
-                rootBox: "mx-auto w-full",
-                card: "shadow-none border border-border/80 rounded-md bg-background w-full",
-              },
-            }}
+            appearance={clerkAppearance}
           />
           <p className="mt-5 max-w-sm text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70">
             Form not loading? Disable strict tracking protection.
