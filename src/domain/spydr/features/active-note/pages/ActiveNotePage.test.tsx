@@ -51,6 +51,11 @@ vi.mock("@/domain/spydr/features/shared/hooks/queries", () => ({
     isLoading: false,
     isError: false,
   }),
+  useActiveNotesHistoryQuery: () => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+  }),
 }));
 
 vi.mock(
@@ -136,49 +141,6 @@ describe("ActiveNotePage", () => {
     expect(
       screen.getByLabelText(/active note agent disclaimer/i)
     ).toHaveTextContent(/still working on the Active Note agent/i);
-  });
-
-  it("lists active projects with open-task drill-down and optional project linking", async () => {
-    const user = userEvent.setup();
-    renderPage();
-
-    expect(
-      screen.getByRole("listbox", { name: /active projects/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("option", { name: /Muay Thai Development/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("option", { name: /Competition Preparation/i })
-    ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("button", {
-        name: /expand tasks for Muay Thai Development/i,
-      })
-    );
-    expect(
-      screen.getByRole("link", { name: /Practice teep setups/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("link", { name: /Completed sparring review/i })
-    ).not.toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("option", { name: /Muay Thai Development/i })
-    );
-    expect(screen.getByText(/linked to/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("option", { name: /Muay Thai Development/i })
-    ).toHaveAttribute("aria-selected", "true");
-
-    await user.click(screen.getByRole("button", { name: /hide projects/i }));
-    expect(
-      screen.queryByRole("listbox", { name: /active projects/i })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /show projects/i })
-    ).toBeInTheDocument();
   });
 
   it("lets a user enter, save, analyze, edit, reject, resolve duplicates, and apply", async () => {

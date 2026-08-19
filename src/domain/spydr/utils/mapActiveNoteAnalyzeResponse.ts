@@ -360,13 +360,24 @@ export function mapActiveNoteAnalyzeResponse(input: {
   );
 
   const summary = buildSummary(input.response.actionPlans ?? []);
+  const timestamp = new Date().toISOString();
+  const sessionId = input.response.sessionId?.trim() || "";
 
   return {
-    activeNote: toActiveNote(
-      input.activeNote,
-      input.content,
-      input.projectId
-    ),
+    activeNote: sessionId
+      ? {
+          id: sessionId,
+          content: input.content,
+          projectId: input.projectId ?? input.activeNote?.projectId ?? null,
+          status: "review",
+          createdAt: input.activeNote?.createdAt ?? timestamp,
+          updatedAt: timestamp,
+        }
+      : toActiveNote(
+          input.activeNote,
+          input.content,
+          input.projectId
+        ),
     summary,
     routing: null,
     impact: null,

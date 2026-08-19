@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequestAuthed } from "@/lib/apiClient";
 import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
 import { spydrApi } from "@/domain/spydr/utils/api";
+import { activeNoteApi } from "@/domain/spydr/utils/activeNoteApi";
 import type { IdeaNode } from "@/domain/spydr/utils/types";
 import { spydrOrgKey } from "./spydrQueryKeys";
 
@@ -180,5 +181,16 @@ export function useIdeasQuery() {
       failureCount < 2 &&
       error instanceof Error &&
       error.message === "Unauthorized",
+  });
+}
+
+export function useActiveNotesHistoryQuery() {
+  const enabled = useSpydrQueryEnabled();
+  const { activeOrgId } = useOrganizationContext();
+  return useQuery({
+    queryKey: spydrOrgKey(activeOrgId!, "active-notes"),
+    queryFn: activeNoteApi.list,
+    enabled: enabled && !!activeOrgId,
+    refetchOnMount: "always",
   });
 }

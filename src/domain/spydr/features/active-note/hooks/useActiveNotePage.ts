@@ -240,6 +240,11 @@ export function useActiveNotePage() {
       setProposal(nextProposal);
       setOperations(nextProposal.operations.map((op) => ({ ...op })));
       setPhase("review");
+      if (activeOrgId) {
+        void queryClient.invalidateQueries({
+          queryKey: spydrOrgKey(activeOrgId, "active-notes"),
+        });
+      }
     } catch (error) {
       if (cancelledAnalysisRef.current || requestId !== analysisRequestRef.current) {
         return;
@@ -608,6 +613,9 @@ export function useActiveNotePage() {
             queryClient.invalidateQueries({
               queryKey: spydrOrgKey(activeOrgId, "dashboard"),
             }),
+            queryClient.invalidateQueries({
+              queryKey: spydrOrgKey(activeOrgId, "active-notes"),
+            }),
           ]);
         } catch (error) {
           console.warn("[active-note.apply] cache invalidate failed", error);
@@ -692,13 +700,11 @@ export function useActiveNotePage() {
   return {
     phase,
     content,
-    projectId,
     activeNote,
     proposal,
     operations,
     projects: projectsQuery.data ?? [],
     tasks: tasksQuery.data ?? [],
-    projectsLoading: projectsQuery.isLoading || tasksQuery.isLoading,
     saveState,
     composeError,
     analysisError,
@@ -711,7 +717,6 @@ export function useActiveNotePage() {
     editingOperationId,
     characterCount,
     selectedCount,
-    setProjectId,
     setEditingOperationId,
     handleContentChange,
     handleSave,

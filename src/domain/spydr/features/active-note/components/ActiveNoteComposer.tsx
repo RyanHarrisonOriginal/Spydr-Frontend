@@ -4,24 +4,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SpydrMark } from "@/components/SpydrMark";
 import { WebField } from "@/components/WebField";
-import type { ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
 import { ACTIVE_NOTE_MAX_LENGTH } from "@/domain/spydr/utils/activeNoteTypes";
 import type { ActiveNoteSaveState } from "../hooks/useActiveNotePage";
 import { cn } from "@/lib/utils";
-import { ActiveNoteProjectBrowser } from "./ActiveNoteProjectBrowser";
+import { useActiveNotesHistoryQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import { ActiveNoteHistoryPanel } from "./ActiveNoteHistoryPanel";
 
 interface ActiveNoteComposerProps {
   content: string;
-  projectId: string | null;
-  projects: ProjectNode[];
-  tasks: TaskNode[];
-  projectsLoading: boolean;
   characterCount: number;
   saveState: ActiveNoteSaveState;
   errorMessage: string | null;
   isBusy: boolean;
   onContentChange(value: string): void;
-  onProjectChange(projectId: string | null): void;
   onSave(): void;
   onAnalyze(): void;
   onLoadTestSuggestions(): void;
@@ -46,23 +41,18 @@ function saveLabel(saveState: ActiveNoteSaveState): string {
 
 export function ActiveNoteComposer({
   content,
-  projectId,
-  projects,
-  tasks,
-  projectsLoading,
   characterCount,
   saveState,
   errorMessage,
   isBusy,
   onContentChange,
-  onProjectChange,
   onSave,
   onAnalyze,
   onLoadTestSuggestions,
 }: ActiveNoteComposerProps) {
   const overLimit = characterCount > ACTIVE_NOTE_MAX_LENGTH;
   const canSubmit = content.trim().length > 0 && !overLimit && !isBusy;
-  const selectedProject = projects.find((project) => project.id === projectId);
+  const historyQuery = useActiveNotesHistoryQuery();
 
   return (
     <div className="relative flex h-full min-h-0 overflow-hidden">
@@ -81,16 +71,12 @@ export function ActiveNoteComposer({
         />
       </div>
 
-      <ActiveNoteProjectBrowser
-        projects={projects}
-        tasks={tasks}
-        selectedProjectId={projectId}
-        loading={projectsLoading}
-        disabled={isBusy}
-        onSelectProject={onProjectChange}
+      <ActiveNoteHistoryPanel
+        notes={historyQuery.data ?? []}
+        loading={historyQuery.isLoading}
       />
 
-      <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden px-6 py-10 md:px-10 lg:px-14">
+      <div className="relative z-[1] flex h-full min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden px-6 py-10 md:px-10 lg:px-14">
         <div className="mx-auto w-full max-w-3xl">
           <div className="mb-10">
             <div className="flex items-center gap-2.5">
@@ -120,28 +106,17 @@ export function ActiveNoteComposer({
               >
                 Your note
               </Label>
-              <div className="flex items-center gap-3">
-                {selectedProject ? (
-                  <span className="max-w-[14rem] truncate font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Context · {selectedProject.title}
-                  </span>
-                ) : (
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">
-                    Optional project context
-                  </span>
+              <span
+                className={cn(
+                  "font-mono text-[10px] uppercase tracking-wider",
+                  saveState === "error" || overLimit
+                    ? "text-destructive"
+                    : "text-muted-foreground"
                 )}
-                <span
-                  className={cn(
-                    "font-mono text-[10px] uppercase tracking-wider",
-                    saveState === "error" || overLimit
-                      ? "text-destructive"
-                      : "text-muted-foreground"
-                  )}
-                  aria-live="polite"
-                >
-                  {saveLabel(saveState)}
-                </span>
-              </div>
+                aria-live="polite"
+              >
+                {saveLabel(saveState)}
+              </span>
             </div>
 
             <Textarea

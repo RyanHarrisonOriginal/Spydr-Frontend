@@ -302,6 +302,29 @@ export interface ApplyActiveNoteProposalResult {
   partial: boolean;
 }
 
+export type ActiveNoteHistoryDecision =
+  | "accepted"
+  | "rejected"
+  | "failed"
+  | "pending";
+
+export interface ActiveNoteHistorySuggestion {
+  id: string;
+  title: string;
+  objectType: string | null;
+  decision: ActiveNoteHistoryDecision;
+}
+
+export interface ActiveNoteHistoryItem {
+  id: string;
+  content: string;
+  status: "review" | "applying" | "completed" | "failed";
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  suggestions: ActiveNoteHistorySuggestion[];
+}
+
 export const ACTIVE_NOTE_MAX_LENGTH = 8000;
 export const ACTIVE_NOTE_MIN_LENGTH = 1;
 

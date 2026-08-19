@@ -119,6 +119,7 @@ export type BackendSegmentActionPlan =
   | BackendUnassignedActionPlan;
 
 export interface BackendActiveNoteAnalyzeResponse {
+  sessionId?: string | null;
   segments: BackendActiveNoteSegment[];
   actionPlans: BackendSegmentActionPlan[];
 }

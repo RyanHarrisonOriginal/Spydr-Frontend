@@ -11,6 +11,7 @@ import {
 import { mapActiveNoteAnalyzeResponse } from "./mapActiveNoteAnalyzeResponse";
 import type {
   ActiveNote,
+  ActiveNoteHistoryItem,
   ActiveNoteProposal,
   ApplyActiveNoteProposalInput,
   ApplyActiveNoteProposalResult,
@@ -213,10 +214,18 @@ export function buildActiveNoteApplyRequestBody(
   };
 }
 
+export async function listActiveNotes(): Promise<ActiveNoteHistoryItem[]> {
+  if (isActiveNoteMockMode()) {
+    return [];
+  }
+  return apiRequest<ActiveNoteHistoryItem[]>("/active-notes");
+}
+
 export const activeNoteApi = {
   create: createActiveNote,
   update: updateActiveNote,
   analyze: analyzeActiveNote,
   getProposal: getActiveNoteProposal,
   apply: applyActiveNoteProposal,
+  list: listActiveNotes,
 };

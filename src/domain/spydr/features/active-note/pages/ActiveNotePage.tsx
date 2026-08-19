@@ -74,16 +74,11 @@ export function ActiveNotePage() {
         {page.phase === "compose" && (
           <ActiveNoteComposer
             content={page.content}
-            projectId={page.projectId}
-            projects={page.projects}
-            tasks={page.tasks}
-            projectsLoading={page.projectsLoading}
             characterCount={page.characterCount}
             saveState={page.saveState}
             errorMessage={page.composeError}
             isBusy={page.saveState === "saving"}
             onContentChange={page.handleContentChange}
-            onProjectChange={page.setProjectId}
             onSave={() => void page.handleSave()}
             onAnalyze={() => void page.handleAnalyze()}
             onLoadTestSuggestions={page.handleLoadTestSuggestions}
