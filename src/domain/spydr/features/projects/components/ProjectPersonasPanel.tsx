@@ -32,7 +32,7 @@ export function ProjectPersonasPanel({
           <p className="text-[11px] text-muted-foreground">
             No people in your workspace yet.
           </p>
-          <Link to="/people" className="mt-0.5 inline-block text-[11px] text-primary hover:underline">
+          <Link to="/work" className="mt-0.5 inline-block text-[11px] text-primary hover:underline">
             Add people to assign roles
           </Link>
         </div>

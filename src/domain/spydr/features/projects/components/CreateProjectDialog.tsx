@@ -26,6 +26,7 @@ interface CreateProjectDialogProps {
   errorMessage: string | null;
   linkPersonName?: string;
   triggerVariant?: "default" | "outline";
+  hideTrigger?: boolean;
   onOpenChange(open: boolean): void;
   onFieldChange<TField extends keyof ProjectFormValues>(
     field: TField,
@@ -46,18 +47,21 @@ export function CreateProjectDialog({
   errorMessage,
   linkPersonName,
   triggerVariant = "default",
+  hideTrigger = false,
   onOpenChange,
   onFieldChange,
   onSubmit,
 }: CreateProjectDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant={triggerVariant} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" />
-          New Project
-        </Button>
-      </DialogTrigger>
+      {hideTrigger ? null : (
+        <DialogTrigger asChild>
+          <Button size="sm" variant={triggerVariant} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            New Project
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-2xl">
         <form
           onSubmit={(event) => {

@@ -32,7 +32,7 @@ export function DashboardPage() {
         }
         actions={
           <Link
-            to="/tasks"
+            to="/work?view=tasks"
             className="inline-flex h-7 items-center gap-1.5 rounded-sm border border-border bg-muted/20 px-2.5 text-[12px] hover:bg-muted/40"
           >
             View tasks

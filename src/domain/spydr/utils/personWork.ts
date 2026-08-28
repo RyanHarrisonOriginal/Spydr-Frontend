@@ -54,6 +54,31 @@ export function listPersonTasks(tasks: TaskNode[], personId: string) {
     });
 }
 
+export function filterProjectsForPerson(
+  projects: ProjectNode[],
+  tasks: TaskNode[],
+  personId: string | null
+): ProjectNode[] {
+  if (!personId) return projects;
+  const projectIdsWithAssignedTasks = new Set<string>();
+  for (const task of tasks) {
+    const projectId = task.project?.id;
+    if (projectId && taskAssignedToPerson(task, personId)) {
+      projectIdsWithAssignedTasks.add(projectId);
+    }
+  }
+  return projects.filter(
+    (project) =>
+      projectInvolvesPerson(project, personId) ||
+      projectIdsWithAssignedTasks.has(project.id)
+  );
+}
+
+export function filterTasksForPerson(tasks: TaskNode[], personId: string | null): TaskNode[] {
+  if (!personId) return tasks;
+  return tasks.filter((task) => taskAssignedToPerson(task, personId));
+}
+
 export function isOpenTask(task: TaskNode): boolean {
   return task.status !== "completed" && task.status !== "archived";
 }

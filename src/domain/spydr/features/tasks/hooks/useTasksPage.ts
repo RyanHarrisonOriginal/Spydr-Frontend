@@ -6,6 +6,7 @@ import {
 } from "@/domain/spydr/features/shared/hooks/queries";
 import { useCollectionView } from "@/domain/spydr/features/shared/hooks/useCollectionView";
 import { tasksCollection } from "@/domain/spydr/utils/collections/tasksCollection";
+import { filterTasksForPerson } from "@/domain/spydr/utils/personWork";
 import {
   getTaskStatusBucket,
   isTaskStatus,
@@ -14,14 +15,19 @@ import { useUpdateTaskMutation } from "./useUpdateTaskMutation";
 import { useDeleteTaskMutation } from "./useDeleteTaskMutation";
 import { useCollectionReorder } from "@/domain/spydr/features/shared/hooks/useCollectionReorder";
 
-export function useTasksPage() {
+export function useTasksPage(options?: { personId?: string | null }) {
+  const personId = options?.personId ?? null;
   const query = useTasksQuery();
   const projectsQuery = useProjectsQuery();
   const peopleQuery = usePeopleQuery();
   const tasks = query.data ?? [];
   const projects = projectsQuery.data ?? [];
   const people = peopleQuery.data ?? [];
-  const view = useCollectionView(tasksCollection, tasks);
+  const scopedTasks = useMemo(
+    () => filterTasksForPerson(tasks, personId),
+    [personId, tasks]
+  );
+  const view = useCollectionView(tasksCollection, scopedTasks);
   const reorder = useCollectionReorder("task", view);
   const updateTask = useUpdateTaskMutation();
   const deleteTask = useDeleteTaskMutation();
@@ -34,8 +40,10 @@ export function useTasksPage() {
   const [dueDateError, setDueDateError] = useState<string | null>(null);
 
   const openCount = useMemo(
-    () => tasks.filter((task) => getTaskStatusBucket(task.status) === "open").length,
-    [tasks]
+    () =>
+      scopedTasks.filter((task) => getTaskStatusBucket(task.status) === "open")
+        .length,
+    [scopedTasks]
   );
 
   const updateStatus = (taskId: string, status: string) => {
@@ -132,13 +140,14 @@ export function useTasksPage() {
   };
 
   return {
-    tasks,
+    tasks: scopedTasks,
+    orgTaskCount: tasks.length,
     projects,
     people,
     view,
     reorder,
     getPriorityRank: view.getPriorityRank,
-    totalCount: tasks.length,
+    totalCount: scopedTasks.length,
     openCount,
     updateStatus,
     updateProject,

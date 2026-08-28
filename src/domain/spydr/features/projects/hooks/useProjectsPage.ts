@@ -11,6 +11,10 @@ import { isProjectStatus } from "@/domain/spydr/utils/projectStatus";
 import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
 import { isTaskStatus } from "@/domain/spydr/utils/taskStatus";
 import type { TaskNode, UpdateProjectInput } from "@/domain/spydr/utils/types";
+import {
+  filterProjectsForPerson,
+  filterTasksForPerson,
+} from "@/domain/spydr/utils/personWork";
 import { useProjectListView } from "./useProjectListView";
 import { useDeleteProjectMutation } from "./useDeleteProjectMutation";
 import { useRestoreProjectMutation } from "./useRestoreProjectMutation";
@@ -41,7 +45,8 @@ function groupTasksByProjectId(tasks: TaskNode[]) {
   return map;
 }
 
-export function useProjectsPage() {
+export function useProjectsPage(options?: { personId?: string | null }) {
+  const personId = options?.personId ?? null;
   const query = useProjectsQuery();
   const tasksQuery = useTasksQuery();
   const trashQuery = useDeletedProjectsQuery();
@@ -52,11 +57,19 @@ export function useProjectsPage() {
   const deletedProjects = trashQuery.data ?? [];
   const areas = areasQuery.data ?? [];
   const people = peopleQuery.data ?? [];
-  const listView = useProjectListView(projects, areas, people);
+  const scopedProjects = useMemo(
+    () => filterProjectsForPerson(projects, tasks, personId),
+    [personId, projects, tasks]
+  );
+  const scopedTasks = useMemo(
+    () => filterTasksForPerson(tasks, personId),
+    [personId, tasks]
+  );
+  const listView = useProjectListView(scopedProjects, areas, people);
   const reorderMutation = useReorderCollectionMutation();
   const canReorder = canManuallyReorderCollection(listView.hasActiveFilters);
   const getPriorityRank = useCollectionDisplayPriorityRank(
-    projects,
+    scopedProjects,
     listView.visibleProjects,
     listView.sort.column,
     listView.sort.direction
@@ -67,10 +80,13 @@ export function useProjectsPage() {
   const deleteProject = useDeleteProjectMutation();
   const restoreProject = useRestoreProjectMutation();
   const activeCount = useMemo(
-    () => projects.filter((project) => project.status === "active").length,
-    [projects]
+    () => scopedProjects.filter((project) => project.status === "active").length,
+    [scopedProjects]
   );
-  const tasksByProjectId = useMemo(() => groupTasksByProjectId(tasks), [tasks]);
+  const tasksByProjectId = useMemo(
+    () => groupTasksByProjectId(scopedTasks),
+    [scopedTasks]
+  );
 
   const [updatingProjectId, setUpdatingProjectId] = useState<string | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
@@ -234,13 +250,14 @@ export function useProjectsPage() {
 
   return {
     projects: listView.visibleProjects,
-    allProjects: projects,
+    allProjects: scopedProjects,
+    orgProjectCount: projects.length,
     tasksByProjectId,
     deletedProjects,
     deletedCount: deletedProjects.length,
     areas,
     people,
-    totalCount: projects.length,
+    totalCount: scopedProjects.length,
     filteredCount: listView.filteredCount,
     activeCount,
     updatingProjectId,

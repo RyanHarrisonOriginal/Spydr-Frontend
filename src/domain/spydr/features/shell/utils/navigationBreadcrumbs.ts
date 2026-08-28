@@ -7,6 +7,7 @@ export interface NavigationBreadcrumb {
 export const WORKSPACE_ROOT_PATHS = new Set([
   "/active-note",
   "/dashboard",
+  "/work",
   "/projects",
   "/tasks",
   "/ideas",
@@ -19,12 +20,13 @@ export const WORKSPACE_ROOT_PATHS = new Set([
 const ROOT_LABELS: Record<string, string> = {
   "/active-note": "Active Note",
   "/dashboard": "Dashboard",
-  "/projects": "Projects",
-  "/tasks": "Tasks",
+  "/work": "Work",
+  "/projects": "Work",
+  "/tasks": "Work",
   "/ideas": "Ideas",
   "/decisions": "Decisions",
   "/notes": "Notes",
-  "/people": "People",
+  "/people": "Work",
   "/resources": "Resources",
 };
 

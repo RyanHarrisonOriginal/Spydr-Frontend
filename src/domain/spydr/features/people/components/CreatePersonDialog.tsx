@@ -13,6 +13,7 @@ interface CreatePersonDialogProps {
   open: boolean;
   isSubmitting?: boolean;
   errorMessage?: string | null;
+  hideTrigger?: boolean;
   onOpenChange(open: boolean): void;
   onSubmit(values: {
     fullName: string;
@@ -29,17 +30,20 @@ export function CreatePersonDialog({
   open,
   isSubmitting = false,
   errorMessage = null,
+  hideTrigger = false,
   onOpenChange,
   onSubmit,
 }: CreatePersonDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="h-8 gap-1.5 text-[12px]">
-          <Plus className="h-3.5 w-3.5" />
-          New person
-        </Button>
-      </DialogTrigger>
+      {hideTrigger ? null : (
+        <DialogTrigger asChild>
+          <Button size="sm" className="h-8 gap-1.5 text-[12px]">
+            <Plus className="h-3.5 w-3.5" />
+            New person
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-md gap-3 p-4">
         <DialogHeader>
           <DialogTitle className="text-base">Add person</DialogTitle>

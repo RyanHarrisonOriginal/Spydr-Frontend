@@ -15,17 +15,27 @@ interface ProjectColumnSelectorProps {
   }[];
   visibleColumnSet: Set<ProjectColumnId>;
   onToggleColumn(columnId: ProjectColumnId): void;
+  compact?: boolean;
 }
 
 export function ProjectColumnSelector({
   columns,
   visibleColumnSet,
   onToggleColumn,
+  compact = false,
 }: ProjectColumnSelectorProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
+        <Button
+          variant={compact ? "ghost" : "outline"}
+          size="sm"
+          className={
+            compact
+              ? "h-7 gap-1.5 px-2 text-[11px] text-muted-foreground"
+              : "gap-1.5"
+          }
+        >
           <SlidersHorizontal className="h-3.5 w-3.5" />
           Columns
         </Button>

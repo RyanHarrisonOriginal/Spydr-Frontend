@@ -52,6 +52,21 @@ interface ProjectListProps {
   onCreateTask?(projectId: string, title: string, onSuccess?: () => void): void;
   onDelete?(projectId: string): void;
   deletingProjectId?: string | null;
+  expandedIds?: Set<string>;
+  onExpandedIdsChange?(next: Set<string>): void;
+}
+
+function toggleExpandedId(current: Set<string>, projectId: string): Set<string> {
+  const next = new Set(current);
+  if (next.has(projectId)) next.delete(projectId);
+  else next.add(projectId);
+  return next;
+}
+
+function addExpandedId(current: Set<string>, projectId: string): Set<string> {
+  const next = new Set(current);
+  next.add(projectId);
+  return next;
 }
 
 const columnWidths: Record<ProjectColumnId, string> = {
@@ -426,10 +441,16 @@ export function ProjectList({
   onCreateTask,
   onDelete,
   deletingProjectId = null,
+  expandedIds: controlledExpandedIds,
+  onExpandedIdsChange,
 }: ProjectListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [uncontrolledExpandedIds, setUncontrolledExpandedIds] = useState<Set<string>>(
+    new Set()
+  );
+  const expandedIds = controlledExpandedIds ?? uncontrolledExpandedIds;
+  const setExpandedIds = onExpandedIdsChange ?? setUncontrolledExpandedIds;
   const [composingProjectId, setComposingProjectId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const gridTemplateColumns = getProjectListGrid(
@@ -460,22 +481,13 @@ export function ProjectList({
   }, [pendingDeleteId]);
 
   const toggleExpanded = (projectId: string) => {
-    setExpandedIds((current) => {
-      const next = new Set(current);
-      if (next.has(projectId)) next.delete(projectId);
-      else next.add(projectId);
-      return next;
-    });
+    setExpandedIds(toggleExpandedId(expandedIds, projectId));
   };
 
   const startCompose = (projectId: string) => {
     setComposingProjectId(projectId);
     setDraftTitle("");
-    setExpandedIds((current) => {
-      const next = new Set(current);
-      next.add(projectId);
-      return next;
-    });
+    setExpandedIds(addExpandedId(expandedIds, projectId));
   };
 
   const cancelCompose = () => {
@@ -487,11 +499,7 @@ export function ProjectList({
     if (!onCreateTask || draftTitle.trim().length === 0) return;
     onCreateTask(projectId, draftTitle, () => {
       setDraftTitle("");
-      setExpandedIds((current) => {
-        const next = new Set(current);
-        next.add(projectId);
-        return next;
-      });
+      setExpandedIds(addExpandedId(expandedIds, projectId));
     });
   };
 

@@ -157,7 +157,7 @@ export function usePersonDetailPage() {
     if (!person) return;
     setDeleteError(null);
     deletePerson.mutate(person.id, {
-      onSuccess: () => navigate("/people"),
+      onSuccess: () => navigate("/work"),
       onError: (error) => {
         setDeleteError(
           error instanceof Error ? error.message : "Failed to delete person"

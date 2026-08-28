@@ -29,6 +29,7 @@ interface CreateTaskDialogProps {
   errorMessage: string | null;
   assigneeName?: string;
   triggerVariant?: "default" | "outline";
+  hideTrigger?: boolean;
   onOpenChange(open: boolean): void;
   onFieldChange<TField extends keyof CreateTaskFormValues>(
     field: TField,
@@ -46,6 +47,7 @@ export function CreateTaskDialog({
   errorMessage,
   assigneeName,
   triggerVariant = "default",
+  hideTrigger = false,
   onOpenChange,
   onFieldChange,
   onSubmit,
@@ -54,12 +56,14 @@ export function CreateTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant={triggerVariant} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" />
-          New Task
-        </Button>
-      </DialogTrigger>
+      {hideTrigger ? null : (
+        <DialogTrigger asChild>
+          <Button size="sm" variant={triggerVariant} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            New Task
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-lg">
         <form
           onSubmit={(event) => {

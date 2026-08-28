@@ -139,7 +139,7 @@ export function ProjectsTrashButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-muted/40 px-3 text-[12px] transition-colors hover:bg-muted/60",
+        "inline-flex h-7 items-center gap-1.5 rounded-sm px-2 text-[11px] text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground",
         className
       )}
     >

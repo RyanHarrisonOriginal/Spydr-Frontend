@@ -7,16 +7,14 @@ import { OrganizationProvider } from "@/domain/spydr/features/organizations/cont
 import { CurrentUserPersonProvider } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import DashboardScreen from "@/screens/DashboardScreen";
 import WorkspaceShellScreen from "@/screens/WorkspaceShellScreen";
-import ProjectsScreen from "@/screens/ProjectsScreen";
+import WorkScreen from "@/screens/WorkScreen";
 import ProjectDetailScreen from "@/screens/ProjectDetailScreen";
-import TasksScreen from "@/screens/TasksScreen";
 import TaskDetailScreen from "@/screens/TaskDetailScreen";
 import IdeasScreen from "@/screens/IdeasScreen";
 import DecisionsScreen from "@/screens/DecisionsScreen";
 import NotesScreen from "@/screens/NotesScreen";
 import NoteDetailScreen from "@/screens/NoteDetailScreen";
 import ActiveNoteScreen from "@/screens/ActiveNoteScreen";
-import PeopleScreen from "@/screens/PeopleScreen";
 import PersonDetailScreen from "@/screens/PersonDetailScreen";
 import ResourcesScreen from "@/screens/ResourcesScreen";
 import SignInScreen from "@/screens/SignInScreen";
@@ -54,22 +52,26 @@ export default function App() {
               <Route index element={<Navigate to="/active-note" replace />} />
               <Route path="/active-note" element={<ActiveNoteScreen />} />
               <Route path="/dashboard" element={<DashboardScreen />} />
-              <Route path="/projects" element={<ProjectsScreen />} />
+              <Route path="/work" element={<WorkScreen />} />
+              <Route path="/projects" element={<Navigate to="/work" replace />} />
               <Route path="/projects/:projectId" element={<ProjectDetailScreen />} />
-              <Route path="/tasks" element={<TasksScreen />} />
+              <Route
+                path="/tasks"
+                element={<Navigate to="/work?view=tasks" replace />}
+              />
               <Route path="/tasks/:taskId" element={<TaskDetailScreen />} />
               <Route path="/ideas" element={<IdeasScreen />} />
               <Route path="/decisions" element={<DecisionsScreen />} />
               <Route path="/notes" element={<NotesScreen />} />
               <Route path="/notes/:noteId" element={<NoteDetailScreen />} />
-              <Route path="/people" element={<PeopleScreen />} />
+              <Route path="/people" element={<Navigate to="/work" replace />} />
               <Route path="/people/:personId" element={<PersonDetailScreen />} />
               <Route path="/resources" element={<ResourcesScreen />} />
             </Route>
             <Route
               path="/ontology/:ontologyId"
               element={
-                <Navigate to="/projects" replace />
+                <Navigate to="/work" replace />
               }
             />
             <Route path="/404" element={<NotFoundScreen />} />

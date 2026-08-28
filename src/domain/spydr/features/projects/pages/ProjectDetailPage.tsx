@@ -24,7 +24,7 @@ export function ProjectDetailPage() {
         description="This project does not exist or is not available to your account."
       >
         <Button asChild variant="outline" size="sm">
-          <Link to="/projects">Back to projects</Link>
+          <Link to="/work">Back to work</Link>
         </Button>
       </EmptyState>
     );

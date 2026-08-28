@@ -10,6 +10,7 @@ import { isPersonOwnedProject } from "@/domain/spydr/utils/personWork";
 import { projectPersonaLabels } from "@/domain/spydr/utils/projectPersonas";
 import { StatusDot } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { ShowCompletedToggle } from "@/domain/spydr/features/shared/components/ShowCompletedToggle";
+import { ExpandCollapseControls } from "@/domain/spydr/features/shared/components/ExpandCollapseControls";
 import { ProjectStatusSelect } from "@/domain/spydr/features/projects/components/ProjectStatusSelect";
 import { ProjectTargetDateSelect } from "@/domain/spydr/features/projects/components/ProjectTargetDateSelect";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
@@ -497,6 +498,15 @@ export function PersonWorkSection({
         ? `${openTaskCount} open tasks`
         : `${visibleProjects.length} projects · ${openTaskCount} open`;
 
+  const expandableProjectIds = useMemo(() => {
+    return visibleProjects
+      .filter((entry) => {
+        const projectTasks = tasksByProjectId.get(entry.project.id) ?? [];
+        return projectTasks.length > 0;
+      })
+      .map((entry) => entry.project.id);
+  }, [tasksByProjectId, visibleProjects]);
+
   const toggleExpanded = (projectId: string) => {
     setExpandedIds((current) => {
       const next = new Set(current);
@@ -547,6 +557,13 @@ export function PersonWorkSection({
         actions={
           <>
             <ViewModeToggle value={viewMode} onChange={setViewMode} />
+            {viewMode === "tree" ? (
+              <ExpandCollapseControls
+                disabled={expandableProjectIds.length === 0}
+                onExpandAll={() => setExpandedIds(new Set(expandableProjectIds))}
+                onCollapseAll={() => setExpandedIds(new Set())}
+              />
+            ) : null}
             <ShowCompletedToggle
               showCompleted={showCompleted}
               completedCount={completedCount}

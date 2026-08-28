@@ -3,7 +3,6 @@ import { NavLink } from "react-router-dom";
 import {
   Archive,
   Bookmark,
-  CheckSquare,
   FileText,
   FolderKanban,
   GitBranch,
@@ -12,7 +11,6 @@ import {
   LayoutDashboard,
   PenLine,
   Sun,
-  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SpydrMark } from "@/components/SpydrMark";
@@ -37,12 +35,10 @@ const outlooks: NavigationItem[] = [
 
 const workspace: NavigationItem[] = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/projects", icon: FolderKanban, label: "Projects" },
-  { to: "/tasks", icon: CheckSquare, label: "Tasks" },
+  { to: "/work", icon: FolderKanban, label: "Work" },
   { to: "/ideas", icon: Lightbulb, label: "Ideas" },
   { to: "/decisions", icon: GitBranch, label: "Decisions" },
   { to: "/notes", icon: FileText, label: "Notes" },
-  { to: "/people", icon: Users, label: "People" },
   { to: "/resources", icon: Bookmark, label: "Resources" },
 ];
 
