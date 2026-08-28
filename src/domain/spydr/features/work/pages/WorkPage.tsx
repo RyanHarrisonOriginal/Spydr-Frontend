@@ -8,18 +8,12 @@ import {
 } from "@/domain/spydr/features/shared/components/ListState";
 import { CollectionToolbar } from "@/domain/spydr/features/shared/components/CollectionToolbar";
 import { CollectionNoResults } from "@/domain/spydr/features/shared/components/CollectionNoResults";
-import { ExpandCollapseControls } from "@/domain/spydr/features/shared/components/ExpandCollapseControls";
 import { isClosedCollectionStatus } from "@/domain/spydr/utils/collectionVisibility";
 import { personDisplayName } from "@/domain/spydr/utils/projectPersonas";
-import { ProjectAreasPanel } from "@/domain/spydr/features/projects/components/ProjectAreasPanel";
-import { ProjectColumnSelector } from "@/domain/spydr/features/projects/components/ProjectColumnSelector";
 import { CreateProjectDialog } from "@/domain/spydr/features/projects/components/CreateProjectDialog";
 import { ProjectList } from "@/domain/spydr/features/projects/components/ProjectList";
 import { ProjectListToolbar } from "@/domain/spydr/features/projects/components/ProjectListToolbar";
-import {
-  ProjectTrashPanel,
-  ProjectsTrashButton,
-} from "@/domain/spydr/features/projects/components/ProjectTrashPanel";
+import { ProjectTrashPanel } from "@/domain/spydr/features/projects/components/ProjectTrashPanel";
 import { useCreateProjectForm } from "@/domain/spydr/features/projects/hooks/useCreateProjectForm";
 import { useProjectListColumns } from "@/domain/spydr/features/projects/hooks/useProjectListColumns";
 import { useProjectsPage } from "@/domain/spydr/features/projects/hooks/useProjectsPage";
@@ -29,9 +23,10 @@ import { useCreateTaskForm } from "@/domain/spydr/features/tasks/hooks/useCreate
 import { useTasksPage } from "@/domain/spydr/features/tasks/hooks/useTasksPage";
 import { CreatePersonDialog } from "@/domain/spydr/features/people/components/CreatePersonDialog";
 import { usePeoplePage } from "@/domain/spydr/features/people/hooks/usePeoplePage";
-import { WorkPersonFilter } from "../components/WorkPersonFilter";
+import { WorkPersonPicker } from "../components/WorkPersonPicker";
 import { WorkViewToggle } from "../components/WorkViewToggle";
 import { WorkCreateMenu } from "../components/WorkCreateMenu";
+import { WorkMoreMenu } from "../components/WorkMoreMenu";
 import { useWorkScope } from "../hooks/useWorkScope";
 
 export function WorkPage() {
@@ -99,11 +94,18 @@ export function WorkPage() {
     ? projectsPage.errorMessage
     : tasksPage.errorMessage;
 
-  const metaLabel = selectedPerson
-    ? personDisplayName(selectedPerson)
-    : isPersonScopePending
-      ? "Your work"
-      : "Everyone";
+  const listTools = isHierarchy ? (
+    <WorkMoreMenu
+      canExpand={expandableProjectIds.length > 0}
+      onExpandAll={() => setExpandedIds(new Set(expandableProjectIds))}
+      onCollapseAll={() => setExpandedIds(new Set())}
+      columns={projectColumns.columns}
+      visibleColumnSet={projectColumns.visibleColumnSet}
+      onToggleColumn={projectColumns.toggleColumn}
+      trashCount={projectsPage.deletedCount}
+      onOpenTrash={projectsPage.openTrash}
+    />
+  ) : null;
 
   return (
     <div>
@@ -112,8 +114,6 @@ export function WorkPage() {
         title="Work"
         meta={
           <span className="font-mono text-[10px] uppercase tracking-[0.12em]">
-            {metaLabel}
-            {" · "}
             {isHierarchy
               ? `${projectsPage.totalCount} projects · ${projectsPage.activeCount} active`
               : `${tasksPage.totalCount} tasks · ${tasksPage.openCount} open`}
@@ -121,9 +121,15 @@ export function WorkPage() {
         }
         actions={
           <>
+            <WorkPersonPicker
+              people={peoplePage.people}
+              selectedPersonId={personId}
+              pending={isPersonScopePending}
+              onSelect={setPersonId}
+              onAddPerson={() => peoplePage.setIsCreateOpen(true)}
+            />
             <WorkViewToggle value={view} onChange={setView} />
             <WorkCreateMenu
-              view={view}
               onCreateProject={() => createProject.setIsOpen(true)}
               onCreateTask={() => createTask.setIsOpen(true)}
               onCreatePerson={() => peoplePage.setIsCreateOpen(true)}
@@ -170,62 +176,21 @@ export function WorkPage() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-3 border-b border-border/80 px-6 py-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground/80">
-            Who
-          </span>
-          <WorkPersonFilter
-            people={peoplePage.people}
-            selectedPersonId={personId}
-            pending={isPersonScopePending}
-            onSelect={setPersonId}
-          />
-        </div>
-        {isHierarchy ? (
-          <div className="flex shrink-0 items-center gap-1">
-            <ExpandCollapseControls
-              disabled={expandableProjectIds.length === 0}
-              onExpandAll={() => setExpandedIds(new Set(expandableProjectIds))}
-              onCollapseAll={() => setExpandedIds(new Set())}
-            />
-            <ProjectColumnSelector
-              compact
-              columns={projectColumns.columns}
-              visibleColumnSet={projectColumns.visibleColumnSet}
-              onToggleColumn={projectColumns.toggleColumn}
-            />
-            <ProjectsTrashButton
-              count={projectsPage.deletedCount}
-              onClick={projectsPage.openTrash}
-            />
-          </div>
-        ) : null}
-      </div>
-
       {peoplePage.deleteError ? (
         <p className="px-6 pt-3 text-sm text-destructive">{peoplePage.deleteError}</p>
       ) : null}
 
-      {isHierarchy ? (
-        <>
-          <ProjectAreasPanel
-            areas={projectsPage.areas}
-            isLoading={projectsPage.isAreasLoading}
-          />
-          {(projectsPage.isTrashLoading || projectsPage.deletedCount > 0) && (
-            <ProjectTrashPanel
-              projects={projectsPage.deletedProjects}
-              isLoading={projectsPage.isTrashLoading}
-              expanded={projectsPage.trashExpanded}
-              onExpandedChange={projectsPage.setTrashExpanded}
-              onRestore={projectsPage.restoreProject}
-              isRestoring={projectsPage.restoringProjectId !== null}
-              restoringId={projectsPage.restoringProjectId}
-              error={projectsPage.restoreError}
-            />
-          )}
-        </>
+      {isHierarchy && projectsPage.trashExpanded ? (
+        <ProjectTrashPanel
+          projects={projectsPage.deletedProjects}
+          isLoading={projectsPage.isTrashLoading}
+          expanded={projectsPage.trashExpanded}
+          onExpandedChange={projectsPage.setTrashExpanded}
+          onRestore={projectsPage.restoreProject}
+          isRestoring={projectsPage.restoringProjectId !== null}
+          restoringId={projectsPage.restoringProjectId}
+          error={projectsPage.restoreError}
+        />
       ) : null}
 
       {isLoading && (
@@ -258,6 +223,7 @@ export function WorkPage() {
             onToggleFacet={projectsPage.listView.toggleFacetFilter}
             onRemoveFacetValue={projectsPage.listView.removeFacetFilter}
             onClearFilters={projectsPage.listView.clearFilters}
+            endActions={listTools}
           />
           {projectsPage.statusError && (
             <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">

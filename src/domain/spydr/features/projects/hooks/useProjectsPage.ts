@@ -219,7 +219,6 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     setDeleteError(null);
     setDeletingProjectId(projectId);
     deleteProject.mutate(projectId, {
-      onSuccess: () => setTrashExpanded(true),
       onError: (error) => {
         setDeleteError(
           error instanceof Error ? error.message : "Failed to delete project"
@@ -244,8 +243,11 @@ export function useProjectsPage(options?: { personId?: string | null }) {
 
   const openTrash = () => {
     setTrashExpanded(true);
-    const section = document.getElementById("projects-trash");
-    section?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    window.setTimeout(() => {
+      document
+        .getElementById("projects-trash")
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 0);
   };
 
   return {

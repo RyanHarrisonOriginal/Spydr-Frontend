@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Filter, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -23,6 +24,7 @@ interface ProjectListToolbarProps {
   onToggleFacet(facetId: ProjectListFilterFacetId, value: string): void;
   onRemoveFacetValue(facetId: ProjectListFilterFacetId, value: string): void;
   onClearFilters(): void;
+  endActions?: ReactNode;
 }
 
 export function ProjectListToolbar({
@@ -36,6 +38,7 @@ export function ProjectListToolbar({
   onToggleFacet,
   onRemoveFacetValue,
   onClearFilters,
+  endActions,
 }: ProjectListToolbarProps) {
   const hasActiveFilters = hasActiveProjectListFilters(filters);
   const filterContext = { areas, people };
@@ -96,6 +99,7 @@ export function ProjectListToolbar({
             ? `${totalCount} projects`
             : `${filteredCount} of ${totalCount}`}
         </span>
+        {endActions}
       </div>
 
       <ProjectListActiveFilterChips
