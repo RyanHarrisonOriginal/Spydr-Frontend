@@ -25,6 +25,8 @@ import {
   operationTypeForObjectType,
 } from "../utils/buildOperationPayload";
 import { buildTestApplyProposal } from "../utils/buildTestApplyProposal";
+import type { BackendActiveNotePipelineStep } from "@/domain/spydr/utils/activeNoteAnalyzeTypes";
+import { toApplyOperationInputs } from "../utils/toApplyOperationInputs";
 import {
   friendlyApiError,
   validateNoteContent,
@@ -45,7 +47,22 @@ export type AnalysisStatusText =
   | "Preparing suggestions";
 
 const SAVE_DEBOUNCE_MS = 700;
-const ANALYSIS_STATUS_ROTATE_MS = 1600;
+
+function statusFromCompletedSteps(
+  steps: BackendActiveNotePipelineStep[]
+): AnalysisStatusText {
+  if (steps.includes("project_assignment") || steps.includes("action_plan")) {
+    return "Preparing suggestions";
+  }
+  if (steps.includes("project_context")) {
+    return "Finding related Spydr objects";
+  }
+  return "Reading note";
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === "AbortError";
+}
 
 function serializeDraft(content: string, projectId: string | null) {
   return JSON.stringify({ content, projectId });
@@ -85,6 +102,7 @@ export function useActiveNotePage() {
   const lastSavedSnapshotRef = useRef<string>(serializeDraft("", null));
   const analysisRequestRef = useRef(0);
   const cancelledAnalysisRef = useRef(false);
+  const analysisAbortRef = useRef<AbortController | null>(null);
 
   const characterCount = content.length;
   const selectedCount = operations.filter(
@@ -127,22 +145,6 @@ export function useActiveNotePage() {
     return () => clearTimeout(saveTimerRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- persistNote closes over latest state
   }, [content, projectId, activeNote?.id, phase]);
-
-  useEffect(() => {
-    if (!isAnalyzing) return;
-    const stages: AnalysisStatusText[] = [
-      "Reading note",
-      "Finding related Spydr objects",
-      "Preparing suggestions",
-    ];
-    let index = 0;
-    setAnalysisStatus(stages[0]);
-    const timer = setInterval(() => {
-      index = (index + 1) % stages.length;
-      setAnalysisStatus(stages[index]);
-    }, ANALYSIS_STATUS_ROTATE_MS);
-    return () => clearInterval(timer);
-  }, [isAnalyzing]);
 
   async function persistNote(options?: {
     silent?: boolean;
@@ -203,6 +205,10 @@ export function useActiveNotePage() {
 
     setPhase("analyze");
     setIsAnalyzing(true);
+    setAnalysisStatus("Reading note");
+    analysisAbortRef.current?.abort();
+    const abortController = new AbortController();
+    analysisAbortRef.current = abortController;
 
     try {
       let note = activeNote;
@@ -230,6 +236,16 @@ export function useActiveNotePage() {
         content,
         projectId,
         activeNote: note,
+        signal: abortController.signal,
+        onProgress: (steps) => {
+          if (
+            cancelledAnalysisRef.current ||
+            requestId !== analysisRequestRef.current
+          ) {
+            return;
+          }
+          setAnalysisStatus(statusFromCompletedSteps(steps));
+        },
       });
 
       if (cancelledAnalysisRef.current || requestId !== analysisRequestRef.current) {
@@ -246,7 +262,11 @@ export function useActiveNotePage() {
         });
       }
     } catch (error) {
-      if (cancelledAnalysisRef.current || requestId !== analysisRequestRef.current) {
+      if (
+        cancelledAnalysisRef.current ||
+        requestId !== analysisRequestRef.current ||
+        isAbortError(error)
+      ) {
         return;
       }
       setAnalysisError(
@@ -266,6 +286,8 @@ export function useActiveNotePage() {
   function handleCancelAnalysis() {
     cancelledAnalysisRef.current = true;
     analysisRequestRef.current += 1;
+    analysisAbortRef.current?.abort();
+    analysisAbortRef.current = null;
     setIsAnalyzing(false);
     setAnalysisError(null);
     setPhase("compose");
@@ -511,33 +533,7 @@ export function useActiveNotePage() {
   async function handleApply() {
     if (!activeNote || isApplying) return;
 
-    const applyInput = operations.map((op) => ({
-      operationId: op.id,
-      selected:
-        op.selected &&
-        op.operationType !== "no_action" &&
-        op.duplicateResolution !== "ignore",
-      objectType: op.objectType ?? null,
-      payload: op.payload,
-      duplicateResolution:
-        op.duplicateResolution ??
-        (op.operationType === "update" &&
-        Boolean(op.attachment?.id ?? op.duplicateOf?.id)
-          ? "attach_existing"
-          : null),
-      selectedProjectId: op.selectedProjectId ?? null,
-      projectRef: op.projectRef ?? null,
-      targetObjectId:
-        op.attachment?.type === "task"
-          ? op.attachment.id ?? null
-          : op.payload.kind === "link"
-            ? op.payload.targetObjectId || null
-            : op.duplicateResolution === "attach_existing" ||
-                op.operationType === "update"
-              ? op.targetObjectId ?? op.duplicateOf?.id ?? null
-              : null,
-      attachment: op.attachment ?? null,
-    }));
+    const applyInput = toApplyOperationInputs(operations);
 
     const selected = applyInput.filter((item) => item.selected);
     if (selected.length === 0) {

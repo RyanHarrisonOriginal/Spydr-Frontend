@@ -100,6 +100,12 @@ export type DuplicateResolution =
   | "create_new"
   | "ignore";
 
+export type ActiveNoteHistoryDecision =
+  | "accepted"
+  | "rejected"
+  | "failed"
+  | "pending";
+
 export type ProposalPresentationKind =
   | "detected"
   | "suggested"
@@ -241,6 +247,12 @@ export interface ActiveNoteProposalOperation {
   targetTaskTitle?: string;
   /** Unassigned segments need the user to pick an action */
   needsUserDecision?: boolean;
+  /** Persisted apply outcome for a past active note. */
+  applyDecision?: ActiveNoteHistoryDecision;
+  /** Object written the last time this suggestion was applied. */
+  appliedObject?: AppliedActiveNoteObject | null;
+  /** Failure message from the last apply attempt. */
+  applyErrorMessage?: string | null;
 }
 
 export interface ActiveNoteProposal {
@@ -290,6 +302,7 @@ export interface AppliedActiveNoteObject {
   title: string;
   action: "created" | "updated" | "linked";
   href: string;
+  operationId?: string;
 }
 
 export interface ApplyActiveNoteProposalResult {
@@ -301,12 +314,6 @@ export interface ApplyActiveNoteProposalResult {
   }>;
   partial: boolean;
 }
-
-export type ActiveNoteHistoryDecision =
-  | "accepted"
-  | "rejected"
-  | "failed"
-  | "pending";
 
 export interface ActiveNoteHistorySuggestion {
   id: string;

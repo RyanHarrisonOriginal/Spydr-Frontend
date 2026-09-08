@@ -30,7 +30,7 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "relative overflow-hidden border-b border-border",
+        "relative overflow-hidden border-b border-border spydr-rule",
         className
       )}
     >
@@ -47,10 +47,10 @@ export function PageHeader({
 
       <div
         className={cn(
-          "relative flex items-end justify-between gap-6",
+          "relative flex flex-col items-stretch justify-between gap-3 md:flex-row md:items-end",
           dense
-            ? "min-h-0 px-6 py-3"
-            : "min-h-[6.5rem] gap-8 px-8 py-7"
+            ? "min-h-0 px-4 py-3 md:px-6"
+            : "min-h-0 gap-4 px-4 py-5 md:min-h-[6.5rem] md:gap-8 md:px-8 md:py-7"
         )}
       >
         <div className="min-w-0 flex-1">
@@ -66,8 +66,9 @@ export function PageHeader({
           ) : null}
           <h1
             className={cn(
-              "truncate font-semibold leading-none tracking-[-0.03em]",
-              dense ? "mt-1 text-[18px]" : "mt-2 text-[22px]",
+              "font-semibold leading-none tracking-[-0.03em]",
+              dense ? "mt-1 text-[18px]" : "mt-2 text-[20px] md:text-[22px]",
+              "truncate",
               titleClassName
             )}
           >
@@ -76,7 +77,7 @@ export function PageHeader({
           {meta && (
             <div
               className={cn(
-                "flex items-center gap-2 text-muted-foreground",
+                "flex flex-wrap items-center gap-2 text-muted-foreground",
                 dense ? "mt-1.5 text-[11px]" : "mt-2.5 text-[12px]"
               )}
             >
@@ -85,7 +86,7 @@ export function PageHeader({
           )}
         </div>
         {actions && (
-          <div className="flex shrink-0 items-center gap-2 pb-0.5">{actions}</div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2 pb-0.5">{actions}</div>
         )}
       </div>
     </div>

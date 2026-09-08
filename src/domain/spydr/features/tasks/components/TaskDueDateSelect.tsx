@@ -5,6 +5,9 @@ interface TaskDueDateSelectProps {
   onChange(dueDate: string | null): void;
   disabled?: boolean;
   className?: string;
+  placeholder?: string;
+  showChevron?: boolean;
+  showIcon?: boolean;
 }
 
 export function TaskDueDateSelect({
@@ -12,6 +15,9 @@ export function TaskDueDateSelect({
   onChange,
   disabled = false,
   className,
+  placeholder = "No due date",
+  showChevron = true,
+  showIcon = true,
 }: TaskDueDateSelectProps) {
   return (
     <DatePicker
@@ -20,7 +26,9 @@ export function TaskDueDateSelect({
       disabled={disabled}
       className={className}
       variant="compact"
-      placeholder="No due date"
+      placeholder={placeholder}
+      showChevron={showChevron}
+      showIcon={showIcon}
       ariaLabel="Task due date"
       panelLabel="Due date"
       clearLabel="Clear due date"

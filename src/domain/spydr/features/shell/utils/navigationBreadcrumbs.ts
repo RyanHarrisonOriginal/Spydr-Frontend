@@ -55,6 +55,9 @@ export function getDefaultBreadcrumbLabel(pathname: string): string {
   const noteId = extractEntityId(pathname, "/notes/");
   if (noteId) return formatBreadcrumbEntityId(noteId);
 
+  const activeNoteId = extractEntityId(pathname, "/active-note/");
+  if (activeNoteId) return formatBreadcrumbEntityId(activeNoteId);
+
   if (pathname.startsWith("/people/")) return "Person";
 
   return "Page";

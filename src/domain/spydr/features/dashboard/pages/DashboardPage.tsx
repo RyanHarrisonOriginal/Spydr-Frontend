@@ -55,7 +55,7 @@ export function DashboardPage() {
 
       {!query.isLoading && !query.isError && dashboard && (
         <>
-          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 border-b border-border px-6 py-3">
+          <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2 border-b border-border px-4 py-3 md:gap-x-6 md:px-6">
             {dashboardMetrics.map((metric) => {
               const value = metric.getValue(dashboard.summary);
               const hint = metric.hint?.(dashboard.summary);

@@ -87,7 +87,7 @@ export function WorkPersonPicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen(true)}
-        className="inline-flex h-8 max-w-[12rem] items-center gap-1.5 rounded-sm border border-border bg-muted/20 px-2 text-[12px] text-foreground transition-colors hover:bg-muted/40 disabled:opacity-60"
+        className="inline-flex h-10 max-w-[12rem] items-center gap-1.5 rounded-sm border border-border bg-muted/20 px-2 text-[12px] text-foreground transition-colors hover:bg-muted/40 disabled:opacity-60 md:h-8"
       >
         {selectedPerson ? (
           <PersonAvatar person={selectedPerson} size="sm" className="h-4 w-4 text-[8px]" />

@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { useIsPhone } from "@/hooks/useIsPhone";
 import type { PersonNode, ProjectPersonas } from "@/domain/spydr/utils/types";
 import {
   projectPersonaHints,
@@ -16,6 +18,7 @@ interface ProjectPersonasPanelProps {
   people: PersonNode[];
   personas: ProjectPersonas;
   disabled?: boolean;
+  compact?: boolean;
   onChange(role: ProjectPersonaRole, personNodeId: string | null): void;
 }
 
@@ -23,10 +26,13 @@ export function ProjectPersonasPanel({
   people,
   personas,
   disabled = false,
+  compact = false,
   onChange,
 }: ProjectPersonasPanelProps) {
+  const isPhone = useIsPhone();
+  const tight = compact || isPhone;
   return (
-    <ProjectDetailFormPanel label="People" className="p-2.5">
+    <ProjectDetailFormPanel label="People" className={tight ? "p-2" : "p-2.5"}>
       {people.length === 0 ? (
         <div className="rounded-md border border-dashed border-border/80 bg-muted/10 px-2.5 py-2.5 text-center">
           <p className="text-[11px] text-muted-foreground">
@@ -37,7 +43,12 @@ export function ProjectPersonasPanel({
           </Link>
         </div>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        <div
+          className={cn(
+            "grid gap-2",
+            tight ? "grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-4"
+          )}
+        >
           {projectPersonaRoles.map((role) => (
             <ProjectDetailField
               key={role}

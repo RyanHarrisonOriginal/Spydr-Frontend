@@ -23,6 +23,8 @@ export interface DatePickerProps {
   clearLabel?: string;
   allowClear?: boolean;
   variant?: "field" | "compact";
+  showChevron?: boolean;
+  showIcon?: boolean;
 }
 
 export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
@@ -39,6 +41,8 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
       clearLabel = "Clear date",
       allowClear = true,
       variant = "field",
+      showChevron = true,
+      showIcon = true,
     },
     ref
   ) {
@@ -61,19 +65,21 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
           onPointerDown={(event) => event.stopPropagation()}
           className={cn(
             "flex w-full min-w-0 items-center gap-1.5 rounded-md border transition-colors",
-            "border-border/80 bg-background hover:border-border hover:bg-muted/40",
+            "border-border/20 bg-background/30 hover:border-border/40 hover:bg-muted/30",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/15",
             "disabled:cursor-not-allowed disabled:opacity-50",
-            "data-[state=open]:border-primary/40 data-[state=open]:ring-2 data-[state=open]:ring-primary/15",
+            "data-[state=open]:border-primary/30 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
             variant === "field" &&
               "h-8 border-input px-2.5 text-[13px] ring-focus",
             variant === "compact" &&
-              "h-7 border-border/80 bg-background/50 px-2 text-[11px]",
-            !hasValue && variant === "compact" && "border-dashed bg-muted/20",
+              "h-7 border-border/20 bg-background/30 px-2 text-[11px]",
+            variant === "compact" && !showIcon && "gap-0 px-1.5",
+            !hasValue && variant === "compact" && "border-dashed border-border/25 bg-muted/10",
             !hasValue && variant === "field" && "text-muted-foreground",
             className
           )}
         >
+          {showIcon ? (
           <Calendar
             className={cn(
               "shrink-0",
@@ -82,6 +88,7 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
             )}
             aria-hidden
           />
+          ) : null}
           <span
             className={cn(
               "min-w-0 flex-1 truncate leading-none",
@@ -97,13 +104,15 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
           >
             {displayLabel}
           </span>
-          <ChevronDown
-            className={cn(
-              "h-3 w-3 shrink-0 text-muted-foreground/70 transition-transform",
-              open && "rotate-180 text-foreground"
-            )}
-            aria-hidden
-          />
+          {showChevron ? (
+            <ChevronDown
+              className={cn(
+                "h-3 w-3 shrink-0 text-muted-foreground/70 transition-transform",
+                open && "rotate-180 text-foreground"
+              )}
+              aria-hidden
+            />
+          ) : null}
         </button>
       </DropdownMenuTrigger>
 

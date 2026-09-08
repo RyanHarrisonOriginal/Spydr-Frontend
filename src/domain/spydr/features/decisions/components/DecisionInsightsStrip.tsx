@@ -54,7 +54,7 @@ export function DecisionInsightsStrip({ insights }: DecisionInsightsStripProps) 
       {metrics.map((metric) => (
         <div
           key={metric.id}
-          className="group relative border-r border-border px-6 py-5 transition-colors last:border-r-0 hover:bg-muted/15"
+          className="group relative border-b border-r border-border px-4 py-4 transition-colors last:border-r-0 even:border-r-0 hover:bg-muted/15 md:border-b-0 md:px-6 md:py-5 md:even:border-r"
         >
           <span
             aria-hidden
@@ -64,7 +64,7 @@ export function DecisionInsightsStrip({ insights }: DecisionInsightsStripProps) 
             {metric.label}
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <div className="text-3xl font-semibold tracking-tight tabular-nums">
+            <div className="text-2xl font-semibold tracking-tight tabular-nums md:text-3xl">
               {metric.value}
             </div>
             {metric.hint ? (

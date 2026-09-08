@@ -48,7 +48,7 @@ export function IdeasPage() {
         <>
           <CollectionToolbar view={view} />
           {deleteError ? (
-            <p className="px-6 pb-2 text-sm text-destructive">{deleteError}</p>
+            <p className="px-4 pb-2 text-sm text-destructive md:px-6">{deleteError}</p>
           ) : null}
           {view.items.length > 0 ? (
             <IdeaList

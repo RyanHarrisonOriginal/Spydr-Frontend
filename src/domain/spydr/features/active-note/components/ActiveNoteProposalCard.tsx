@@ -10,6 +10,7 @@ import type {
 import type { ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
 import { cn } from "@/lib/utils";
 import { ActiveNoteActionPresentation } from "./ActiveNoteActionPresentation";
+import { ActiveNoteDecisionBadge } from "./ActiveNoteDecisionBadge";
 import { ActiveNoteDuplicateResolver } from "./ActiveNoteDuplicateResolver";
 import { ActiveNoteProjectSelector } from "./ActiveNoteProjectSelector";
 import { ActiveNoteSuggestionControls } from "./ActiveNoteSuggestionControls";
@@ -295,22 +296,30 @@ export function ActiveNoteProposalCard({
           </div>
         </button>
 
-        {!isNoAction ? (
-          <input
-            type="checkbox"
-            className="mt-1 h-4 w-4 shrink-0"
-            checked={operation.selected && !rejected}
-            onChange={(event) =>
-              onToggleSelected(operation.id, event.target.checked)
-            }
-            disabled={disabled || rejected}
-            aria-label={
-              operation.selected
-                ? `Deselect: ${action} — ${title}`
-                : `Accept: ${action} — ${title}`
-            }
-          />
-        ) : null}
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          {operation.applyDecision ? (
+            <ActiveNoteDecisionBadge
+              decision={operation.applyDecision}
+              href={operation.appliedObject?.href}
+            />
+          ) : null}
+          {!isNoAction ? (
+            <input
+              type="checkbox"
+              className="mt-1 h-4 w-4 shrink-0"
+              checked={operation.selected && !rejected}
+              onChange={(event) =>
+                onToggleSelected(operation.id, event.target.checked)
+              }
+              disabled={disabled || rejected}
+              aria-label={
+                operation.selected
+                  ? `Deselect: ${action} — ${title}`
+                  : `Accept: ${action} — ${title}`
+              }
+            />
+          ) : null}
+        </div>
       </div>
 
       {expanded && hasExpandableDetails ? (
@@ -366,6 +375,12 @@ export function ActiveNoteProposalCard({
           {rootValidationError ? (
             <p className="text-[12px] text-destructive" role="alert">
               {rootValidationError}
+            </p>
+          ) : null}
+
+          {operation.applyErrorMessage ? (
+            <p className="text-[12px] text-destructive" role="alert">
+              {operation.applyErrorMessage}
             </p>
           ) : null}
 

@@ -62,7 +62,7 @@ export function OrganizationSwitcher() {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 max-w-[14rem] justify-between gap-2 border-border bg-muted/20 px-2.5 text-[13px] font-normal"
+            className="h-8 max-w-[9.5rem] justify-between gap-2 border-border bg-muted/20 px-2.5 text-[13px] font-normal md:max-w-[14rem]"
           >
             <span className="flex min-w-0 items-center gap-2">
               <Building2 className="h-3.5 w-3.5 shrink-0 text-highlight" />

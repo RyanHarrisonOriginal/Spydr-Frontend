@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import {
@@ -27,6 +27,8 @@ import { WorkPersonPicker } from "../components/WorkPersonPicker";
 import { WorkViewToggle } from "../components/WorkViewToggle";
 import { WorkCreateMenu } from "../components/WorkCreateMenu";
 import { WorkMoreMenu } from "../components/WorkMoreMenu";
+import { ExpandCollapseControls } from "@/domain/spydr/features/shared/components/ExpandCollapseControls";
+import { ShowCompletedToggle } from "@/domain/spydr/features/shared/components/ShowCompletedToggle";
 import { useWorkScope } from "../hooks/useWorkScope";
 
 export function WorkPage() {
@@ -52,6 +54,7 @@ export function WorkPage() {
     assigneePersonNodeId: selectedPerson?.id,
   });
   const projectColumns = useProjectListColumns();
+  const [showCompletedTasks, setShowCompletedTasks] = useState(false);
 
   usePageBreadcrumb("Work");
 
@@ -94,18 +97,107 @@ export function WorkPage() {
     ? projectsPage.errorMessage
     : tasksPage.errorMessage;
 
-  const listTools = isHierarchy ? (
-    <WorkMoreMenu
-      canExpand={expandableProjectIds.length > 0}
-      onExpandAll={() => setExpandedIds(new Set(expandableProjectIds))}
-      onCollapseAll={() => setExpandedIds(new Set())}
-      columns={projectColumns.columns}
-      visibleColumnSet={projectColumns.visibleColumnSet}
-      onToggleColumn={projectColumns.toggleColumn}
-      trashCount={projectsPage.deletedCount}
-      onOpenTrash={projectsPage.openTrash}
-    />
-  ) : null;
+  const completedTaskCount = useMemo(() => {
+    let count = 0;
+    for (const project of projectsPage.projects) {
+      const tasks = projectsPage.tasksByProjectId.get(project.id) ?? [];
+      count += tasks.filter((task) => isClosedCollectionStatus(task.status)).length;
+    }
+    return count;
+  }, [projectsPage.projects, projectsPage.tasksByProjectId]);
+
+  const listTools = (
+    <>
+      {isHierarchy ? (
+        <ShowCompletedToggle
+          showCompleted={showCompletedTasks}
+          completedCount={completedTaskCount}
+          onChange={setShowCompletedTasks}
+        />
+      ) : null}
+      {isHierarchy ? (
+        <ExpandCollapseControls
+          expanded={
+            expandableProjectIds.length > 0 &&
+            expandableProjectIds.every((id) => expandedIds.has(id))
+          }
+          disabled={expandableProjectIds.length === 0}
+          onExpandAll={() => setExpandedIds(new Set(expandableProjectIds))}
+          onCollapseAll={() => setExpandedIds(new Set())}
+        />
+      ) : null}
+      <WorkCreateMenu
+        onCreateProject={() => createProject.setIsOpen(true)}
+        onCreateTask={() => createTask.setIsOpen(true)}
+        onCreatePerson={() => peoplePage.setIsCreateOpen(true)}
+      />
+      {isHierarchy ? (
+        <WorkMoreMenu
+          columns={projectColumns.columns}
+          visibleColumnSet={projectColumns.visibleColumnSet}
+          onToggleColumn={projectColumns.toggleColumn}
+          trashCount={projectsPage.deletedCount}
+          onOpenTrash={projectsPage.openTrash}
+        />
+      ) : null}
+    </>
+  );
+
+  const pageControls = (
+    <>
+      <WorkPersonPicker
+        people={peoplePage.people}
+        selectedPersonId={personId}
+        pending={isPersonScopePending}
+        onSelect={setPersonId}
+        onAddPerson={() => peoplePage.setIsCreateOpen(true)}
+      />
+      <WorkViewToggle value={view} onChange={setView} />
+    </>
+  );
+
+  const createDialogs = (
+    <>
+      <CreatePersonDialog
+        hideTrigger
+        open={peoplePage.isCreateOpen}
+        isSubmitting={peoplePage.isCreating}
+        errorMessage={peoplePage.createError}
+        onOpenChange={peoplePage.setIsCreateOpen}
+        onSubmit={peoplePage.submitCreate}
+      />
+      <CreateProjectDialog
+        hideTrigger
+        areas={projectsPage.areas}
+        open={createProject.isOpen}
+        values={createProject.values}
+        canSubmit={createProject.canSubmit}
+        isSubmitting={createProject.isSubmitting}
+        errorMessage={createProject.errorMessage}
+        linkPersonName={
+          selectedPerson ? personDisplayName(selectedPerson) : undefined
+        }
+        onOpenChange={createProject.setIsOpen}
+        onFieldChange={createProject.updateField}
+        onSubmit={createProject.submit}
+      />
+      <CreateTaskDialog
+        hideTrigger
+        projects={tasksPage.projects}
+        open={createTask.isOpen}
+        values={createTask.values}
+        canSubmit={createTask.canSubmit}
+        isSubmitting={createTask.isSubmitting}
+        errorMessage={createTask.errorMessage}
+        assigneeName={
+          selectedPerson ? personDisplayName(selectedPerson) : undefined
+        }
+        onOpenChange={createTask.setIsOpen}
+        onFieldChange={createTask.updateField}
+        onSubmit={createTask.submit}
+      />
+    </>
+  );
 
   return (
     <div>
@@ -119,65 +211,11 @@ export function WorkPage() {
               : `${tasksPage.totalCount} tasks · ${tasksPage.openCount} open`}
           </span>
         }
-        actions={
-          <>
-            <WorkPersonPicker
-              people={peoplePage.people}
-              selectedPersonId={personId}
-              pending={isPersonScopePending}
-              onSelect={setPersonId}
-              onAddPerson={() => peoplePage.setIsCreateOpen(true)}
-            />
-            <WorkViewToggle value={view} onChange={setView} />
-            <WorkCreateMenu
-              onCreateProject={() => createProject.setIsOpen(true)}
-              onCreateTask={() => createTask.setIsOpen(true)}
-              onCreatePerson={() => peoplePage.setIsCreateOpen(true)}
-            />
-            <CreatePersonDialog
-              hideTrigger
-              open={peoplePage.isCreateOpen}
-              isSubmitting={peoplePage.isCreating}
-              errorMessage={peoplePage.createError}
-              onOpenChange={peoplePage.setIsCreateOpen}
-              onSubmit={peoplePage.submitCreate}
-            />
-            <CreateProjectDialog
-              hideTrigger
-              areas={projectsPage.areas}
-              open={createProject.isOpen}
-              values={createProject.values}
-              canSubmit={createProject.canSubmit}
-              isSubmitting={createProject.isSubmitting}
-              errorMessage={createProject.errorMessage}
-              linkPersonName={
-                selectedPerson ? personDisplayName(selectedPerson) : undefined
-              }
-              onOpenChange={createProject.setIsOpen}
-              onFieldChange={createProject.updateField}
-              onSubmit={createProject.submit}
-            />
-            <CreateTaskDialog
-              hideTrigger
-              projects={tasksPage.projects}
-              open={createTask.isOpen}
-              values={createTask.values}
-              canSubmit={createTask.canSubmit}
-              isSubmitting={createTask.isSubmitting}
-              errorMessage={createTask.errorMessage}
-              assigneeName={
-                selectedPerson ? personDisplayName(selectedPerson) : undefined
-              }
-              onOpenChange={createTask.setIsOpen}
-              onFieldChange={createTask.updateField}
-              onSubmit={createTask.submit}
-            />
-          </>
-        }
       />
+      {createDialogs}
 
       {peoplePage.deleteError ? (
-        <p className="px-6 pt-3 text-sm text-destructive">{peoplePage.deleteError}</p>
+        <p className="px-4 pt-3 text-sm text-destructive md:px-6">{peoplePage.deleteError}</p>
       ) : null}
 
       {isHierarchy && projectsPage.trashExpanded ? (
@@ -190,6 +228,33 @@ export function WorkPage() {
           isRestoring={projectsPage.restoringProjectId !== null}
           restoringId={projectsPage.restoringProjectId}
           error={projectsPage.restoreError}
+        />
+      ) : null}
+
+      {!isError && isHierarchy ? (
+        <ProjectListToolbar
+          filters={projectsPage.listView.filters}
+          areas={projectsPage.areas}
+          people={projectsPage.people}
+          filteredCount={projectsPage.filteredCount}
+          totalCount={projectsPage.totalCount}
+          activeFilterCount={projectsPage.listView.activeFilterCount}
+          onSearchChange={projectsPage.listView.setSearch}
+          onToggleFacet={projectsPage.listView.toggleFacetFilter}
+          onRemoveFacetValue={projectsPage.listView.removeFacetFilter}
+          onClearFilters={projectsPage.listView.clearFilters}
+          startActions={pageControls}
+          endActions={listTools}
+          sticky
+        />
+      ) : null}
+
+      {!isError && !isHierarchy ? (
+        <CollectionToolbar
+          view={tasksPage.view}
+          startActions={pageControls}
+          endActions={listTools}
+          sticky
         />
       ) : null}
 
@@ -212,19 +277,6 @@ export function WorkPage() {
 
       {!isLoading && !isError && isHierarchy && projectsPage.orgProjectCount > 0 && (
         <>
-          <ProjectListToolbar
-            filters={projectsPage.listView.filters}
-            areas={projectsPage.areas}
-            people={projectsPage.people}
-            filteredCount={projectsPage.filteredCount}
-            totalCount={projectsPage.totalCount}
-            activeFilterCount={projectsPage.listView.activeFilterCount}
-            onSearchChange={projectsPage.listView.setSearch}
-            onToggleFacet={projectsPage.listView.toggleFacetFilter}
-            onRemoveFacetValue={projectsPage.listView.removeFacetFilter}
-            onClearFilters={projectsPage.listView.clearFilters}
-            endActions={listTools}
-          />
           {projectsPage.statusError && (
             <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectsPage.statusError}
@@ -274,7 +326,7 @@ export function WorkPage() {
               }
               description={
                 selectedPerson
-                  ? "Assign them to a project or a task, then they will show up here."
+                  ? "Owned projects and projects with an open task assigned to them show up here."
                   : undefined
               }
             />
@@ -308,6 +360,8 @@ export function WorkPage() {
               deletingProjectId={projectsPage.deletingProjectId}
               expandedIds={expandedIds}
               onExpandedIdsChange={setExpandedIds}
+              showCompletedTasks={showCompletedTasks}
+              onShowCompletedTasksChange={setShowCompletedTasks}
             />
           )}
         </>
@@ -322,29 +376,28 @@ export function WorkPage() {
 
       {!isLoading && !isError && !isHierarchy && tasksPage.orgTaskCount > 0 && (
         <>
-          <CollectionToolbar view={tasksPage.view} />
           {tasksPage.statusError ? (
-            <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.statusError}
             </p>
           ) : null}
           {tasksPage.projectError ? (
-            <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.projectError}
             </p>
           ) : null}
           {tasksPage.assigneeError ? (
-            <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.assigneeError}
             </p>
           ) : null}
           {tasksPage.dueDateError ? (
-            <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.dueDateError}
             </p>
           ) : null}
           {tasksPage.deleteError ? (
-            <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.deleteError}
             </p>
           ) : null}
@@ -353,6 +406,7 @@ export function WorkPage() {
               tasks={tasksPage.view.items}
               projects={tasksPage.projects}
               people={tasksPage.people}
+              areas={projectsPage.areas}
               sort={tasksPage.view.state.sort}
               reorderEnabled={tasksPage.reorder.canReorder}
               getPriorityRank={tasksPage.getPriorityRank}

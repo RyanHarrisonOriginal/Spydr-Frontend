@@ -25,7 +25,11 @@ export function ProjectResourcesList({
   isDeleting = false,
 }: ProjectResourcesListProps) {
   return (
-    <ProjectDetailSection className="min-h-[360px]">
+    <ProjectDetailSection
+      collapsible
+      defaultExpanded={false}
+      className="md:min-h-[360px]"
+    >
       <ProjectDetailSectionHeader
         icon={<Paperclip className="h-3.5 w-3.5" />}
         label="Resources"

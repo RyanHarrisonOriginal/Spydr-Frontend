@@ -194,3 +194,14 @@ export function useActiveNotesHistoryQuery() {
     refetchOnMount: "always",
   });
 }
+
+export function useActiveNoteSessionQuery(sessionId: string | undefined) {
+  const enabled = useSpydrQueryEnabled();
+  const { activeOrgId } = useOrganizationContext();
+  return useQuery({
+    queryKey: spydrOrgKey(activeOrgId!, "active-notes", sessionId ?? ""),
+    queryFn: () => activeNoteApi.getProposal(sessionId!),
+    enabled: enabled && !!activeOrgId && !!sessionId,
+    refetchOnMount: "always",
+  });
+}

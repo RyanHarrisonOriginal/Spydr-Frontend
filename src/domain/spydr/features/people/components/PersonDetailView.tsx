@@ -191,10 +191,10 @@ export function PersonDetailView({
       />
 
       {deleteError ? (
-        <p className="px-6 py-1.5 text-sm text-destructive">{deleteError}</p>
+        <p className="px-4 py-1.5 text-sm text-destructive md:px-6">{deleteError}</p>
       ) : null}
 
-      <div className="border-b border-border px-6 py-3">
+      <div className="border-b border-border px-4 py-3 md:px-6">
         {isCurrentUser ? (
           <div className="mb-2.5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-highlight">
             <PersonMeBadge compact />

@@ -5,7 +5,7 @@ interface CollectionNoResultsProps {
 
 export function CollectionNoResults({ noun, onClearFilters }: CollectionNoResultsProps) {
   return (
-    <div className="px-6 py-10 text-center">
+    <div className="px-4 py-10 text-center md:px-6">
       <p className="text-[13px] font-medium text-foreground/90">
         No {noun} match your filters
       </p>

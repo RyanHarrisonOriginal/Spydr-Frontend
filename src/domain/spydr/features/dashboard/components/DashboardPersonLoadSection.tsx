@@ -27,7 +27,7 @@ export function DashboardPersonLoadSection({
 
   return (
     <section className="border-b border-border">
-      <div className="flex items-center gap-3 px-6 py-3">
+      <div className="flex items-center gap-3 px-4 py-3 md:px-6">
         <h2 className="text-[13px] font-medium text-foreground">
           Load by person
         </h2>
@@ -36,7 +36,86 @@ export function DashboardPersonLoadSection({
         </span>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="md:hidden">
+        {loads.length === 0 ? (
+          <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">
+            Assign people on projects to see workload distribution.
+          </p>
+        ) : (
+          <ul className="divide-y divide-border/50">
+            {loads.map((load) => {
+              const width =
+                maxOpenTasks > 0
+                  ? Math.round((load.openTasks / maxOpenTasks) * 100)
+                  : 0;
+              const roles = dashboardPersonRoleIds.filter(
+                (role) => load.roleCounts[role] > 0
+              );
+
+              return (
+                <li
+                  key={load.person?.id ?? "unassigned"}
+                  className={cn(
+                    "space-y-2 px-4 py-3",
+                    load.person && isMe(load.person.id) && "person-me-row"
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    {load.person ? (
+                      <span className="inline-flex min-w-0 items-center gap-1.5">
+                        <Link
+                          to={`/people/${load.person.id}`}
+                          className={cn(
+                            "truncate font-medium hover:text-highlight",
+                            isMe(load.person.id) && "text-highlight"
+                          )}
+                        >
+                          {load.person.name}
+                        </Link>
+                        {isMe(load.person.id) ? <PersonMeBadge compact /> : null}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">Unassigned</span>
+                    )}
+                    <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
+                      {load.openTasks} open
+                    </span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-sm bg-muted/50">
+                    <div
+                      className={cn(
+                        "h-full rounded-sm",
+                        load.openTasks > 0 ? "bg-highlight/75" : "bg-transparent"
+                      )}
+                      style={{ width: `${width}%` }}
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <span>{load.projects} projects</span>
+                    {load.blockedTasks > 0 ? (
+                      <span className="text-[hsl(var(--status-blocked))]">
+                        {load.blockedTasks} blocked
+                      </span>
+                    ) : null}
+                    {load.overdueTasks > 0 ? (
+                      <span className="text-[hsl(var(--status-blocked))]">
+                        {load.overdueTasks} overdue
+                      </span>
+                    ) : null}
+                    {roles.map((role) => (
+                      <span key={role}>
+                        {dashboardPersonRoleLabels[role]} {load.roleCounts[role]}
+                      </span>
+                    ))}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      <div className="hidden touch-scroll-x md:block">
         <table className="w-full min-w-[640px] text-left text-[13px]">
           <thead className="border-y border-border/70 bg-muted/20 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             <tr>
@@ -162,7 +241,7 @@ export function DashboardPersonLoadSection({
       </div>
 
       {dashboard.summary.unassignedProjects > 0 ? (
-        <p className="border-t border-border/70 px-6 py-2 text-[12px] text-muted-foreground">
+        <p className="border-t border-border/70 px-4 py-2 text-[12px] text-muted-foreground md:px-6">
           {dashboard.summary.unassignedProjects} projects and{" "}
           {dashboard.summary.unassignedProjectTasks} tasks have no assignee.
         </p>

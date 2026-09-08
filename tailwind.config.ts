@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 export default {
   darkMode: ["class"],
@@ -130,5 +131,12 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography"),
+    plugin(({ addVariant }) => {
+      addVariant("coarse", "@media (pointer: coarse)");
+      addVariant("fine", "@media (pointer: fine)");
+    }),
+  ],
 } satisfies Config;

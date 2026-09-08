@@ -27,7 +27,7 @@ export function ProjectListActiveFilterChips({
   if (chips.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 border-b border-border/60 bg-muted/5 px-6 py-1.5">
+    <div className="flex flex-wrap items-center gap-1.5 border-b border-border/60 bg-muted/5 px-4 py-1.5 md:px-6">
       {chips.map((chip) => (
         <Button
           key={`${chip.facetId}-${chip.value}`}

@@ -41,8 +41,8 @@
     --destructive: 2 74% 54%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 12% 14%;
-    --input: 220 12% 11%;
+    --border: 214 18% 28%;
+    --input: 214 16% 25%;
     /* Electric blue — focus / signal / navigation */
     --ring: 214 95% 58%;
 
@@ -57,33 +57,33 @@
        No purple, no warm journal rainbow. */
     --thought: 214 70% 62%;
     --thought-bg: 214 28% 12%;
-    --thought-border: 214 22% 20%;
+    --thought-border: 214 28% 34%;
 
     --idea: 220 12% 68%;
     --idea-bg: 220 10% 12%;
-    --idea-border: 220 10% 20%;
+    --idea-border: 220 12% 32%;
 
     --project: 200 28% 58%;
     --project-bg: 200 16% 11%;
-    --project-border: 200 14% 20%;
+    --project-border: 200 18% 32%;
 
     --article: 220 14% 64%;
     --article-bg: 220 12% 11%;
-    --article-border: 220 10% 20%;
+    --article-border: 220 12% 32%;
 
     --article-section: 214 32% 58%;
     --article-section-bg: 214 18% 11%;
-    --article-section-border: 214 14% 20%;
+    --article-section-border: 214 18% 32%;
 
     --paragraph: 220 8% 58%;
     --paragraph-bg: 220 10% 11%;
-    --paragraph-border: 220 8% 18%;
+    --paragraph-border: 220 10% 30%;
 
     --question: 351 55% 58%;
     --question-bg: 351 28% 11%;
-    --question-border: 351 22% 20%;
+    --question-border: 351 26% 32%;
 
-    --connector-line: 220 12% 18%;
+    --connector-line: 214 16% 28%;
     --node-fill-opacity: 0.06;
 
     --action-add: 214 70% 55%;
@@ -92,11 +92,11 @@
     --action-delete: 2 74% 54%;
 
     --panel-bg: 222 16% 7%;
-    --panel-border: 220 12% 14%;
+    --panel-border: 214 18% 28%;
 
     --tree-hover: 220 12% 10%;
     --tree-active: 214 95% 58%;
-    --tree-line: 220 12% 16%;
+    --tree-line: 214 16% 26%;
 
     --status-todo: 220 8% 52%;
     --status-active: 214 95% 60%;
@@ -113,8 +113,8 @@
     --shadow-sm: 0 1px 0 0 hsl(0 0% 0% / 0.35);
     --shadow-md: 0 1px 0 0 hsl(0 0% 0% / 0.45), 0 8px 24px -16px hsl(0 0% 0% / 0.5);
     --shadow-lg: 0 1px 0 0 hsl(0 0% 0% / 0.5), 0 16px 40px -20px hsl(0 0% 0% / 0.55);
-    --shadow-glow: 0 0 0 1px hsl(var(--highlight) / 0.12);
-    --shadow-glow-secondary: 0 0 0 1px hsl(var(--highlight-secondary) / 0.14);
+    --shadow-glow: 0 0 0 1px hsl(var(--highlight) / 0.22);
+    --shadow-glow-secondary: 0 0 0 1px hsl(var(--highlight-secondary) / 0.24);
     --shadow-2xs: 0 1px 0 0 hsl(0 0% 0% / 0.2);
     --shadow-xs: 0 1px 0 0 hsl(0 0% 0% / 0.28);
     --shadow: var(--shadow-sm);
@@ -127,7 +127,7 @@
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 12% 10%;
     --sidebar-accent-foreground: 220 14% 90%;
-    --sidebar-border: 220 12% 11%;
+    --sidebar-border: 214 20% 26%;
     --sidebar-ring: 214 95% 58%;
 
     --chart-1: 214 70% 58%;
@@ -150,7 +150,7 @@
     --clerk-color-input: #111318;
     --clerk-color-input-foreground: #e2e5eb;
     --clerk-color-neutral: #e2e5eb;
-    --clerk-color-border: #1f2228;
+    --clerk-color-border: #3b4654;
     --clerk-color-ring: #308cfc;
     --clerk-color-danger: #df3430;
     --clerk-color-success: #3d9a6e;
@@ -195,6 +195,12 @@
     body,
     #root {
       height: 100dvh;
+    }
+  }
+
+  @media (pointer: coarse) {
+    .row-hover:hover {
+      background-color: transparent;
     }
   }
 
@@ -248,6 +254,7 @@
   .panel {
     background-color: hsl(var(--panel-bg));
     border-color: hsl(var(--panel-border));
+    box-shadow: inset 0 1px 0 hsl(220 24% 100% / 0.055);
     @apply border rounded-lg;
   }
 
@@ -313,19 +320,19 @@
     @apply transition-colors duration-200;
   }
   .card-interactive:hover {
-    border-color: hsl(var(--highlight) / 0.35);
+    border-color: hsl(var(--highlight) / 0.5);
   }
 
   .divider {
-    @apply h-px w-full bg-border/60;
+    @apply h-px w-full bg-border;
   }
 
   .glow-hover:hover {
-    box-shadow: 0 0 0 1px hsl(var(--highlight) / 0.2);
+    box-shadow: 0 0 0 1px hsl(var(--highlight) / 0.32);
   }
 
   .glow-hover-secondary:hover {
-    box-shadow: 0 0 0 1px hsl(var(--highlight-secondary) / 0.22);
+    box-shadow: 0 0 0 1px hsl(var(--highlight-secondary) / 0.34);
   }
 
   /* react-colorful: match app theme (borders, radius) */
@@ -359,6 +366,16 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .page-gutter {
+    @apply px-4 md:px-6;
+  }
+
+  .touch-scroll-x {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   :root {
@@ -502,23 +519,63 @@
  * Structure from hairlines and space. Signal from thin blue. Pulse from crimson.
  * ────────────────────────────────────────────────────────────────────────── */
 @layer utilities {
-  /* Void + faint blueprint grid. No wash gradients. */
+  /* Flat charcoal canvas — no blueprint grid. */
   .spydr-surface {
     background-color: hsl(var(--background));
-    background-image:
-      linear-gradient(hsl(var(--foreground) / 0.018) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--foreground) / 0.018) 1px, transparent 1px);
-    background-size: 48px 48px;
-    background-position: -1px -1px;
   }
 
-  /* Sidebar rail — quieter, almost flat. */
+  /* Sidebar rail — quieter, almost flat, with a HUD seam on the right. */
   .spydr-rail {
+    position: relative;
     background-image: linear-gradient(
       180deg,
-      hsl(var(--highlight) / 0.03),
-      transparent 20%
+      hsl(var(--highlight) / 0.05),
+      transparent 22%
     );
+    box-shadow: inset -1px 0 0 hsl(var(--highlight) / 0.5);
+  }
+  .spydr-rail::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: -1px;
+    z-index: 2;
+    width: 1px;
+    height: 3.25rem;
+    background: linear-gradient(
+      180deg,
+      hsl(var(--highlight-secondary) / 0.95),
+      hsl(var(--highlight) / 0.5) 42%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  /* Horizontal chrome rule: steel hairline + inner signal + crimson tick. */
+  .spydr-rule {
+    position: relative;
+    box-shadow: inset 0 -1px 0 hsl(var(--highlight) / 0.48);
+  }
+  .spydr-rule::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: 2;
+    height: 1px;
+    width: 3.25rem;
+    background: linear-gradient(
+      90deg,
+      hsl(var(--highlight-secondary) / 0.95),
+      hsl(var(--highlight) / 0.5) 42%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  /* Machined-plate lip on framed surfaces. */
+  .spydr-plate {
+    box-shadow: inset 0 1px 0 hsl(220 24% 100% / 0.055);
   }
 
   /* Quiet radial ping for empty states. */
@@ -562,11 +619,11 @@
     @apply transition-colors duration-200;
   }
   .card-accent:hover {
-    border-color: hsl(var(--highlight) / 0.4);
+    border-color: hsl(var(--highlight) / 0.55);
   }
 
   .card-accent-primary:hover {
-    border-color: hsl(var(--highlight-secondary) / 0.45);
+    border-color: hsl(var(--highlight-secondary) / 0.55);
   }
 
   .glow-primary:hover {
@@ -641,6 +698,15 @@
     pointer-events: none;
   }
 
+  .active-note-editor .active-note-mention {
+    border-radius: 0.25rem;
+    background: color-mix(in oklab, var(--highlight) 12%, transparent);
+    padding: 0.05rem 0.3rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    white-space: nowrap;
+  }
+
   .spydr-rich-text {
     @apply prose prose-sm max-w-none;
     color: hsl(var(--foreground));
@@ -691,9 +757,12 @@
 .cl-cardBox,
 .cl-actionCard,
 .cl-modalContent {
-  border-color: hsl(var(--border)) !important;
+  border: 1px solid hsl(var(--border)) !important;
   border-radius: var(--radius) !important;
-  box-shadow: var(--shadow-md) !important;
+  box-shadow:
+    inset 0 1px 0 hsl(220 24% 100% / 0.06),
+    0 0 0 1px hsl(var(--highlight) / 0.14),
+    var(--shadow-md) !important;
 }
 
 .cl-headerTitle,
@@ -776,14 +845,17 @@
   background-color: hsl(var(--primary) / 0.9) !important;
 }
 
-.cl-socialButtonsBlockButton,
-.cl-socialButtonsIconButton,
-.cl-alternativeMethodsBlockButton,
-.cl-enterpriseConnectionButton,
-.cl-formButtonReset,
-.cl-selectButton,
+button.cl-socialButtonsBlockButton,
+button.cl-socialButtonsIconButton,
+button.cl-alternativeMethodsBlockButton,
+button.cl-enterpriseConnectionButton,
+button.cl-formButtonReset,
+button.cl-selectButton,
+.cl-socialButtonsBlockButton.cl-button,
 .cl-phoneInputBox {
   background-color: hsl(var(--card)) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
   border-color: hsl(var(--border)) !important;
   color: hsl(var(--foreground)) !important;
   box-shadow: none !important;
@@ -807,14 +879,16 @@
   text-transform: uppercase !important;
 }
 
-.cl-input,
-.cl-formFieldInput,
-.cl-otpCodeFieldInput,
-.cl-selectSearchInput,
+input.cl-input,
+input.cl-formFieldInput,
+input.cl-otpCodeFieldInput,
+input.cl-selectSearchInput,
 .cl-organizationProfileMembersSearchInput,
 .cl-apiKeysSearchInput,
 .cl-tagInputContainer {
   background-color: hsl(var(--card)) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
   border-color: hsl(var(--border)) !important;
   color: hsl(var(--foreground)) !important;
   box-shadow: none !important;
@@ -848,7 +922,7 @@
 .cl-tooltipContent,
 .cl-impersonationFab {
   background-color: hsl(var(--popover)) !important;
-  border-color: hsl(var(--border)) !important;
+  border: 1px solid hsl(var(--border)) !important;
   color: hsl(var(--popover-foreground)) !important;
   box-shadow: var(--shadow-md) !important;
   border-radius: var(--radius) !important;
@@ -1002,4 +1076,11 @@
   border-color: hsl(var(--ring)) !important;
   box-shadow: 0 0 0 1px hsl(var(--ring) / 0.35) !important;
   outline: none !important;
+}
+
+.cl-rootBox button.cl-button.cl-socialButtonsBlockButton,
+.cl-rootBox button.cl-button.cl-socialButtonsIconButton,
+.cl-rootBox button.cl-button.cl-alternativeMethodsBlockButton,
+.cl-rootBox button.cl-button.cl-enterpriseConnectionButton {
+  border-color: hsl(var(--border)) !important;
 }

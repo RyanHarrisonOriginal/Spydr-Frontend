@@ -24,7 +24,9 @@ interface ProjectListToolbarProps {
   onToggleFacet(facetId: ProjectListFilterFacetId, value: string): void;
   onRemoveFacetValue(facetId: ProjectListFilterFacetId, value: string): void;
   onClearFilters(): void;
+  startActions?: ReactNode;
   endActions?: ReactNode;
+  sticky?: boolean;
 }
 
 export function ProjectListToolbar({
@@ -38,25 +40,36 @@ export function ProjectListToolbar({
   onToggleFacet,
   onRemoveFacetValue,
   onClearFilters,
+  startActions,
   endActions,
+  sticky = false,
 }: ProjectListToolbarProps) {
   const hasActiveFilters = hasActiveProjectListFilters(filters);
   const filterContext = { areas, people };
 
   return (
-    <div className="border-b border-border/80">
-      <div className="flex flex-wrap items-center gap-2 bg-muted/10 px-6 py-2">
-        <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
+    <div
+      className={cn(
+        "border-b border-border",
+        sticky && "sticky top-0 z-20 bg-background/95 backdrop-blur-sm"
+      )}
+    >
+      <div className="flex flex-col gap-2 bg-muted/10 px-4 py-2 md:flex-row md:flex-wrap md:items-center md:px-6">
+        {startActions ? (
+          <div className="flex min-w-0 flex-wrap items-center gap-2">{startActions}</div>
+        ) : null}
+        <div className="relative min-w-0 flex-1 md:min-w-[12rem] md:max-w-xs">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={filters.search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search by name…"
-            className="h-8 border-border/80 bg-background pl-8 text-[12px] shadow-none"
+            className="h-8 border-border bg-background pl-8 text-[12px] shadow-none"
             aria-label="Search projects by name"
           />
         </div>
 
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]">
@@ -100,6 +113,7 @@ export function ProjectListToolbar({
             : `${filteredCount} of ${totalCount}`}
         </span>
         {endActions}
+        </div>
       </div>
 
       <ProjectListActiveFilterChips

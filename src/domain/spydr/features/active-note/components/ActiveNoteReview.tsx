@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import type {
   ActiveNoteProposal,
   ActiveNoteProposalAttachment,
@@ -13,6 +12,7 @@ import { ACTIVE_NOTE_MAX_LENGTH } from "@/domain/spydr/utils/activeNoteTypes";
 import type { ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
 import { cn } from "@/lib/utils";
 import { groupProposalOperations } from "../utils/proposalPresentation";
+import { ActiveNoteEditor } from "./ActiveNoteEditor";
 import { ActiveNoteProposalCard } from "./ActiveNoteProposalCard";
 import { ActiveNoteProposalEditor } from "./ActiveNoteProposalEditor";
 
@@ -26,6 +26,8 @@ interface ActiveNoteReviewProps {
   selectedCount: number;
   isApplying: boolean;
   isReanalyzing: boolean;
+  noteEditable?: boolean;
+  applyAgain?: boolean;
   applyError: string | null;
   noteError: string | null;
   validationErrors: Record<string, string>;
@@ -60,6 +62,8 @@ export function ActiveNoteReview({
   selectedCount,
   isApplying,
   isReanalyzing,
+  noteEditable = true,
+  applyAgain = false,
   applyError,
   noteError,
   validationErrors,
@@ -97,15 +101,15 @@ export function ActiveNoteReview({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="mx-auto grid h-full min-h-0 w-full max-w-6xl grid-rows-[minmax(0,auto)_minmax(0,1fr)] gap-4 px-6 pt-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:grid-rows-1 lg:gap-6 md:px-8">
+      <div className="mx-auto grid h-full min-h-0 w-full max-w-6xl grid-rows-[minmax(0,auto)_minmax(0,1fr)] gap-3 overflow-y-auto px-4 pt-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:grid-rows-1 lg:gap-6 lg:overflow-hidden md:px-8 md:pt-4">
         <aside className="flex min-h-0 flex-col gap-3 overflow-hidden lg:gap-4">
-          <section className="flex min-h-0 flex-col rounded-md border border-border bg-muted/10 p-4 lg:min-h-0 lg:flex-1">
+          <section className="flex min-h-0 flex-col rounded-md border border-border bg-muted/10 p-4 spydr-plate lg:min-h-0 lg:flex-1">
             <div className="flex shrink-0 items-center justify-between gap-3">
               <Label
-                htmlFor="active-note-review-content"
+                id="active-note-review-content-label"
                 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
               >
-                Active note
+                {noteEditable ? "Active note" : "Original note"}
               </Label>
               <span
                 className={cn(
@@ -117,12 +121,14 @@ export function ActiveNoteReview({
                 {ACTIVE_NOTE_MAX_LENGTH.toLocaleString()}
               </span>
             </div>
-            <Textarea
+            <ActiveNoteEditor
               id="active-note-review-content"
               value={content}
-              onChange={(event) => onContentChange(event.target.value)}
-              className="mt-3 min-h-[160px] flex-1 resize-y border-border/80 bg-background text-[14px] leading-relaxed lg:min-h-0"
-              disabled={noteBusy}
+              onValueChange={onContentChange}
+              className="mt-3 min-h-[120px] flex-1 border-border bg-background text-[14px] leading-relaxed lg:min-h-0"
+              disabled={noteBusy || !noteEditable}
+              readOnly={!noteEditable}
+              aria-labelledby="active-note-review-content-label"
               aria-invalid={Boolean(noteError) || overLimit}
             />
             {(noteError || overLimit) && (
@@ -131,21 +137,23 @@ export function ActiveNoteReview({
                   `Notes can be at most ${ACTIVE_NOTE_MAX_LENGTH.toLocaleString()} characters.`}
               </p>
             )}
-            <div className="mt-3 flex shrink-0">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onReanalyze}
-                disabled={!canReanalyze}
-              >
-                {isReanalyzing ? "Re-analyzing…" : "Re-analyze"}
-              </Button>
-            </div>
+            {noteEditable ? (
+              <div className="mt-3 flex shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onReanalyze}
+                  disabled={!canReanalyze}
+                >
+                  {isReanalyzing ? "Re-analyzing…" : "Re-analyze"}
+                </Button>
+              </div>
+            ) : null}
           </section>
         </aside>
 
-        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-md border border-border bg-muted/5">
+        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-md border border-border bg-muted/5 spydr-plate">
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2.5">
             <h2 className="text-[14px] font-semibold tracking-tight">Suggestions</h2>
             <p
@@ -191,7 +199,11 @@ export function ActiveNoteReview({
 
           <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border bg-background/95 px-4 py-2.5">
             <p className="text-[12px] text-muted-foreground">
-              {selectedCount === 0 ? "None selected" : `${selectedCount} selected`}
+              {selectedCount === 0
+                ? "None selected"
+                : applyAgain
+                  ? `${selectedCount} selected to apply again`
+                  : `${selectedCount} selected`}
             </p>
             <Button
               type="button"
@@ -201,10 +213,18 @@ export function ActiveNoteReview({
               aria-label={
                 isApplying
                   ? "Applying selected changes"
-                  : `Apply ${selectedCount} selected changes`
+                  : applyAgain
+                    ? `Apply ${selectedCount} selected changes again`
+                    : `Apply ${selectedCount} selected changes`
               }
             >
-              {isApplying ? "Applying…" : selectedCount === 0 ? "Apply" : `Apply (${selectedCount})`}
+              {isApplying
+                ? "Applying…"
+                : selectedCount === 0
+                  ? "Apply"
+                  : applyAgain
+                    ? `Apply again (${selectedCount})`
+                    : `Apply (${selectedCount})`}
             </Button>
           </div>
         </section>

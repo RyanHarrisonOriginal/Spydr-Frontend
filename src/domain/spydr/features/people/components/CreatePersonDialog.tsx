@@ -73,7 +73,7 @@ export function CreatePersonDialog({
             </span>
             <input name="email" type="email" className={fieldClassName} placeholder="jane@org.com" />
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <label className="block space-y-1">
               <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                 Title

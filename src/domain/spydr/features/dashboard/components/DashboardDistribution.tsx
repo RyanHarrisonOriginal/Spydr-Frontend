@@ -92,7 +92,7 @@ export function DashboardDistribution({ dashboard }: DashboardDistributionProps)
     }));
 
   return (
-    <section className="grid gap-8 px-6 py-5 md:grid-cols-3">
+    <section className="grid gap-6 px-4 py-5 md:grid-cols-3 md:gap-8 md:px-6">
       <CountList
         title="Tasks"
         rows={toStatusRows(dashboard.taskStatusCounts)}

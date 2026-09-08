@@ -1,5 +1,12 @@
-import type { ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsPhone } from "@/hooks/useIsPhone";
 
 export const detailFieldClassName =
   "w-full rounded-md border border-input bg-background px-2.5 text-[13px] ring-focus transition-colors placeholder:text-muted-foreground";
@@ -10,22 +17,49 @@ export const detailTextareaClassName =
 export const detailInsetPanelClassName =
   "rounded-lg border border-border/70 bg-muted/20 p-3";
 
+interface SectionCollapseContextValue {
+  collapsible: boolean;
+  expanded: boolean;
+  toggle(): void;
+}
+
+const SectionCollapseContext = createContext<SectionCollapseContextValue>({
+  collapsible: false,
+  expanded: true,
+  toggle: () => undefined,
+});
+
 export function ProjectDetailSection({
   children,
   className,
+  collapsible = false,
+  defaultExpanded = true,
 }: {
   children: ReactNode;
   className?: string;
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
 }) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+
   return (
-    <section
-      className={cn(
-        "flex min-h-0 flex-col overflow-hidden rounded-md border border-border bg-card",
-        className
-      )}
+    <SectionCollapseContext.Provider
+      value={{
+        collapsible,
+        expanded: collapsible ? expanded : true,
+        toggle: () => setExpanded((current) => !current),
+      }}
     >
-      {children}
-    </section>
+      <section
+        className={cn(
+          "flex min-h-0 flex-col overflow-hidden rounded-md border border-border bg-card",
+          className,
+          collapsible && !expanded && "min-h-0 md:min-h-0"
+        )}
+      >
+        {children}
+      </section>
+    </SectionCollapseContext.Provider>
   );
 }
 
@@ -35,39 +69,89 @@ export function ProjectDetailSectionHeader({
   hint,
   hintClassName,
   actions,
+  compact = false,
 }: {
   icon?: ReactNode;
   label: string;
   hint?: string;
   hintClassName?: string;
   actions?: ReactNode;
+  compact?: boolean;
 }) {
-  return (
-    <div className="flex items-center gap-2 border-b border-border bg-muted/25 px-4 py-2.5">
+  const isPhone = useIsPhone();
+  const tight = compact || isPhone;
+  const { collapsible, expanded, toggle } = useContext(SectionCollapseContext);
+
+  const content = (
+    <>
+      {collapsible ? (
+        <ChevronRight
+          className={cn(
+            "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
+            expanded && "rotate-90"
+          )}
+          strokeWidth={2.5}
+          aria-hidden
+        />
+      ) : null}
       {icon ? (
         <span className="text-muted-foreground [&_svg]:h-3.5 [&_svg]:w-3.5">
           {icon}
         </span>
       ) : null}
-      <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-foreground/80">
+      <h2
+        className={cn(
+          "font-mono uppercase text-foreground/80",
+          tight ? "text-[11px] tracking-[0.12em]" : "text-[10px] tracking-[0.16em]"
+        )}
+      >
         {label}
       </h2>
-      <span className="h-px min-w-4 flex-1 bg-border/80" aria-hidden />
+      <span className="h-px min-w-2 flex-1 bg-border/80" aria-hidden />
       {actions ? (
-        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+        <div
+          className="flex shrink-0 items-center gap-2"
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          {actions}
+        </div>
       ) : null}
       {hint ? (
         <span
           className={cn(
-            "font-mono text-[10px] tabular-nums text-muted-foreground",
+            "shrink-0 font-mono tabular-nums text-muted-foreground",
+            tight ? "text-[11px]" : "text-[10px]",
             hintClassName
           )}
         >
           {hint}
         </span>
       ) : null}
-    </div>
+    </>
   );
+
+  const shellClass = cn(
+    "flex w-full items-center gap-2 border-b border-border bg-muted/25 text-left",
+    tight ? "px-3 py-2" : "px-4 py-2.5",
+    collapsible && "cursor-pointer transition-colors hover:bg-muted/40",
+    collapsible && !expanded && "border-b-0"
+  );
+
+  if (collapsible) {
+    return (
+      <button
+        type="button"
+        className={shellClass}
+        aria-expanded={expanded}
+        onClick={toggle}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <div className={shellClass}>{content}</div>;
 }
 
 export function ProjectDetailSectionBody({
@@ -77,6 +161,9 @@ export function ProjectDetailSectionBody({
   children: ReactNode;
   className?: string;
 }) {
+  const { collapsible, expanded } = useContext(SectionCollapseContext);
+  if (collapsible && !expanded) return null;
+
   return (
     <div className={cn("flex flex-1 flex-col gap-4 p-4", className)}>{children}</div>
   );

@@ -18,7 +18,7 @@ export function BreadcrumbTrail({ className }: BreadcrumbTrailProps) {
   return (
     <nav
       aria-label="Breadcrumb"
-      className={cn("flex min-w-0 items-center gap-2", className)}
+      className={cn("flex min-w-0 items-center gap-2 overflow-x-auto", className)}
     >
       {stack.map((entry, index) => {
         const isLast = index === stack.length - 1;
@@ -26,7 +26,8 @@ export function BreadcrumbTrail({ className }: BreadcrumbTrailProps) {
         const isEntityId =
           /^\/projects\/[^/]+$/.test(entry.pathname) ||
           /^\/tasks\/[^/]+$/.test(entry.pathname) ||
-          /^\/notes\/[^/]+$/.test(entry.pathname);
+          /^\/notes\/[^/]+$/.test(entry.pathname) ||
+          /^\/active-note\/[^/]+$/.test(entry.pathname);
         const labelClassName = cn(
           "truncate",
           isEntityId && "font-mono tabular-nums",

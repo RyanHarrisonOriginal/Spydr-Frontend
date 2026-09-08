@@ -39,13 +39,16 @@ export function ResourceList({
         const source = getResourceSource(resource);
 
         return (
-          <div className="flex items-center gap-3 px-6 py-3 row-hover">
+          <div className="flex flex-col gap-2 px-4 py-3 row-hover md:px-6 sm:flex-row sm:items-center sm:gap-3">
+            <div className="flex min-w-0 items-center gap-3">
             {reorderEnabled ? (
               <CollectionDragHandle {...sortable.dragHandleProps} />
             ) : null}
             <CollectionPriorityRank rank={getPriorityRank(resource.id)} />
             <Bookmark className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             <span className="min-w-0 flex-1 truncate text-[13px]">{resource.title}</span>
+            </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
             {resource.area && <EntityTag tag={resource.area} />}
             <span className="rounded bg-muted/60 px-1.5 py-px font-mono text-[10px] uppercase text-muted-foreground">
               {resource.details?.resourceType ?? "resource"}
@@ -64,6 +67,7 @@ export function ResourceList({
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
+            </div>
           </div>
         );
       }}

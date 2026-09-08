@@ -60,17 +60,21 @@ export function filterProjectsForPerson(
   personId: string | null
 ): ProjectNode[] {
   if (!personId) return projects;
-  const projectIdsWithAssignedTasks = new Set<string>();
+  const projectIdsWithOpenAssignedTasks = new Set<string>();
   for (const task of tasks) {
     const projectId = task.project?.id;
-    if (projectId && taskAssignedToPerson(task, personId)) {
-      projectIdsWithAssignedTasks.add(projectId);
+    if (
+      projectId &&
+      taskAssignedToPerson(task, personId) &&
+      isOpenTask(task)
+    ) {
+      projectIdsWithOpenAssignedTasks.add(projectId);
     }
   }
   return projects.filter(
     (project) =>
-      projectInvolvesPerson(project, personId) ||
-      projectIdsWithAssignedTasks.has(project.id)
+      isPersonOwnedProject(getPersonProjectRoles(project, personId)) ||
+      projectIdsWithOpenAssignedTasks.has(project.id)
   );
 }
 

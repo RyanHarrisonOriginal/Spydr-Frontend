@@ -1,6 +1,7 @@
 import type { ProjectAreaNode } from "@/domain/spydr/utils/types";
 import {
   areaColorSurfaceStyle,
+  hslColorCss,
   resolveAreaColor,
 } from "@/domain/spydr/utils/projectAreaColors";
 import { AreaColorSwatch } from "./AreaColorSwatch";
@@ -12,6 +13,7 @@ interface ProjectAreaSelectProps {
   onChange(areaNodeId: string | null): void;
   disabled?: boolean;
   className?: string;
+  appearance?: "field" | "rail";
 }
 
 function findArea(areas: ProjectAreaNode[], areaId: string) {
@@ -24,6 +26,7 @@ export function ProjectAreaSelect({
   onChange,
   disabled = false,
   className,
+  appearance = "field",
 }: ProjectAreaSelectProps) {
   const options = [
     { value: "", label: "Unassigned" },
@@ -34,7 +37,9 @@ export function ProjectAreaSelect({
   ];
 
   const hasValue = Boolean(value);
-  const selectedColor = hasValue ? resolveAreaColor(findArea(areas, value)) : null;
+  const selectedArea = hasValue ? findArea(areas, value) : undefined;
+  const selectedColor = hasValue ? resolveAreaColor(selectedArea) : null;
+  const areaName = selectedArea?.title ?? "Unassigned";
 
   return (
     <ProjectListFieldSelect
@@ -42,17 +47,20 @@ export function ProjectAreaSelect({
       options={options}
       onChange={(next) => onChange(next ? next : null)}
       disabled={disabled}
-      ariaLabel="Project area"
+      appearance={appearance}
+      ariaLabel={appearance === "rail" ? `Area: ${areaName}` : "Project area"}
       menuLabel="Area"
       placeholder="Unassigned"
       emptyValue=""
       searchable
       leading={
-        hasValue && selectedColor ? (
-          <AreaColorSwatch color={selectedColor} />
-        ) : (
-          <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-dashed border-muted-foreground/40" />
-        )
+        appearance === "field" ? (
+          hasValue && selectedColor ? (
+            <AreaColorSwatch color={selectedColor} />
+          ) : (
+            <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-dashed border-muted-foreground/40" />
+          )
+        ) : null
       }
       renderOptionLeading={(option) =>
         option.value ? (
@@ -63,7 +71,13 @@ export function ProjectAreaSelect({
       }
       triggerClassName={className}
       triggerStyle={
-        hasValue && selectedColor ? areaColorSurfaceStyle(selectedColor) : undefined
+        appearance === "rail"
+          ? selectedColor
+            ? { backgroundColor: hslColorCss(selectedColor) }
+            : undefined
+          : hasValue && selectedColor
+            ? areaColorSurfaceStyle(selectedColor)
+            : undefined
       }
       labelClassName="font-medium tracking-tight text-foreground/90"
       getOptionStyle={(option, selected) => {

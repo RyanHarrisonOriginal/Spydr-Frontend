@@ -124,6 +124,53 @@ export interface BackendActiveNoteAnalyzeResponse {
   actionPlans: BackendSegmentActionPlan[];
 }
 
+export type BackendActiveNotePipelineStep =
+  | "segment"
+  | "project_context"
+  | "project_assignment"
+  | "action_plan";
+
+export interface BackendActiveNoteAnalyzeAccepted {
+  sessionId: string;
+  status: "analyzing";
+}
+
+export interface BackendActiveNoteAnalysisSnapshot {
+  sessionId: string;
+  status: "analyzing" | "review" | "applying" | "completed" | "failed";
+  content: string;
+  projectId: string | null;
+  completedSteps: BackendActiveNotePipelineStep[];
+  segments?: BackendActiveNoteSegment[];
+  actionPlans?: BackendSegmentActionPlan[];
+  reviewSnapshot?: BackendActiveNoteReviewSnapshot | null;
+  errorMessage?: string | null;
+  failedStep?: string | null;
+}
+
+export interface BackendActiveNoteReviewSnapshot {
+  operations: Array<{
+    operationId: string;
+    title: string;
+    objectType: string | null;
+    selected: boolean;
+    outcome: "accepted" | "rejected" | "failed";
+  }>;
+  applied: Array<{
+    id: string;
+    type: string;
+    title: string;
+    action: "created" | "updated" | "linked";
+    href: string;
+    operationId?: string;
+  }>;
+  failed: Array<{
+    operationId: string;
+    message: string;
+  }>;
+  appliedAt: string;
+}
+
 export interface AnalyzeActiveNoteInput {
   content: string;
   projectId?: string | null;
@@ -136,4 +183,6 @@ export interface AnalyzeActiveNoteInput {
     createdAt: string;
     updatedAt: string;
   } | null;
+  onProgress?: (completedSteps: BackendActiveNotePipelineStep[]) => void;
+  signal?: AbortSignal;
 }

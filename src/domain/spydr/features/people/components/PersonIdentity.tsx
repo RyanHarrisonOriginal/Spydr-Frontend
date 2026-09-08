@@ -1,6 +1,6 @@
 import { Sparkles } from "lucide-react";
 import type { PersonNode } from "@/domain/spydr/utils/types";
-import { personDisplayName, personInitial } from "@/domain/spydr/utils/projectPersonas";
+import { personDisplayName, personInitials } from "@/domain/spydr/utils/projectPersonas";
 import { useCurrentUserPerson } from "../context/CurrentUserPersonContext";
 import { cn } from "@/lib/utils";
 
@@ -31,9 +31,9 @@ interface PersonAvatarProps {
 }
 
 const avatarSizeClass: Record<NonNullable<PersonAvatarProps["size"]>, string> = {
-  sm: "h-6 w-6 text-[10px]",
-  md: "h-8 w-8 text-[11px]",
-  lg: "h-10 w-10 text-[12px]",
+  sm: "h-6 w-6 text-[9px] tracking-tight",
+  md: "h-8 w-8 text-[10px] tracking-tight",
+  lg: "h-10 w-10 text-[11px] tracking-tight",
 };
 
 export function PersonAvatar({
@@ -54,7 +54,7 @@ export function PersonAvatar({
       )}
       aria-label={isCurrentUser ? "Your profile avatar" : undefined}
     >
-      {personInitial(person)}
+      {personInitials(person)}
     </span>
   );
 }

@@ -6,7 +6,7 @@ import {
   PersonAvatar,
   personSelectLabel,
 } from "@/domain/spydr/features/people/components/PersonIdentity";
-import { personSubtitle } from "@/domain/spydr/utils/projectPersonas";
+import { personGivenName, personSubtitle } from "@/domain/spydr/utils/projectPersonas";
 import { cn } from "@/lib/utils";
 
 interface PersonSelectProps {
@@ -49,23 +49,28 @@ export function PersonSelect({
         menuLabel="People"
         emptyValue=""
         searchable
+        triggerLabel={
+          compact && selected
+            ? isMe(selected)
+              ? `${personGivenName(selected)} (You)`
+              : personGivenName(selected)
+            : undefined
+        }
         leading={
           selected ? (
-            <PersonAvatar person={selected} size="sm" className="h-4 w-4 text-[8px]" />
+            <PersonAvatar person={selected} size="sm" />
           ) : (
-            <span className="h-4 w-4 shrink-0 rounded-full border border-dashed border-border/80 bg-muted/20" />
+            <span className="h-6 w-6 shrink-0 rounded-full border border-dashed border-border/25 bg-muted/15" />
           )
         }
         renderOptionLeading={(option) => {
           const person = people.find((item) => item.id === option.value);
-          if (!person) return <span className="h-4 w-4 shrink-0" />;
-          return (
-            <PersonAvatar person={person} size="sm" className="h-4 w-4 text-[8px]" />
-          );
+          if (!person) return <span className="h-6 w-6 shrink-0" />;
+          return <PersonAvatar person={person} size="sm" />;
         }}
         triggerClassName={cn(
           "h-8 bg-background",
-          selected && isMe(selected) && "border-highlight/35 bg-highlight/5"
+          selected && isMe(selected) && "border-highlight/12 bg-highlight/5"
         )}
         labelClassName={cn(
           "text-[12px] text-foreground/90",

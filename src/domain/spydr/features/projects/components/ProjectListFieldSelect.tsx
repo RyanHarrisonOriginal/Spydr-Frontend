@@ -36,6 +36,9 @@ interface ProjectListFieldSelectProps {
   getOptionClassName?(option: ProjectListFieldOption, selected: boolean): string | undefined;
   getOptionLabelClassName?(option: ProjectListFieldOption, selected: boolean): string | undefined;
   getOptionStyle?(option: ProjectListFieldOption, selected: boolean): CSSProperties | undefined;
+  appearance?: "field" | "icon" | "rail";
+  /** Overrides the selected option label on the trigger. */
+  triggerLabel?: string;
 }
 
 export function ProjectListFieldSelect({
@@ -57,6 +60,8 @@ export function ProjectListFieldSelect({
   getOptionClassName,
   getOptionLabelClassName,
   getOptionStyle,
+  appearance = "field",
+  triggerLabel,
 }: ProjectListFieldSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,7 +69,7 @@ export function ProjectListFieldSelect({
   const showSearch = searchable ?? options.length > SEARCH_OPTION_THRESHOLD;
 
   const selected = options.find((option) => option.value === value);
-  const displayLabel = selected?.label ?? placeholder;
+  const displayLabel = triggerLabel ?? selected?.label ?? placeholder;
   const isEmpty = !value || value === emptyValue;
 
   const visibleOptions = useMemo(() => {
@@ -103,45 +108,59 @@ export function ProjectListFieldSelect({
           type="button"
           disabled={disabled}
           aria-label={ariaLabel}
+          title={appearance === "rail" ? ariaLabel : undefined}
           aria-haspopup="listbox"
           aria-expanded={open}
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
           className={cn(
-            "flex h-7 w-full min-w-0 items-center gap-1.5 rounded-md border px-2",
-            "border-border/80 bg-background/50 text-[11px] transition-colors",
-            "hover:border-border hover:bg-muted/40",
+            "flex min-w-0 items-center transition-colors",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/15",
             "disabled:cursor-not-allowed disabled:opacity-50",
-            "data-[state=open]:border-primary/40 data-[state=open]:ring-2 data-[state=open]:ring-primary/15",
-            isEmpty && "border-dashed bg-muted/20",
+            appearance === "field" &&
+              "h-7 w-full gap-1.5 rounded-md border border-border/20 bg-background/30 px-2 text-[11px] hover:border-border/40 hover:bg-muted/30 data-[state=open]:border-primary/30 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
+            appearance === "field" && isEmpty && "border-dashed border-border/25 bg-muted/10",
+            appearance === "icon" &&
+              "h-8 w-8 shrink-0 justify-center rounded-md border border-border/30 bg-background/40 hover:border-highlight/40 hover:bg-muted/40 data-[state=open]:border-primary/40 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
+            appearance === "rail" &&
+              "h-auto w-1.5 min-h-10 shrink-0 self-stretch rounded-sm border-0 p-0 hover:opacity-80 data-[state=open]:ring-2 data-[state=open]:ring-highlight/40",
+            appearance === "rail" && isEmpty && "bg-muted/50",
             triggerClassName
           )}
           style={triggerStyle}
         >
-          {leading}
-          <span
-            className={cn(
-              "min-w-0 flex-1 truncate text-left leading-none",
-              isEmpty ? "italic text-muted-foreground" : labelClassName
-            )}
-          >
-            {displayLabel}
-          </span>
-          <ChevronDown
-            className={cn(
-              "h-3 w-3 shrink-0 text-muted-foreground/70 transition-transform",
-              open && "rotate-180 text-foreground"
-            )}
-            aria-hidden
-          />
+          {appearance !== "rail" ? leading : null}
+          {appearance === "field" ? (
+            <>
+              <span
+                className={cn(
+                  "min-w-0 flex-1 truncate text-left leading-none",
+                  isEmpty ? "italic text-muted-foreground" : labelClassName
+                )}
+              >
+                {displayLabel}
+              </span>
+              <ChevronDown
+                className={cn(
+                  "h-3 w-3 shrink-0 text-muted-foreground/70 transition-transform",
+                  open && "rotate-180 text-foreground"
+                )}
+                aria-hidden
+              />
+            </>
+          ) : null}
         </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
         align="start"
         sideOffset={6}
-        className="z-[120] w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-hidden border-border/90 bg-popover p-1 shadow-lg"
+        className={cn(
+          "z-[120] overflow-hidden border-border/90 bg-popover p-1 shadow-lg",
+          appearance === "field"
+            ? "w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)]"
+            : "min-w-[14rem]"
+        )}
         onClick={(event) => event.stopPropagation()}
         onPointerDown={(event) => event.stopPropagation()}
       >

@@ -61,7 +61,7 @@ export function ActiveNoteCompletionSummary({
   const totalApplied = result.applied.length;
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-10 md:px-8">
+    <div className="mx-auto max-w-2xl px-4 py-8 md:px-8 md:py-10">
       <header className="relative overflow-hidden rounded-md border border-border bg-muted/10 px-5 py-5">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.55]"

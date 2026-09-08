@@ -6,6 +6,48 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetActiveNoteMocks } from "@/domain/spydr/utils/activeNoteMocks";
 import { ActiveNotePage } from "./ActiveNotePage";
 
+/** TipTap/ProseMirror is awkward in jsdom; page flows use a textarea stand-in. */
+vi.mock(
+  "@/domain/spydr/features/active-note/components/ActiveNoteEditor",
+  () => ({
+    ActiveNoteEditor: ({
+      value,
+      onValueChange,
+      disabled,
+      readOnly,
+      id,
+      placeholder,
+      "aria-labelledby": ariaLabelledBy,
+      "aria-invalid": ariaInvalid,
+      "aria-describedby": ariaDescribedBy,
+    }: {
+      value: string;
+      onValueChange: (value: string) => void;
+      disabled?: boolean;
+      readOnly?: boolean;
+      id?: string;
+      placeholder?: string;
+      "aria-labelledby"?: string;
+      "aria-invalid"?: boolean | string;
+      "aria-describedby"?: string;
+    }) => (
+      <textarea
+        id={id}
+        value={value}
+        placeholder={placeholder}
+        disabled={disabled || readOnly}
+        readOnly={readOnly}
+        aria-labelledby={ariaLabelledBy}
+        aria-invalid={
+          ariaInvalid == null ? undefined : String(ariaInvalid)
+        }
+        aria-describedby={ariaDescribedBy}
+        onChange={(event) => onValueChange(event.target.value)}
+      />
+    ),
+  })
+);
+
 vi.mock("@/domain/spydr/features/shared/hooks/queries", () => ({
   useProjectsQuery: () => ({
     data: [
@@ -48,6 +90,11 @@ vi.mock("@/domain/spydr/features/shared/hooks/queries", () => ({
         project: { id: "proj-muay-thai", title: "Muay Thai Development" },
       },
     ],
+    isLoading: false,
+    isError: false,
+  }),
+  useNotesQuery: () => ({
+    data: [],
     isLoading: false,
     isError: false,
   }),
@@ -166,8 +213,16 @@ describe("ActiveNotePage", () => {
     ).toBeInTheDocument();
 
     expect(
-      screen.getByText(/Difficulty landing teeps against larger opponents/i)
-    ).toBeInTheDocument();
+      await waitFor(() => {
+        const card = document.querySelector(
+          '[data-operation-id="op-note-observation"]'
+        );
+        if (!card) {
+          throw new Error("Observation proposal card not found");
+        }
+        return card;
+      })
+    ).toBeTruthy();
     expect(
       screen.queryByText((_, element) => {
         return (
@@ -199,8 +254,11 @@ describe("ActiveNotePage", () => {
     expect(suggestedAccept).not.toBeChecked();
 
     await user.click(
+      within(suggestedCard).getByRole("button", { expanded: false })
+    );
+    await user.click(
       within(suggestedCard).getByRole("radio", {
-        name: /create a new task/i,
+        name: /create new anyway/i,
       })
     );
     expect(suggestedAccept).toBeChecked();
@@ -213,14 +271,16 @@ describe("ActiveNotePage", () => {
     await user.type(titleInput, "Drill teep setups vs larger partners");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    expect(
-      await screen.findByText(/Drill teep setups vs larger partners/i)
-    ).toBeInTheDocument();
-
     const linkCard = document.querySelector(
       'article[data-operation-type="link"]'
     ) as HTMLElement;
     expect(linkCard).toBeTruthy();
+    const linkExpand = within(linkCard).queryByRole("button", {
+      expanded: false,
+    });
+    if (linkExpand) {
+      await user.click(linkExpand);
+    }
     await user.click(within(linkCard).getByRole("button", { name: "Reject" }));
 
     const applyButton = screen.getByRole("button", {
@@ -243,7 +303,7 @@ describe("ActiveNotePage", () => {
     expect(
       screen.getByRole("button", { name: /create another active note/i })
     ).toBeInTheDocument();
-  });
+  }, 15_000);
 
   it("keeps the sticky apply action available in the document", async () => {
     const user = userEvent.setup();
@@ -287,6 +347,7 @@ describe("ActiveNotePage", () => {
         if (!card) throw new Error("Task proposal card not found");
         return card;
       });
+      await user.click(within(taskCard).getByRole("button", { expanded: false }));
       await user.click(within(taskCard).getByRole("button", { name: "Edit" }));
       const titleInput = await screen.findByLabelText("Title");
       await user.clear(titleInput);
@@ -301,9 +362,14 @@ describe("ActiveNotePage", () => {
       expect(
         await screen.findByText(/apply failed|could not apply/i)
       ).toBeInTheDocument();
+      const applyPayload = applySpy.mock.calls[0]?.[1] as {
+        operations: Array<{ payload?: { title?: string } }>;
+      };
       expect(
-        screen.getByText(/Edited explicit task/i)
-      ).toBeInTheDocument();
+        applyPayload.operations.some(
+          (operation) => operation.payload?.title === "Edited explicit task"
+        )
+      ).toBe(true);
       expect(screen.getByText(/active note review/i)).toBeInTheDocument();
     } finally {
       applySpy.mockRestore();

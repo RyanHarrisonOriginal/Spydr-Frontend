@@ -5,17 +5,17 @@ import { ProjectListFieldSelect } from "./ProjectListFieldSelect";
 
 const statusSurface: Record<string, string> = {
   active:
-    "border-[hsl(var(--status-active)/0.35)] bg-[hsl(var(--status-active)/0.08)]",
-  inactive: "border-border/80 bg-muted/30",
+    "border-[hsl(var(--status-active)/0.12)] bg-[hsl(var(--status-active)/0.08)]",
+  inactive: "border-border/20 bg-muted/20",
   waiting:
-    "border-[hsl(var(--status-doing)/0.35)] bg-[hsl(var(--status-doing)/0.08)]",
+    "border-[hsl(var(--status-doing)/0.12)] bg-[hsl(var(--status-doing)/0.08)]",
   snoozed:
-    "border-[hsl(var(--status-doing)/0.35)] bg-[hsl(var(--status-doing)/0.08)]",
+    "border-[hsl(var(--status-doing)/0.12)] bg-[hsl(var(--status-doing)/0.08)]",
   completed:
-    "border-[hsl(var(--status-done)/0.35)] bg-[hsl(var(--status-done)/0.08)]",
-  archived: "border-border/80 bg-muted/25",
+    "border-[hsl(var(--status-done)/0.12)] bg-[hsl(var(--status-done)/0.08)]",
+  archived: "border-border/20 bg-muted/15",
   blocked:
-    "border-[hsl(var(--status-blocked)/0.35)] bg-[hsl(var(--status-blocked)/0.08)]",
+    "border-[hsl(var(--status-blocked)/0.12)] bg-[hsl(var(--status-blocked)/0.08)]",
 };
 
 const statusOptionSurface: Record<string, string> = {

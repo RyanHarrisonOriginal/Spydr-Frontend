@@ -6,7 +6,7 @@ import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader
 import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/navigationBreadcrumbs";
-import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
+import { formatDateTime, formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
 import { ProjectPrioritySelect } from "@/domain/spydr/features/projects/components/ProjectPrioritySelect";
 import { ProjectSelect } from "@/domain/spydr/features/projects/components/ProjectSelect";
 import { PersonSelect } from "@/domain/spydr/features/projects/components/PersonSelect";
@@ -91,8 +91,8 @@ export function TaskDetailView({
           meta={
             <span className="font-mono text-[11px] text-muted-foreground">
               updated {formatRelativeTime(task.updatedAt)}
-              {task.details?.completedAt
-                ? ` · completed ${formatRelativeTime(task.details.completedAt)}`
+              {task.details?.completedAt && task.status === "completed"
+                ? ` · completed ${formatDateTime(task.details.completedAt)}`
                 : null}
             </span>
           }
@@ -106,7 +106,7 @@ export function TaskDetailView({
           }
         />
 
-        <div className="space-y-5 px-6 pb-8 pt-2">
+        <div className="space-y-5 px-4 pb-8 pt-2 md:px-6">
           <ProjectDetailSection>
             <ProjectDetailSectionHeader
               icon={<ClipboardList />}

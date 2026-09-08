@@ -21,7 +21,7 @@ export function ActiveNoteAnalysisState({
   onReturn,
 }: ActiveNoteAnalysisStateProps) {
   return (
-    <div className="mx-auto grid max-w-4xl gap-6 px-6 py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:px-8">
+    <div className="mx-auto grid max-w-4xl gap-6 px-4 py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:px-8">
       <section className="rounded-md border border-border bg-muted/10 p-4">
         <h2 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           Saved note

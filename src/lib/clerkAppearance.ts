@@ -19,7 +19,7 @@ const spydr = {
   foreground: "#e2e5eb",
   muted: "#14171c",
   mutedForeground: "#7a808c",
-  border: "#1f2228",
+  border: "#3b4654",
   primary: "#cd2d4d",
   primaryForeground: "#ffffff",
   highlight: "#308cfc",
@@ -97,7 +97,7 @@ const clerkTheme = {
     logoBox: "hidden",
     logoImage: "hidden",
 
-    card: "shadow-none border border-border/80 rounded-md bg-background",
+    card: "shadow-none border border-border rounded-md bg-background",
     cardBox: "shadow-none bg-background",
     actionCard: popoverSurface,
     popoverBox: popoverSurface,
@@ -108,7 +108,7 @@ const clerkTheme = {
     backLink: highlightLink,
 
     main: "!bg-transparent",
-    footer: "!bg-transparent border-t border-border/60",
+    footer: "!bg-transparent border-t border-border",
     footerItem: "!bg-transparent",
     footerAction: "!bg-transparent",
     footerActionText: "text-muted-foreground",
@@ -356,7 +356,7 @@ const authCardTheme = {
   elements: {
     ...clerkTheme.elements,
     rootBox: "font-sans mx-auto w-full",
-    card: "shadow-none border border-border/80 rounded-md bg-background w-full",
+    card: "shadow-none border border-border rounded-md bg-background w-full",
   },
 };
 

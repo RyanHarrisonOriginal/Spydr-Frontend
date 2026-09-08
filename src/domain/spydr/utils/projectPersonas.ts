@@ -35,9 +35,27 @@ export function personDisplayName(person: PersonNode | null | undefined): string
   return person.details?.fullName ?? person.title;
 }
 
+export function personGivenName(person: PersonNode | null | undefined): string {
+  const name = personDisplayName(person).trim();
+  if (!name) return "";
+  return name.split(/\s+/)[0] ?? "";
+}
+
 export function personInitial(person: PersonNode | null | undefined): string {
-  const name = personDisplayName(person);
-  return name ? name.charAt(0).toUpperCase() : "?";
+  return personInitials(person).slice(0, 1) || "?";
+}
+
+/** First + last initials, or the first two letters of a single name. */
+export function personInitials(person: PersonNode | null | undefined): string {
+  const name = personDisplayName(person).trim();
+  if (!name) return "?";
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  const first = parts[0][0] ?? "";
+  const last = parts[parts.length - 1][0] ?? "";
+  return `${first}${last}`.toUpperCase();
 }
 
 export function personSubtitle(person: PersonNode | null | undefined): string | null {

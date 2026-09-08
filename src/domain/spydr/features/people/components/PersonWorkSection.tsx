@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ChevronDown, ChevronRight, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import type {
   PersonWorkProjectEntry,
   PersonWorkTaskEntry,
@@ -15,8 +15,10 @@ import { ProjectStatusSelect } from "@/domain/spydr/features/projects/components
 import { ProjectTargetDateSelect } from "@/domain/spydr/features/projects/components/ProjectTargetDateSelect";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
+import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
 import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
 import { CollectionDualRank } from "@/domain/spydr/features/shared/components/CollectionDualRank";
+import { RowExpandToggle } from "@/domain/spydr/features/shared/components/RowExpandToggle";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
 import {
   ProjectDetailSection,
@@ -151,19 +153,10 @@ function ProjectRow({
       ) : null}
 
       {showExpand ? (
-        <button
-          type="button"
-          aria-expanded={expanded}
-          aria-label={expanded ? "Collapse tasks" : "Expand tasks"}
-          className="grid h-6 w-6 shrink-0 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-          onClick={onToggleExpand}
-        >
-          {expanded ? (
-            <ChevronDown className="h-3.5 w-3.5" />
-          ) : (
-            <ChevronRight className="h-3.5 w-3.5" />
-          )}
-        </button>
+        <RowExpandToggle
+          expanded={Boolean(expanded)}
+          onToggle={() => onToggleExpand?.()}
+        />
       ) : null}
 
       <CollectionDualRank
@@ -388,6 +381,10 @@ function TaskRow({
           </Link>
         ) : null}
       </div>
+      <TaskCompletedAt
+        status={entry.task.status}
+        completedAt={entry.task.details?.completedAt}
+      />
       <span className="w-[108px] shrink-0">
         <TaskDueDateSelect
           value={entry.task.details?.dueDate}
@@ -559,6 +556,10 @@ export function PersonWorkSection({
             <ViewModeToggle value={viewMode} onChange={setViewMode} />
             {viewMode === "tree" ? (
               <ExpandCollapseControls
+                expanded={
+                  expandableProjectIds.length > 0 &&
+                  expandableProjectIds.every((id) => expandedIds.has(id))
+                }
                 disabled={expandableProjectIds.length === 0}
                 onExpandAll={() => setExpandedIds(new Set(expandableProjectIds))}
                 onCollapseAll={() => setExpandedIds(new Set())}

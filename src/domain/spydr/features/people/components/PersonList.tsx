@@ -42,9 +42,9 @@ export function PersonList({
   const { isMe } = useCurrentUserPerson();
 
   return (
-    <div className="overflow-x-auto">
+    <div className="touch-scroll-x">
       <div
-        className={`${reorderEnabled ? "grid grid-cols-[24px_minmax(0,1fr)] items-center gap-4 px-6" : "px-6"} border-b border-border bg-muted/20 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground`}
+        className={`${reorderEnabled ? "grid grid-cols-[24px_minmax(0,1fr)] items-center gap-4 px-4 md:px-6" : "px-4 md:px-6"} border-b border-border bg-muted/20 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground`}
       >
         {reorderEnabled ? <span aria-hidden /> : null}
         <div className={ROW_INNER}>
@@ -73,8 +73,8 @@ export function PersonList({
             <div
               className={cn(
                 reorderEnabled
-                  ? "grid grid-cols-[24px_minmax(0,1fr)] items-center gap-4 px-6 py-3 row-hover"
-                  : "px-6 py-3 row-hover",
+                  ? "grid grid-cols-[24px_minmax(0,1fr)] items-center gap-4 px-4 py-3 row-hover md:px-6"
+                  : "px-4 py-3 row-hover md:px-6",
                 isCurrentUser && "person-me-row"
               )}
             >

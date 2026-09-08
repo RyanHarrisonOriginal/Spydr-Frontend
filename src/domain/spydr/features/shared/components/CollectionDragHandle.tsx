@@ -18,7 +18,7 @@ export function CollectionDragHandle({
       type="button"
       aria-label="Drag to reorder"
       className={cn(
-        "inline-flex h-7 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-md border border-border/60 bg-muted/30 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary active:cursor-grabbing",
+        "inline-flex h-7 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-md border border-border/20 bg-muted/15 text-muted-foreground transition-colors hover:border-primary/35 hover:bg-primary/10 hover:text-primary active:cursor-grabbing",
         className
       )}
       {...props}

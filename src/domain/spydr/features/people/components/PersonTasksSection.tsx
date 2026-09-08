@@ -11,6 +11,7 @@ import {
 } from "@/domain/spydr/features/projects/components/ProjectDetailSection";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
+import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
 import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
 import { CollectionDualRank } from "@/domain/spydr/features/shared/components/CollectionDualRank";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
@@ -132,6 +133,10 @@ export function PersonTasksSection({
                       </Link>
                     ) : null}
                   </div>
+                  <TaskCompletedAt
+                    status={entry.task.status}
+                    completedAt={entry.task.details?.completedAt}
+                  />
                   <span className="w-[108px] shrink-0">
                     <TaskDueDateSelect
                       value={entry.task.details?.dueDate}

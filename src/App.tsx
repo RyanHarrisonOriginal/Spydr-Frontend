@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { PhoneLayoutSync } from "@/components/PhoneLayoutSync";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { RequireAuth } from "@/components/RequireAuth";
 import { ApiAuthSync } from "@/components/ApiAuthSync";
@@ -15,6 +16,7 @@ import DecisionsScreen from "@/screens/DecisionsScreen";
 import NotesScreen from "@/screens/NotesScreen";
 import NoteDetailScreen from "@/screens/NoteDetailScreen";
 import ActiveNoteScreen from "@/screens/ActiveNoteScreen";
+import PastActiveNoteScreen from "@/screens/PastActiveNoteScreen";
 import PersonDetailScreen from "@/screens/PersonDetailScreen";
 import ResourcesScreen from "@/screens/ResourcesScreen";
 import SignInScreen from "@/screens/SignInScreen";
@@ -26,6 +28,7 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <PhoneLayoutSync />
       <QueryClientProvider client={queryClient}>
         <ApiAuthSync />
         <BrowserRouter
@@ -51,6 +54,7 @@ export default function App() {
             >
               <Route index element={<Navigate to="/active-note" replace />} />
               <Route path="/active-note" element={<ActiveNoteScreen />} />
+              <Route path="/active-note/:sessionId" element={<PastActiveNoteScreen />} />
               <Route path="/dashboard" element={<DashboardScreen />} />
               <Route path="/work" element={<WorkScreen />} />
               <Route path="/projects" element={<Navigate to="/work" replace />} />

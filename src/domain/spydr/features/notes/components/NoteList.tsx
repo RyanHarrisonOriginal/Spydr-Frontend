@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { FileText, FolderKanban } from "lucide-react";
 import type { NoteNode } from "@/domain/spydr/utils/types";
@@ -18,8 +18,14 @@ import {
   formatRelativeTime,
   formatShortDate,
 } from "@/domain/spydr/features/shared/components/time";
-import { isRichTextEmpty } from "@/domain/spydr/utils/richText";
+import {
+  isRichTextEmpty,
+  richTextToPlainText,
+} from "@/domain/spydr/utils/richText";
+import { useIsPhone } from "@/hooks/useIsPhone";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { groupNotesForMobile } from "../utils/notesMobileGroups";
 
 interface NoteListProps {
   notes: NoteNode[];
@@ -31,14 +37,214 @@ interface NoteListProps {
   deletingNoteIds?: string[];
 }
 
-export function NoteList({
+function notePreview(note: NoteNode): string {
+  const plain = richTextToPlainText(note.body);
+  return plain || "No additional detail";
+}
+
+function MobileNoteFeed({
+  notes,
+  onDeleteSelected,
+  deletingNoteIds,
+}: {
+  notes: NoteNode[];
+  onDeleteSelected?(noteIds: string[]): void;
+  deletingNoteIds: string[];
+}) {
+  const [selectMode, setSelectMode] = useState(false);
+  const noteIds = useMemo(() => notes.map((note) => note.id), [notes]);
+  const selection = useItemSelection(noteIds);
+  const { clear: clearSelection } = selection;
+  const canSelect = Boolean(onDeleteSelected);
+  const groups = useMemo(() => groupNotesForMobile(notes), [notes]);
+  const isBulkDeleting =
+    deletingNoteIds.length > 0 &&
+    selection.selectedIds.some((id) => deletingNoteIds.includes(id));
+
+  useEffect(() => {
+    if (!selectMode) clearSelection();
+  }, [selectMode, clearSelection]);
+
+  return (
+    <div className="pb-4">
+      {canSelect ? (
+        <div className="flex items-center gap-2 border-b border-border/80 px-4 py-2">
+          {selectMode ? (
+            <>
+              <SelectionCheckbox
+                checked={selection.allSelected}
+                indeterminate={selection.someSelected}
+                disabled={deletingNoteIds.length > 0}
+                label="Select all notes"
+                onChange={selection.setAll}
+              />
+              {selection.selectedCount > 0 ? (
+                <BulkDeleteBar
+                  count={selection.selectedCount}
+                  noun="note"
+                  isDeleting={isBulkDeleting}
+                  disabled={deletingNoteIds.length > 0}
+                  onDelete={() => onDeleteSelected?.(selection.selectedIds)}
+                  onClear={selection.clear}
+                />
+              ) : (
+                <span className="min-w-0 flex-1 font-mono text-[10px] text-muted-foreground">
+                  Tap notes to select
+                </span>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="ml-auto h-8 px-2.5 text-[12px]"
+                onClick={() => setSelectMode(false)}
+              >
+                Done
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="ml-auto h-8 px-2.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground"
+              onClick={() => setSelectMode(true)}
+            >
+              Select
+            </Button>
+          )}
+        </div>
+      ) : null}
+
+      <div className="divide-y divide-border/70">
+        {groups.map((group) => (
+          <section key={group.id} className="pt-3">
+            <h2 className="px-4 pb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              {group.label}
+            </h2>
+            <ul className="divide-y divide-border/50">
+              {group.notes.map((note) => {
+                const preview = notePreview(note);
+                const emptyPreview = isRichTextEmpty(note.body);
+
+                if (selectMode && canSelect) {
+                  return (
+                    <li key={note.id}>
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={selection.isSelected(note.id)}
+                        aria-label={`Select ${note.title || "note"}`}
+                        onClick={() => {
+                          if (deletingNoteIds.length > 0) return;
+                          selection.toggle(note.id);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            if (deletingNoteIds.length > 0) return;
+                            selection.toggle(note.id);
+                          }
+                        }}
+                        className={cn(
+                          "flex w-full cursor-pointer items-start gap-3 px-4 py-3.5 text-left transition-colors",
+                          deletingNoteIds.length > 0 && "pointer-events-none opacity-60",
+                          selection.isSelected(note.id)
+                            ? "bg-highlight/[0.06]"
+                            : "active:bg-muted/40"
+                        )}
+                      >
+                        <SelectionCheckbox
+                          className="mt-0.5"
+                          checked={selection.isSelected(note.id)}
+                          disabled={deletingNoteIds.length > 0}
+                          label={`Select ${note.title || "note"}`}
+                          onChange={() => selection.toggle(note.id)}
+                        />
+                        <MobileNoteBody
+                          note={note}
+                          preview={preview}
+                          emptyPreview={emptyPreview}
+                        />
+                      </div>
+                    </li>
+                  );
+                }
+
+                return (
+                  <li key={note.id}>
+                    <Link
+                      to={`/notes/${note.id}`}
+                      className="block px-4 py-3.5 active:bg-muted/40"
+                    >
+                      <MobileNoteBody
+                        note={note}
+                        preview={preview}
+                        emptyPreview={emptyPreview}
+                      />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MobileNoteBody({
+  note,
+  preview,
+  emptyPreview,
+}: {
+  note: NoteNode;
+  preview: string;
+  emptyPreview: boolean;
+}) {
+  return (
+    <div className="min-w-0 flex-1">
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="min-w-0 truncate text-[15px] font-medium leading-snug tracking-[-0.01em] text-foreground">
+          {note.title || "Untitled note"}
+        </h3>
+        <time
+          dateTime={note.updatedAt}
+          className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground"
+          title={formatShortDate(note.updatedAt)}
+        >
+          {formatRelativeTime(note.updatedAt)}
+        </time>
+      </div>
+      <p
+        className={cn(
+          "mt-1 line-clamp-2 text-[13px] leading-snug",
+          emptyPreview
+            ? "italic text-muted-foreground/65"
+            : "text-muted-foreground"
+        )}
+      >
+        {preview}
+      </p>
+      {note.project ? (
+        <span className="mt-2 inline-flex max-w-full items-center gap-1 rounded-md bg-muted/40 px-1.5 py-0.5 text-[11px] text-muted-foreground">
+          <FolderKanban className="h-3 w-3 shrink-0" />
+          <span className="truncate">{note.project.title}</span>
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function DesktopNoteList({
   notes,
   getPriorityRank,
-  reorderEnabled = false,
+  reorderEnabled,
   onReorder,
   onDelete,
   onDeleteSelected,
-  deletingNoteIds = [],
+  deletingNoteIds,
 }: NoteListProps) {
   const noteIds = useMemo(() => notes.map((note) => note.id), [notes]);
   const selection = useItemSelection(noteIds);
@@ -50,7 +256,7 @@ export function NoteList({
   return (
     <div>
       {canSelect && notes.length > 0 ? (
-        <div className="flex items-center gap-3 border-b border-border bg-muted/20 px-6 py-1.5">
+        <div className="flex items-center gap-3 border-b border-border bg-muted/20 px-4 py-1.5 md:px-6">
           <SelectionCheckbox
             checked={selection.allSelected}
             indeterminate={selection.someSelected}
@@ -84,9 +290,12 @@ export function NoteList({
           const isDeleting = deletingNoteIds.includes(note.id);
 
           return (
-            <div className="flex items-start gap-4 px-6 py-4 row-hover">
+            <div className="flex items-start gap-3 px-4 py-4 row-hover md:gap-4 md:px-6">
               {reorderEnabled ? (
-                <CollectionDragHandle className="mt-0.5" {...sortable.dragHandleProps} />
+                <CollectionDragHandle
+                  className="mt-0.5"
+                  {...sortable.dragHandleProps}
+                />
               ) : null}
               {canSelect ? (
                 <SelectionCheckbox
@@ -97,7 +306,10 @@ export function NoteList({
                   onChange={() => selection.toggle(note.id)}
                 />
               ) : null}
-              <CollectionPriorityRank rank={getPriorityRank(note.id)} className="mt-0.5 shrink-0" />
+              <CollectionPriorityRank
+                rank={getPriorityRank(note.id)}
+                className="mt-0.5 shrink-0"
+              />
               <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-3">
@@ -173,4 +385,20 @@ export function NoteList({
       />
     </div>
   );
+}
+
+export function NoteList(props: NoteListProps) {
+  const isPhone = useIsPhone();
+
+  if (isPhone) {
+    return (
+      <MobileNoteFeed
+        notes={props.notes}
+        onDeleteSelected={props.onDeleteSelected}
+        deletingNoteIds={props.deletingNoteIds ?? []}
+      />
+    );
+  }
+
+  return <DesktopNoteList {...props} />;
 }

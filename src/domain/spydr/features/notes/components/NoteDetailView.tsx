@@ -22,6 +22,7 @@ import {
   ProjectDetailSectionBody,
   ProjectDetailSectionHeader,
 } from "@/domain/spydr/features/projects/components/ProjectDetailSection";
+import { useIsPhone } from "@/hooks/useIsPhone";
 import type {
   NoteDetailFormValues,
   NoteDetailSaveState,
@@ -54,7 +55,64 @@ export function NoteDetailView({
 }: NoteDetailViewProps) {
   const project = note.project;
   const hint = saveLabel(saveState);
+  const isPhone = useIsPhone();
   usePageBreadcrumb(formatBreadcrumbEntityId(note.id));
+
+  const transformMenu = (
+    <EntityTransformMenu
+      nodeId={note.id}
+      sourceType="note"
+      sourceTitle={note.title}
+      projects={projects}
+      defaultProjectId={project?.id ?? null}
+    />
+  );
+
+  if (isPhone) {
+    return (
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <PageHeader
+          dense
+          title={
+            <input
+              value={form.title}
+              onChange={(event) => onFieldChange("title", event.target.value)}
+              className="w-full bg-transparent text-[1.25rem] font-semibold tracking-tight outline-none ring-focus placeholder:text-muted-foreground"
+              placeholder="Title (optional)"
+            />
+          }
+          meta={
+            <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[11px] text-muted-foreground">
+              <span>Updated {formatRelativeTime(note.updatedAt)}</span>
+              {hint ? <span>· {hint}</span> : null}
+              {project ? (
+                <>
+                  <span aria-hidden>·</span>
+                  <Link
+                    to={`/projects/${project.id}`}
+                    className="inline-flex min-w-0 max-w-[12rem] items-center gap-1 truncate text-muted-foreground hover:text-primary"
+                  >
+                    <FolderKanban className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{project.title}</span>
+                  </Link>
+                </>
+              ) : null}
+            </span>
+          }
+          actions={transformMenu}
+        />
+
+        <div className="min-h-0 flex-1 px-4 pb-8 pt-3">
+          <RichTextEditor
+            value={form.body}
+            onChange={(body) => onFieldChange("body", body)}
+            placeholder="Start writing…"
+            minHeightClassName="min-h-[60vh]"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-w-0">
@@ -73,18 +131,10 @@ export function NoteDetailView({
             {hint ? ` · ${hint}` : null}
           </span>
         }
-        actions={
-          <EntityTransformMenu
-            nodeId={note.id}
-            sourceType="note"
-            sourceTitle={note.title}
-            projects={projects}
-            defaultProjectId={project?.id ?? null}
-          />
-        }
+        actions={transformMenu}
       />
 
-      <div className="border-b border-border px-6 py-4">
+      <div className="border-b border-border px-4 py-4 md:px-6">
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill status={note.status} />
           <PriorityBadge priority={note.priority} />
@@ -96,16 +146,26 @@ export function NoteDetailView({
 
         <dl className="mt-3 grid gap-2 text-[12px] text-muted-foreground sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <dt className="font-mono text-[10px] uppercase tracking-wider">Created</dt>
-            <dd className="mt-0.5 text-foreground/90">{formatShortDate(note.createdAt)}</dd>
+            <dt className="font-mono text-[10px] uppercase tracking-wider">
+              Created
+            </dt>
+            <dd className="mt-0.5 text-foreground/90">
+              {formatShortDate(note.createdAt)}
+            </dd>
           </div>
           <div>
-            <dt className="font-mono text-[10px] uppercase tracking-wider">Last updated</dt>
-            <dd className="mt-0.5 text-foreground/90">{formatShortDate(note.updatedAt)}</dd>
+            <dt className="font-mono text-[10px] uppercase tracking-wider">
+              Last updated
+            </dt>
+            <dd className="mt-0.5 text-foreground/90">
+              {formatShortDate(note.updatedAt)}
+            </dd>
           </div>
           {project ? (
             <div>
-              <dt className="font-mono text-[10px] uppercase tracking-wider">Project</dt>
+              <dt className="font-mono text-[10px] uppercase tracking-wider">
+                Project
+              </dt>
               <dd className="mt-0.5">
                 <Link
                   to={`/projects/${project.id}`}
@@ -126,7 +186,7 @@ export function NoteDetailView({
           label="Note body"
           hint={hint ?? undefined}
         />
-        <ProjectDetailSectionBody className="px-6 py-5">
+        <ProjectDetailSectionBody className="px-4 py-5 md:px-6">
           <ProjectDetailFormPanel label="Content">
             <ProjectDetailField label="Body">
               <RichTextEditor

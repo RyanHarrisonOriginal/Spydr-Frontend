@@ -12,13 +12,13 @@ const statusColors: Record<string, string> = {
 
 const priorityColors: Record<string, string> = {
   critical:
-    "border-[hsl(var(--priority-critical)/0.35)] bg-[hsl(var(--priority-critical)/0.08)] text-[hsl(var(--priority-critical))]",
+    "border-[hsl(var(--priority-critical)/0.12)] bg-[hsl(var(--priority-critical)/0.08)] text-[hsl(var(--priority-critical))]",
   high:
-    "border-[hsl(var(--priority-high)/0.35)] bg-[hsl(var(--priority-high)/0.08)] text-[hsl(var(--priority-high))]",
+    "border-[hsl(var(--priority-high)/0.12)] bg-[hsl(var(--priority-high)/0.08)] text-[hsl(var(--priority-high))]",
   medium:
-    "border-[hsl(var(--priority-medium)/0.35)] bg-[hsl(var(--priority-medium)/0.08)] text-[hsl(var(--priority-medium))]",
+    "border-[hsl(var(--priority-medium)/0.12)] bg-[hsl(var(--priority-medium)/0.08)] text-[hsl(var(--priority-medium))]",
   low:
-    "border-[hsl(var(--priority-low)/0.35)] bg-[hsl(var(--priority-low)/0.08)] text-[hsl(var(--priority-low))]",
+    "border-[hsl(var(--priority-low)/0.12)] bg-[hsl(var(--priority-low)/0.08)] text-[hsl(var(--priority-low))]",
 };
 
 export function StatusDot({
@@ -37,7 +37,7 @@ export function StatusDot({
 
 export function StatusPill({ status }: { status: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded border border-border bg-muted/40 px-1.5 py-px text-[11px] capitalize text-foreground/80">
+    <span className="inline-flex items-center gap-1.5 rounded border border-border/20 bg-muted/20 px-1.5 py-px text-[11px] capitalize text-foreground/80">
       <StatusDot status={status} />
       {status.replace(/_/g, " ")}
     </span>
@@ -49,7 +49,7 @@ export function PriorityBadge({ priority }: { priority: string }) {
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded border px-1.5 py-px font-mono text-[10px] uppercase tracking-wider",
-        priorityColors[priority] ?? "border-border text-muted-foreground"
+        priorityColors[priority] ?? "border-border/20 text-muted-foreground"
       )}
     >
       {priority}

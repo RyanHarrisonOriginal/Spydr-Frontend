@@ -1,7 +1,6 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { SpydrMark } from "@/components/SpydrMark";
 import { WebField } from "@/components/WebField";
 import { ACTIVE_NOTE_MAX_LENGTH } from "@/domain/spydr/utils/activeNoteTypes";
@@ -9,6 +8,7 @@ import type { ActiveNoteSaveState } from "../hooks/useActiveNotePage";
 import { cn } from "@/lib/utils";
 import { useActiveNotesHistoryQuery } from "@/domain/spydr/features/shared/hooks/queries";
 import { ActiveNoteHistoryPanel } from "./ActiveNoteHistoryPanel";
+import { ActiveNoteEditor } from "./ActiveNoteEditor";
 
 interface ActiveNoteComposerProps {
   content: string;
@@ -76,20 +76,20 @@ export function ActiveNoteComposer({
         loading={historyQuery.isLoading}
       />
 
-      <div className="relative z-[1] flex h-full min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden px-6 py-10 md:px-10 lg:px-14">
-        <div className="mx-auto w-full max-w-3xl">
-          <div className="mb-10">
-            <div className="flex items-center gap-2.5">
+      <div className="relative z-[1] flex h-full min-h-0 min-w-0 flex-1 items-start justify-center overflow-y-auto px-4 py-6 md:items-center md:overflow-hidden md:px-10 md:py-10 lg:px-14">
+        <div className="mx-auto w-full max-w-3xl pb-6 pt-8 md:pb-0 md:pt-0">
+          <div className="mb-6 md:mb-10">
+            <div className="hidden items-center gap-2.5 md:flex">
               <SpydrMark size={40} className="shrink-0" alt="Spydr" />
               <span className="text-[1.35rem] font-semibold leading-none tracking-[-0.04em] text-foreground">
                 Spydr<span className="text-highlight-secondary">.</span>
               </span>
             </div>
 
-            <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.18em] text-highlight">
+            <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-highlight md:mt-8">
               Active Note
             </p>
-            <h1 className="mt-2 text-[1.75rem] font-semibold tracking-[-0.04em] text-foreground md:text-[2.15rem]">
+            <h1 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-foreground md:text-[2.15rem]">
               What’s moving?
             </h1>
             <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-muted-foreground">
@@ -98,10 +98,10 @@ export function ActiveNoteComposer({
             </p>
           </div>
 
-          <div className="rounded-md border border-border/80 bg-background/80 p-4 shadow-sm backdrop-blur-sm md:p-5">
+          <div className="rounded-md border border-border bg-background/80 p-4 spydr-plate shadow-sm backdrop-blur-sm md:p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <Label
-                htmlFor="active-note-content"
+                id="active-note-content-label"
                 className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
               >
                 Your note
@@ -119,14 +119,15 @@ export function ActiveNoteComposer({
               </span>
             </div>
 
-            <Textarea
+            <ActiveNoteEditor
               id="active-note-content"
               value={content}
-              onChange={(event) => onContentChange(event.target.value)}
-              placeholder="Write what happened, what you decided, or what needs to happen next…"
-              className="min-h-[280px] resize-y border-border/70 bg-muted/15 text-[15px] leading-relaxed md:min-h-[320px]"
+              onValueChange={onContentChange}
+              placeholder="Write what happened, what you decided, or what needs to happen next… Use @ to reference projects, tasks, or notes."
+              className="min-h-[200px] border-border bg-muted/15 text-[15px] leading-relaxed md:min-h-[320px]"
               disabled={isBusy}
               autoFocus
+              aria-labelledby="active-note-content-label"
               aria-invalid={Boolean(errorMessage) || overLimit}
               aria-describedby={
                 errorMessage || overLimit
@@ -134,8 +135,11 @@ export function ActiveNoteComposer({
                   : "active-note-char-count"
               }
             />
+            <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/80">
+              Tip · type @ to reference a project, task, or note
+            </p>
 
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <p
                 id="active-note-char-count"
                 className={cn(
@@ -147,12 +151,13 @@ export function ActiveNoteComposer({
                 {ACTIVE_NOTE_MAX_LENGTH.toLocaleString()}
               </p>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={onSave}
                   disabled={!canSubmit && saveState !== "error"}
+                  className="w-full sm:w-auto"
                 >
                   Save draft
                 </Button>
@@ -162,6 +167,7 @@ export function ActiveNoteComposer({
                     variant="outline"
                     onClick={onLoadTestSuggestions}
                     disabled={isBusy}
+                    className="w-full sm:w-auto"
                   >
                     Load test suggestions
                   </Button>
@@ -170,7 +176,7 @@ export function ActiveNoteComposer({
                   type="button"
                   onClick={onAnalyze}
                   disabled={!canSubmit}
-                  className="gap-1.5"
+                  className="w-full gap-1.5 sm:w-auto"
                 >
                   <Sparkles className="h-3.5 w-3.5" />
                   Analyze note

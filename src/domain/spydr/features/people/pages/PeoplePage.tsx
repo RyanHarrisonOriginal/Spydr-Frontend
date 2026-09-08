@@ -61,10 +61,10 @@ export function PeoplePage() {
       {!isLoading && !isError && people.length > 0 && (
         <>
           {deleteError ? (
-            <p className="px-6 pb-2 text-sm text-destructive">{deleteError}</p>
+            <p className="px-4 pb-2 text-sm text-destructive md:px-6">{deleteError}</p>
           ) : null}
           {isCurrentUserReady && !currentUserPerson && primaryClerkEmail ? (
-            <p className="px-6 pb-2 text-[12px] text-muted-foreground">
+            <p className="px-4 pb-2 text-[12px] text-muted-foreground md:px-6">
               No person record matches your Clerk email ({primaryClerkEmail}). Add yourself
               with that email to see the <span className="text-highlight">You</span> badge.
             </p>

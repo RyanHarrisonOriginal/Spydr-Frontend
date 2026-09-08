@@ -83,7 +83,7 @@ export function ProjectNotesLog({
     selection.selectedIds.some((id) => deletingChildIds.includes(id));
 
   return (
-    <ProjectDetailSection className="min-h-[360px]">
+    <ProjectDetailSection collapsible defaultExpanded className="md:min-h-[360px]">
       <ProjectDetailSectionHeader
         icon={<FileText className="h-3.5 w-3.5" />}
         label="Notes"

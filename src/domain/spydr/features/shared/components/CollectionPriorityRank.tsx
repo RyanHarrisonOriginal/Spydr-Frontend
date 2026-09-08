@@ -14,7 +14,7 @@ export function CollectionPriorityRank({ rank, className }: CollectionPriorityRa
   return (
     <span
       className={cn(
-        "inline-flex min-w-[1.75rem] justify-center rounded border border-border/50 bg-muted/25 px-1 py-px font-mono text-[11px] tabular-nums text-muted-foreground",
+        "inline-flex min-w-[1.75rem] justify-center rounded border border-border/20 bg-muted/15 px-1 py-px font-mono text-[11px] tabular-nums text-muted-foreground",
         className
       )}
       title={`Priority rank ${rank}`}

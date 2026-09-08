@@ -11,13 +11,13 @@ export function isProjectPriority(priority: string): priority is SpydrPriority {
 
 export const prioritySurface: Record<string, string> = {
   critical:
-    "border-[hsl(var(--priority-critical)/0.35)] bg-[hsl(var(--priority-critical)/0.08)] text-[hsl(var(--priority-critical))]",
+    "border-[hsl(var(--priority-critical)/0.12)] bg-[hsl(var(--priority-critical)/0.08)] text-[hsl(var(--priority-critical))]",
   high:
-    "border-[hsl(var(--priority-high)/0.35)] bg-[hsl(var(--priority-high)/0.08)] text-[hsl(var(--priority-high))]",
+    "border-[hsl(var(--priority-high)/0.12)] bg-[hsl(var(--priority-high)/0.08)] text-[hsl(var(--priority-high))]",
   medium:
-    "border-[hsl(var(--priority-medium)/0.35)] bg-[hsl(var(--priority-medium)/0.08)] text-[hsl(var(--priority-medium))]",
+    "border-[hsl(var(--priority-medium)/0.12)] bg-[hsl(var(--priority-medium)/0.08)] text-[hsl(var(--priority-medium))]",
   low:
-    "border-[hsl(var(--priority-low)/0.35)] bg-[hsl(var(--priority-low)/0.08)] text-[hsl(var(--priority-low))]",
+    "border-[hsl(var(--priority-low)/0.12)] bg-[hsl(var(--priority-low)/0.08)] text-[hsl(var(--priority-low))]",
 };
 
 export const priorityOptionSurface: Record<string, string> = {

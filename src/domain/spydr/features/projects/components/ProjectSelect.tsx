@@ -48,7 +48,7 @@ export function ProjectSelect({
           <FolderKanban className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         )
       }
-      triggerClassName={cn(compact && "h-7 border-border/70 px-2 text-[11px]", className)}
+      triggerClassName={cn(compact && "h-7 border-border/20 px-2 text-[11px]", className)}
       labelClassName={cn(
         "font-medium tracking-tight text-foreground/90",
         compact && "text-[11px]"

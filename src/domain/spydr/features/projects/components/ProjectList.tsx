@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, ArrowUpRight, ChevronDown, ChevronRight, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ArrowUpRight, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { ProjectAreaNode, ProjectNode, PersonNode, TaskNode } from "@/domain/spydr/utils/types";
@@ -13,11 +13,14 @@ import { isClosedCollectionStatus } from "@/domain/spydr/utils/collectionVisibil
 import type { ProjectListSort, ProjectSortColumn } from "@/domain/spydr/utils/projectListView";
 import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
+import { RowExpandToggle } from "@/domain/spydr/features/shared/components/RowExpandToggle";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
 import { ShowCompletedToggle } from "@/domain/spydr/features/shared/components/ShowCompletedToggle";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
+import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
 import { cn } from "@/lib/utils";
+import { useIsPhone } from "@/hooks/useIsPhone";
 import type { ProjectColumnId } from "../hooks/useProjectListColumns";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
 import { ProjectPrioritySelect } from "./ProjectPrioritySelect";
@@ -54,6 +57,8 @@ interface ProjectListProps {
   deletingProjectId?: string | null;
   expandedIds?: Set<string>;
   onExpandedIdsChange?(next: Set<string>): void;
+  showCompletedTasks?: boolean;
+  onShowCompletedTasksChange?(show: boolean): void;
 }
 
 function toggleExpandedId(current: Set<string>, projectId: string): Set<string> {
@@ -81,7 +86,7 @@ const columnWidths: Record<ProjectColumnId, string> = {
 const actionsColumnWidth = "48px";
 const actionsColumnWidthWithCreate = "76px";
 const rankColumnWidth = "36px";
-const expandColumnWidth = "28px";
+const expandColumnWidth = "32px";
 
 function getProjectListGrid(
   visibleColumns: ProjectColumnId[],
@@ -93,7 +98,6 @@ function getProjectListGrid(
     ...(reorderEnabled ? ["24px"] : []),
     expandColumnWidth,
     rankColumnWidth,
-    "40px",
     "minmax(280px,1fr)",
     ...visibleColumns.map((id) => columnWidths[id]),
     actionWidth,
@@ -217,9 +221,11 @@ function OpenTaskCount({ count }: { count: number }) {
 function ProjectOpenDetailButton({
   projectId,
   projectTitle,
+  iconOnly = false,
 }: {
   projectId: string;
   projectTitle: string;
+  iconOnly?: boolean;
 }) {
   return (
     <Link
@@ -227,21 +233,59 @@ function ProjectOpenDetailButton({
       onClick={(event) => event.stopPropagation()}
       aria-label={`Open ${projectTitle}`}
       className={cn(
-        "group inline-flex h-6 shrink-0 items-center gap-0.5 rounded-md",
-        "border border-highlight/30 bg-highlight/[0.07] px-1.5",
-        "text-[10px] font-medium text-highlight/90",
-        "transition-all duration-200",
+        "group shrink-0 rounded-md text-highlight/90 transition-all duration-200",
+        "border border-highlight/12 bg-highlight/[0.05]",
         "hover:border-highlight/55 hover:bg-highlight/12 hover:text-highlight",
-        "hover:shadow-[inset_0_0_0_1px_hsl(var(--highlight)/0.12)]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight/30"
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight/30",
+        iconOnly
+          ? "grid h-7 w-7 place-items-center"
+          : "inline-flex h-6 items-center gap-0.5 px-1.5 text-[10px] font-medium"
       )}
     >
-      <span className="font-mono text-[10px] uppercase tracking-[0.08em]">Open</span>
+      {iconOnly ? null : (
+        <span className="font-mono text-[10px] uppercase tracking-[0.08em]">Open</span>
+      )}
       <ArrowUpRight
-        className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-px group-hover:-translate-y-px"
+        className={cn(
+          "transition-transform duration-200 group-hover:translate-x-px group-hover:-translate-y-px",
+          iconOnly ? "h-3.5 w-3.5" : "h-3.5 w-3.5"
+        )}
         aria-hidden
       />
     </Link>
+  );
+}
+
+function ProjectAddTaskButton({
+  projectTitle,
+  composing,
+  disabled,
+  onToggle,
+}: {
+  projectTitle: string;
+  composing: boolean;
+  disabled: boolean;
+  onToggle(): void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={`Add task to ${projectTitle}`}
+      aria-pressed={composing}
+      disabled={disabled}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle();
+      }}
+      className={cn(
+        "grid h-7 w-7 shrink-0 place-items-center rounded-sm transition-colors disabled:opacity-50",
+        composing
+          ? "bg-highlight/15 text-highlight"
+          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+      )}
+    >
+      <Plus className="h-3.5 w-3.5" />
+    </button>
   );
 }
 
@@ -250,11 +294,13 @@ function ProjectListTitleInput({
   title,
   disabled,
   onTitleChange,
+  className,
 }: {
   projectId: string;
   title: string;
   disabled?: boolean;
   onTitleChange?(projectId: string, title: string): void;
+  className?: string;
 }) {
   const [draft, setDraft] = useState(title);
 
@@ -275,7 +321,10 @@ function ProjectListTitleInput({
     return (
       <Link
         to={`/projects/${projectId}`}
-        className="min-w-0 truncate text-[13px] font-medium hover:text-highlight"
+        className={cn(
+          "min-w-0 truncate text-[13px] font-medium hover:text-highlight",
+          className
+        )}
       >
         {title}
       </Link>
@@ -300,7 +349,10 @@ function ProjectListTitleInput({
       onClick={(event) => event.stopPropagation()}
       disabled={disabled}
       aria-label="Project name"
-      className="min-w-0 flex-1 truncate bg-transparent text-[13px] font-medium outline-none ring-focus placeholder:text-muted-foreground disabled:opacity-60"
+      className={cn(
+        "min-w-0 flex-1 truncate bg-transparent text-[13px] font-medium outline-none ring-focus placeholder:text-muted-foreground disabled:opacity-60",
+        className
+      )}
     />
   );
 }
@@ -308,16 +360,58 @@ function ProjectListTitleInput({
 function NestedTaskRow({
   task,
   busy,
+  compact = false,
   onStatusChange,
   onDueDateChange,
 }: {
   task: TaskNode;
   busy: boolean;
+  compact?: boolean;
   onStatusChange?(taskId: string, status: string): void;
   onDueDateChange?(taskId: string, dueDate: string | null): void;
 }) {
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1 rounded-sm border border-border/20 border-l-2 border-l-highlight/18 bg-canvas px-1 py-0.5">
+        <TaskStatusSelect
+          value={task.status}
+          disabled={!onStatusChange || busy}
+          appearance="icon"
+          className="h-7 w-7"
+          onChange={(status) => onStatusChange?.(task.id, status)}
+        />
+        <Link
+          to={`/tasks/${task.id}`}
+          className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground/90"
+        >
+          {task.title}
+        </Link>
+        <TaskCompletedAt
+          status={task.status}
+          completedAt={task.details?.completedAt}
+        />
+        <TaskDueDateSelect
+          value={task.details?.dueDate}
+          disabled={!onDueDateChange || busy}
+          placeholder="Due"
+          showChevron={false}
+          showIcon={false}
+          className="h-7 w-[3.75rem] shrink-0"
+          onChange={(dueDate) => onDueDateChange?.(task.id, dueDate)}
+        />
+        <Link
+          to={`/tasks/${task.id}`}
+          aria-label={`Open ${task.title}`}
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-highlight/90"
+        >
+          <ArrowUpRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-2 rounded-sm border border-border/50 border-l-2 border-l-highlight/35 bg-canvas px-2.5 py-1.5">
+    <div className="flex items-center gap-2 rounded-sm border border-border/20 border-l-2 border-l-highlight/18 bg-canvas px-2.5 py-1.5">
       <TaskStatusSelect
         value={task.status}
         disabled={!onStatusChange || busy}
@@ -337,6 +431,10 @@ function NestedTaskRow({
           </span>
         ) : null}
       </div>
+      <TaskCompletedAt
+        status={task.status}
+        completedAt={task.details?.completedAt}
+      />
       <span className="w-[108px] shrink-0">
         <TaskDueDateSelect
           value={task.details?.dueDate}
@@ -443,9 +541,17 @@ export function ProjectList({
   deletingProjectId = null,
   expandedIds: controlledExpandedIds,
   onExpandedIdsChange,
+  showCompletedTasks: controlledShowCompletedTasks,
+  onShowCompletedTasksChange,
 }: ProjectListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [uncontrolledShowCompletedTasks, setUncontrolledShowCompletedTasks] =
+    useState(false);
+  const showCompletedTasks =
+    controlledShowCompletedTasks ?? uncontrolledShowCompletedTasks;
+  const setShowCompletedTasks =
+    onShowCompletedTasksChange ?? setUncontrolledShowCompletedTasks;
+  const showInlineCompletedToggle = !onShowCompletedTasksChange;
   const [uncontrolledExpandedIds, setUncontrolledExpandedIds] = useState<Set<string>>(
     new Set()
   );
@@ -453,13 +559,14 @@ export function ProjectList({
   const setExpandedIds = onExpandedIdsChange ?? setUncontrolledExpandedIds;
   const [composingProjectId, setComposingProjectId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
+  const isPhone = useIsPhone();
   const gridTemplateColumns = getProjectListGrid(
     visibleColumns,
     reorderEnabled,
     Boolean(onCreateTask)
   );
   const minWidth =
-    504 +
+    448 +
     visibleColumns.length * 112 +
     (onCreateTask ? 144 : 108) +
     (reorderEnabled ? 24 : 0);
@@ -511,9 +618,9 @@ export function ProjectList({
   };
 
   return (
-    <div className="overflow-x-auto">
-      {completedTaskCount > 0 ? (
-        <div className="flex items-center justify-end gap-2 border-b border-border/70 px-6 py-1.5">
+    <div className={isPhone ? "" : "touch-scroll-x"}>
+      {showInlineCompletedToggle && completedTaskCount > 0 ? (
+        <div className="flex items-center justify-end gap-2 border-b border-border/70 px-4 py-1.5 md:px-6">
           <ShowCompletedToggle
             showCompleted={showCompletedTasks}
             completedCount={completedTaskCount}
@@ -521,14 +628,14 @@ export function ProjectList({
           />
         </div>
       ) : null}
+      {isPhone ? null : (
       <div
-        className="grid items-center gap-4 border-b border-border bg-muted/20 px-6 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+        className="grid items-center gap-4 border-b border-border bg-muted/20 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:px-6"
         style={{ gridTemplateColumns, minWidth }}
       >
         {reorderEnabled ? <span aria-hidden /> : null}
         <span aria-hidden />
         <SortableHeader label="Rank" column="order" sort={sort} onSort={onSortColumn} />
-        <span />
         <SortableHeader label="Name" column="name" sort={sort} onSort={onSortColumn} />
         {hasColumn("area") && (
           <SortableHeader
@@ -582,8 +689,9 @@ export function ProjectList({
         )}
         <span />
       </div>
+      )}
       {projects.length === 0 ? (
-        <div className="px-6 py-10 text-center">
+        <div className="px-4 py-10 text-center md:px-6">
           <p className="text-[13px] font-medium text-foreground/90">
             No projects match your filters
           </p>
@@ -600,8 +708,10 @@ export function ProjectList({
       ) : (
         <CollectionSortableList
           items={projects}
-          enabled={reorderEnabled}
-          className="space-y-1.5 px-3 py-2 md:px-4"
+          enabled={reorderEnabled && !isPhone}
+          className={
+            isPhone ? "space-y-1.5 px-2 py-2" : "space-y-1.5 px-3 py-2 md:px-4"
+          }
           onReorder={(orderedIds) => onReorder?.(orderedIds)}
           renderItem={(project, sortable) => {
             const allProjectTasks = tasksByProjectId.get(project.id) ?? [];
@@ -611,8 +721,117 @@ export function ProjectList({
             ).length;
             const composing = composingProjectId === project.id;
             const canExpand = visibleTasks.length > 0 || composing;
-            const expanded = expandedIds.has(project.id) && canExpand;
+            const expanded = expandedIds.has(project.id) && visibleTasks.length > 0;
             const showChildren = expanded || composing;
+
+            if (isPhone) {
+              return (
+                <div
+                  className={cn(
+                    "overflow-hidden rounded-md border",
+                    showChildren
+                      ? "border-border bg-muted/15 ring-1 ring-border/50"
+                      : "border-border/70 bg-background"
+                  )}
+                >
+                  <div className="flex min-w-0 items-stretch">
+                    {onAreaChange ? (
+                      <ProjectAreaSelect
+                        appearance="rail"
+                        areas={areas}
+                        value={resolveProjectAreaId(project, areas)}
+                        onChange={(areaNodeId) => onAreaChange(project.id, areaNodeId)}
+                        disabled={updatingProjectId === project.id}
+                      />
+                    ) : (
+                      <span
+                        className="w-1.5 shrink-0 self-stretch rounded-sm bg-muted/60"
+                        aria-hidden
+                      />
+                    )}
+                    <div className="flex min-w-0 flex-1 items-center gap-1 py-0.5 pl-1 pr-1">
+                        {visibleTasks.length > 0 ? (
+                          <RowExpandToggle
+                            expanded={expanded}
+                            onToggle={() => toggleExpanded(project.id)}
+                          />
+                        ) : null}
+                        <CollectionPriorityRank
+                          rank={getPriorityRank(project.id)}
+                          className="min-w-[1.15rem] px-0.5"
+                        />
+                        <ProjectListTitleInput
+                          projectId={project.id}
+                          title={project.title}
+                          disabled={updatingProjectId === project.id}
+                          onTitleChange={onTitleChange}
+                          className="text-[12px]"
+                        />
+                        <ProjectTargetDateSelect
+                          value={project.details?.targetDate}
+                          placeholder="Due"
+                          showChevron={false}
+                          showIcon={false}
+                          className="h-7 w-[3.75rem] shrink-0"
+                          onChange={(targetDate) => {
+                            const current =
+                              project.details?.targetDate?.slice(0, 10) ?? null;
+                            const next = targetDate?.slice(0, 10) ?? null;
+                            if (next !== current) {
+                              onTargetDateChange?.(project.id, targetDate);
+                            }
+                          }}
+                          disabled={
+                            !onTargetDateChange || updatingProjectId === project.id
+                          }
+                        />
+                        {onCreateTask ? (
+                          <ProjectAddTaskButton
+                            projectTitle={project.title}
+                            composing={composing}
+                            disabled={creatingTaskProjectId === project.id}
+                            onToggle={() => {
+                              if (composing) cancelCompose();
+                              else startCompose(project.id);
+                            }}
+                          />
+                        ) : null}
+                        <ProjectOpenDetailButton
+                          projectId={project.id}
+                          projectTitle={project.title}
+                          iconOnly
+                        />
+                    </div>
+                  </div>
+                  {showChildren ? (
+                    <div className="space-y-1 border-t border-border/50 bg-canvas/80 px-2 py-1.5">
+                      {expanded
+                        ? visibleTasks.map((task) => (
+                            <NestedTaskRow
+                              key={task.id}
+                              task={task}
+                              compact
+                              busy={updatingTaskId === task.id}
+                              onStatusChange={onTaskStatusChange}
+                              onDueDateChange={onTaskDueDateChange}
+                            />
+                          ))
+                        : null}
+                      {composing && onCreateTask ? (
+                        <ProjectTaskComposer
+                          projectTitle={project.title}
+                          draft={draftTitle}
+                          busy={creatingTaskProjectId === project.id}
+                          onCancel={cancelCompose}
+                          onDraftChange={setDraftTitle}
+                          onSubmit={() => submitCompose(project.id)}
+                        />
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            }
 
             return (
               <div
@@ -635,26 +854,14 @@ export function ProjectList({
                     <CollectionDragHandle {...sortable.dragHandleProps} />
                   ) : null}
                   {canExpand ? (
-                    <button
-                      type="button"
-                      aria-expanded={expanded}
-                      aria-label={expanded ? "Collapse tasks" : "Expand tasks"}
-                      className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-                      onClick={() => toggleExpanded(project.id)}
-                    >
-                      {expanded ? (
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      ) : (
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      )}
-                    </button>
+                    <RowExpandToggle
+                      expanded={expanded}
+                      onToggle={() => toggleExpanded(project.id)}
+                    />
                   ) : (
-                    <span aria-hidden className="h-6 w-6" />
+                    <span aria-hidden className="h-7 w-7" />
                   )}
                   <CollectionPriorityRank rank={getPriorityRank(project.id)} />
-                  <span className="grid h-7 w-7 place-items-center rounded border border-border bg-muted/40 font-mono text-[11px] text-muted-foreground">
-                    {project.title.charAt(0).toUpperCase()}
-                  </span>
                   <div className="min-w-0">
                     <div className="flex min-w-0 items-center gap-2">
                       {!hasColumn("status") && onStatusChange ? (
@@ -669,16 +876,18 @@ export function ProjectList({
                       ) : (
                         <StatusDot status={project.status} />
                       )}
-                      <ProjectListTitleInput
-                        projectId={project.id}
-                        title={project.title}
-                        disabled={updatingProjectId === project.id}
-                        onTitleChange={onTitleChange}
-                      />
-                      <ProjectOpenDetailButton
-                        projectId={project.id}
-                        projectTitle={project.title}
-                      />
+                      <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                        <ProjectOpenDetailButton
+                          projectId={project.id}
+                          projectTitle={project.title}
+                        />
+                        <ProjectListTitleInput
+                          projectId={project.id}
+                          title={project.title}
+                          disabled={updatingProjectId === project.id}
+                          onTitleChange={onTitleChange}
+                        />
+                      </div>
                       <OpenTaskCount count={openCount} />
                     </div>
                     <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -705,7 +914,7 @@ export function ProjectList({
                           disabled={updatingProjectId === project.id}
                         />
                       ) : project.area ? (
-                        <span className="rounded border border-border bg-muted/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-foreground/80">
+                        <span className="rounded border border-border/20 bg-muted/20 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-foreground/80">
                           {project.area}
                         </span>
                       ) : (
@@ -772,7 +981,7 @@ export function ProjectList({
                           disabled={updatingProjectId === project.id}
                         />
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded border border-border bg-muted/40 px-1.5 py-px text-[11px] capitalize text-foreground/80">
+                        <span className="inline-flex items-center gap-1.5 rounded border border-border/20 bg-muted/20 px-1.5 py-px text-[11px] capitalize text-foreground/80">
                           <StatusDot status={project.status} />
                           {project.status.replace(/_/g, " ")}
                         </span>
@@ -807,25 +1016,15 @@ export function ProjectList({
                   )}
                   <div className="flex shrink-0 items-center justify-end gap-1.5">
                     {onCreateTask ? (
-                      <button
-                        type="button"
-                        aria-label={`Add task to ${project.title}`}
-                        aria-pressed={composing}
+                      <ProjectAddTaskButton
+                        projectTitle={project.title}
+                        composing={composing}
                         disabled={creatingTaskProjectId === project.id}
-                        onClick={(event) => {
-                          event.stopPropagation();
+                        onToggle={() => {
                           if (composing) cancelCompose();
                           else startCompose(project.id);
                         }}
-                        className={cn(
-                          "grid h-7 w-7 shrink-0 place-items-center rounded-sm transition-colors disabled:opacity-50",
-                          composing
-                            ? "bg-highlight/15 text-highlight"
-                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                        )}
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
+                      />
                     ) : null}
                     {onDelete ? (
                       <ProjectListDeleteButton
@@ -848,7 +1047,11 @@ export function ProjectList({
                 </div>
 
                 {showChildren ? (
-                  <div className="space-y-1 bg-canvas/80 px-2 py-1.5 pl-10">
+                  <div className="relative space-y-1.5 bg-canvas/80 py-1.5 pl-20 pr-3">
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute bottom-2 left-9 top-2 w-px bg-[hsl(var(--connector-line))]"
+                    />
                     {expanded
                       ? visibleTasks.map((task) => (
                           <NestedTaskRow

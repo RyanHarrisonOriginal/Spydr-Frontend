@@ -94,7 +94,7 @@ export function ProjectAreasPanel({ areas, isLoading = false }: ProjectAreasPane
       : `${areas.length} area${areas.length === 1 ? "" : "s"}`;
 
   return (
-    <section className="border-b border-border/80 px-6 py-2">
+    <section className="border-b border-border/80 px-4 py-2 md:px-6">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <button
           type="button"

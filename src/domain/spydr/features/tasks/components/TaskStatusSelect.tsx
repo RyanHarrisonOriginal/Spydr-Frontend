@@ -5,13 +5,13 @@ import { cn } from "@/lib/utils";
 
 const statusSurface: Record<string, string> = {
   active:
-    "border-[hsl(var(--status-active)/0.35)] bg-[hsl(var(--status-active)/0.08)]",
+    "border-[hsl(var(--status-active)/0.12)] bg-[hsl(var(--status-active)/0.08)]",
   waiting:
-    "border-[hsl(var(--status-doing)/0.35)] bg-[hsl(var(--status-doing)/0.08)]",
+    "border-[hsl(var(--status-doing)/0.12)] bg-[hsl(var(--status-doing)/0.08)]",
   blocked:
-    "border-[hsl(var(--status-blocked)/0.35)] bg-[hsl(var(--status-blocked)/0.08)]",
+    "border-[hsl(var(--status-blocked)/0.12)] bg-[hsl(var(--status-blocked)/0.08)]",
   completed:
-    "border-[hsl(var(--status-done)/0.35)] bg-[hsl(var(--status-done)/0.08)]",
+    "border-[hsl(var(--status-done)/0.12)] bg-[hsl(var(--status-done)/0.08)]",
 };
 
 const statusOptionSurface: Record<string, string> = {
@@ -30,6 +30,7 @@ interface TaskStatusSelectProps {
   onChange(status: string): void;
   disabled?: boolean;
   className?: string;
+  appearance?: "field" | "icon";
 }
 
 export function TaskStatusSelect({
@@ -37,6 +38,7 @@ export function TaskStatusSelect({
   onChange,
   disabled = false,
   className,
+  appearance = "field",
 }: TaskStatusSelectProps) {
   const options = taskStatuses.map((status) => ({
     value: status,
@@ -51,6 +53,7 @@ export function TaskStatusSelect({
       disabled={disabled}
       ariaLabel="Task status"
       menuLabel="Status"
+      appearance={appearance}
       leading={<StatusDot status={value} className="shrink-0" />}
       renderOptionLeading={(option) => (
         <StatusDot status={option.value} className="shrink-0" />

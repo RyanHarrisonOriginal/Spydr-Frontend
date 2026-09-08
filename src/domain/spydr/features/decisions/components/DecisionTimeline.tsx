@@ -96,7 +96,7 @@ function DecisionRow({
   const minWidth = reorderEnabled ? ROW_MIN_WIDTH_WITH_HANDLE : ROW_MIN_WIDTH;
 
   return (
-    <div className={cn(rowClass, "px-6 py-4 row-hover")} style={{ minWidth }}>
+    <div className={cn(rowClass, "px-4 py-4 row-hover md:px-6")} style={{ minWidth }}>
       {reorderEnabled ? (
         <CollectionDragHandle className="mt-1" {...sortable.dragHandleProps} />
       ) : null}
@@ -208,11 +208,11 @@ export function DecisionTimeline({
   }, [decisions]);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="touch-scroll-x">
       <div
         className={cn(
           headerClass,
-          "border-b border-border bg-muted/20 px-6 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+          "border-b border-border bg-muted/20 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:px-6"
         )}
         style={{ minWidth }}
       >

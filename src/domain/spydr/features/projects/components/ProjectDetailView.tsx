@@ -32,6 +32,7 @@ import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/na
 import { PriorityBadge } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
+import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
 import {
   formatRelativeTime,
 } from "@/domain/spydr/features/shared/components/time";
@@ -70,6 +71,7 @@ import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/E
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import { SelectionCheckbox } from "@/domain/spydr/features/shared/components/SelectionCheckbox";
 import { BulkDeleteBar } from "@/domain/spydr/features/shared/components/BulkDeleteBar";
+import { useIsPhone } from "@/hooks/useIsPhone";
 import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSelection";
 
 interface ProjectDetailViewProps {
@@ -219,6 +221,7 @@ export function ProjectDetailView({
   deletingChildIds,
   childMutationError,
 }: ProjectDetailViewProps) {
+  const isPhone = useIsPhone();
   const deletedCount = getDeletedItemCount(deleted);
   const personas = project.personas ?? {
     requester: null,
@@ -264,16 +267,60 @@ export function ProjectDetailView({
     <div className="flex min-w-0">
       <div className="min-w-0 flex-1">
         <PageHeader
+          dense={isPhone}
           titleClassName="w-full max-w-none truncate-none"
           title={
             <input
               value={detailForm.title}
               onChange={(event) => onDetailFieldChange("title", event.target.value)}
-              className="w-full min-w-0 bg-transparent text-[1.35rem] font-semibold tracking-tight outline-none ring-focus placeholder:text-muted-foreground"
+              className={cn(
+                "w-full min-w-0 bg-transparent font-semibold tracking-tight outline-none ring-focus placeholder:text-muted-foreground",
+                isPhone ? "text-[16px] leading-snug" : "text-[1.35rem]"
+              )}
               placeholder="Project name"
             />
           }
           meta={
+            isPhone ? (
+              <div className="flex w-full min-w-0 flex-col gap-2">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <ProjectStatusSelect
+                    value={project.status}
+                    onChange={onStatusChange}
+                    disabled={isUpdatingStatus}
+                    className="w-[6.75rem] shrink-0"
+                  />
+                  <ProjectAreaSelect
+                    areas={areas}
+                    value={areaNodeId}
+                    onChange={onAreaChange}
+                    disabled={isUpdatingArea}
+                    className="min-w-0 flex-1"
+                  />
+                </div>
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <DatePicker
+                    value={detailForm.targetDate || null}
+                    onChange={(targetDate) =>
+                      onDetailFieldChange("targetDate", targetDate ?? "")
+                    }
+                    variant="compact"
+                    showChevron={false}
+                    showIcon={false}
+                    placeholder="Target"
+                    panelLabel="Target date"
+                    clearLabel="Clear target date"
+                    ariaLabel="Project target date"
+                    className="h-7 w-[5.5rem] shrink-0"
+                  />
+                  <PriorityBadge priority={project.priority} />
+                  <span className="ml-auto truncate font-mono text-[10px] tabular-nums text-muted-foreground">
+                    {detailSaveLabel(detailSaveState) ??
+                      `Updated ${formatRelativeTime(project.updatedAt)}`}
+                  </span>
+                </div>
+              </div>
+            ) : (
             <div className="flex flex-wrap items-center gap-2">
               <ProjectStatusSelect
                 value={project.status}
@@ -305,9 +352,12 @@ export function ProjectDetailView({
                   : null}
               </span>
             </div>
+            )
           }
           actions={
+            isPhone && deletedCount === 0 ? undefined : (
             <div className="flex items-center gap-2">
+              {isPhone ? null : (
               <EntityTransformMenu
                 nodeId={project.id}
                 sourceType="project"
@@ -315,6 +365,7 @@ export function ProjectDetailView({
                 projects={projects}
                 excludeProjectId={project.id}
               />
+              )}
               {deletedCount > 0 ? (
                 <Button
                   type="button"
@@ -324,18 +375,19 @@ export function ProjectDetailView({
                   onClick={openTrash}
                 >
                   <ArchiveRestore className="h-3 w-3" />
-                  Trash
+                  {isPhone ? null : "Trash"}
                   <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[9px] font-semibold tabular-nums leading-none text-foreground/80">
                     {deletedCount}
                   </span>
                 </Button>
               ) : null}
             </div>
+            )
           }
         />
 
         {deletedCount > 0 && (
-          <div className="px-6 pt-2">
+          <div className="px-4 pt-2 md:px-6">
             <ProjectDeletedItems
               deleted={deleted}
               expanded={trashExpanded}
@@ -347,8 +399,21 @@ export function ProjectDetailView({
           </div>
         )}
 
-        <div className="space-y-3 px-6 pb-3 pt-2">
-          <ProjectDetailSection>
+        <div
+          className={cn(
+            "flex flex-col gap-3 pb-8 pt-2",
+            isPhone ? "px-3" : "px-4 md:px-6"
+          )}
+        >
+          {isPhone ? (
+            <PhoneGlance
+              openCount={stats.openTaskCount}
+              totalCount={stats.connected.tasks.total}
+              progressPercent={stats.progressPercent}
+            />
+          ) : null}
+
+          <ProjectDetailSection collapsible defaultExpanded>
             <ProjectDetailSectionHeader
               label="Overview"
               hint={detailSaveLabel(detailSaveState) ?? undefined}
@@ -356,11 +421,13 @@ export function ProjectDetailView({
                 detailSaveState === "error" ? "text-destructive" : undefined
               }
             />
-            <ProjectDetailSectionBody className="gap-3 p-3">
+            <ProjectDetailSectionBody className={cn("gap-3", isPhone ? "p-2.5" : "p-3")}>
+              {isPhone ? null : (
               <ConnectedSummary
                 connected={stats.connected}
                 progressPercent={stats.progressPercent}
               />
+              )}
 
               <ProjectDetailField label="Brief" className="space-y-1">
                 <textarea
@@ -374,10 +441,15 @@ export function ProjectDetailView({
                 />
               </ProjectDetailField>
 
-              <div className="grid gap-3 lg:grid-cols-2">
+              <div className={cn("grid gap-3", isPhone ? "grid-cols-1" : "lg:grid-cols-2")}>
                 <ProjectDetailFormPanel label="Timeline" className="p-2.5">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                    <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <div className={cn("flex flex-col gap-2", !isPhone && "sm:flex-row sm:items-end")}>
+                    <div
+                      className={cn(
+                        "grid min-w-0 flex-1 items-center gap-2",
+                        isPhone ? "grid-cols-2" : "grid-cols-[1fr_auto_1fr]"
+                      )}
+                    >
                       <ProjectDetailField label="Start" className="space-y-1">
                         <DatePicker
                           value={detailForm.startDate || null}
@@ -391,6 +463,27 @@ export function ProjectDetailView({
                           className="h-7"
                         />
                       </ProjectDetailField>
+                      {isPhone ? (
+                        <ProjectDetailField label="Risk" className="space-y-1">
+                          <select
+                            value={detailForm.riskLevel}
+                            onChange={(event) =>
+                              onDetailFieldChange(
+                                "riskLevel",
+                                event.target.value as SpydrPriority
+                              )
+                            }
+                            className="h-7 w-full rounded-md border border-input bg-background px-2 text-[11px] ring-focus"
+                          >
+                            {priorityOptions.map((priority) => (
+                              <option key={priority} value={priority}>
+                                {priority}
+                              </option>
+                            ))}
+                          </select>
+                        </ProjectDetailField>
+                      ) : (
+                        <>
                       <ArrowRight
                         aria-hidden
                         className="mb-1.5 h-3 w-3 shrink-0 text-muted-foreground"
@@ -408,7 +501,10 @@ export function ProjectDetailView({
                           className="h-7"
                         />
                       </ProjectDetailField>
+                        </>
+                      )}
                     </div>
+                    {isPhone ? null : (
                     <ProjectDetailField
                       label="Risk"
                       className="space-y-1 sm:w-28"
@@ -430,6 +526,7 @@ export function ProjectDetailView({
                         ))}
                       </select>
                     </ProjectDetailField>
+                    )}
                   </div>
                 </ProjectDetailFormPanel>
 
@@ -468,19 +565,21 @@ export function ProjectDetailView({
           {childMutationError && (
             <ProjectDetailInlineError>{childMutationError}</ProjectDetailInlineError>
           )}
-        </div>
 
-        <div className="grid gap-4 px-6 pb-8 xl:grid-cols-2">
-          <ProjectDetailSection className="min-h-[360px]">
+        <div className={cn(isPhone ? "space-y-3" : "grid gap-4 xl:grid-cols-2")}>
+          <ProjectDetailSection collapsible defaultExpanded className="md:min-h-[360px]">
             <ProjectDetailSectionHeader
               icon={<Activity className="h-3.5 w-3.5" />}
-              label="In motion"
+              label={isPhone ? "Tasks" : "In motion"}
               hint={`${stats.openTaskCount} open`}
             />
             <ProjectDetailSectionBody className="min-h-0 flex-1 gap-3 p-3">
             <ProjectDetailFormPanel>
             <form
-              className="grid gap-2 md:grid-cols-[1fr_118px_auto]"
+              className={cn(
+                "grid gap-2",
+                isPhone ? "grid-cols-[1fr_auto]" : "md:grid-cols-[1fr_118px_auto]"
+              )}
               onSubmit={(event) => {
                 event.preventDefault();
                 onAddTask();
@@ -492,6 +591,7 @@ export function ProjectDetailView({
                 placeholder="Add a task..."
                 className={cn(detailFieldClassName, "h-8")}
               />
+              {isPhone ? null : (
               <DatePicker
                 value={taskForm.dueDate || null}
                 onChange={(dueDate) => onTaskFieldChange("dueDate", dueDate ?? "")}
@@ -500,13 +600,14 @@ export function ProjectDetailView({
                 placeholder="Due date"
                 ariaLabel="Task due date"
               />
+              )}
               <Button type="submit" size="sm" disabled={!canAddTask}>
                 {isAddingTask ? "Adding..." : "Add"}
               </Button>
             </form>
             </ProjectDetailFormPanel>
             {taskError && <ProjectDetailInlineError>{taskError}</ProjectDetailInlineError>}
-            {project.tasks.length > 0 ? (
+            {project.tasks.length > 0 && !isPhone ? (
               <div className="flex items-center gap-2 px-0.5">
                 <SelectionCheckbox
                   checked={taskSelection.allSelected}
@@ -534,7 +635,57 @@ export function ProjectDetailView({
               </div>
             ) : null}
             <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
-              {project.tasks.map((task) => (
+              {project.tasks.map((task) =>
+                isPhone ? (
+                <li
+                  key={task.id}
+                  className="flex min-w-0 items-center gap-1 rounded-md border border-border/60 bg-background px-1.5 py-1"
+                >
+                  <TaskStatusSelect
+                    value={task.status}
+                    disabled={isUpdatingChild}
+                    appearance="icon"
+                    className="h-7 w-7"
+                    onChange={(status) => {
+                      if (status !== task.status) {
+                        onUpdateChild("task", task.id, { status });
+                      }
+                    }}
+                  />
+                  <Link
+                    to={`/tasks/${task.id}`}
+                    className="min-w-0 flex-1 truncate text-[13px] font-medium hover:text-primary"
+                  >
+                    {task.title}
+                  </Link>
+                  <TaskCompletedAt
+                    status={task.status}
+                    completedAt={task.details?.completedAt}
+                  />
+                  <TaskDueDateSelect
+                    value={task.details?.dueDate}
+                    disabled={isUpdatingChild}
+                    placeholder="Due"
+                    showChevron={false}
+                    showIcon={false}
+                    className="h-7 w-[3.75rem] shrink-0"
+                    onChange={(dueDate) => {
+                      const current = task.details?.dueDate?.slice(0, 10) ?? null;
+                      const next = dueDate?.slice(0, 10) ?? null;
+                      if (next !== current) {
+                        onUpdateChild("task", task.id, { dueDate });
+                      }
+                    }}
+                  />
+                  <Link
+                    to={`/tasks/${task.id}`}
+                    aria-label={`Open ${task.title}`}
+                    className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-highlight/90"
+                  >
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </Link>
+                </li>
+                ) : (
                 <li
                   key={task.id}
                   className="flex min-w-0 items-center gap-2 rounded-md border border-border/60 bg-background px-3 py-2 shadow-sm"
@@ -582,6 +733,10 @@ export function ProjectDetailView({
                       }
                     }}
                   />
+                  <TaskCompletedAt
+                    status={task.status}
+                    completedAt={task.details?.completedAt}
+                  />
                   <span className="w-[118px] shrink-0">
                     <TaskDueDateSelect
                       value={task.details?.dueDate}
@@ -623,7 +778,8 @@ export function ProjectDetailView({
                     />
                   </div>
                 </li>
-              ))}
+                )
+              )}
               {!project.tasks.length && (
                 <li className="rounded-lg border border-dashed border-border/80 bg-muted/10 py-6 text-center text-sm text-muted-foreground">
                   No tasks linked yet.
@@ -647,7 +803,11 @@ export function ProjectDetailView({
             isDeleting={isDeletingChild}
           />
 
-          <ProjectDetailSection className="min-h-[360px]">
+          <ProjectDetailSection
+            collapsible
+            defaultExpanded={!isPhone}
+            className="md:min-h-[360px]"
+          >
             <ProjectDetailSectionHeader
               icon={<Lightbulb className="h-3.5 w-3.5" />}
               label="Thinking"
@@ -748,6 +908,7 @@ export function ProjectDetailView({
             isDeleting={isDeletingChild}
           />
         </div>
+        </div>
       </div>
     </div>
   );
@@ -766,6 +927,41 @@ function detailSaveLabel(state: ProjectDetailSaveState) {
     default:
       return null;
   }
+}
+
+function PhoneGlance({
+  openCount,
+  totalCount,
+  progressPercent,
+}: {
+  openCount: number;
+  totalCount: number;
+  progressPercent: number;
+}) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-md border border-border/70 bg-muted/15 px-2.5 py-2">
+      <div className="min-w-0">
+        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+          Progress
+        </p>
+        <p className="mt-0.5 text-[13px] font-medium tabular-nums text-foreground">
+          {openCount} open
+          <span className="text-muted-foreground"> · {totalCount} total</span>
+        </p>
+      </div>
+      <div className="ml-auto flex min-w-[7rem] max-w-[11rem] flex-1 items-center gap-2">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-highlight-secondary transition-[width]"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+        <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
+          {progressPercent}%
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function ConnectedSummary({

@@ -1,6 +1,10 @@
 import { apiRequest } from "@/lib/apiClient";
 import type { AnalyzeActiveNoteInput } from "./activeNoteAnalyzeTypes";
-import type { BackendActiveNoteAnalyzeResponse } from "./activeNoteAnalyzeTypes";
+import type {
+  BackendActiveNoteAnalysisSnapshot,
+  BackendActiveNoteAnalyzeAccepted,
+  BackendActiveNoteAnalyzeResponse,
+} from "./activeNoteAnalyzeTypes";
 import {
   mockAnalyzeActiveNote,
   mockApplyActiveNoteProposal,
@@ -9,6 +13,7 @@ import {
   mockUpdateActiveNote,
 } from "./activeNoteMocks";
 import { mapActiveNoteAnalyzeResponse } from "./mapActiveNoteAnalyzeResponse";
+import { overlayReviewSnapshotOnProposal } from "./overlayActiveNoteReview";
 import type {
   ActiveNote,
   ActiveNoteHistoryItem,
@@ -81,7 +86,7 @@ export async function analyzeActiveNote(
     return mockAnalyzeActiveNote(note.id);
   }
 
-  const response = await apiRequest<BackendActiveNoteAnalyzeResponse>(
+  const accepted = await apiRequest<BackendActiveNoteAnalyzeAccepted>(
     "/active-notes/analyze",
     {
       method: "POST",
@@ -89,8 +94,16 @@ export async function analyzeActiveNote(
         content: input.content,
         projectId: input.projectId ?? null,
       },
+      signal: input.signal,
     }
   );
+
+  const snapshot = await waitForActiveNoteAnalysis(accepted.sessionId, input);
+  const response: BackendActiveNoteAnalyzeResponse = {
+    sessionId: snapshot.sessionId,
+    segments: snapshot.segments ?? [],
+    actionPlans: snapshot.actionPlans ?? [],
+  };
 
   return mapActiveNoteAnalyzeResponse({
     response,
@@ -100,13 +113,114 @@ export async function analyzeActiveNote(
   });
 }
 
+const ANALYSIS_POLL_MS = 1_000;
+const ANALYSIS_TIMEOUT_MS = 180_000;
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (!signal?.aborted) return;
+  const error = new Error("Analysis cancelled");
+  error.name = "AbortError";
+  throw error;
+}
+
+async function waitForActiveNoteAnalysis(
+  sessionId: string,
+  input: AnalyzeActiveNoteInput
+): Promise<BackendActiveNoteAnalysisSnapshot> {
+  const startedAt = Date.now();
+
+  while (true) {
+    throwIfAborted(input.signal);
+
+    const snapshot = await apiRequest<BackendActiveNoteAnalysisSnapshot>(
+      `/active-notes/${sessionId}`,
+      { signal: input.signal }
+    );
+    input.onProgress?.(snapshot.completedSteps ?? []);
+
+    if (snapshot.status === "review" || snapshot.status === "completed") {
+      return snapshot;
+    }
+
+    if (snapshot.status === "failed") {
+      throw new Error(
+        snapshot.errorMessage ??
+          "Analysis could not be completed. Your note was kept — you can retry."
+      );
+    }
+
+    if (Date.now() - startedAt > ANALYSIS_TIMEOUT_MS) {
+      throw new Error("Analysis timed out. Please try again.");
+    }
+
+    await sleep(ANALYSIS_POLL_MS, input.signal);
+  }
+}
+
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    const onAbort = () => {
+      clearTimeout(timer);
+      const error = new Error("Analysis cancelled");
+      error.name = "AbortError";
+      reject(error);
+    };
+    if (signal?.aborted) {
+      onAbort();
+      return;
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
 export async function getActiveNoteProposal(
   activeNoteId: string
 ): Promise<ActiveNoteProposal> {
   if (isActiveNoteMockMode()) {
     return mockGetActiveNoteProposal(activeNoteId);
   }
-  throw new Error("Loading saved Active Note proposals is not available yet.");
+
+  const snapshot = await apiRequest<BackendActiveNoteAnalysisSnapshot>(
+    `/active-notes/${activeNoteId}`
+  );
+  if (snapshot.status === "analyzing" || snapshot.status === "applying") {
+    throw new Error("Active note analysis is still in progress.");
+  }
+  if (snapshot.status === "failed" && !snapshot.actionPlans?.length) {
+    throw new Error(snapshot.errorMessage ?? "Active note analysis failed.");
+  }
+
+  const proposal = mapActiveNoteAnalyzeResponse({
+    response: {
+      sessionId: snapshot.sessionId,
+      segments: snapshot.segments ?? [],
+      actionPlans: snapshot.actionPlans ?? [],
+    },
+    content: snapshot.content,
+    projectId: snapshot.projectId,
+  });
+
+  const status =
+    snapshot.status === "completed"
+      ? "completed"
+      : snapshot.status === "failed"
+        ? "failed"
+        : "review";
+
+  return overlayReviewSnapshotOnProposal(
+    {
+      ...proposal,
+      activeNote: {
+        ...proposal.activeNote,
+        status,
+      },
+    },
+    snapshot.reviewSnapshot
+  );
 }
 
 export async function applyActiveNoteProposal(

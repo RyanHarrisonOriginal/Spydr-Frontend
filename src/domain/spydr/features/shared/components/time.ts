@@ -21,3 +21,19 @@ export function formatShortDate(value: string | null | undefined): string {
     day: "numeric",
   }).format(date);
 }
+
+/** Absolute date + time for completed timestamps and similar. */
+export function formatDateTime(value: string | null | undefined): string {
+  if (!value) return "No date";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}

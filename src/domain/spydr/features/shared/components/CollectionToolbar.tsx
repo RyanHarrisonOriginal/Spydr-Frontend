@@ -1,4 +1,5 @@
 import { ArrowUpDown, Filter, Search, X } from "lucide-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -12,11 +13,17 @@ interface CollectionToolbarProps<T> {
   view: CollectionView<T>;
   /** Hide the sort dropdown when the list provides its own column sorting. */
   showSort?: boolean;
+  startActions?: ReactNode;
+  endActions?: ReactNode;
+  sticky?: boolean;
 }
 
 export function CollectionToolbar<T>({
   view,
   showSort = true,
+  startActions,
+  endActions,
+  sticky = false,
 }: CollectionToolbarProps<T>) {
   const {
     state,
@@ -36,19 +43,28 @@ export function CollectionToolbar<T>({
   const hasFacets = facets.some((facet) => facet.options.length > 0);
 
   return (
-    <div className="border-b border-border/80">
-      <div className="flex flex-wrap items-center gap-2 bg-muted/10 px-6 py-2">
-        <div className="relative min-w-[12rem] flex-1 sm:max-w-xs">
+    <div
+      className={cn(
+        "border-b border-border",
+        sticky && "sticky top-0 z-20 bg-background/95 backdrop-blur-sm"
+      )}
+    >
+      <div className="flex flex-col gap-2 bg-muted/10 px-4 py-2 md:flex-row md:flex-wrap md:items-center md:px-6">
+        {startActions ? (
+          <div className="flex min-w-0 flex-wrap items-center gap-2">{startActions}</div>
+        ) : null}
+        <div className="relative min-w-0 flex-1 md:min-w-[12rem] md:max-w-xs">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={state.search}
             onChange={(event) => view.setSearch(event.target.value)}
             placeholder={searchPlaceholder}
-            className="h-8 border-border/80 bg-background pl-8 text-[12px] shadow-none"
+            className="h-8 border-border bg-background pl-8 text-[12px] shadow-none"
             aria-label={searchPlaceholder}
           />
         </div>
 
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
         {hasFacets ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -109,6 +125,8 @@ export function CollectionToolbar<T>({
             ? `${totalCount} ${noun}`
             : `${filteredCount} of ${totalCount}`}
         </span>
+        {endActions}
+        </div>
       </div>
 
       <CollectionActiveFilterChips chips={activeChips} onRemove={view.removeFacet} />

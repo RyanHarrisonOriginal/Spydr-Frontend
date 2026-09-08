@@ -23,8 +23,8 @@ export function hslColorCss(color: string): string {
 
 export function areaColorSurfaceStyle(color: string) {
   return {
-    borderColor: `hsl(${color} / 0.35)`,
-    backgroundColor: `hsl(${color} / 0.1)`,
+    borderColor: `hsl(${color} / 0.12)`,
+    backgroundColor: `hsl(${color} / 0.06)`,
   } as const;
 }
 
