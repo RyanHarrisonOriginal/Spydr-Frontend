@@ -28,7 +28,7 @@ vi.mock(
       id?: string;
       placeholder?: string;
       "aria-labelledby"?: string;
-      "aria-invalid"?: boolean | string;
+      "aria-invalid"?: boolean | "true" | "false" | "grammar" | "spelling";
       "aria-describedby"?: string;
     }) => (
       <textarea
@@ -38,9 +38,7 @@ vi.mock(
         disabled={disabled || readOnly}
         readOnly={readOnly}
         aria-labelledby={ariaLabelledBy}
-        aria-invalid={
-          ariaInvalid == null ? undefined : String(ariaInvalid)
-        }
+        aria-invalid={ariaInvalid}
         aria-describedby={ariaDescribedBy}
         onChange={(event) => onValueChange(event.target.value)}
       />

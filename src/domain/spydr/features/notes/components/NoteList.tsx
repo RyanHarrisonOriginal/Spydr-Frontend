@@ -240,11 +240,11 @@ function MobileNoteBody({
 function DesktopNoteList({
   notes,
   getPriorityRank,
-  reorderEnabled,
+  reorderEnabled = false,
   onReorder,
   onDelete,
   onDeleteSelected,
-  deletingNoteIds,
+  deletingNoteIds = [],
 }: NoteListProps) {
   const noteIds = useMemo(() => notes.map((note) => note.id), [notes]);
   const selection = useItemSelection(noteIds);
