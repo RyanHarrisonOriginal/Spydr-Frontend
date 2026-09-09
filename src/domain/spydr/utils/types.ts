@@ -142,6 +142,23 @@ export type TaskNode = SpydrNode<"task", TaskDetails> & {
   project?: TaskProjectRef | null;
   assignee?: PersonNode | null;
 };
+
+export type TodoItemSource = "user" | "agent";
+
+export interface TodoItem {
+  id: string;
+  organizationId: string;
+  userId: string;
+  taskId: string;
+  source: TodoItemSource;
+  sortOrder: number;
+  addedAt: string;
+  isStale: boolean;
+  staleAt: string | null;
+  ageHours: number;
+  task: TaskNode;
+}
+
 export type NoteNode = SpydrNode<"note", null> & {
   project?: TaskProjectRef | null;
 };

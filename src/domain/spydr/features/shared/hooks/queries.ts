@@ -90,6 +90,17 @@ export function useTasksQuery() {
   });
 }
 
+export function useTodoItemsQuery() {
+  const enabled = useSpydrQueryEnabled();
+  const { activeOrgId } = useOrganizationContext();
+  return useQuery({
+    queryKey: spydrOrgKey(activeOrgId!, "todos"),
+    queryFn: spydrApi.todos.list,
+    enabled: enabled && !!activeOrgId,
+    refetchOnMount: "always",
+  });
+}
+
 export function useWorkspaceDashboardQuery() {
   const enabled = useSpydrQueryEnabled();
   const { activeOrgId } = useOrganizationContext();

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import type { CreateProjectInput, SpydrNodeStatus, SpydrPriority } from "@/domain/spydr/utils/types";
 import { useCreateProjectMutation } from "./useCreateProjectMutation";
 import { useUpdateProjectMutation } from "./useUpdateProjectMutation";
@@ -37,6 +38,7 @@ export interface UseCreateProjectFormOptions {
 export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
   const [isOpen, setIsOpen] = useState(false);
   const [values, setValues] = useState<ProjectFormValues>(initialValues);
+  const { currentUserPersonId } = useCurrentUserPerson();
   const mutation = useCreateProjectMutation();
   const updateProject = useUpdateProjectMutation();
 
@@ -73,7 +75,8 @@ export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
 
     mutation.mutate(input, {
       onSuccess: (project) => {
-        const personId = options?.linkPersonAsAssignee;
+        const personId =
+          options?.linkPersonAsAssignee ?? currentUserPersonId ?? null;
         if (!personId) {
           options?.onSuccess?.();
           reset();

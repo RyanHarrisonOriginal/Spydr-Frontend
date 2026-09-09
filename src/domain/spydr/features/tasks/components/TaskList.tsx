@@ -30,13 +30,14 @@ import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/In
 import { SelectionCheckbox } from "@/domain/spydr/features/shared/components/SelectionCheckbox";
 import { BulkDeleteBar } from "@/domain/spydr/features/shared/components/BulkDeleteBar";
 import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSelection";
+import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
 
 const ROW_BASE =
-  "grid grid-cols-[28px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_148px_72px] items-center gap-3";
+  "grid grid-cols-[28px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_148px_40px_72px] items-center gap-3";
 const ROW_WITH_HANDLE =
-  "grid grid-cols-[24px_28px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_148px_72px] items-center gap-3";
-const ROW_MIN_WIDTH = 1140;
-const ROW_MIN_WIDTH_WITH_HANDLE = 1164;
+  "grid grid-cols-[24px_28px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_148px_40px_72px] items-center gap-3";
+const ROW_MIN_WIDTH = 1180;
+const ROW_MIN_WIDTH_WITH_HANDLE = 1204;
 
 interface TaskListProps {
   tasks: TaskNode[];
@@ -56,6 +57,9 @@ interface TaskListProps {
   onDelete?(taskId: string): void;
   onDeleteSelected?(taskIds: string[]): void;
   deletingTaskIds?: string[];
+  todoTaskIds?: Set<string>;
+  togglingTodoTaskId?: string | null;
+  onToggleTodo?(taskId: string, onTodo: boolean): void;
 }
 
 function resolveAssigneeId(task: TaskNode): string | null {
@@ -80,6 +84,9 @@ function TaskRow({
   onToggleSelected,
   compact = false,
   areas = [],
+  onTodo = false,
+  togglingTodo = false,
+  onToggleTodo,
 }: {
   task: TaskNode;
   projects: ProjectNode[];
@@ -98,6 +105,9 @@ function TaskRow({
   onToggleSelected?(id: string): void;
   compact?: boolean;
   areas?: ProjectAreaNode[];
+  onTodo?: boolean;
+  togglingTodo?: boolean;
+  onToggleTodo?(taskId: string, onTodo: boolean): void;
 }) {
   const rowClass = reorderEnabled ? ROW_WITH_HANDLE : ROW_BASE;
   const minWidth = reorderEnabled ? ROW_MIN_WIDTH_WITH_HANDLE : ROW_MIN_WIDTH;
@@ -155,6 +165,13 @@ function TaskRow({
             className="h-7 w-[3.75rem] shrink-0"
             onChange={(dueDate) => onDueDateChange(task.id, dueDate)}
           />
+          {onToggleTodo ? (
+            <AddToTodoButton
+              onTodo={onTodo}
+              busy={togglingTodo}
+              onToggle={() => onToggleTodo(task.id, onTodo)}
+            />
+          ) : null}
           <Link
             to={`/tasks/${task.id}`}
             aria-label={`Open ${task.title}`}
@@ -258,6 +275,15 @@ function TaskRow({
       >
         {timestamp.value}
       </span>
+      {onToggleTodo ? (
+        <AddToTodoButton
+          onTodo={onTodo}
+          busy={togglingTodo}
+          onToggle={() => onToggleTodo(task.id, onTodo)}
+        />
+      ) : (
+        <span aria-hidden />
+      )}
       {onDelete ? (
         <InlineDeleteButton
           label={task.title}
@@ -288,6 +314,9 @@ export function TaskList({
   onDelete,
   onDeleteSelected,
   deletingTaskIds = [],
+  todoTaskIds,
+  togglingTodoTaskId = null,
+  onToggleTodo,
 }: TaskListProps) {
   const headerClass = reorderEnabled ? ROW_WITH_HANDLE : ROW_BASE;
   const minWidth = reorderEnabled ? ROW_MIN_WIDTH_WITH_HANDLE : ROW_MIN_WIDTH;
@@ -393,6 +422,7 @@ export function TaskList({
           align="end"
           onSort={onSortColumn}
         />
+        <span className="text-center">Today</span>
         <span />
       </div>
       )}
@@ -421,6 +451,9 @@ export function TaskList({
             onToggleSelected={!isPhone && canSelect ? selection.toggle : undefined}
             compact={isPhone}
             areas={areas}
+            onTodo={todoTaskIds?.has(task.id) ?? false}
+            togglingTodo={togglingTodoTaskId === task.id}
+            onToggleTodo={onToggleTodo}
           />
         )}
       />

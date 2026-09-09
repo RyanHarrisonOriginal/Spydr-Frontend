@@ -63,7 +63,10 @@ function SortableItem<T extends { id: string }>({
     <li
       ref={setNodeRef}
       style={sortableStyle}
-      className={cn(className, isDragging && "relative z-10 opacity-60")}
+      className={cn(
+        className,
+        isDragging && "relative z-10 opacity-60"
+      )}
     >
       {children({
         dragHandleProps: enabled ? { ...attributes, ...listeners } : undefined,
@@ -83,6 +86,7 @@ export function CollectionSortableList<T extends { id: string }>({
 }: CollectionSortableListProps<T>) {
   const strategy: SortingStrategy =
     layout === "grid" ? rectSortingStrategy : verticalListSortingStrategy;
+  const itemClassName = layout === "grid" ? "h-full min-h-0" : undefined;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -104,7 +108,7 @@ export function CollectionSortableList<T extends { id: string }>({
     return (
       <ul className={className}>
         {items.map((item) => (
-          <li key={item.id}>
+          <li key={item.id} className={itemClassName}>
             {renderItem(item, { dragHandleProps: undefined, isDragging: false })}
           </li>
         ))}
@@ -121,7 +125,12 @@ export function CollectionSortableList<T extends { id: string }>({
       <SortableContext items={items.map((item) => item.id)} strategy={strategy}>
         <ul className={className}>
           {items.map((item) => (
-            <SortableItem key={item.id} item={item} enabled={enabled}>
+            <SortableItem
+              key={item.id}
+              item={item}
+              enabled={enabled}
+              className={itemClassName}
+            >
               {(props) => renderItem(item, props)}
             </SortableItem>
           ))}

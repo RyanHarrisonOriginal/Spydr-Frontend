@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import {
   useProjectQuery,
   usePeopleQuery,
@@ -102,6 +103,7 @@ function serializeDetailForm(form: ProjectDetailFormValues) {
 
 export function useProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
+  const { currentUserPersonId } = useCurrentUserPerson();
   const query = useProjectQuery(projectId);
   const projectsQuery = useProjectsQuery();
   const peopleQuery = usePeopleQuery();
@@ -239,6 +241,7 @@ export function useProjectDetailPage() {
         dueDate: taskForm.dueDate || null,
         priority: taskForm.priority,
         status: "active",
+        assigneePersonNodeId: currentUserPersonId,
       },
       {
         onSuccess: () => setTaskForm(emptyTaskForm),

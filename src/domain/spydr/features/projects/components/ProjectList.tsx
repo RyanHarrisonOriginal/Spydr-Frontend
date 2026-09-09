@@ -19,6 +19,8 @@ import { ShowCompletedToggle } from "@/domain/spydr/features/shared/components/S
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
 import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
+import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
+import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
 import { cn } from "@/lib/utils";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import type { ProjectColumnId } from "../hooks/useProjectListColumns";
@@ -53,12 +55,17 @@ interface ProjectListProps {
   onTaskStatusChange?(taskId: string, status: string): void;
   onTaskDueDateChange?(taskId: string, dueDate: string | null): void;
   onCreateTask?(projectId: string, title: string, onSuccess?: () => void): void;
+  onDeleteTask?(taskId: string): void;
   onDelete?(projectId: string): void;
+  deletingTaskIds?: string[];
   deletingProjectId?: string | null;
   expandedIds?: Set<string>;
   onExpandedIdsChange?(next: Set<string>): void;
   showCompletedTasks?: boolean;
   onShowCompletedTasksChange?(show: boolean): void;
+  todoTaskIds?: Set<string>;
+  togglingTodoTaskId?: string | null;
+  onToggleTodo?(taskId: string, onTodo: boolean): void;
 }
 
 function toggleExpandedId(current: Set<string>, projectId: string): Set<string> {
@@ -361,15 +368,43 @@ function NestedTaskRow({
   task,
   busy,
   compact = false,
+  isDeleting = false,
+  deleteDisabled = false,
   onStatusChange,
   onDueDateChange,
+  onDelete,
+  onTodo = false,
+  togglingTodo = false,
+  onToggleTodo,
 }: {
   task: TaskNode;
   busy: boolean;
   compact?: boolean;
+  isDeleting?: boolean;
+  deleteDisabled?: boolean;
   onStatusChange?(taskId: string, status: string): void;
   onDueDateChange?(taskId: string, dueDate: string | null): void;
+  onDelete?(taskId: string): void;
+  onTodo?: boolean;
+  togglingTodo?: boolean;
+  onToggleTodo?(taskId: string, onTodo: boolean): void;
 }) {
+  const deleteControl = onDelete ? (
+    <InlineDeleteButton
+      label={task.title}
+      isDeleting={isDeleting}
+      disabled={deleteDisabled}
+      onDelete={() => onDelete(task.id)}
+    />
+  ) : null;
+  const todoControl = onToggleTodo ? (
+    <AddToTodoButton
+      onTodo={onTodo}
+      busy={togglingTodo}
+      onToggle={() => onToggleTodo(task.id, onTodo)}
+    />
+  ) : null;
+
   if (compact) {
     return (
       <div className="flex items-center gap-1 rounded-sm border border-border/20 border-l-2 border-l-highlight/18 bg-canvas px-1 py-0.5">
@@ -399,6 +434,8 @@ function NestedTaskRow({
           className="h-7 w-[3.75rem] shrink-0"
           onChange={(dueDate) => onDueDateChange?.(task.id, dueDate)}
         />
+        {todoControl}
+        {deleteControl}
         <Link
           to={`/tasks/${task.id}`}
           aria-label={`Open ${task.title}`}
@@ -443,6 +480,8 @@ function NestedTaskRow({
           onChange={(dueDate) => onDueDateChange?.(task.id, dueDate)}
         />
       </span>
+      {todoControl}
+      {deleteControl}
     </div>
   );
 }
@@ -537,12 +576,17 @@ export function ProjectList({
   onTaskStatusChange,
   onTaskDueDateChange,
   onCreateTask,
+  onDeleteTask,
   onDelete,
+  deletingTaskIds = [],
   deletingProjectId = null,
   expandedIds: controlledExpandedIds,
   onExpandedIdsChange,
   showCompletedTasks: controlledShowCompletedTasks,
   onShowCompletedTasksChange,
+  todoTaskIds,
+  togglingTodoTaskId = null,
+  onToggleTodo,
 }: ProjectListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [uncontrolledShowCompletedTasks, setUncontrolledShowCompletedTasks] =
@@ -811,9 +855,21 @@ export function ProjectList({
                               key={task.id}
                               task={task}
                               compact
-                              busy={updatingTaskId === task.id}
+                              busy={
+                                updatingTaskId === task.id ||
+                                deletingTaskIds.includes(task.id)
+                              }
+                              isDeleting={deletingTaskIds.includes(task.id)}
+                              deleteDisabled={
+                                deletingTaskIds.length > 0 &&
+                                !deletingTaskIds.includes(task.id)
+                              }
                               onStatusChange={onTaskStatusChange}
                               onDueDateChange={onTaskDueDateChange}
+                              onDelete={onDeleteTask}
+                              onTodo={todoTaskIds?.has(task.id) ?? false}
+                              togglingTodo={togglingTodoTaskId === task.id}
+                              onToggleTodo={onToggleTodo}
                             />
                           ))
                         : null}
@@ -1057,9 +1113,21 @@ export function ProjectList({
                           <NestedTaskRow
                             key={task.id}
                             task={task}
-                            busy={updatingTaskId === task.id}
+                            busy={
+                              updatingTaskId === task.id ||
+                              deletingTaskIds.includes(task.id)
+                            }
+                            isDeleting={deletingTaskIds.includes(task.id)}
+                            deleteDisabled={
+                              deletingTaskIds.length > 0 &&
+                              !deletingTaskIds.includes(task.id)
+                            }
                             onStatusChange={onTaskStatusChange}
                             onDueDateChange={onTaskDueDateChange}
+                            onDelete={onDeleteTask}
+                            onTodo={todoTaskIds?.has(task.id) ?? false}
+                            togglingTodo={togglingTodoTaskId === task.id}
+                            onToggleTodo={onToggleTodo}
                           />
                         ))
                       : null}

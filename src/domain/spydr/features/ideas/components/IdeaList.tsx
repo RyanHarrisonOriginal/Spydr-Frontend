@@ -10,6 +10,15 @@ import { CollectionPriorityRank } from "@/domain/spydr/features/shared/component
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
+import {
+  CAPTURE_CARD_BODY_CLASS,
+  CAPTURE_CARD_BODY_EMPTY_CLASS,
+  CAPTURE_CARD_CLASS,
+  CAPTURE_CARD_FOOTER_CLASS,
+  CAPTURE_CARD_GRID_CLASS,
+  CAPTURE_CARD_META_CLASS,
+  CAPTURE_CARD_TITLE_CLASS,
+} from "@/domain/spydr/features/shared/components/captureCardStyles";
 import { cn } from "@/lib/utils";
 
 interface IdeaListProps {
@@ -39,7 +48,7 @@ export function IdeaList({
       items={ideas}
       enabled={reorderEnabled}
       layout="grid"
-      className="grid gap-2 px-4 pb-4 sm:grid-cols-2 xl:grid-cols-3"
+      className={CAPTURE_CARD_GRID_CLASS}
       onReorder={(orderedIds) => onReorder?.(orderedIds)}
       renderItem={(idea, sortable) => {
         const confidence = formatConfidence(idea.details?.confidence);
@@ -47,13 +56,8 @@ export function IdeaList({
         const isPromoted = !!idea.details?.promotedToProjectNodeId;
 
         return (
-          <div
-            className={cn(
-              "rounded-lg border border-border/70 bg-card/30 p-3 row-hover",
-              "hover:border-highlight-secondary/30"
-            )}
-          >
-            <div className="flex items-start gap-2">
+          <div className={CAPTURE_CARD_CLASS}>
+            <div className="flex min-h-0 flex-1 items-start gap-2">
               {reorderEnabled ? (
                 <CollectionDragHandle
                   className="mt-0.5"
@@ -63,10 +67,13 @@ export function IdeaList({
               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-highlight-secondary/25 bg-highlight-secondary/10">
                 <Lightbulb className="h-3.5 w-3.5 text-highlight-secondary" />
               </span>
-              <div className="min-w-0 flex-1">
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                 <div className="flex items-start gap-2">
-                  <CollectionPriorityRank rank={getPriorityRank(idea.id)} className="mt-0.5 shrink-0" />
-                  <h2 className="min-w-0 flex-1 text-[13px] font-semibold leading-snug">
+                  <CollectionPriorityRank
+                    rank={getPriorityRank(idea.id)}
+                    className="mt-0.5 shrink-0"
+                  />
+                  <h2 className={cn(CAPTURE_CARD_TITLE_CLASS, "min-w-0 flex-1")}>
                     {idea.title}
                   </h2>
                   {onDelete ? (
@@ -82,17 +89,15 @@ export function IdeaList({
                   </span>
                 </div>
 
+                <div className={CAPTURE_CARD_META_CLASS} aria-hidden />
+
                 {idea.body ? (
-                  <p className="mt-1.5 line-clamp-3 text-[12px] leading-relaxed text-muted-foreground">
-                    {idea.body}
-                  </p>
+                  <p className={CAPTURE_CARD_BODY_CLASS}>{idea.body}</p>
                 ) : (
-                  <p className="mt-1.5 text-[11px] italic text-muted-foreground/70">
-                    No description yet.
-                  </p>
+                  <p className={CAPTURE_CARD_BODY_EMPTY_CLASS}>No description yet.</p>
                 )}
 
-                <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                <div className={CAPTURE_CARD_FOOTER_CLASS}>
                   <StatusPill status={idea.status} />
                   <PriorityBadge priority={idea.priority} />
                   {potentialValue && (

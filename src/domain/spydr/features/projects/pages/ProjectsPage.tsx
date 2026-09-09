@@ -40,8 +40,10 @@ export function ProjectsPage() {
     updateTaskStatus,
     updateTaskDueDate,
     createProjectTask,
+    deleteTask,
     deleteProject,
     restoreProject,
+    deletingTaskIds,
     deletingProjectId,
     restoringProjectId,
     deletedProjects,
@@ -202,6 +204,8 @@ export function ProjectsPage() {
             onTaskStatusChange={updateTaskStatus}
             onTaskDueDateChange={updateTaskDueDate}
             onCreateTask={createProjectTask}
+            onDeleteTask={deleteTask}
+            deletingTaskIds={deletingTaskIds}
             onDelete={deleteProject}
             deletingProjectId={deletingProjectId}
           />

@@ -25,7 +25,7 @@ export const homeNavItems: WorkspaceNavItem[] = [
 ];
 
 export const outlookNavItems: WorkspaceNavItem[] = [
-  { icon: Sun, label: "Today", badge: "later", disabled: true },
+  { to: "/today", icon: Sun, label: "Today" },
   { icon: Inbox, label: "Inbox", badge: "later", disabled: true },
 ];
 
@@ -73,6 +73,7 @@ export const mobilePrimaryTabs: MobileTab[] = [
     icon: FolderKanban,
     isActive: (pathname) =>
       pathname.startsWith("/work") ||
+      pathname.startsWith("/today") ||
       pathname.startsWith("/projects") ||
       pathname.startsWith("/tasks") ||
       pathname.startsWith("/people"),

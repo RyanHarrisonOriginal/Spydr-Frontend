@@ -1,5 +1,6 @@
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
+import { Button } from "@/components/ui/button";
 import {
   EmptyState,
   ErrorState,
@@ -7,7 +8,6 @@ import {
 } from "@/domain/spydr/features/shared/components/ListState";
 import { CollectionToolbar } from "@/domain/spydr/features/shared/components/CollectionToolbar";
 import { CollectionNoResults } from "@/domain/spydr/features/shared/components/CollectionNoResults";
-import { useIsPhone } from "@/hooks/useIsPhone";
 import { NoteList } from "../components/NoteList";
 import { useNotesPage } from "../hooks/useNotesPage";
 
@@ -17,45 +17,50 @@ export function NotesPage() {
     reorder,
     getPriorityRank,
     deleteNote,
-    deleteSelectedNotes,
-    deletingNoteIds,
+    deletingNoteId,
     deleteError,
     totalCount,
     isLoading,
+    isFetching,
     isError,
     errorMessage,
+    refetch,
   } = useNotesPage();
-  const isPhone = useIsPhone();
+  const showInitialLoading = isLoading && totalCount === 0;
+  const showEmpty = !showInitialLoading && !isError && totalCount === 0;
   usePageBreadcrumb("Notes");
 
   return (
     <div>
       <PageHeader
         title="Notes"
-        dense={isPhone}
         meta={
           <span>
-            {totalCount} {totalCount === 1 ? "note" : "notes"}
+            {totalCount} captured
+            {isFetching && totalCount > 0 ? " · refreshing…" : ""}
+            {" · add notes from a project’s Thinking panel"}
           </span>
         }
       />
-      {isLoading && <LoadingState title="Loading notes" />}
+      {showInitialLoading && <LoadingState title="Loading notes" />}
       {isError && (
-        <ErrorState title="Notes unavailable" description={errorMessage} />
+        <ErrorState title="Notes unavailable" description={errorMessage}>
+          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </ErrorState>
       )}
-      {!isLoading && !isError && totalCount === 0 && (
+      {showEmpty && (
         <EmptyState
           title="No notes yet"
-          description="Note nodes will appear here once they are available from the API."
+          description="Capture notes on a project page. They'll show up here across your workspace."
         />
       )}
-      {!isLoading && !isError && totalCount > 0 && (
+      {totalCount > 0 && (
         <>
-          <CollectionToolbar view={view} sticky={isPhone} />
+          <CollectionToolbar view={view} />
           {deleteError ? (
-            <p className="px-4 pb-2 text-sm text-destructive md:px-6">
-              {deleteError}
-            </p>
+            <p className="px-4 pb-2 text-sm text-destructive md:px-6">{deleteError}</p>
           ) : null}
           {view.items.length > 0 ? (
             <NoteList
@@ -64,14 +69,10 @@ export function NotesPage() {
               reorderEnabled={reorder.canReorder}
               onReorder={reorder.onReorder}
               onDelete={deleteNote}
-              onDeleteSelected={deleteSelectedNotes}
-              deletingNoteIds={deletingNoteIds}
+              deletingNoteId={deletingNoteId}
             />
           ) : (
-            <CollectionNoResults
-              noun={view.noun}
-              onClearFilters={view.clearFilters}
-            />
+            <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />
           )}
         </>
       )}

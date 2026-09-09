@@ -9,6 +9,7 @@ import { CurrentUserPersonProvider } from "@/domain/spydr/features/people/contex
 import DashboardScreen from "@/screens/DashboardScreen";
 import WorkspaceShellScreen from "@/screens/WorkspaceShellScreen";
 import WorkScreen from "@/screens/WorkScreen";
+import TodayScreen from "@/screens/TodayScreen";
 import ProjectDetailScreen from "@/screens/ProjectDetailScreen";
 import TaskDetailScreen from "@/screens/TaskDetailScreen";
 import IdeasScreen from "@/screens/IdeasScreen";
@@ -56,6 +57,7 @@ export default function App() {
               <Route path="/active-note" element={<ActiveNoteScreen />} />
               <Route path="/active-note/:sessionId" element={<PastActiveNoteScreen />} />
               <Route path="/dashboard" element={<DashboardScreen />} />
+              <Route path="/today" element={<TodayScreen />} />
               <Route path="/work" element={<WorkScreen />} />
               <Route path="/projects" element={<Navigate to="/work" replace />} />
               <Route path="/projects/:projectId" element={<ProjectDetailScreen />} />

@@ -23,6 +23,12 @@ import { useCreateTaskForm } from "@/domain/spydr/features/tasks/hooks/useCreate
 import { useTasksPage } from "@/domain/spydr/features/tasks/hooks/useTasksPage";
 import { CreatePersonDialog } from "@/domain/spydr/features/people/components/CreatePersonDialog";
 import { usePeoplePage } from "@/domain/spydr/features/people/hooks/usePeoplePage";
+import { useTodoItemsQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import {
+  useAddTodoItemMutation,
+  useRemoveTodoItemMutation,
+} from "@/domain/spydr/features/todos/hooks/useTodoItemMutations";
+import { WorkTodoPanel } from "@/domain/spydr/features/todos/components/WorkTodoPanel";
 import { WorkPersonPicker } from "../components/WorkPersonPicker";
 import { WorkViewToggle } from "../components/WorkViewToggle";
 import { WorkCreateMenu } from "../components/WorkCreateMenu";
@@ -45,18 +51,35 @@ export function WorkPage() {
   const projectsPage = useProjectsPage({ personId });
   const tasksPage = useTasksPage({ personId });
   const peoplePage = usePeoplePage();
+  const todosQuery = useTodoItemsQuery();
+  const addTodo = useAddTodoItemMutation();
+  const removeTodo = useRemoveTodoItemMutation();
+  const [togglingTodoTaskId, setTogglingTodoTaskId] = useState<string | null>(null);
   const selectedPerson =
     peoplePage.people.find((person) => person.id === personId) ?? null;
   const createProject = useCreateProjectForm({
-    linkPersonAsAssignee: selectedPerson?.id,
+    linkPersonAsAssignee: personId ?? undefined,
   });
   const createTask = useCreateTaskForm({
-    assigneePersonNodeId: selectedPerson?.id,
+    assigneePersonNodeId: personId ?? undefined,
   });
   const projectColumns = useProjectListColumns();
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
 
   usePageBreadcrumb("Work");
+
+  const todoTaskIds = useMemo(
+    () => new Set((todosQuery.data ?? []).map((item) => item.taskId)),
+    [todosQuery.data]
+  );
+
+  const toggleTodo = (taskId: string, onTodo: boolean) => {
+    setTogglingTodoTaskId(taskId);
+    const mutation = onTodo
+      ? removeTodo.mutateAsync({ taskId })
+      : addTodo.mutateAsync({ taskId, source: "user" });
+    void mutation.finally(() => setTogglingTodoTaskId(null));
+  };
 
   useEffect(() => {
     if (expandSeeded || isPersonScopePending || projectsPage.isLoading) return;
@@ -214,6 +237,13 @@ export function WorkPage() {
       />
       {createDialogs}
 
+      <WorkTodoPanel
+        items={todosQuery.data ?? []}
+        isLoading={todosQuery.isLoading}
+        togglingTaskId={togglingTodoTaskId}
+        onToggleTask={toggleTodo}
+      />
+
       {peoplePage.deleteError ? (
         <p className="px-4 pt-3 text-sm text-destructive md:px-6">{peoplePage.deleteError}</p>
       ) : null}
@@ -356,12 +386,17 @@ export function WorkPage() {
               onTaskStatusChange={projectsPage.updateTaskStatus}
               onTaskDueDateChange={projectsPage.updateTaskDueDate}
               onCreateTask={projectsPage.createProjectTask}
+              onDeleteTask={projectsPage.deleteTask}
+              deletingTaskIds={projectsPage.deletingTaskIds}
               onDelete={projectsPage.deleteProject}
               deletingProjectId={projectsPage.deletingProjectId}
               expandedIds={expandedIds}
               onExpandedIdsChange={setExpandedIds}
               showCompletedTasks={showCompletedTasks}
               onShowCompletedTasksChange={setShowCompletedTasks}
+              todoTaskIds={todoTaskIds}
+              togglingTodoTaskId={togglingTodoTaskId}
+              onToggleTodo={toggleTodo}
             />
           )}
         </>
@@ -420,6 +455,9 @@ export function WorkPage() {
               onDelete={tasksPage.deleteTask}
               onDeleteSelected={tasksPage.deleteSelectedTasks}
               deletingTaskIds={tasksPage.deletingTaskIds}
+              todoTaskIds={todoTaskIds}
+              togglingTodoTaskId={togglingTodoTaskId}
+              onToggleTodo={toggleTodo}
             />
           ) : (
             <CollectionNoResults

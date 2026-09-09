@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import {
   useDeletedProjectsQuery,
   usePeopleQuery,
@@ -21,6 +22,7 @@ import { useRestoreProjectMutation } from "./useRestoreProjectMutation";
 import { useUpdateProjectMutation } from "./useUpdateProjectMutation";
 import { useUpdateTaskMutation } from "@/domain/spydr/features/tasks/hooks/useUpdateTaskMutation";
 import { useCreateTaskMutation } from "@/domain/spydr/features/tasks/hooks/useCreateTaskMutation";
+import { useDeleteTaskMutation } from "@/domain/spydr/features/tasks/hooks/useDeleteTaskMutation";
 import { canManuallyReorderCollection } from "@/domain/spydr/utils/collections/shared";
 import { useReorderCollectionMutation } from "@/domain/spydr/features/shared/hooks/useReorderCollectionMutation";
 import { useCollectionDisplayPriorityRank } from "@/domain/spydr/features/shared/hooks/usePriorityRankLookup";
@@ -47,6 +49,7 @@ function groupTasksByProjectId(tasks: TaskNode[]) {
 
 export function useProjectsPage(options?: { personId?: string | null }) {
   const personId = options?.personId ?? null;
+  const { currentUserPersonId } = useCurrentUserPerson();
   const query = useProjectsQuery();
   const tasksQuery = useTasksQuery();
   const trashQuery = useDeletedProjectsQuery();
@@ -77,6 +80,7 @@ export function useProjectsPage(options?: { personId?: string | null }) {
   const updateProject = useUpdateProjectMutation();
   const updateTask = useUpdateTaskMutation();
   const createTask = useCreateTaskMutation();
+  const deleteTask = useDeleteTaskMutation();
   const deleteProject = useDeleteProjectMutation();
   const restoreProject = useRestoreProjectMutation();
   const activeCount = useMemo(
@@ -103,6 +107,7 @@ export function useProjectsPage(options?: { personId?: string | null }) {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
+  const [deletingTaskIds, setDeletingTaskIds] = useState<string[]>([]);
   const [restoringProjectId, setRestoringProjectId] = useState<string | null>(null);
   const [trashExpanded, setTrashExpanded] = useState(false);
 
@@ -201,6 +206,7 @@ export function useProjectsPage(options?: { personId?: string | null }) {
           title: trimmed,
           status: "active",
           priority: "medium",
+          assigneePersonNodeId: personId ?? currentUserPersonId ?? null,
         },
       },
       {
@@ -213,6 +219,19 @@ export function useProjectsPage(options?: { personId?: string | null }) {
         onSettled: () => setCreatingTaskProjectId(null),
       }
     );
+  };
+
+  const deleteTaskById = (taskId: string) => {
+    setTaskError(null);
+    setDeletingTaskIds([taskId]);
+    deleteTask.mutate(taskId, {
+      onError: (error) => {
+        setTaskError(
+          error instanceof Error ? error.message : "Failed to delete task"
+        );
+      },
+      onSettled: () => setDeletingTaskIds([]),
+    });
   };
 
   const deleteProjectById = (projectId: string) => {
@@ -274,8 +293,10 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     updateTaskStatus,
     updateTaskDueDate,
     createProjectTask,
+    deleteTask: deleteTaskById,
     deleteProject: deleteProjectById,
     restoreProject: restoreProjectById,
+    deletingTaskIds,
     deletingProjectId,
     restoringProjectId,
     trashExpanded,

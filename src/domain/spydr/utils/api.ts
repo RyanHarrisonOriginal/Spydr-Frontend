@@ -27,6 +27,8 @@ import type {
   CreateOrganizationInput,
   TransformNodeTypeInput,
   TransformNodeTypeResult,
+  TodoItem,
+  TodoItemSource,
 } from "./types";
 import type { PersonWork } from "./personWorkApi";
 import type { WorkspaceDashboard } from "./workspaceDashboard";
@@ -149,6 +151,15 @@ export const spydrApi = {
       apiRequest<TaskNode>(`/tasks/${taskId}`, { method: "PATCH", body: input }),
     delete: (taskId: string) =>
       apiRequest<void>(`/tasks/${taskId}`, { method: "DELETE" }),
+  },
+  todos: {
+    list: () => apiRequest<TodoItem[]>("/todos"),
+    add: (input: { taskId: string; source?: TodoItemSource }) =>
+      apiRequest<TodoItem>("/todos", { method: "POST", body: input }),
+    remove: (todoId: string) =>
+      apiRequest<void>(`/todos/${todoId}`, { method: "DELETE" }),
+    removeByTask: (taskId: string) =>
+      apiRequest<void>(`/todos/by-task/${taskId}`, { method: "DELETE" }),
   },
   dashboard: {
     getWorkspace: () => apiRequest<WorkspaceDashboard>("/dashboard"),

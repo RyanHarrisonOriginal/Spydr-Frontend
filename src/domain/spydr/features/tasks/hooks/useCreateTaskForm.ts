@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import type { SpydrPriority } from "@/domain/spydr/utils/types";
 import { isTaskStatus, type TaskStatus } from "@/domain/spydr/utils/taskStatus";
 import { useCreateTaskMutation } from "./useCreateTaskMutation";
@@ -29,6 +30,7 @@ export interface UseCreateTaskFormOptions {
 export function useCreateTaskForm(options?: UseCreateTaskFormOptions) {
   const [isOpen, setIsOpen] = useState(false);
   const [values, setValues] = useState<CreateTaskFormValues>(emptyForm);
+  const { currentUserPersonId } = useCurrentUserPerson();
   const createTask = useCreateTaskMutation();
 
   const updateField = <TField extends keyof CreateTaskFormValues>(
@@ -57,7 +59,8 @@ export function useCreateTaskForm(options?: UseCreateTaskFormOptions) {
           dueDate: values.dueDate || null,
           status: values.status,
           priority: values.priority,
-          assigneePersonNodeId: options?.assigneePersonNodeId ?? null,
+          assigneePersonNodeId:
+            options?.assigneePersonNodeId ?? currentUserPersonId ?? null,
         },
       },
       {
