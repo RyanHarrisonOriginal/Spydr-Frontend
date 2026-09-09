@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import { cn } from "@/lib/utils";
@@ -25,9 +25,12 @@ interface ActiveNoteEditorProps {
   "aria-describedby"?: string;
 }
 
-function serializeEditorText(editor: {
-  getText: (options?: { blockSeparator?: string }) => string;
-}): string {
+function isEditorReady(editor: Editor | null): editor is Editor {
+  return Boolean(editor && !editor.isDestroyed && editor.schema);
+}
+
+function serializeEditorText(editor: Editor): string {
+  if (!isEditorReady(editor)) return "";
   return editor.getText({ blockSeparator: "\n" });
 }
 
@@ -66,6 +69,9 @@ export function ActiveNoteEditor({
 
   const editor = useEditor(
     {
+      // Avoid creating the editor during the first render pass (Strict Mode /
+      // remounts can otherwise call getText while schema is already null).
+      immediatelyRender: false,
       extensions: [
         StarterKit.configure({
           heading: false,
@@ -113,12 +119,12 @@ export function ActiveNoteEditor({
   );
 
   useEffect(() => {
-    if (!editor) return;
+    if (!isEditorReady(editor)) return;
     editor.setEditable(editable);
   }, [editor, editable]);
 
   useEffect(() => {
-    if (!editor) return;
+    if (!isEditorReady(editor)) return;
     const current = serializeEditorText(editor);
     if (current === value) return;
     editor.commands.setContent(activeNotePlainTextToHtml(value), {
@@ -126,7 +132,7 @@ export function ActiveNoteEditor({
     });
   }, [editor, value]);
 
-  if (!editor) {
+  if (!isEditorReady(editor)) {
     return (
       <div
         className={cn(
