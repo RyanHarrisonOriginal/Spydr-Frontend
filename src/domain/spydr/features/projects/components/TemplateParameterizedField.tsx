@@ -70,7 +70,8 @@ export function TemplateParameterizedField({
           horizontalRule: false,
           listItem: false,
           code: false,
-          hardBreak: multiline,
+          // TipTap only accepts `false` (disable) or options — not `true`.
+          hardBreak: multiline ? undefined : false,
         }),
         Placeholder.configure({
           placeholder,

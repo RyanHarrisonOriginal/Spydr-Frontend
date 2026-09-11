@@ -253,7 +253,15 @@ export function ProjectTemplateEditorForm({
       tasks,
     };
 
-    const update: UpdateProjectTemplateInput = { ...create };
+    const update: UpdateProjectTemplateInput = {
+      name,
+      description: state.description.trim() || null,
+      titleTemplate,
+      bodyTemplate: state.bodyTemplate.trim(),
+      outcomeTemplate: state.outcomeTemplate.trim() || null,
+      parameters,
+      tasks,
+    };
 
     onSubmit({ create, update });
   };
