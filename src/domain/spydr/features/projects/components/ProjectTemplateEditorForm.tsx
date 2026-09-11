@@ -6,14 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type {
   CreateProjectTemplateInput,
+  ProjectAreaNode,
   ProjectTemplate,
   UpdateProjectTemplateInput,
 } from "@/domain/spydr/utils/types";
+import { CollectionReorderControls } from "@/domain/spydr/features/shared/components/CollectionReorderControls";
+import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
+import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
+import { findAreaIdByTitle } from "@/domain/spydr/utils/projectAreas";
+import { useProjectAreasQuery } from "@/domain/spydr/features/shared/hooks/queries";
 import {
   TemplateParametersPanel,
   type EditableTemplateParameter,
 } from "./TemplateParametersPanel";
 import { TemplateParameterizedField } from "./TemplateParameterizedField";
+import { ProjectAreaSelect } from "./ProjectAreaSelect";
 import {
   extractKeysFromTexts,
   humanizeParameterKey,
@@ -36,6 +43,7 @@ export interface ProjectTemplateEditorFormState {
   titleTemplate: string;
   bodyTemplate: string;
   outcomeTemplate: string;
+  areaNodeId: string;
   parameters: EditableTemplateParameter[];
   tasks: EditableTemplateTaskRow[];
 }
@@ -47,18 +55,23 @@ function emptyState(): ProjectTemplateEditorFormState {
     titleTemplate: "",
     bodyTemplate: "",
     outcomeTemplate: "",
+    areaNodeId: "",
     parameters: [],
     tasks: [],
   };
 }
 
-function stateFromTemplate(template: ProjectTemplate): ProjectTemplateEditorFormState {
+function stateFromTemplate(
+  template: ProjectTemplate,
+  areas: ProjectAreaNode[]
+): ProjectTemplateEditorFormState {
   return {
     name: template.name,
     description: template.description ?? "",
     titleTemplate: template.titleTemplate,
     bodyTemplate: template.bodyTemplate,
     outcomeTemplate: template.outcomeTemplate ?? "",
+    areaNodeId: findAreaIdByTitle(template.area, areas),
     parameters: template.parameters.map((param) => ({
       id: param.id,
       key: param.key,
@@ -99,16 +112,18 @@ export function ProjectTemplateEditorForm({
   onCancel,
   onSubmit,
 }: ProjectTemplateEditorFormProps) {
+  const areasQuery = useProjectAreasQuery();
+  const areas = areasQuery.data ?? [];
   const [state, setState] = useState<ProjectTemplateEditorFormState>(() =>
-    initialTemplate ? stateFromTemplate(initialTemplate) : emptyState()
+    initialTemplate ? stateFromTemplate(initialTemplate, areas) : emptyState()
   );
   const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialTemplate) {
-      setState(stateFromTemplate(initialTemplate));
+      setState(stateFromTemplate(initialTemplate, areas));
     }
-  }, [initialTemplate?.id, initialTemplate?.updatedAt]);
+  }, [initialTemplate?.id, initialTemplate?.updatedAt, areas]);
 
   const parameterOptions = useMemo(
     () => state.parameters.map((param) => ({ key: param.key, label: param.label })),
@@ -193,8 +208,31 @@ export function ProjectTemplateEditorForm({
   const removeTask = (id: string) => {
     setState((current) => ({
       ...current,
-      tasks: current.tasks.filter((task) => task.id !== id),
+      tasks: current.tasks
+        .filter((task) => task.id !== id)
+        .map((task, index) => ({ ...task, sortOrder: index })),
     }));
+  };
+
+  const reorderTasks = (orderedIds: string[]) => {
+    setState((current) => {
+      const byId = new Map(current.tasks.map((task) => [task.id, task]));
+      const next = orderedIds
+        .map((id) => byId.get(id))
+        .filter((task): task is EditableTemplateTaskRow => Boolean(task))
+        .map((task, index) => ({ ...task, sortOrder: index }));
+      if (next.length !== current.tasks.length) return current;
+      return { ...current, tasks: next };
+    });
+  };
+
+  const moveTask = (id: string, direction: "up" | "down") => {
+    const next = moveIdInOrder(
+      state.tasks.map((task) => task.id),
+      id,
+      direction
+    );
+    if (next) reorderTasks(next);
   };
 
   const handleSubmit = () => {
@@ -243,12 +281,16 @@ export function ProjectTemplateEditorForm({
       sortOrder: index,
     }));
 
+    const areaTitle =
+      areas.find((area) => area.id === state.areaNodeId)?.title ?? null;
+
     const create: CreateProjectTemplateInput = {
       name,
       description: state.description.trim() || null,
       titleTemplate,
       bodyTemplate: state.bodyTemplate.trim(),
       outcomeTemplate: state.outcomeTemplate.trim() || null,
+      area: areaTitle,
       parameters,
       tasks,
     };
@@ -259,6 +301,7 @@ export function ProjectTemplateEditorForm({
       titleTemplate,
       bodyTemplate: state.bodyTemplate.trim(),
       outcomeTemplate: state.outcomeTemplate.trim() || null,
+      area: areaTitle,
       parameters,
       tasks,
     };
@@ -306,6 +349,18 @@ export function ProjectTemplateEditorForm({
           </p>
         </div>
         <div className="space-y-2">
+          <Label>Area</Label>
+          <ProjectAreaSelect
+            areas={areas}
+            value={state.areaNodeId}
+            onChange={(areaNodeId) => patch("areaNodeId", areaNodeId ?? "")}
+            className="h-10 text-sm normal-case tracking-normal"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Spawned projects inherit this area unless overridden at create time.
+          </p>
+        </div>
+        <div className="space-y-2">
           <Label>Title</Label>
           <TemplateParameterizedField
             value={state.titleTemplate}
@@ -346,6 +401,7 @@ export function ProjectTemplateEditorForm({
             <h2 className="text-sm font-medium">Tasks</h2>
             <p className="text-[12px] text-muted-foreground">
               Add parameterized tasks that will be created with the project.
+              Drag or use arrows to set order.
             </p>
           </div>
           <Button
@@ -365,23 +421,33 @@ export function ProjectTemplateEditorForm({
             No tasks yet. Add one to seed work when this template is used.
           </p>
         ) : (
-          <div className="space-y-3">
-            {state.tasks.map((task, index) => (
-              <div
-                key={task.id}
-                className="space-y-2 rounded-md border border-border/60 p-3"
-              >
+          <CollectionSortableList
+            items={state.tasks}
+            enabled
+            className="space-y-3"
+            onReorder={reorderTasks}
+            renderItem={(task, sortable) => (
+              <div className="space-y-2 rounded-md border border-border/60 p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="font-mono text-[10px] uppercase text-muted-foreground">
-                    Task {index + 1}
-                  </p>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <CollectionReorderControls
+                      dragHandleProps={sortable.dragHandleProps}
+                      canMoveUp={sortable.index > 0}
+                      canMoveDown={sortable.index < state.tasks.length - 1}
+                      onMoveUp={() => moveTask(task.id, "up")}
+                      onMoveDown={() => moveTask(task.id, "down")}
+                    />
+                    <p className="font-mono text-[10px] uppercase text-muted-foreground">
+                      Task {sortable.index + 1}
+                    </p>
+                  </div>
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
                     className="h-7 px-2 text-muted-foreground hover:text-destructive"
                     onClick={() => removeTask(task.id)}
-                    aria-label={`Remove task ${index + 1}`}
+                    aria-label={`Remove task ${sortable.index + 1}`}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
@@ -393,7 +459,7 @@ export function ProjectTemplateEditorForm({
                   }
                   parameters={parameterOptions}
                   placeholder="reach out to {{NEW_COMPANY_NAME}} CFO…"
-                  aria-label={`Task ${index + 1} title`}
+                  aria-label={`Task ${sortable.index + 1} title`}
                 />
                 <TemplateParameterizedField
                   value={task.bodyTemplate}
@@ -403,11 +469,11 @@ export function ProjectTemplateEditorForm({
                   parameters={parameterOptions}
                   multiline
                   placeholder="Optional task notes"
-                  aria-label={`Task ${index + 1} body`}
+                  aria-label={`Task ${sortable.index + 1} body`}
                 />
               </div>
-            ))}
-          </div>
+            )}
+          />
         )}
       </section>
 

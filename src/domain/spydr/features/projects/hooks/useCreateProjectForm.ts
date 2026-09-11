@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import {
+  useProjectAreasQuery,
   useProjectTemplateQuery,
   useProjectTemplatesQuery,
 } from "@/domain/spydr/features/shared/hooks/queries";
 import type { CreateProjectInput, SpydrNodeStatus, SpydrPriority } from "@/domain/spydr/utils/types";
+import { findAreaIdByTitle } from "@/domain/spydr/utils/projectAreas";
 import { useCreateProjectMutation } from "./useCreateProjectMutation";
 import { useInvokeProjectTemplateMutation } from "./useInvokeProjectTemplateMutation";
 import { useUpdateProjectMutation } from "./useUpdateProjectMutation";
@@ -53,6 +55,8 @@ export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
 
   const templatesQuery = useProjectTemplatesQuery({ includeArchived: true });
   const templateQuery = useProjectTemplateQuery(templateId || undefined);
+  const areasQuery = useProjectAreasQuery();
+  const areas = areasQuery.data ?? [];
 
   const allTemplates = templatesQuery.data ?? [];
   const templates = allTemplates.filter((template) => !template.isArchived);
@@ -69,7 +73,23 @@ export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
       next[param.key] = param.defaultValue ?? "";
     }
     setParamValues(next);
+    setValues((current) => ({
+      ...current,
+      areaNodeId: findAreaIdByTitle(selectedTemplate.area, areas),
+    }));
+    // Prefill area when the template changes; areas may still be empty here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- areas handled below
   }, [selectedTemplate?.id]);
+
+  // If areas load after the template, resolve the template area once while still empty.
+  useEffect(() => {
+    if (!selectedTemplate?.area || areas.length === 0) return;
+    setValues((current) => {
+      if (current.areaNodeId) return current;
+      const areaNodeId = findAreaIdByTitle(selectedTemplate.area, areas);
+      return areaNodeId ? { ...current, areaNodeId } : current;
+    });
+  }, [areas, selectedTemplate?.id, selectedTemplate?.area]);
 
   const updateField = <TField extends keyof ProjectFormValues>(
     field: TField,

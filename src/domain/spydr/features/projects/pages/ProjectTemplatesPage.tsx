@@ -153,6 +153,7 @@ export function ProjectTemplatesPage() {
                   </p>
                 ) : null}
                 <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {template.area ? `${template.area} · ` : null}
                   {template.taskCount} tasks · {template.parameterCount} params
                   · updated {formatRelativeTime(template.updatedAt)}
                 </p>
