@@ -7,7 +7,7 @@ import {
   PriorityBadge,
   StatusPill,
 } from "@/domain/spydr/features/shared/components/StatusPrimitives";
-import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import { CollectionReorderControls } from "@/domain/spydr/features/shared/components/CollectionReorderControls";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
@@ -21,6 +21,7 @@ import {
   CAPTURE_CARD_META_CLASS,
   CAPTURE_CARD_TITLE_CLASS,
 } from "@/domain/spydr/features/shared/components/captureCardStyles";
+import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
 import { cn } from "@/lib/utils";
 
 interface DecisionListProps {
@@ -76,6 +77,15 @@ export function DecisionList({
     );
   }, [decisions]);
 
+  const moveRank = (id: string, direction: "up" | "down") => {
+    const next = moveIdInOrder(
+      decisions.map((decision) => decision.id),
+      id,
+      direction
+    );
+    if (next) onReorder?.(next);
+  };
+
   return (
     <CollectionSortableList
       items={decisions}
@@ -93,9 +103,13 @@ export function DecisionList({
           <div className={CAPTURE_CARD_CLASS}>
             <div className="flex min-h-0 flex-1 items-start gap-2">
               {reorderEnabled ? (
-                <CollectionDragHandle
+                <CollectionReorderControls
                   className="mt-0.5"
-                  {...sortable.dragHandleProps}
+                  dragHandleProps={sortable.dragHandleProps}
+                  canMoveUp={sortable.index > 0}
+                  canMoveDown={sortable.index < decisions.length - 1}
+                  onMoveUp={() => moveRank(decision.id, "up")}
+                  onMoveDown={() => moveRank(decision.id, "down")}
                 />
               ) : null}
               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-highlight-secondary/25 bg-highlight-secondary/10">

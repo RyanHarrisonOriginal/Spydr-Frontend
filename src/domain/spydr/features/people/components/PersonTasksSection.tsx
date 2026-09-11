@@ -12,9 +12,10 @@ import {
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
 import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
-import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import { CollectionReorderControls } from "@/domain/spydr/features/shared/components/CollectionReorderControls";
 import { CollectionDualRank } from "@/domain/spydr/features/shared/components/CollectionDualRank";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
+import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
 
 interface PersonTasksSectionProps {
   tasks: PersonWorkTaskEntry[];
@@ -60,10 +61,19 @@ export function PersonTasksSection({
     tasks.length === 0
       ? "No assigned tasks"
       : showCompleted
-        ? `${openCount} open · ${tasks.length} total · drag to set person rank`
+        ? `${openCount} open · ${tasks.length} total · drag or arrows to set person rank`
         : completedCount > 0
           ? `${openCount} open · ${completedCount} completed hidden`
-          : `${openCount} open · drag to set person rank`;
+          : `${openCount} open · drag or arrows to set person rank`;
+
+  const moveRank = (id: string, direction: "up" | "down") => {
+    const next = moveIdInOrder(
+      visibleTasks.map((entry) => entry.task.id),
+      id,
+      direction
+    );
+    if (next) onReorder?.(next);
+  };
 
   return (
     <ProjectDetailSection className={className}>
@@ -104,7 +114,13 @@ export function PersonTasksSection({
               return (
                 <div className="flex items-center gap-2 rounded-sm border border-border/80 bg-background px-2.5 py-1.5">
                   {reorderEnabled ? (
-                    <CollectionDragHandle {...sortable.dragHandleProps} />
+                    <CollectionReorderControls
+                      dragHandleProps={sortable.dragHandleProps}
+                      canMoveUp={sortable.index > 0}
+                      canMoveDown={sortable.index < visibleTasks.length - 1}
+                      onMoveUp={() => moveRank(entry.task.id, "up")}
+                      onMoveDown={() => moveRank(entry.task.id, "down")}
+                    />
                   ) : null}
                   <CollectionDualRank
                     globalRank={entry.globalRank}

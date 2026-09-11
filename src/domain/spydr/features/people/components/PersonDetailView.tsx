@@ -283,8 +283,16 @@ export function PersonDetailView({
               errorMessage={createProject.errorMessage}
               linkPersonName={displayName}
               triggerVariant="outline"
+              templates={createProject.templates}
+              hasAnyTemplates={createProject.hasAnyTemplates}
+              templateId={createProject.templateId}
+              selectedTemplate={createProject.selectedTemplate}
+              templateLoading={createProject.templateLoading}
+              paramValues={createProject.paramValues}
               onOpenChange={createProject.setIsOpen}
               onFieldChange={createProject.updateField}
+              onTemplateChange={createProject.setTemplateId}
+              onParamChange={createProject.updateParam}
               onSubmit={createProject.submit}
             />
           }

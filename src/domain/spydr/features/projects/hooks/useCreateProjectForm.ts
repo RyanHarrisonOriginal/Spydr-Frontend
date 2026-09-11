@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
+import {
+  useProjectTemplateQuery,
+  useProjectTemplatesQuery,
+} from "@/domain/spydr/features/shared/hooks/queries";
 import type { CreateProjectInput, SpydrNodeStatus, SpydrPriority } from "@/domain/spydr/utils/types";
 import { useCreateProjectMutation } from "./useCreateProjectMutation";
+import { useInvokeProjectTemplateMutation } from "./useInvokeProjectTemplateMutation";
 import { useUpdateProjectMutation } from "./useUpdateProjectMutation";
 
 export interface ProjectFormValues {
@@ -38,9 +43,33 @@ export interface UseCreateProjectFormOptions {
 export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
   const [isOpen, setIsOpen] = useState(false);
   const [values, setValues] = useState<ProjectFormValues>(initialValues);
+  const [templateId, setTemplateId] = useState<string>("");
+  const [paramValues, setParamValues] = useState<Record<string, string>>({});
+
   const { currentUserPersonId } = useCurrentUserPerson();
   const mutation = useCreateProjectMutation();
+  const invokeMutation = useInvokeProjectTemplateMutation();
   const updateProject = useUpdateProjectMutation();
+
+  const templatesQuery = useProjectTemplatesQuery({ includeArchived: true });
+  const templateQuery = useProjectTemplateQuery(templateId || undefined);
+
+  const allTemplates = templatesQuery.data ?? [];
+  const templates = allTemplates.filter((template) => !template.isArchived);
+  const hasAnyTemplates = allTemplates.length > 0;
+  const selectedTemplate = templateQuery.data ?? null;
+
+  useEffect(() => {
+    if (!selectedTemplate) {
+      setParamValues({});
+      return;
+    }
+    const next: Record<string, string> = {};
+    for (const param of selectedTemplate.parameters) {
+      next[param.key] = param.defaultValue ?? "";
+    }
+    setParamValues(next);
+  }, [selectedTemplate?.id]);
 
   const updateField = <TField extends keyof ProjectFormValues>(
     field: TField,
@@ -49,8 +78,14 @@ export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
     setValues((current) => ({ ...current, [field]: value }));
   };
 
+  const updateParam = (key: string, value: string) => {
+    setParamValues((current) => ({ ...current, [key]: value }));
+  };
+
   const reset = () => {
     setValues(initialValues);
+    setTemplateId("");
+    setParamValues({});
   };
 
   const toCreateInput = (): CreateProjectInput => ({
@@ -69,48 +104,97 @@ export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
     riskLevel: values.riskLevel,
   });
 
+  const requiredParamsFilled = useMemo(() => {
+    if (!selectedTemplate) return true;
+    return selectedTemplate.parameters.every((param) => {
+      if (!param.required) return true;
+      const value = paramValues[param.key]?.trim();
+      return Boolean(value);
+    });
+  }, [selectedTemplate, paramValues]);
+
+  const finishWithAssignee = (projectId: string) => {
+    const personId =
+      options?.linkPersonAsAssignee ?? currentUserPersonId ?? null;
+    if (!personId) {
+      options?.onSuccess?.();
+      reset();
+      setIsOpen(false);
+      return;
+    }
+
+    updateProject.mutate(
+      { projectId, input: { assigneePersonNodeId: personId } },
+      {
+        onSuccess: () => {
+          options?.onSuccess?.();
+          reset();
+          setIsOpen(false);
+        },
+      }
+    );
+  };
+
   const submit = () => {
+    if (templateId && selectedTemplate) {
+      if (!requiredParamsFilled) return;
+      invokeMutation.mutate(
+        {
+          templateId,
+          input: {
+            parameters: paramValues,
+            areaNodeId: values.areaNodeId || null,
+          },
+        },
+        {
+          onSuccess: (project) => finishWithAssignee(project.id),
+        }
+      );
+      return;
+    }
+
     const input = toCreateInput();
     if (!input.title) return;
 
     mutation.mutate(input, {
-      onSuccess: (project) => {
-        const personId =
-          options?.linkPersonAsAssignee ?? currentUserPersonId ?? null;
-        if (!personId) {
-          options?.onSuccess?.();
-          reset();
-          setIsOpen(false);
-          return;
-        }
-
-        updateProject.mutate(
-          { projectId: project.id, input: { assigneePersonNodeId: personId } },
-          {
-            onSuccess: () => {
-              options?.onSuccess?.();
-              reset();
-              setIsOpen(false);
-            },
-          }
-        );
-      },
+      onSuccess: (project) => finishWithAssignee(project.id),
     });
   };
 
-  const isSubmitting = mutation.isPending || updateProject.isPending;
+  const isSubmitting =
+    mutation.isPending || invokeMutation.isPending || updateProject.isPending;
+
+  const canSubmitBlank = values.title.trim().length > 0 && !isSubmitting;
+  const canSubmitTemplate =
+    Boolean(templateId) &&
+    Boolean(selectedTemplate) &&
+    requiredParamsFilled &&
+    !isSubmitting &&
+    !templateQuery.isLoading;
+
+  const error =
+    mutation.error ?? invokeMutation.error ?? updateProject.error ?? null;
 
   return {
     isOpen,
-    setIsOpen,
+    setIsOpen: (open: boolean) => {
+      setIsOpen(open);
+      if (!open) reset();
+    },
     values,
     updateField,
     submit,
-    canSubmit: values.title.trim().length > 0 && !isSubmitting,
+    canSubmit: templateId ? canSubmitTemplate : canSubmitBlank,
     isSubmitting,
-    errorMessage:
-      (mutation.error ?? updateProject.error) instanceof Error
-        ? ((mutation.error ?? updateProject.error) as Error).message
-        : null,
+    errorMessage: error instanceof Error ? error.message : null,
+    templates,
+    hasAnyTemplates,
+    templatesLoading: templatesQuery.isLoading,
+    templateId,
+    setTemplateId,
+    selectedTemplate,
+    templateLoading: templateQuery.isFetching && Boolean(templateId),
+    paramValues,
+    updateParam,
   };
 }

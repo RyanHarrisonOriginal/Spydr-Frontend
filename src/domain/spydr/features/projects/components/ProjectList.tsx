@@ -11,7 +11,10 @@ import { formatRelativeTime } from "@/domain/spydr/features/shared/components/ti
 import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
 import { isClosedCollectionStatus } from "@/domain/spydr/utils/collectionVisibility";
 import type { ProjectListSort, ProjectSortColumn } from "@/domain/spydr/utils/projectListView";
-import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import {
+  COLLECTION_REORDER_COLUMN,
+  CollectionReorderControls,
+} from "@/domain/spydr/features/shared/components/CollectionReorderControls";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
 import { RowExpandToggle } from "@/domain/spydr/features/shared/components/RowExpandToggle";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
@@ -23,6 +26,10 @@ import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/In
 import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
 import { cn } from "@/lib/utils";
 import { useIsPhone } from "@/hooks/useIsPhone";
+import {
+  moveIdInOrder,
+  type RankMoveDirection,
+} from "@/domain/spydr/utils/collectionReorder";
 import type { ProjectColumnId } from "../hooks/useProjectListColumns";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
 import { ProjectPrioritySelect } from "./ProjectPrioritySelect";
@@ -38,8 +45,11 @@ interface ProjectListProps {
   visibleColumns: ProjectColumnId[];
   sort: ProjectListSort;
   reorderEnabled?: boolean;
+  /** Full filtered order when `projects` is a page slice. */
+  rankOrderIds?: string[];
   getPriorityRank(id: string): number | undefined;
   onReorder?(orderedIds: string[]): void;
+  onMoveRank?(id: string, direction: RankMoveDirection): void;
   updatingProjectId?: string | null;
   updatingTaskId?: string | null;
   creatingTaskProjectId?: string | null;
@@ -102,7 +112,7 @@ function getProjectListGrid(
 ) {
   const actionWidth = showCreateTask ? actionsColumnWidthWithCreate : actionsColumnWidth;
   return [
-    ...(reorderEnabled ? ["24px"] : []),
+    ...(reorderEnabled ? [COLLECTION_REORDER_COLUMN] : []),
     expandColumnWidth,
     rankColumnWidth,
     "minmax(280px,1fr)",
@@ -559,8 +569,10 @@ export function ProjectList({
   visibleColumns,
   sort,
   reorderEnabled = false,
+  rankOrderIds,
   getPriorityRank,
   onReorder,
+  onMoveRank,
   updatingProjectId = null,
   updatingTaskId = null,
   creatingTaskProjectId = null,
@@ -613,8 +625,35 @@ export function ProjectList({
     448 +
     visibleColumns.length * 112 +
     (onCreateTask ? 144 : 108) +
-    (reorderEnabled ? 24 : 0);
+    (reorderEnabled ? 52 : 0);
   const hasColumn = (columnId: ProjectColumnId) => visibleColumns.includes(columnId);
+  const orderIds = useMemo(
+    () => rankOrderIds ?? projects.map((project) => project.id),
+    [rankOrderIds, projects]
+  );
+
+  const moveRank = (id: string, direction: RankMoveDirection) => {
+    if (onMoveRank) {
+      onMoveRank(id, direction);
+      return;
+    }
+    const next = moveIdInOrder(orderIds, id, direction);
+    if (next) onReorder?.(next);
+  };
+
+  const rankControls = (projectId: string, dragHandleProps?: Record<string, unknown>) => {
+    const rankIndex = orderIds.indexOf(projectId);
+    return (
+      <CollectionReorderControls
+        dragHandleProps={dragHandleProps}
+        showDragHandle={!isPhone}
+        canMoveUp={rankIndex > 0}
+        canMoveDown={rankIndex >= 0 && rankIndex < orderIds.length - 1}
+        onMoveUp={() => moveRank(projectId, "up")}
+        onMoveDown={() => moveRank(projectId, "down")}
+      />
+    );
+  };
 
   const completedTaskCount = useMemo(() => {
     let count = 0;
@@ -794,6 +833,7 @@ export function ProjectList({
                       />
                     )}
                     <div className="flex min-w-0 flex-1 items-center gap-1 py-0.5 pl-1 pr-1">
+                        {reorderEnabled ? rankControls(project.id, sortable.dragHandleProps) : null}
                         {visibleTasks.length > 0 ? (
                           <RowExpandToggle
                             expanded={expanded}
@@ -906,9 +946,7 @@ export function ProjectList({
                   )}
                   style={{ gridTemplateColumns, minWidth: `calc(${minWidth}px - 1.5rem)` }}
                 >
-                  {reorderEnabled ? (
-                    <CollectionDragHandle {...sortable.dragHandleProps} />
-                  ) : null}
+                  {reorderEnabled ? rankControls(project.id, sortable.dragHandleProps) : null}
                   {canExpand ? (
                     <RowExpandToggle
                       expanded={expanded}

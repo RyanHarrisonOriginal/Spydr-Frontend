@@ -181,6 +181,139 @@ export interface CreateProjectInput {
   riskLevel?: SpydrPriority;
 }
 
+export interface ProjectTemplateListItem {
+  id: string;
+  name: string;
+  description: string | null;
+  isArchived: boolean;
+  parameterCount: number;
+  taskCount: number;
+  updatedAt: string;
+}
+
+export interface ProjectTemplateParameter {
+  id: string;
+  key: string;
+  label: string;
+  valueType: string;
+  required: boolean;
+  defaultValue: string | null;
+  sortOrder: number;
+}
+
+export interface ProjectTemplateTask {
+  id: string;
+  titleTemplate: string;
+  bodyTemplate: string;
+  status: string;
+  priority: string;
+  dueOffsetDays: number | null;
+  estimatedMinutes: number | null;
+  tags: string[];
+  sortOrder: number;
+}
+
+export interface ProjectTemplate {
+  id: string;
+  organizationId: string;
+  createdByUserId: string;
+  name: string;
+  description: string | null;
+  titleTemplate: string;
+  bodyTemplate: string;
+  outcomeTemplate: string | null;
+  status: string;
+  priority: string;
+  riskLevel: string;
+  area: string | null;
+  tags: string[];
+  sourceProjectNodeId: string | null;
+  isArchived: boolean;
+  createdAt: string;
+  updatedAt: string;
+  parameters: ProjectTemplateParameter[];
+  tasks: ProjectTemplateTask[];
+}
+
+export interface CreateProjectTemplateFromProjectInput {
+  projectId: string;
+  name: string;
+  description?: string | null;
+  taskIds?: string[];
+}
+
+export interface CreateProjectTemplateInput {
+  name: string;
+  description?: string | null;
+  titleTemplate: string;
+  bodyTemplate?: string;
+  outcomeTemplate?: string | null;
+  status?: string;
+  priority?: SpydrPriority | string;
+  riskLevel?: SpydrPriority | string;
+  area?: string | null;
+  tags?: string[];
+  parameters?: Array<{
+    id?: string;
+    key: string;
+    label: string;
+    valueType?: string;
+    required?: boolean;
+    defaultValue?: string | null;
+    sortOrder?: number;
+  }>;
+  tasks?: Array<{
+    id?: string;
+    titleTemplate: string;
+    bodyTemplate?: string;
+    status?: string;
+    priority?: SpydrPriority | string;
+    dueOffsetDays?: number | null;
+    estimatedMinutes?: number | null;
+    tags?: string[];
+    sortOrder?: number;
+  }>;
+}
+
+export interface UpdateProjectTemplateInput {
+  name?: string;
+  description?: string | null;
+  isArchived?: boolean;
+  titleTemplate?: string;
+  bodyTemplate?: string;
+  outcomeTemplate?: string | null;
+  status?: string;
+  priority?: SpydrPriority | string;
+  riskLevel?: SpydrPriority | string;
+  area?: string | null;
+  tags?: string[];
+  parameters?: Array<{
+    id: string;
+    key: string;
+    label: string;
+    valueType?: string;
+    required?: boolean;
+    defaultValue?: string | null;
+    sortOrder?: number;
+  }>;
+  tasks?: Array<{
+    id: string;
+    titleTemplate: string;
+    bodyTemplate?: string;
+    status?: string;
+    priority?: SpydrPriority | string;
+    dueOffsetDays?: number | null;
+    estimatedMinutes?: number | null;
+    tags?: string[];
+    sortOrder?: number;
+  }>;
+}
+
+export interface InvokeProjectTemplateInput {
+  parameters: Record<string, string>;
+  areaNodeId?: string | null;
+}
+
 export interface ProjectDetailNode extends ProjectNode {
   personas: ProjectPersonas;
   tasks: TaskNode[];

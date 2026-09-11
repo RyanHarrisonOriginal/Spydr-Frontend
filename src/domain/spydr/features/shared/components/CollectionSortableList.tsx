@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 export interface SortableItemRenderProps {
   dragHandleProps: Record<string, unknown> | undefined;
   isDragging: boolean;
+  index: number;
 }
 
 interface CollectionSortableListProps<T extends { id: string }> {
@@ -37,12 +38,14 @@ interface CollectionSortableListProps<T extends { id: string }> {
 function SortableItem<T extends { id: string }>({
   item,
   enabled,
+  index,
   className,
   style,
   children,
 }: {
   item: T;
   enabled: boolean;
+  index: number;
   className?: string;
   style?: CSSProperties;
   children: (props: SortableItemRenderProps) => ReactNode;
@@ -71,6 +74,7 @@ function SortableItem<T extends { id: string }>({
       {children({
         dragHandleProps: enabled ? { ...attributes, ...listeners } : undefined,
         isDragging,
+        index,
       })}
     </li>
   );
@@ -107,9 +111,13 @@ export function CollectionSortableList<T extends { id: string }>({
   if (!enabled) {
     return (
       <ul className={className}>
-        {items.map((item) => (
+        {items.map((item, index) => (
           <li key={item.id} className={itemClassName}>
-            {renderItem(item, { dragHandleProps: undefined, isDragging: false })}
+            {renderItem(item, {
+              dragHandleProps: undefined,
+              isDragging: false,
+              index,
+            })}
           </li>
         ))}
       </ul>
@@ -124,11 +132,12 @@ export function CollectionSortableList<T extends { id: string }>({
     >
       <SortableContext items={items.map((item) => item.id)} strategy={strategy}>
         <ul className={className}>
-          {items.map((item) => (
+          {items.map((item, index) => (
             <SortableItem
               key={item.id}
               item={item}
               enabled={enabled}
+              index={index}
               className={itemClassName}
             >
               {(props) => renderItem(item, props)}

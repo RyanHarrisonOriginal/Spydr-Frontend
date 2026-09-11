@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import {
@@ -35,6 +36,12 @@ import { WorkCreateMenu } from "../components/WorkCreateMenu";
 import { WorkMoreMenu } from "../components/WorkMoreMenu";
 import { ExpandCollapseControls } from "@/domain/spydr/features/shared/components/ExpandCollapseControls";
 import { ShowCompletedToggle } from "@/domain/spydr/features/shared/components/ShowCompletedToggle";
+import { ListPagination } from "@/domain/spydr/features/shared/components/ListPagination";
+import {
+  useClientPagination,
+  useListPageSize,
+} from "@/domain/spydr/features/shared/hooks/useClientPagination";
+import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
 import { useWorkScope } from "../hooks/useWorkScope";
 
 export function WorkPage() {
@@ -51,6 +58,7 @@ export function WorkPage() {
   const projectsPage = useProjectsPage({ personId });
   const tasksPage = useTasksPage({ personId });
   const peoplePage = usePeoplePage();
+  const navigate = useNavigate();
   const todosQuery = useTodoItemsQuery();
   const addTodo = useAddTodoItemMutation();
   const removeTodo = useRemoveTodoItemMutation();
@@ -65,6 +73,26 @@ export function WorkPage() {
   });
   const projectColumns = useProjectListColumns();
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [pageSize, setPageSize] = useListPageSize("work");
+
+  const projectsPagination = useClientPagination(projectsPage.projects, {
+    pageSize,
+    setPageSize,
+    resetKey: [
+      personId ?? "all",
+      JSON.stringify(projectsPage.listView.filters),
+      projectsPage.listView.sort.column,
+      projectsPage.listView.sort.direction,
+    ].join("|"),
+  });
+  const tasksPagination = useClientPagination(tasksPage.view.items, {
+    pageSize,
+    setPageSize,
+    resetKey: [
+      personId ?? "all",
+      JSON.stringify(tasksPage.view.state),
+    ].join("|"),
+  });
 
   usePageBreadcrumb("Work");
 
@@ -152,17 +180,16 @@ export function WorkPage() {
       <WorkCreateMenu
         onCreateProject={() => createProject.setIsOpen(true)}
         onCreateTask={() => createTask.setIsOpen(true)}
+        onCreateTemplate={() => navigate("/project-templates/new")}
         onCreatePerson={() => peoplePage.setIsCreateOpen(true)}
       />
-      {isHierarchy ? (
-        <WorkMoreMenu
-          columns={projectColumns.columns}
-          visibleColumnSet={projectColumns.visibleColumnSet}
-          onToggleColumn={projectColumns.toggleColumn}
-          trashCount={projectsPage.deletedCount}
-          onOpenTrash={projectsPage.openTrash}
-        />
-      ) : null}
+      <WorkMoreMenu
+        columns={isHierarchy ? projectColumns.columns : []}
+        visibleColumnSet={projectColumns.visibleColumnSet}
+        onToggleColumn={projectColumns.toggleColumn}
+        trashCount={projectsPage.deletedCount}
+        onOpenTrash={projectsPage.openTrash}
+      />
     </>
   );
 
@@ -200,8 +227,16 @@ export function WorkPage() {
         linkPersonName={
           selectedPerson ? personDisplayName(selectedPerson) : undefined
         }
+        templates={createProject.templates}
+        hasAnyTemplates={createProject.hasAnyTemplates}
+        templateId={createProject.templateId}
+        selectedTemplate={createProject.selectedTemplate}
+        templateLoading={createProject.templateLoading}
+        paramValues={createProject.paramValues}
         onOpenChange={createProject.setIsOpen}
         onFieldChange={createProject.updateField}
+        onTemplateChange={createProject.setTemplateId}
+        onParamChange={createProject.updateParam}
         onSubmit={createProject.submit}
       />
       <CreateTaskDialog
@@ -361,43 +396,59 @@ export function WorkPage() {
               }
             />
           ) : (
-            <ProjectList
-              projects={projectsPage.projects}
-              areas={projectsPage.areas}
-              people={projectsPage.people}
-              tasksByProjectId={projectsPage.tasksByProjectId}
-              visibleColumns={projectColumns.visibleColumns}
-              sort={projectsPage.listView.sort}
-              reorderEnabled={projectsPage.reorder.canReorder}
-              getPriorityRank={projectsPage.getPriorityRank}
-              onReorder={projectsPage.reorder.onReorder}
-              hasActiveFilters={projectsPage.listView.hasActiveFilters}
-              updatingProjectId={projectsPage.updatingProjectId}
-              updatingTaskId={projectsPage.updatingTaskId}
-              creatingTaskProjectId={projectsPage.creatingTaskProjectId}
-              onSortColumn={projectsPage.listView.toggleSortColumn}
-              onClearFilters={projectsPage.listView.clearFilters}
-              onTitleChange={projectsPage.updateTitle}
-              onStatusChange={projectsPage.updateStatus}
-              onAreaChange={projectsPage.updateArea}
-              onPriorityChange={projectsPage.updatePriority}
-              onTargetDateChange={projectsPage.updateTargetDate}
-              onAssigneeChange={projectsPage.updateAssignee}
-              onTaskStatusChange={projectsPage.updateTaskStatus}
-              onTaskDueDateChange={projectsPage.updateTaskDueDate}
-              onCreateTask={projectsPage.createProjectTask}
-              onDeleteTask={projectsPage.deleteTask}
-              deletingTaskIds={projectsPage.deletingTaskIds}
-              onDelete={projectsPage.deleteProject}
-              deletingProjectId={projectsPage.deletingProjectId}
-              expandedIds={expandedIds}
-              onExpandedIdsChange={setExpandedIds}
-              showCompletedTasks={showCompletedTasks}
-              onShowCompletedTasksChange={setShowCompletedTasks}
-              todoTaskIds={todoTaskIds}
-              togglingTodoTaskId={togglingTodoTaskId}
-              onToggleTodo={toggleTodo}
-            />
+            <>
+              <ProjectList
+                projects={projectsPagination.pageItems}
+                areas={projectsPage.areas}
+                people={projectsPage.people}
+                tasksByProjectId={projectsPage.tasksByProjectId}
+                visibleColumns={projectColumns.visibleColumns}
+                sort={projectsPage.listView.sort}
+                reorderEnabled={projectsPage.reorder.canReorder}
+                rankOrderIds={projectsPage.projects.map((project) => project.id)}
+                getPriorityRank={projectsPage.getPriorityRank}
+                onReorder={(orderedIds) =>
+                  projectsPage.reorder.onReorder(
+                    projectsPagination.mergePageReorder(orderedIds)
+                  )
+                }
+                onMoveRank={(id, direction) => {
+                  const next = moveIdInOrder(
+                    projectsPage.projects.map((project) => project.id),
+                    id,
+                    direction
+                  );
+                  if (next) projectsPage.reorder.onReorder(next);
+                }}
+                hasActiveFilters={projectsPage.listView.hasActiveFilters}
+                updatingProjectId={projectsPage.updatingProjectId}
+                updatingTaskId={projectsPage.updatingTaskId}
+                creatingTaskProjectId={projectsPage.creatingTaskProjectId}
+                onSortColumn={projectsPage.listView.toggleSortColumn}
+                onClearFilters={projectsPage.listView.clearFilters}
+                onTitleChange={projectsPage.updateTitle}
+                onStatusChange={projectsPage.updateStatus}
+                onAreaChange={projectsPage.updateArea}
+                onPriorityChange={projectsPage.updatePriority}
+                onTargetDateChange={projectsPage.updateTargetDate}
+                onAssigneeChange={projectsPage.updateAssignee}
+                onTaskStatusChange={projectsPage.updateTaskStatus}
+                onTaskDueDateChange={projectsPage.updateTaskDueDate}
+                onCreateTask={projectsPage.createProjectTask}
+                onDeleteTask={projectsPage.deleteTask}
+                deletingTaskIds={projectsPage.deletingTaskIds}
+                onDelete={projectsPage.deleteProject}
+                deletingProjectId={projectsPage.deletingProjectId}
+                expandedIds={expandedIds}
+                onExpandedIdsChange={setExpandedIds}
+                showCompletedTasks={showCompletedTasks}
+                onShowCompletedTasksChange={setShowCompletedTasks}
+                todoTaskIds={todoTaskIds}
+                togglingTodoTaskId={togglingTodoTaskId}
+                onToggleTodo={toggleTodo}
+              />
+              <ListPagination pagination={projectsPagination} noun="projects" />
+            </>
           )}
         </>
       )}
@@ -437,28 +488,44 @@ export function WorkPage() {
             </p>
           ) : null}
           {tasksPage.view.items.length > 0 ? (
-            <TaskList
-              tasks={tasksPage.view.items}
-              projects={tasksPage.projects}
-              people={tasksPage.people}
-              areas={projectsPage.areas}
-              sort={tasksPage.view.state.sort}
-              reorderEnabled={tasksPage.reorder.canReorder}
-              getPriorityRank={tasksPage.getPriorityRank}
-              updatingTaskId={tasksPage.updatingTaskId}
-              onSortColumn={tasksPage.view.toggleSort}
-              onReorder={tasksPage.reorder.onReorder}
-              onStatusChange={tasksPage.updateStatus}
-              onProjectChange={tasksPage.updateProject}
-              onAssigneeChange={tasksPage.updateAssignee}
-              onDueDateChange={tasksPage.updateDueDate}
-              onDelete={tasksPage.deleteTask}
-              onDeleteSelected={tasksPage.deleteSelectedTasks}
-              deletingTaskIds={tasksPage.deletingTaskIds}
-              todoTaskIds={todoTaskIds}
-              togglingTodoTaskId={togglingTodoTaskId}
-              onToggleTodo={toggleTodo}
-            />
+            <>
+              <TaskList
+                tasks={tasksPagination.pageItems}
+                projects={tasksPage.projects}
+                people={tasksPage.people}
+                areas={projectsPage.areas}
+                sort={tasksPage.view.state.sort}
+                reorderEnabled={tasksPage.reorder.canReorder}
+                rankOrderIds={tasksPage.view.items.map((task) => task.id)}
+                getPriorityRank={tasksPage.getPriorityRank}
+                updatingTaskId={tasksPage.updatingTaskId}
+                onSortColumn={tasksPage.view.toggleSort}
+                onReorder={(orderedIds) =>
+                  tasksPage.reorder.onReorder(
+                    tasksPagination.mergePageReorder(orderedIds)
+                  )
+                }
+                onMoveRank={(id, direction) => {
+                  const next = moveIdInOrder(
+                    tasksPage.view.items.map((task) => task.id),
+                    id,
+                    direction
+                  );
+                  if (next) tasksPage.reorder.onReorder(next);
+                }}
+                onStatusChange={tasksPage.updateStatus}
+                onProjectChange={tasksPage.updateProject}
+                onAssigneeChange={tasksPage.updateAssignee}
+                onDueDateChange={tasksPage.updateDueDate}
+                onDelete={tasksPage.deleteTask}
+                onDeleteSelected={tasksPage.deleteSelectedTasks}
+                deletingTaskIds={tasksPage.deletingTaskIds}
+                todoTaskIds={todoTaskIds}
+                togglingTodoTaskId={togglingTodoTaskId}
+                onToggleTodo={toggleTodo}
+              />
+              <ListPagination pagination={tasksPagination} noun="tasks" />
+            </>
           ) : (
             <CollectionNoResults
               noun={tasksPage.view.noun}

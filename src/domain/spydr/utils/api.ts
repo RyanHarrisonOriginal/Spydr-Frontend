@@ -6,18 +6,24 @@ import type {
   CreateProjectInput,
   CreateProjectNoteInput,
   CreateProjectTaskInput,
+  CreateProjectTemplateFromProjectInput,
+  CreateProjectTemplateInput,
   DecisionNode,
   IdeaNode,
+  InvokeProjectTemplateInput,
   NoteNode,
   ProjectChildKind,
   ProjectDetailNode,
   ProjectAreaNode,
   ProjectNode,
+  ProjectTemplate,
+  ProjectTemplateListItem,
   ResourceNode,
   TaskNode,
   UpdateProjectAreaInput,
   UpdateProjectChildInput,
   UpdateProjectInput,
+  UpdateProjectTemplateInput,
   UpdateTaskInput,
   UpdateNoteInput,
   CreatePersonInput,
@@ -79,6 +85,36 @@ export const spydrApi = {
       }),
     delete: (areaId: string) =>
       apiRequest<void>(`/project-areas/${areaId}`, { method: "DELETE" }),
+  },
+  projectTemplates: {
+    list: (options?: { includeArchived?: boolean }) => {
+      const qs = options?.includeArchived ? "?includeArchived=true" : "";
+      return apiRequest<ProjectTemplateListItem[]>(`/project-templates${qs}`);
+    },
+    get: (templateId: string) =>
+      apiRequest<ProjectTemplate>(`/project-templates/${templateId}`),
+    create: (input: CreateProjectTemplateInput) =>
+      apiRequest<ProjectTemplate>("/project-templates", {
+        method: "POST",
+        body: input,
+      }),
+    createFromProject: (input: CreateProjectTemplateFromProjectInput) =>
+      apiRequest<ProjectTemplate>("/project-templates/from-project", {
+        method: "POST",
+        body: input,
+      }),
+    update: (templateId: string, input: UpdateProjectTemplateInput) =>
+      apiRequest<ProjectTemplate>(`/project-templates/${templateId}`, {
+        method: "PATCH",
+        body: input,
+      }),
+    delete: (templateId: string) =>
+      apiRequest<void>(`/project-templates/${templateId}`, { method: "DELETE" }),
+    invoke: (templateId: string, input: InvokeProjectTemplateInput) =>
+      apiRequest<ProjectDetailNode>(`/project-templates/${templateId}/invoke`, {
+        method: "POST",
+        body: input,
+      }),
   },
   projects: {
     list: () => apiRequest<ProjectNode[]>("/projects"),

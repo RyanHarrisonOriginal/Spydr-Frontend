@@ -1,16 +1,19 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import type { PersonNode, ProjectAreaNode, ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
 import { PriorityBadge } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { CollectionSortableHeader } from "@/domain/spydr/features/shared/components/CollectionSortableHeader";
-import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import { CollectionReorderControls } from "@/domain/spydr/features/shared/components/CollectionReorderControls";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
 import {
   CollectionSortableList,
-  type SortableItemRenderProps,
 } from "@/domain/spydr/features/shared/components/CollectionSortableList";
 import type { CollectionSortState } from "@/domain/spydr/utils/collectionView";
+import {
+  moveIdInOrder,
+  type RankMoveDirection,
+} from "@/domain/spydr/utils/collectionReorder";
 import { cn } from "@/lib/utils";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import { findAreaIdByTitle } from "@/domain/spydr/utils/projectAreas";
@@ -35,9 +38,9 @@ import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToT
 const ROW_BASE =
   "grid grid-cols-[28px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_148px_40px_72px] items-center gap-3";
 const ROW_WITH_HANDLE =
-  "grid grid-cols-[24px_28px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_148px_40px_72px] items-center gap-3";
+  "grid grid-cols-[52px_28px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_148px_40px_72px] items-center gap-3";
 const ROW_MIN_WIDTH = 1180;
-const ROW_MIN_WIDTH_WITH_HANDLE = 1204;
+const ROW_MIN_WIDTH_WITH_HANDLE = 1232;
 
 interface TaskListProps {
   tasks: TaskNode[];
@@ -46,10 +49,13 @@ interface TaskListProps {
   areas?: ProjectAreaNode[];
   sort: CollectionSortState;
   reorderEnabled?: boolean;
+  /** Full filtered order when `tasks` is a page slice. */
+  rankOrderIds?: string[];
   getPriorityRank(id: string): number | undefined;
   updatingTaskId?: string | null;
   onSortColumn(column: string): void;
   onReorder?(orderedIds: string[]): void;
+  onMoveRank?(id: string, direction: RankMoveDirection): void;
   onStatusChange(taskId: string, status: string): void;
   onProjectChange(taskId: string, projectNodeId: string | null): void;
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
@@ -72,7 +78,7 @@ function TaskRow({
   people,
   reorderEnabled,
   getPriorityRank,
-  sortable,
+  rankControls,
   isUpdating,
   onStatusChange,
   onProjectChange,
@@ -93,7 +99,7 @@ function TaskRow({
   people: PersonNode[];
   reorderEnabled: boolean;
   getPriorityRank(id: string): number | undefined;
-  sortable: SortableItemRenderProps;
+  rankControls?: ReactNode;
   isUpdating: boolean;
   onStatusChange(taskId: string, status: string): void;
   onProjectChange(taskId: string, projectNodeId: string | null): void;
@@ -131,6 +137,7 @@ function TaskRow({
           aria-label={task.area ? `Area: ${task.area}` : "No area"}
         />
         <div className="flex min-w-0 flex-1 items-center gap-1 py-0.5 pl-1 pr-1">
+          {reorderEnabled ? rankControls : null}
           <CollectionPriorityRank
             rank={getPriorityRank(task.id)}
             className="min-w-[1.15rem] px-0.5"
@@ -186,9 +193,7 @@ function TaskRow({
 
   return (
     <div className={cn(rowClass, "px-4 py-2.5 row-hover md:px-6")} style={{ minWidth }}>
-      {reorderEnabled ? (
-        <CollectionDragHandle {...sortable.dragHandleProps} />
-      ) : null}
+      {reorderEnabled ? rankControls : null}
       {onToggleSelected ? (
         <SelectionCheckbox
           checked={selected}
@@ -303,10 +308,12 @@ export function TaskList({
   areas = [],
   sort,
   reorderEnabled = false,
+  rankOrderIds,
   getPriorityRank,
   updatingTaskId = null,
   onSortColumn,
   onReorder,
+  onMoveRank,
   onStatusChange,
   onProjectChange,
   onAssigneeChange,
@@ -321,9 +328,39 @@ export function TaskList({
   const headerClass = reorderEnabled ? ROW_WITH_HANDLE : ROW_BASE;
   const minWidth = reorderEnabled ? ROW_MIN_WIDTH_WITH_HANDLE : ROW_MIN_WIDTH;
   const taskIds = useMemo(() => tasks.map((task) => task.id), [tasks]);
+  const orderIds = useMemo(
+    () => rankOrderIds ?? taskIds,
+    [rankOrderIds, taskIds]
+  );
   const selection = useItemSelection(taskIds);
   const canSelect = Boolean(onDeleteSelected);
   const isPhone = useIsPhone();
+
+  const moveRank = (id: string, direction: RankMoveDirection) => {
+    if (onMoveRank) {
+      onMoveRank(id, direction);
+      return;
+    }
+    const next = moveIdInOrder(orderIds, id, direction);
+    if (next) onReorder?.(next);
+  };
+
+  const rankControlsFor = (
+    taskId: string,
+    dragHandleProps?: Record<string, unknown>
+  ) => {
+    const rankIndex = orderIds.indexOf(taskId);
+    return (
+      <CollectionReorderControls
+        dragHandleProps={dragHandleProps}
+        showDragHandle={!isPhone}
+        canMoveUp={rankIndex > 0}
+        canMoveDown={rankIndex >= 0 && rankIndex < orderIds.length - 1}
+        onMoveUp={() => moveRank(taskId, "up")}
+        onMoveDown={() => moveRank(taskId, "down")}
+      />
+    );
+  };
 
   return (
     <div className={isPhone ? "" : "touch-scroll-x"}>
@@ -439,7 +476,7 @@ export function TaskList({
             people={people}
             reorderEnabled={reorderEnabled}
             getPriorityRank={getPriorityRank}
-            sortable={sortable}
+            rankControls={rankControlsFor(task.id, sortable.dragHandleProps)}
             isUpdating={updatingTaskId === task.id}
             onStatusChange={onStatusChange}
             onProjectChange={onProjectChange}

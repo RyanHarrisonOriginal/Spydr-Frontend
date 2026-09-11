@@ -707,6 +707,17 @@
     white-space: nowrap;
   }
 
+  .template-param-editor .template-param-mention {
+    border-radius: 0.25rem;
+    background: color-mix(in oklab, var(--highlight) 14%, transparent);
+    padding: 0.05rem 0.3rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85em;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    white-space: nowrap;
+  }
+
   .spydr-rich-text {
     @apply prose prose-sm max-w-none;
     color: hsl(var(--foreground));

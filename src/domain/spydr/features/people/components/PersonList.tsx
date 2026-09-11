@@ -7,12 +7,13 @@ import {
   PersonIdentityLabel,
   PersonMeBadge,
 } from "@/domain/spydr/features/people/components/PersonIdentity";
-import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import { CollectionReorderControls } from "@/domain/spydr/features/shared/components/CollectionReorderControls";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
 import { CollectionSortableHeader } from "@/domain/spydr/features/shared/components/CollectionSortableHeader";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import type { CollectionSortState } from "@/domain/spydr/utils/collectionView";
+import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
 import { cn } from "@/lib/utils";
 
 interface PersonListProps {
@@ -41,10 +42,19 @@ export function PersonList({
 }: PersonListProps) {
   const { isMe } = useCurrentUserPerson();
 
+  const moveRank = (id: string, direction: "up" | "down") => {
+    const next = moveIdInOrder(
+      people.map((person) => person.id),
+      id,
+      direction
+    );
+    if (next) onReorder?.(next);
+  };
+
   return (
     <div className="touch-scroll-x">
       <div
-        className={`${reorderEnabled ? "grid grid-cols-[24px_minmax(0,1fr)] items-center gap-4 px-4 md:px-6" : "px-4 md:px-6"} border-b border-border bg-muted/20 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground`}
+        className={`${reorderEnabled ? "grid grid-cols-[52px_minmax(0,1fr)] items-center gap-4 px-4 md:px-6" : "px-4 md:px-6"} border-b border-border bg-muted/20 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground`}
       >
         {reorderEnabled ? <span aria-hidden /> : null}
         <div className={ROW_INNER}>
@@ -73,13 +83,19 @@ export function PersonList({
             <div
               className={cn(
                 reorderEnabled
-                  ? "grid grid-cols-[24px_minmax(0,1fr)] items-center gap-4 px-4 py-3 row-hover md:px-6"
+                  ? "grid grid-cols-[52px_minmax(0,1fr)] items-center gap-4 px-4 py-3 row-hover md:px-6"
                   : "px-4 py-3 row-hover md:px-6",
                 isCurrentUser && "person-me-row"
               )}
             >
               {reorderEnabled ? (
-                <CollectionDragHandle {...sortable.dragHandleProps} />
+                <CollectionReorderControls
+                  dragHandleProps={sortable.dragHandleProps}
+                  canMoveUp={sortable.index > 0}
+                  canMoveDown={sortable.index < people.length - 1}
+                  onMoveUp={() => moveRank(person.id, "up")}
+                  onMoveDown={() => moveRank(person.id, "down")}
+                />
               ) : null}
               <div className={ROW_INNER}>
                 <CollectionPriorityRank rank={getPriorityRank(person.id)} />

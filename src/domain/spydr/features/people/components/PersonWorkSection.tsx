@@ -16,7 +16,7 @@ import { ProjectTargetDateSelect } from "@/domain/spydr/features/projects/compon
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
 import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
-import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import { CollectionReorderControls } from "@/domain/spydr/features/shared/components/CollectionReorderControls";
 import { CollectionDualRank } from "@/domain/spydr/features/shared/components/CollectionDualRank";
 import { RowExpandToggle } from "@/domain/spydr/features/shared/components/RowExpandToggle";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
@@ -25,6 +25,7 @@ import {
   ProjectDetailSectionBody,
   ProjectDetailSectionHeader,
 } from "@/domain/spydr/features/projects/components/ProjectDetailSection";
+import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
 import { cn } from "@/lib/utils";
 
 export type PersonWorkViewMode = "tree" | "projects" | "tasks";
@@ -107,6 +108,10 @@ function ProjectRow({
   busy,
   reorderEnabled,
   dragHandleProps,
+  canMoveUp = false,
+  canMoveDown = false,
+  onMoveUp,
+  onMoveDown,
   showExpand,
   expanded,
   tone = "flat",
@@ -121,6 +126,10 @@ function ProjectRow({
   busy: boolean;
   reorderEnabled: boolean;
   dragHandleProps?: Record<string, unknown>;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  onMoveUp?(): void;
+  onMoveDown?(): void;
   showExpand?: boolean;
   expanded?: boolean;
   /** Tree parents use a filled rail; flat lists stay quieter. */
@@ -148,8 +157,14 @@ function ProjectRow({
         tone === "parent" && expanded && "rounded-b-none border-b-transparent"
       )}
     >
-      {reorderEnabled && dragHandleProps ? (
-        <CollectionDragHandle {...dragHandleProps} />
+      {reorderEnabled ? (
+        <CollectionReorderControls
+          dragHandleProps={dragHandleProps}
+          canMoveUp={canMoveUp}
+          canMoveDown={canMoveDown}
+          onMoveUp={() => onMoveUp?.()}
+          onMoveDown={() => onMoveDown?.()}
+        />
       ) : null}
 
       {showExpand ? (
@@ -326,6 +341,10 @@ function TaskRow({
   busy,
   reorderEnabled,
   dragHandleProps,
+  canMoveUp = false,
+  canMoveDown = false,
+  onMoveUp,
+  onMoveDown,
   nested,
   hideProjectLink,
   onDueDateChange,
@@ -335,6 +354,10 @@ function TaskRow({
   busy: boolean;
   reorderEnabled: boolean;
   dragHandleProps?: Record<string, unknown>;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  onMoveUp?(): void;
+  onMoveDown?(): void;
   nested?: boolean;
   hideProjectLink?: boolean;
   onDueDateChange?(taskId: string, dueDate: string | null): void;
@@ -349,8 +372,14 @@ function TaskRow({
           : "border-border/70 bg-background"
       )}
     >
-      {reorderEnabled && dragHandleProps ? (
-        <CollectionDragHandle {...dragHandleProps} />
+      {reorderEnabled && !nested ? (
+        <CollectionReorderControls
+          dragHandleProps={dragHandleProps}
+          canMoveUp={canMoveUp}
+          canMoveDown={canMoveDown}
+          onMoveUp={() => onMoveUp?.()}
+          onMoveDown={() => onMoveDown?.()}
+        />
       ) : null}
       {!nested ? (
         <CollectionDualRank
@@ -603,6 +632,24 @@ export function PersonWorkSection({
                       busy={updatingProjectId === entry.project.id}
                       reorderEnabled={reorderEnabled}
                       dragHandleProps={sortable.dragHandleProps}
+                      canMoveUp={sortable.index > 0}
+                      canMoveDown={sortable.index < visibleProjects.length - 1}
+                      onMoveUp={() => {
+                        const next = moveIdInOrder(
+                          visibleProjects.map((item) => item.project.id),
+                          entry.project.id,
+                          "up"
+                        );
+                        if (next) onReorderProjects?.(next);
+                      }}
+                      onMoveDown={() => {
+                        const next = moveIdInOrder(
+                          visibleProjects.map((item) => item.project.id),
+                          entry.project.id,
+                          "down"
+                        );
+                        if (next) onReorderProjects?.(next);
+                      }}
                       composing={composing}
                       createBusy={creatingTaskProjectId === entry.project.id}
                       onTargetDateChange={onTargetDateChange}
@@ -657,6 +704,24 @@ export function PersonWorkSection({
                   busy={updatingTaskId === entry.task.id}
                   reorderEnabled={reorderEnabled}
                   dragHandleProps={sortable.dragHandleProps}
+                  canMoveUp={sortable.index > 0}
+                  canMoveDown={sortable.index < visibleTasks.length - 1}
+                  onMoveUp={() => {
+                    const next = moveIdInOrder(
+                      visibleTasks.map((item) => item.task.id),
+                      entry.task.id,
+                      "up"
+                    );
+                    if (next) onReorderTasks?.(next);
+                  }}
+                  onMoveDown={() => {
+                    const next = moveIdInOrder(
+                      visibleTasks.map((item) => item.task.id),
+                      entry.task.id,
+                      "down"
+                    );
+                    if (next) onReorderTasks?.(next);
+                  }}
                   onDueDateChange={onDueDateChange}
                   onStatusChange={onTaskStatusChange}
                 />
@@ -698,6 +763,24 @@ export function PersonWorkSection({
                           busy={updatingProjectId === entry.project.id}
                           reorderEnabled={reorderEnabled}
                           dragHandleProps={sortable.dragHandleProps}
+                          canMoveUp={sortable.index > 0}
+                          canMoveDown={sortable.index < visibleProjects.length - 1}
+                          onMoveUp={() => {
+                            const next = moveIdInOrder(
+                              visibleProjects.map((item) => item.project.id),
+                              entry.project.id,
+                              "up"
+                            );
+                            if (next) onReorderProjects?.(next);
+                          }}
+                          onMoveDown={() => {
+                            const next = moveIdInOrder(
+                              visibleProjects.map((item) => item.project.id),
+                              entry.project.id,
+                              "down"
+                            );
+                            if (next) onReorderProjects?.(next);
+                          }}
                           showExpand={canExpand}
                           expanded={expanded}
                           tone="parent"

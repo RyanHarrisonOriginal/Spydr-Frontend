@@ -75,6 +75,7 @@ export const mobilePrimaryTabs: MobileTab[] = [
       pathname.startsWith("/work") ||
       pathname.startsWith("/today") ||
       pathname.startsWith("/projects") ||
+      pathname.startsWith("/project-templates") ||
       pathname.startsWith("/tasks") ||
       pathname.startsWith("/people"),
   },

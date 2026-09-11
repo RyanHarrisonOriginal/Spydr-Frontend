@@ -178,6 +178,33 @@ export function useProjectAreasQuery() {
   });
 }
 
+export function useProjectTemplatesQuery(options?: { includeArchived?: boolean }) {
+  const enabled = useSpydrQueryEnabled();
+  const { activeOrgId } = useOrganizationContext();
+  const includeArchived = options?.includeArchived ?? false;
+  return useQuery({
+    queryKey: spydrOrgKey(
+      activeOrgId!,
+      "project-templates",
+      includeArchived ? "all" : "active"
+    ),
+    queryFn: () => spydrApi.projectTemplates.list({ includeArchived }),
+    enabled: enabled && !!activeOrgId,
+    refetchOnMount: "always",
+  });
+}
+
+export function useProjectTemplateQuery(templateId: string | undefined) {
+  const enabled = useSpydrQueryEnabled();
+  const { activeOrgId } = useOrganizationContext();
+  return useQuery({
+    queryKey: spydrOrgKey(activeOrgId!, "project-templates", templateId ?? ""),
+    queryFn: () => spydrApi.projectTemplates.get(templateId!),
+    enabled: enabled && !!activeOrgId && !!templateId,
+    refetchOnMount: "always",
+  });
+}
+
 export function useIdeasQuery() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { isReady, activeOrgId } = useOrganizationContext();

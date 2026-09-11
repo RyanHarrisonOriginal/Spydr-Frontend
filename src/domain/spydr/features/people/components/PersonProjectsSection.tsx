@@ -11,9 +11,10 @@ import { StatusDot } from "@/domain/spydr/features/shared/components/StatusPrimi
 import { ShowCompletedToggle } from "@/domain/spydr/features/shared/components/ShowCompletedToggle";
 import { ProjectStatusSelect } from "@/domain/spydr/features/projects/components/ProjectStatusSelect";
 import { ProjectTargetDateSelect } from "@/domain/spydr/features/projects/components/ProjectTargetDateSelect";
-import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import { CollectionReorderControls } from "@/domain/spydr/features/shared/components/CollectionReorderControls";
 import { CollectionDualRank } from "@/domain/spydr/features/shared/components/CollectionDualRank";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
+import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
 import {
   ProjectDetailSection,
   ProjectDetailSectionBody,
@@ -90,8 +91,17 @@ export function PersonProjectsSection({
             ? `${entries.length} total`
             : completedCount > 0
               ? `${activeCount} active`
-              : "drag to rank"
+              : "drag or arrows to rank"
         }`;
+
+  const moveRank = (id: string, direction: "up" | "down") => {
+    const next = moveIdInOrder(
+      visibleEntries.map((entry) => entry.project.id),
+      id,
+      direction
+    );
+    if (next) onReorder?.(next);
+  };
 
   return (
     <ProjectDetailSection className={className}>
@@ -140,7 +150,13 @@ export function PersonProjectsSection({
                   )}
                 >
                   {reorderEnabled ? (
-                    <CollectionDragHandle {...sortable.dragHandleProps} />
+                    <CollectionReorderControls
+                      dragHandleProps={sortable.dragHandleProps}
+                      canMoveUp={sortable.index > 0}
+                      canMoveDown={sortable.index < visibleEntries.length - 1}
+                      onMoveUp={() => moveRank(entry.project.id, "up")}
+                      onMoveDown={() => moveRank(entry.project.id, "down")}
+                    />
                   ) : null}
                   <CollectionDualRank
                     globalRank={entry.globalRank}

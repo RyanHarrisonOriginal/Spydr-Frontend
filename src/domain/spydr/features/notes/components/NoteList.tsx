@@ -6,7 +6,7 @@ import {
   PriorityBadge,
   StatusPill,
 } from "@/domain/spydr/features/shared/components/StatusPrimitives";
-import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import { CollectionReorderControls } from "@/domain/spydr/features/shared/components/CollectionReorderControls";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
@@ -24,6 +24,7 @@ import {
   isRichTextEmpty,
   richTextToPlainText,
 } from "@/domain/spydr/utils/richText";
+import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
 import { cn } from "@/lib/utils";
 
 interface NoteListProps {
@@ -47,6 +48,15 @@ export function NoteList({
   onDelete,
   deletingNoteId = null,
 }: NoteListProps) {
+  const moveRank = (id: string, direction: "up" | "down") => {
+    const next = moveIdInOrder(
+      notes.map((note) => note.id),
+      id,
+      direction
+    );
+    if (next) onReorder?.(next);
+  };
+
   return (
     <CollectionSortableList
       items={notes}
@@ -62,9 +72,13 @@ export function NoteList({
           <div className={CAPTURE_CARD_CLASS}>
             <div className="flex min-h-0 flex-1 items-start gap-2">
               {reorderEnabled ? (
-                <CollectionDragHandle
+                <CollectionReorderControls
                   className="mt-0.5"
-                  {...sortable.dragHandleProps}
+                  dragHandleProps={sortable.dragHandleProps}
+                  canMoveUp={sortable.index > 0}
+                  canMoveDown={sortable.index < notes.length - 1}
+                  onMoveUp={() => moveRank(note.id, "up")}
+                  onMoveDown={() => moveRank(note.id, "down")}
                 />
               ) : null}
               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-highlight-secondary/25 bg-highlight-secondary/10">

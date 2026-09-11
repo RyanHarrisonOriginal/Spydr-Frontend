@@ -1,4 +1,4 @@
-import { CheckSquare, FolderKanban, Plus, UserPlus } from "lucide-react";
+import { CheckSquare, FolderKanban, LayoutTemplate, Plus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,12 +11,14 @@ import {
 interface WorkCreateMenuProps {
   onCreateProject(): void;
   onCreateTask(): void;
+  onCreateTemplate(): void;
   onCreatePerson(): void;
 }
 
 export function WorkCreateMenu({
   onCreateProject,
   onCreateTask,
+  onCreateTemplate,
   onCreatePerson,
 }: WorkCreateMenuProps) {
   return (
@@ -35,6 +37,10 @@ export function WorkCreateMenu({
         <DropdownMenuItem className="gap-2 text-[12px]" onSelect={onCreateTask}>
           <CheckSquare className="h-3.5 w-3.5 text-muted-foreground" />
           Task
+        </DropdownMenuItem>
+        <DropdownMenuItem className="gap-2 text-[12px]" onSelect={onCreateTemplate}>
+          <LayoutTemplate className="h-3.5 w-3.5 text-muted-foreground" />
+          Template
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="gap-2 text-[12px]" onSelect={onCreatePerson}>

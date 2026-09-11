@@ -1,4 +1,5 @@
-import { MoreHorizontal, Trash2 } from "lucide-react";
+import { LayoutTemplate, MoreHorizontal, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,25 +13,23 @@ import type { ProjectColumnId } from "@/domain/spydr/features/projects/hooks/use
 import { useIsPhone } from "@/hooks/useIsPhone";
 
 interface WorkMoreMenuProps {
-  columns: readonly { id: ProjectColumnId; label: string }[];
-  visibleColumnSet: Set<ProjectColumnId>;
-  onToggleColumn(columnId: ProjectColumnId): void;
-  trashCount: number;
-  onOpenTrash(): void;
+  columns?: readonly { id: ProjectColumnId; label: string }[];
+  visibleColumnSet?: Set<ProjectColumnId>;
+  onToggleColumn?(columnId: ProjectColumnId): void;
+  trashCount?: number;
+  onOpenTrash?(): void;
 }
 
 export function WorkMoreMenu({
-  columns,
-  visibleColumnSet,
+  columns = [],
+  visibleColumnSet = new Set(),
   onToggleColumn,
-  trashCount,
+  trashCount = 0,
   onOpenTrash,
 }: WorkMoreMenuProps) {
   const isPhone = useIsPhone();
-
-  if (isPhone && trashCount === 0) {
-    return null;
-  }
+  const navigate = useNavigate();
+  const showColumns = !isPhone && columns.length > 0 && Boolean(onToggleColumn);
 
   return (
     <DropdownMenu>
@@ -46,7 +45,7 @@ export function WorkMoreMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        {isPhone ? null : (
+        {showColumns ? (
           <>
             <DropdownMenuLabel className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
               Columns
@@ -57,7 +56,7 @@ export function WorkMoreMenu({
                 className="gap-2 text-[12px]"
                 onSelect={(event) => {
                   event.preventDefault();
-                  onToggleColumn(column.id);
+                  onToggleColumn?.(column.id);
                 }}
               >
                 <span className="grid h-4 w-4 place-items-center rounded border border-border bg-muted/40">
@@ -68,11 +67,19 @@ export function WorkMoreMenu({
                 {column.label}
               </DropdownMenuItem>
             ))}
+            <DropdownMenuSeparator />
           </>
-        )}
-        {trashCount > 0 ? (
+        ) : null}
+        <DropdownMenuItem
+          className="gap-2 text-[12px]"
+          onSelect={() => navigate("/project-templates")}
+        >
+          <LayoutTemplate className="h-3.5 w-3.5 text-muted-foreground" />
+          Templates
+        </DropdownMenuItem>
+        {trashCount > 0 && onOpenTrash ? (
           <>
-            {isPhone ? null : <DropdownMenuSeparator />}
+            <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2 text-[12px]" onSelect={onOpenTrash}>
               <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
               Trash

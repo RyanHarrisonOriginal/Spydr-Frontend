@@ -11,6 +11,9 @@ import WorkspaceShellScreen from "@/screens/WorkspaceShellScreen";
 import WorkScreen from "@/screens/WorkScreen";
 import TodayScreen from "@/screens/TodayScreen";
 import ProjectDetailScreen from "@/screens/ProjectDetailScreen";
+import ProjectTemplateCreateScreen from "@/screens/ProjectTemplateCreateScreen";
+import ProjectTemplateEditScreen from "@/screens/ProjectTemplateEditScreen";
+import ProjectTemplatesScreen from "@/screens/ProjectTemplatesScreen";
 import TaskDetailScreen from "@/screens/TaskDetailScreen";
 import IdeasScreen from "@/screens/IdeasScreen";
 import DecisionsScreen from "@/screens/DecisionsScreen";
@@ -61,6 +64,18 @@ export default function App() {
               <Route path="/work" element={<WorkScreen />} />
               <Route path="/projects" element={<Navigate to="/work" replace />} />
               <Route path="/projects/:projectId" element={<ProjectDetailScreen />} />
+              <Route
+                path="/project-templates"
+                element={<ProjectTemplatesScreen />}
+              />
+              <Route
+                path="/project-templates/new"
+                element={<ProjectTemplateCreateScreen />}
+              />
+              <Route
+                path="/project-templates/:templateId/edit"
+                element={<ProjectTemplateEditScreen />}
+              />
               <Route
                 path="/tasks"
                 element={<Navigate to="/work?view=tasks" replace />}

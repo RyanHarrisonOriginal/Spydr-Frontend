@@ -9,9 +9,16 @@ import {
   FileText,
   GitBranch,
   Lightbulb,
+  MoreHorizontal,
   Paperclip,
   Tag as TagIcon,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import type {
@@ -73,6 +80,7 @@ import { SelectionCheckbox } from "@/domain/spydr/features/shared/components/Sel
 import { BulkDeleteBar } from "@/domain/spydr/features/shared/components/BulkDeleteBar";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSelection";
+import { SaveAsTemplateDialog } from "./SaveAsTemplateDialog";
 
 interface ProjectDetailViewProps {
   project: ProjectDetailNode;
@@ -230,6 +238,7 @@ export function ProjectDetailView({
     reviewer: null,
   };
   const [trashExpanded, setTrashExpanded] = useState(false);
+  const [saveAsTemplateOpen, setSaveAsTemplateOpen] = useState(false);
   const taskIds = useMemo(
     () => project.tasks.map((task) => task.id),
     [project.tasks]
@@ -358,6 +367,7 @@ export function ProjectDetailView({
             isPhone && deletedCount === 0 ? undefined : (
             <div className="flex items-center gap-2">
               {isPhone ? null : (
+              <>
               <EntityTransformMenu
                 nodeId={project.id}
                 sourceType="project"
@@ -365,6 +375,28 @@ export function ProjectDetailView({
                 projects={projects}
                 excludeProjectId={project.id}
               />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 text-muted-foreground"
+                    aria-label="Project actions"
+                  >
+                    <MoreHorizontal className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem
+                    className="text-[12px]"
+                    onSelect={() => setSaveAsTemplateOpen(true)}
+                  >
+                    Save as template…
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              </>
               )}
               {deletedCount > 0 ? (
                 <Button
@@ -384,6 +416,12 @@ export function ProjectDetailView({
             </div>
             )
           }
+        />
+
+        <SaveAsTemplateDialog
+          project={project}
+          open={saveAsTemplateOpen}
+          onOpenChange={setSaveAsTemplateOpen}
         />
 
         {deletedCount > 0 && (

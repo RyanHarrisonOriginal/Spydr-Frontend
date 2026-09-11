@@ -1,9 +1,10 @@
 import { Bookmark, ExternalLink } from "lucide-react";
 import type { ResourceNode } from "@/domain/spydr/utils/types";
 import { EntityTag } from "@/domain/spydr/features/shared/components/StatusPrimitives";
-import { CollectionDragHandle } from "@/domain/spydr/features/shared/components/CollectionDragHandle";
+import { CollectionReorderControls } from "@/domain/spydr/features/shared/components/CollectionReorderControls";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
+import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
 
 interface ResourceListProps {
   resources: ResourceNode[];
@@ -29,6 +30,15 @@ export function ResourceList({
   reorderEnabled = false,
   onReorder,
 }: ResourceListProps) {
+  const moveRank = (id: string, direction: "up" | "down") => {
+    const next = moveIdInOrder(
+      resources.map((resource) => resource.id),
+      id,
+      direction
+    );
+    if (next) onReorder?.(next);
+  };
+
   return (
     <CollectionSortableList
       items={resources}
@@ -42,7 +52,13 @@ export function ResourceList({
           <div className="flex flex-col gap-2 px-4 py-3 row-hover md:px-6 sm:flex-row sm:items-center sm:gap-3">
             <div className="flex min-w-0 items-center gap-3">
             {reorderEnabled ? (
-              <CollectionDragHandle {...sortable.dragHandleProps} />
+              <CollectionReorderControls
+                dragHandleProps={sortable.dragHandleProps}
+                canMoveUp={sortable.index > 0}
+                canMoveDown={sortable.index < resources.length - 1}
+                onMoveUp={() => moveRank(resource.id, "up")}
+                onMoveDown={() => moveRank(resource.id, "down")}
+              />
             ) : null}
             <CollectionPriorityRank rank={getPriorityRank(resource.id)} />
             <Bookmark className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
