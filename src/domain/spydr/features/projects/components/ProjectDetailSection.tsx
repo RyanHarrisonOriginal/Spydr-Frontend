@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 import { useIsPhone } from "@/hooks/useIsPhone";
 
 export const detailFieldClassName =
-  "w-full rounded-md border border-input bg-background px-2.5 text-[13px] ring-focus transition-colors placeholder:text-muted-foreground";
+  "h-10 w-full rounded-lg border border-input bg-background px-3 text-[13px] ring-focus transition-colors placeholder:text-muted-foreground";
 
 export const detailTextareaClassName =
-  "min-h-[5.5rem] w-full resize-y rounded-md border border-input bg-background px-2.5 py-2 text-[12px] leading-snug ring-focus transition-colors placeholder:text-muted-foreground";
+  "min-h-[6.5rem] w-full resize-y rounded-lg border border-input bg-background px-3 py-2.5 text-[13px] leading-snug ring-focus transition-colors placeholder:text-muted-foreground";
 
 export const detailInsetPanelClassName =
   "rounded-lg border border-border/70 bg-muted/20 p-3";
@@ -34,11 +34,13 @@ export function ProjectDetailSection({
   className,
   collapsible = false,
   defaultExpanded = true,
+  variant = "card",
 }: {
   children: ReactNode;
   className?: string;
   collapsible?: boolean;
   defaultExpanded?: boolean;
+  variant?: "card" | "plain";
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
@@ -52,7 +54,9 @@ export function ProjectDetailSection({
     >
       <section
         className={cn(
-          "flex min-h-0 flex-col overflow-hidden rounded-md border border-border bg-card",
+          "flex min-h-0 flex-col",
+          variant === "card" &&
+            "overflow-hidden rounded-md border border-border bg-card spydr-plate",
           className,
           collapsible && !expanded && "min-h-0 md:min-h-0"
         )}
@@ -95,47 +99,50 @@ export function ProjectDetailSectionHeader({
         />
       ) : null}
       {icon ? (
-        <span className="text-muted-foreground [&_svg]:h-3.5 [&_svg]:w-3.5">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md border border-highlight/20 bg-highlight/10 text-highlight [&_svg]:h-3.5 [&_svg]:w-3.5">
           {icon}
         </span>
       ) : null}
       <h2
         className={cn(
-          "font-mono uppercase text-foreground/80",
+          "font-mono uppercase text-foreground",
           tight ? "text-[11px] tracking-[0.12em]" : "text-[10px] tracking-[0.16em]"
         )}
       >
         {label}
       </h2>
-      <span className="h-px min-w-2 flex-1 bg-border/80" aria-hidden />
-      {actions ? (
-        <div
-          className="flex shrink-0 items-center gap-2"
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
-          {actions}
+      {actions || hint ? (
+        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-2">
+          {actions ? (
+            <div
+              className="flex shrink-0 items-center gap-2"
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+            >
+              {actions}
+            </div>
+          ) : null}
+          {hint ? (
+            <span
+              className={cn(
+                "shrink-0 font-mono tabular-nums text-muted-foreground",
+                tight ? "text-[11px]" : "text-[10px]",
+                hintClassName
+              )}
+            >
+              {hint}
+            </span>
+          ) : null}
         </div>
-      ) : null}
-      {hint ? (
-        <span
-          className={cn(
-            "shrink-0 font-mono tabular-nums text-muted-foreground",
-            tight ? "text-[11px]" : "text-[10px]",
-            hintClassName
-          )}
-        >
-          {hint}
-        </span>
       ) : null}
     </>
   );
 
   const shellClass = cn(
-    "flex w-full items-center gap-2 border-b border-border bg-muted/25 text-left",
-    tight ? "px-3 py-2" : "px-4 py-2.5",
-    collapsible && "cursor-pointer transition-colors hover:bg-muted/40",
-    collapsible && !expanded && "border-b-0"
+    "flex w-full items-center gap-2 bg-muted/20 text-left",
+    tight ? "px-3 py-1.5" : "px-3 py-2",
+    collapsible && "cursor-pointer transition-colors hover:bg-muted/35",
+    expanded && "border-b border-border/70"
   );
 
   if (collapsible) {
@@ -198,10 +205,10 @@ export function ProjectDetailEmpty({
   description?: string;
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-border/80 bg-muted/10 px-4 py-8 text-center">
-      <p className="text-[13px] text-muted-foreground">{title}</p>
+    <div className="spydr-radial px-2 py-6 text-center">
+      <p className="text-[13px] text-foreground/75">{title}</p>
       {description ? (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground/80">
+        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
           {description}
         </p>
       ) : null}
@@ -217,12 +224,7 @@ export function ProjectDetailEntry({
   className?: string;
 }) {
   return (
-    <li
-      className={cn(
-        "rounded-md border border-border/60 bg-background px-3 py-2.5 shadow-sm",
-        className
-      )}
-    >
+    <li className={cn("rounded-sm bg-muted/20 px-2.5 py-2.5", className)}>
       {children}
     </li>
   );
@@ -261,5 +263,61 @@ export function ProjectDetailField({
       </span>
       {children}
     </label>
+  );
+}
+
+export function ProjectDetailTabs<T extends string>({
+  value,
+  onChange,
+  ariaLabel,
+  items,
+}: {
+  value: T;
+  onChange(value: T): void;
+  ariaLabel: string;
+  items: { id: T; label: string; count?: number }[];
+}) {
+  return (
+    <div
+      role="tablist"
+      aria-label={ariaLabel}
+      className="flex h-8 min-w-0 flex-1 items-center overflow-hidden rounded-sm border border-border/80 bg-muted/30 p-0.5"
+    >
+      {items.map((item) => {
+        const active = item.id === value;
+        const hasItems = (item.count ?? 0) > 0;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            className={cn(
+              "h-full min-w-0 flex-1 truncate rounded-sm px-2 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors",
+              active
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+            onClick={() => onChange(item.id)}
+          >
+            {item.label}
+            {item.count != null ? (
+              <span
+                className={cn(
+                  "ml-1.5 tabular-nums",
+                  active && hasItems
+                    ? "text-highlight"
+                    : hasItems
+                      ? "text-highlight/70"
+                      : "text-muted-foreground/70"
+                )}
+              >
+                {item.count}
+              </span>
+            ) : null}
+          </button>
+        );
+      })}
+    </div>
   );
 }

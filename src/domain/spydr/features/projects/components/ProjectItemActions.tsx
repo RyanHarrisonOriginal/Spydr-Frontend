@@ -161,7 +161,7 @@ export function ProjectItemActions({
                   setDraft((current) => ({ ...current, title: event.target.value }))
                 }
                 placeholder={fieldSet === "note" ? "Title (optional)" : undefined}
-                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px] ring-focus"
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-[13px] ring-focus"
               />
             </label>
 
@@ -189,7 +189,7 @@ export function ProjectItemActions({
                     setDraft((current) => ({ ...current, body: event.target.value }))
                   }
                   rows={3}
-                  className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-1.5 text-[12px] ring-focus"
+                  className="w-full resize-y rounded-lg border border-input bg-background px-3 py-2.5 text-[13px] ring-focus"
                 />
               </label>
             )}
@@ -208,7 +208,7 @@ export function ProjectItemActions({
                     }))
                   }
                   rows={3}
-                  className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-1.5 text-[12px] ring-focus"
+                  className="w-full resize-y rounded-lg border border-input bg-background px-3 py-2.5 text-[13px] ring-focus"
                 />
               </label>
             )}
@@ -245,7 +245,7 @@ export function ProjectItemActions({
                           status: event.target.value,
                         }))
                       }
-                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-[12px] ring-focus"
+                      className="h-10 w-full rounded-lg border border-input bg-background px-3 text-[13px] ring-focus"
                     >
                       {taskStatuses.map((status) => (
                         <option key={status} value={status}>
@@ -266,7 +266,7 @@ export function ProjectItemActions({
                           priority: event.target.value as SpydrPriority,
                         }))
                       }
-                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-[12px] ring-focus"
+                      className="h-10 w-full rounded-lg border border-input bg-background px-3 text-[13px] ring-focus"
                     >
                       {priorityOptions.map((priority) => (
                         <option key={priority} value={priority}>

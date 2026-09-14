@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { FileText, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { NoteNode, ProjectNode, UpdateProjectChildInput } from "@/domain/spydr/utils/types";
 import { RichTextEditor } from "@/domain/spydr/features/shared/components/RichTextEditor";
@@ -13,11 +13,7 @@ import type { ProjectNoteFormValues } from "../hooks/useProjectDetailPage";
 import {
   ProjectDetailEmpty,
   ProjectDetailEntry,
-  ProjectDetailFormPanel,
   ProjectDetailInlineError,
-  ProjectDetailSection,
-  ProjectDetailSectionBody,
-  ProjectDetailSectionHeader,
   detailFieldClassName,
 } from "./ProjectDetailSection";
 import { ProjectItemActions } from "./ProjectItemActions";
@@ -83,53 +79,44 @@ export function ProjectNotesLog({
     selection.selectedIds.some((id) => deletingChildIds.includes(id));
 
   return (
-    <ProjectDetailSection collapsible defaultExpanded className="md:min-h-[360px]">
-      <ProjectDetailSectionHeader
-        icon={<FileText className="h-3.5 w-3.5" />}
-        label="Notes"
-        hint={`${notes.length} linked`}
-      />
-
-      <ProjectDetailSectionBody className="min-h-0 flex-1 gap-3 p-3">
-        <ProjectDetailFormPanel label="Add note">
-          <form
-            className="space-y-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onAdd();
-            }}
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <form
+        className="space-y-2 rounded-lg border border-border/50 bg-muted/20 p-2.5"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onAdd();
+        }}
+      >
+        <input
+          value={form.title}
+          onChange={(event) => onFieldChange("title", event.target.value)}
+          placeholder="Title (optional)"
+          className={detailFieldClassName}
+        />
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+          <RichTextEditor
+            key={formResetKey}
+            value={form.body}
+            onChange={(body) => onFieldChange("body", body)}
+            placeholder="Details, links, or context…"
+            className="flex-1"
+            minHeightClassName="min-h-[5.5rem]"
+          />
+          <Button
+            type="submit"
+            className="h-10 shrink-0 gap-1.5 rounded-lg sm:px-4"
+            disabled={!canAdd}
           >
-            <input
-              value={form.title}
-              onChange={(event) => onFieldChange("title", event.target.value)}
-              placeholder="Title (optional)"
-              className={cn(detailFieldClassName, "h-8 px-3.5 py-2")}
-            />
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-              <RichTextEditor
-                key={formResetKey}
-                value={form.body}
-                onChange={(body) => onFieldChange("body", body)}
-                placeholder="Details, links, or context…"
-                className="flex-1"
-                minHeightClassName="min-h-[5.5rem]"
-              />
-              <Button
-                type="submit"
-                size="sm"
-                className="shrink-0 gap-1.5 sm:px-4"
-                disabled={!canAdd}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                {isAdding ? "Adding…" : "Add note"}
-              </Button>
-            </div>
-            {error && <ProjectDetailInlineError>{error}</ProjectDetailInlineError>}
-          </form>
-        </ProjectDetailFormPanel>
+            <Plus className="h-3.5 w-3.5" />
+            {isAdding ? "Adding…" : "Add note"}
+          </Button>
+        </div>
+        {error ? <ProjectDetailInlineError>{error}</ProjectDetailInlineError> : null}
+      </form>
 
-        {orderedNotes.length > 0 ? (
-          <>
+      {orderedNotes.length > 0 ? (
+        <>
+          {selection.selectedCount > 0 ? (
             <div className="flex items-center gap-2 px-0.5">
               <SelectionCheckbox
                 checked={selection.allSelected}
@@ -138,51 +125,45 @@ export function ProjectNotesLog({
                 label="Select all notes"
                 onChange={selection.setAll}
               />
-              {selection.selectedCount > 0 ? (
-                <BulkDeleteBar
-                  count={selection.selectedCount}
-                  noun="note"
-                  isDeleting={isDeletingSelected}
-                  disabled={deletingChildIds.length > 0}
-                  onDelete={() => onDeleteSelected(selection.selectedIds)}
-                  onClear={selection.clear}
-                />
-              ) : (
-                <span className="font-mono text-[10px] text-muted-foreground">
-                  Select notes to delete
-                </span>
-              )}
+              <BulkDeleteBar
+                count={selection.selectedCount}
+                noun="note"
+                isDeleting={isDeletingSelected}
+                disabled={deletingChildIds.length > 0}
+                onDelete={() => onDeleteSelected(selection.selectedIds)}
+                onClear={selection.clear}
+              />
             </div>
-            <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
-              {orderedNotes.map((note) => (
-                <NoteEntry
-                  key={note.id}
-                  note={note}
-                  projects={projects}
-                  projectId={projectId}
-                  selected={selection.isSelected(note.id)}
-                  onToggleSelected={() => selection.toggle(note.id)}
-                  onUpdate={(input) => onUpdate(note.id, input)}
-                  onDelete={() => onDelete(note.id)}
-                  isUpdating={isUpdating}
-                  isDeleting={deletingChildIds.includes(note.id)}
-                  deleteDisabled={
-                    deletingChildIds.length > 0 &&
-                    !deletingChildIds.includes(note.id)
-                  }
-                  selectDisabled={deletingChildIds.length > 0}
-                />
-              ))}
-            </ul>
-          </>
-        ) : (
-          <ProjectDetailEmpty
-            title="No notes linked to this project yet."
-            description="Capture meeting takeaways, references, and working context above."
-          />
-        )}
-      </ProjectDetailSectionBody>
-    </ProjectDetailSection>
+          ) : null}
+          <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+            {orderedNotes.map((note) => (
+              <NoteEntry
+                key={note.id}
+                note={note}
+                projects={projects}
+                projectId={projectId}
+                selected={selection.isSelected(note.id)}
+                onToggleSelected={() => selection.toggle(note.id)}
+                onUpdate={(input) => onUpdate(note.id, input)}
+                onDelete={() => onDelete(note.id)}
+                isUpdating={isUpdating}
+                isDeleting={deletingChildIds.includes(note.id)}
+                deleteDisabled={
+                  deletingChildIds.length > 0 &&
+                  !deletingChildIds.includes(note.id)
+                }
+                selectDisabled={deletingChildIds.length > 0}
+              />
+            ))}
+          </ul>
+        </>
+      ) : (
+        <ProjectDetailEmpty
+          title="No notes linked yet."
+          description="Capture meeting takeaways, references, and working context above."
+        />
+      )}
+    </div>
   );
 }
 

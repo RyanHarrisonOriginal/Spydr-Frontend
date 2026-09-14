@@ -118,7 +118,7 @@ export function ProjectListFieldSelect({
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/15",
             "disabled:cursor-not-allowed disabled:opacity-50",
             appearance === "field" &&
-              "h-7 w-full gap-1.5 rounded-md border border-border/20 bg-background/30 px-2 text-[11px] hover:border-border/40 hover:bg-muted/30 data-[state=open]:border-primary/30 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
+              "h-7 w-full gap-1.5 rounded-lg border border-border/20 bg-background/30 px-2 text-[11px] hover:border-border/40 hover:bg-muted/30 data-[state=open]:border-primary/30 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
             appearance === "field" && isEmpty && "border-dashed border-border/25 bg-muted/10",
             appearance === "icon" &&
               "h-8 w-8 shrink-0 justify-center rounded-md border border-border/30 bg-background/40 hover:border-highlight/40 hover:bg-muted/40 data-[state=open]:border-primary/40 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",

@@ -258,7 +258,7 @@ export function TaskDetailView({
               ) : null}
 
               {entries.length > 0 ? (
-                <ul className="space-y-2">
+                <ul className="space-y-1">
                   {entries.map((entry) => (
                     <ProjectDetailEntry key={`${entry.loggedAt}-${entry.text.slice(0, 24)}`}>
                       <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">

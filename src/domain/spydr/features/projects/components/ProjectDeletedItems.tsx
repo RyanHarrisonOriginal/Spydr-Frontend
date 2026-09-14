@@ -69,12 +69,12 @@ export function ProjectDeletedItems({
   return (
     <section
       id={PROJECT_TRASH_SECTION_ID}
-      className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+      className="overflow-hidden rounded-md border border-border bg-card"
     >
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-1.5 border-b border-border/60 bg-muted/20 px-4 py-2.5 text-left transition-colors hover:bg-muted/30"
+        className="flex w-full items-center gap-1.5 px-3 py-2 text-left transition-colors hover:bg-muted/30"
       >
         {expanded ? (
           <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -98,10 +98,7 @@ export function ProjectDeletedItems({
 
       {expanded && (
         <>
-          <p className="border-b border-border/40 px-4 py-2 text-[10px] text-muted-foreground">
-            Tasks, notes, decisions, ideas, and resources
-          </p>
-          <ul className="max-h-44 divide-y divide-border/50 overflow-y-auto">
+          <ul className="max-h-44 divide-y divide-border/50 overflow-y-auto border-t border-border/70">
           {entries.map((entry) => {
             const restoring = isRestoring && restoringId === entry.id;
             return (

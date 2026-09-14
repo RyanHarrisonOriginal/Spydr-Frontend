@@ -88,7 +88,7 @@ export function RichTextEditor({
     return (
       <div
         className={cn(
-          "rounded-md border border-input bg-background",
+          "rounded-lg border border-input bg-background",
           minHeightClassName,
           className
         )}
@@ -99,7 +99,7 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-md border border-input bg-background ring-focus focus-within:border-highlight/40",
+          "overflow-hidden rounded-lg border border-input bg-background ring-focus focus-within:border-highlight/40",
         className
       )}
     >

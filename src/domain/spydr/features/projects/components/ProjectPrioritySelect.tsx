@@ -25,6 +25,8 @@ interface ProjectPrioritySelectProps {
   onChange(priority: string): void;
   disabled?: boolean;
   className?: string;
+  ariaLabel?: string;
+  menuLabel?: string;
 }
 
 export function ProjectPrioritySelect({
@@ -32,6 +34,8 @@ export function ProjectPrioritySelect({
   onChange,
   disabled = false,
   className,
+  ariaLabel = "Project priority",
+  menuLabel = "Priority",
 }: ProjectPrioritySelectProps) {
   const options = projectPriorities.map((priority) => ({
     value: priority,
@@ -44,8 +48,8 @@ export function ProjectPrioritySelect({
       options={options}
       onChange={onChange}
       disabled={disabled}
-      ariaLabel="Project priority"
-      menuLabel="Priority"
+      ariaLabel={ariaLabel}
+      menuLabel={menuLabel}
       leading={<PriorityMarker priority={value} />}
       renderOptionLeading={(option) => <PriorityMarker priority={option.value} />}
       triggerClassName={cn(

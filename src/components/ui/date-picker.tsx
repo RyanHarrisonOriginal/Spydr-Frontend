@@ -66,15 +66,15 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
           className={cn(
-            "flex w-full min-w-0 items-center gap-1.5 rounded-md border transition-colors",
+            "flex w-full min-w-0 items-center gap-1.5 rounded-lg border transition-colors",
             "border-border/20 bg-background/30 hover:border-border/40 hover:bg-muted/30",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/15",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "data-[state=open]:border-primary/30 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
             variant === "field" &&
-              "h-8 border-input px-2.5 text-[13px] ring-focus",
+              "h-10 border-input px-3 text-[13px] ring-focus",
             variant === "compact" &&
-              "h-7 border-border/20 bg-background/30 px-2 text-[11px]",
+              "h-8 border-border/20 bg-background/30 px-2.5 text-[12px]",
             variant === "compact" && !showIcon && "gap-0 px-1.5",
             !hasValue && variant === "compact" && "border-dashed border-border/25 bg-muted/10",
             !hasValue && variant === "field" && "text-muted-foreground",

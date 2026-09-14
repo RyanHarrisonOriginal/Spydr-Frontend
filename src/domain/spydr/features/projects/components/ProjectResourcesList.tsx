@@ -1,11 +1,7 @@
-import { ArrowUpRight, Paperclip } from "lucide-react";
 import type { ResourceNode, UpdateProjectChildInput } from "@/domain/spydr/utils/types";
 import {
   ProjectDetailEmpty,
   ProjectDetailEntry,
-  ProjectDetailSection,
-  ProjectDetailSectionBody,
-  ProjectDetailSectionHeader,
 } from "./ProjectDetailSection";
 import { ProjectItemActions } from "./ProjectItemActions";
 
@@ -24,50 +20,37 @@ export function ProjectResourcesList({
   isUpdating = false,
   isDeleting = false,
 }: ProjectResourcesListProps) {
-  return (
-    <ProjectDetailSection
-      collapsible
-      defaultExpanded={false}
-      className="md:min-h-[360px]"
-    >
-      <ProjectDetailSectionHeader
-        icon={<Paperclip className="h-3.5 w-3.5" />}
-        label="Resources"
-        hint={`${resources.length} linked`}
+  if (resources.length === 0) {
+    return (
+      <ProjectDetailEmpty
+        title="No resources linked yet."
+        description="Files, links, and references will appear here when attached."
       />
+    );
+  }
 
-      <ProjectDetailSectionBody className="min-h-0 flex-1 gap-3 p-3">
-        {resources.length > 0 ? (
-          <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
-            {resources.map((resource) => (
-              <ProjectDetailEntry key={resource.id}>
-                <div className="flex items-center gap-2">
-                  <span className="shrink-0 rounded border border-border/60 bg-muted/30 px-1.5 py-px font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                    {resource.details?.resourceType ?? "resource"}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-[13px]">
-                    {resource.title}
-                  </span>
-                  <ArrowUpRight className="h-3 w-3 shrink-0 text-muted-foreground" />
-                  <ProjectItemActions
-                    fieldSet="resource"
-                    values={{ title: resource.title, body: resource.body }}
-                    onSave={(input) => onUpdate(resource.id, input)}
-                    onDelete={() => onDelete(resource.id)}
-                    isSaving={isUpdating}
-                    isDeleting={isDeleting}
-                  />
-                </div>
-              </ProjectDetailEntry>
-            ))}
-          </ul>
-        ) : (
-          <ProjectDetailEmpty
-            title="No resources linked yet."
-            description="Files, links, and references will appear here when attached."
-          />
-        )}
-      </ProjectDetailSectionBody>
-    </ProjectDetailSection>
+  return (
+    <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+      {resources.map((resource) => (
+        <ProjectDetailEntry key={resource.id}>
+          <div className="flex items-center gap-2">
+            <span className="shrink-0 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+              {resource.details?.resourceType ?? "resource"}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[13px]">
+              {resource.title}
+            </span>
+            <ProjectItemActions
+              fieldSet="resource"
+              values={{ title: resource.title, body: resource.body }}
+              onSave={(input) => onUpdate(resource.id, input)}
+              onDelete={() => onDelete(resource.id)}
+              isSaving={isUpdating}
+              isDeleting={isDeleting}
+            />
+          </div>
+        </ProjectDetailEntry>
+      ))}
+    </ul>
   );
 }

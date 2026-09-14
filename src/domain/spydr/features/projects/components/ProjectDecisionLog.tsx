@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { GitBranch, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DecisionNode, UpdateProjectChildInput } from "@/domain/spydr/utils/types";
 import {
@@ -11,11 +11,7 @@ import type { ProjectDecisionFormValues } from "../hooks/useProjectDetailPage";
 import {
   ProjectDetailEmpty,
   ProjectDetailEntry,
-  ProjectDetailFormPanel,
   ProjectDetailInlineError,
-  ProjectDetailSection,
-  ProjectDetailSectionBody,
-  ProjectDetailSectionHeader,
   detailFieldClassName,
 } from "./ProjectDetailSection";
 import { ProjectItemActions } from "./ProjectItemActions";
@@ -67,70 +63,59 @@ export function ProjectDecisionLog({
   );
 
   return (
-    <ProjectDetailSection collapsible defaultExpanded className="md:min-h-[360px]">
-      <ProjectDetailSectionHeader
-        icon={<GitBranch className="h-3.5 w-3.5" />}
-        label="Decision log"
-        hint={`${decisions.length} recorded`}
-      />
-
-      <ProjectDetailSectionBody className="min-h-0 flex-1 gap-3 p-3">
-        <ProjectDetailFormPanel label="Record decision">
-          <form
-            className="space-y-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onAdd();
-            }}
-          >
-            <input
-              value={form.title}
-              onChange={(event) => onFieldChange("title", event.target.value)}
-              placeholder="What was decided?"
-              className={cn(detailFieldClassName, "h-8")}
-            />
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <input
-                value={form.rationale}
-                onChange={(event) => onFieldChange("rationale", event.target.value)}
-                placeholder="Why — context, tradeoffs, constraints (optional)"
-                className={cn(detailFieldClassName, "h-8 min-w-0 flex-1 text-[12px]")}
-              />
-              <Button
-                type="submit"
-                size="sm"
-                className="shrink-0 gap-1.5 sm:px-4"
-                disabled={!canAdd}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                {isAdding ? "Recording…" : "Record"}
-              </Button>
-            </div>
-            {error && <ProjectDetailInlineError>{error}</ProjectDetailInlineError>}
-          </form>
-        </ProjectDetailFormPanel>
-
-        {orderedDecisions.length > 0 ? (
-          <ol className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
-            {orderedDecisions.map((decision) => (
-              <DecisionEntry
-                key={decision.id}
-                decision={decision}
-                onUpdate={(input) => onUpdate(decision.id, input)}
-                onDelete={() => onDelete(decision.id)}
-                isUpdating={isUpdating}
-                isDeleting={isDeleting}
-              />
-            ))}
-          </ol>
-        ) : (
-          <ProjectDetailEmpty
-            title="No decisions recorded for this project yet."
-            description="Log choices above so the team has a durable record of what was decided and why."
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <form
+        className="space-y-2 rounded-lg border border-border/50 bg-muted/20 p-2.5"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onAdd();
+        }}
+      >
+        <input
+          value={form.title}
+          onChange={(event) => onFieldChange("title", event.target.value)}
+          placeholder="What was decided?"
+          className={detailFieldClassName}
+        />
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input
+            value={form.rationale}
+            onChange={(event) => onFieldChange("rationale", event.target.value)}
+            placeholder="Why — context, tradeoffs, constraints (optional)"
+            className={cn(detailFieldClassName, "min-w-0 flex-1")}
           />
-        )}
-      </ProjectDetailSectionBody>
-    </ProjectDetailSection>
+          <Button
+            type="submit"
+            className="h-10 shrink-0 gap-1.5 rounded-lg sm:px-4"
+            disabled={!canAdd}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {isAdding ? "Recording…" : "Record"}
+          </Button>
+        </div>
+        {error ? <ProjectDetailInlineError>{error}</ProjectDetailInlineError> : null}
+      </form>
+
+      {orderedDecisions.length > 0 ? (
+        <ol className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+          {orderedDecisions.map((decision) => (
+            <DecisionEntry
+              key={decision.id}
+              decision={decision}
+              onUpdate={(input) => onUpdate(decision.id, input)}
+              onDelete={() => onDelete(decision.id)}
+              isUpdating={isUpdating}
+              isDeleting={isDeleting}
+            />
+          ))}
+        </ol>
+      ) : (
+        <ProjectDetailEmpty
+          title="No decisions recorded yet."
+          description="Log choices so the team has a durable record of what was decided and why."
+        />
+      )}
+    </div>
   );
 }
 
