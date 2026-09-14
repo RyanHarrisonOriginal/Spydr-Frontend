@@ -8,7 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DatePicker } from "@/components/ui/date-picker";
+import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
+import { useEnsureTaskDueWithinProject } from "@/domain/spydr/features/tasks/hooks/useEnsureTaskDueWithinProject";
+import type { TaskDueProjectRef } from "@/domain/spydr/features/tasks/hooks/useEnsureTaskDueWithinProject";
 import { RichTextEditor } from "@/domain/spydr/features/shared/components/RichTextEditor";
 import type { SpydrPriority } from "@/domain/spydr/utils/types";
 import type { UpdateProjectChildInput } from "@/domain/spydr/utils/types";
@@ -34,6 +36,7 @@ export interface ProjectItemEditValues {
 interface ProjectItemActionsProps {
   fieldSet: ProjectItemFieldSet;
   values: ProjectItemEditValues;
+  project?: TaskDueProjectRef | null;
   onSave: (input: UpdateProjectChildInput) => void;
   onDelete: () => void;
   isSaving?: boolean;
@@ -47,6 +50,7 @@ const priorityOptions: SpydrPriority[] = ["low", "medium", "high", "critical"];
 export function ProjectItemActions({
   fieldSet,
   values,
+  project,
   onSave,
   onDelete,
   isSaving = false,
@@ -56,6 +60,7 @@ export function ProjectItemActions({
 }: ProjectItemActionsProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<ProjectItemEditValues>(values);
+  const dueGuard = useEnsureTaskDueWithinProject();
 
   const openEdit = () => {
     setDraft(values);
@@ -63,31 +68,44 @@ export function ProjectItemActions({
   };
 
   const handleSave = () => {
-    const input: UpdateProjectChildInput = {
-      title: draft.title.trim() || undefined,
+    const persist = () => {
+      const input: UpdateProjectChildInput = {
+        title: draft.title.trim() || undefined,
+      };
+
+      if (fieldSet === "task") {
+        if (!draft.title.trim()) return;
+        input.title = draft.title.trim();
+        input.body = draft.body?.trim() ?? "";
+        input.dueDate = draft.dueDate || null;
+        input.priority = draft.priority;
+        input.status = draft.status;
+      } else if (fieldSet === "note") {
+        input.body = draft.body ?? "";
+      } else if (fieldSet === "idea" || fieldSet === "resource") {
+        if (!draft.title.trim()) return;
+        input.title = draft.title.trim();
+        input.body = draft.body?.trim() ?? "";
+      } else if (fieldSet === "decision") {
+        if (!draft.title.trim()) return;
+        input.title = draft.title.trim();
+        input.rationale = draft.rationale?.trim() ?? "";
+      }
+
+      onSave(input);
+      setEditOpen(false);
     };
 
     if (fieldSet === "task") {
-      if (!draft.title.trim()) return;
-      input.title = draft.title.trim();
-      input.body = draft.body?.trim() ?? "";
-      input.dueDate = draft.dueDate || null;
-      input.priority = draft.priority;
-      input.status = draft.status;
-    } else if (fieldSet === "note") {
-      input.body = draft.body ?? "";
-    } else if (fieldSet === "idea" || fieldSet === "resource") {
-      if (!draft.title.trim()) return;
-      input.title = draft.title.trim();
-      input.body = draft.body?.trim() ?? "";
-    } else if (fieldSet === "decision") {
-      if (!draft.title.trim()) return;
-      input.title = draft.title.trim();
-      input.rationale = draft.rationale?.trim() ?? "";
+      dueGuard.ensure({
+        project,
+        dueDate: draft.dueDate || null,
+        onAllowed: persist,
+      });
+      return;
     }
 
-    onSave(input);
-    setEditOpen(false);
+    persist();
   };
 
   const handleDelete = () => {
@@ -201,7 +219,7 @@ export function ProjectItemActions({
                   <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                     Due date
                   </span>
-                  <DatePicker
+                  <TaskDueDateSelect
                     value={draft.dueDate || null}
                     onChange={(dueDate) =>
                       setDraft((current) => ({
@@ -209,10 +227,9 @@ export function ProjectItemActions({
                         dueDate: dueDate ?? "",
                       }))
                     }
-                    panelLabel="Due date"
-                    clearLabel="Clear due date"
+                    variant="field"
                     placeholder="Select due date"
-                    ariaLabel="Task due date"
+                    project={project}
                   />
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -283,6 +300,7 @@ export function ProjectItemActions({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {dueGuard.dialog}
     </>
   );
 }

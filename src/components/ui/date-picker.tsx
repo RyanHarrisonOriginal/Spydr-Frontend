@@ -25,6 +25,7 @@ export interface DatePickerProps {
   variant?: "field" | "compact";
   showChevron?: boolean;
   showIcon?: boolean;
+  highlightAfter?: string | null;
 }
 
 export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
@@ -43,6 +44,7 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
       variant = "field",
       showChevron = true,
       showIcon = true,
+      highlightAfter,
     },
     ref
   ) {
@@ -130,6 +132,7 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
 
         <MonthCalendarPicker
           value={value}
+          highlightAfter={highlightAfter}
           onSelect={(next) => {
             onChange(next);
             setOpen(false);

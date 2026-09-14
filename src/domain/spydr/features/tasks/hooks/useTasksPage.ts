@@ -38,6 +38,7 @@ export function useTasksPage(options?: { personId?: string | null }) {
   const [projectError, setProjectError] = useState<string | null>(null);
   const [assigneeError, setAssigneeError] = useState<string | null>(null);
   const [dueDateError, setDueDateError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
 
   const openCount = useMemo(
     () =>
@@ -112,6 +113,24 @@ export function useTasksPage(options?: { personId?: string | null }) {
     );
   };
 
+  const updateTitle = (taskId: string, title: string) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    setTitleError(null);
+    setUpdatingTaskId(taskId);
+    updateTask.mutate(
+      { taskId, input: { title: trimmed } },
+      {
+        onError: (error) => {
+          setTitleError(
+            error instanceof Error ? error.message : "Failed to update task name"
+          );
+        },
+        onSettled: () => setUpdatingTaskId(null),
+      }
+    );
+  };
+
   const deleteTaskById = (taskId: string) => {
     setDeleteError(null);
     setDeletingTaskIds([taskId]);
@@ -153,11 +172,13 @@ export function useTasksPage(options?: { personId?: string | null }) {
     updateProject,
     updateAssignee,
     updateDueDate,
+    updateTitle,
     updatingTaskId,
     statusError,
     projectError,
     assigneeError,
     dueDateError,
+    titleError,
     deleteError,
     deleteTask: deleteTaskById,
     deleteSelectedTasks,

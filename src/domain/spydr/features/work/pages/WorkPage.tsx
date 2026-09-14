@@ -434,6 +434,8 @@ export function WorkPage() {
                 onAssigneeChange={projectsPage.updateAssignee}
                 onTaskStatusChange={projectsPage.updateTaskStatus}
                 onTaskDueDateChange={projectsPage.updateTaskDueDate}
+                onTaskAssigneeChange={projectsPage.updateTaskAssignee}
+                onTaskTitleChange={projectsPage.updateTaskTitle}
                 onCreateTask={projectsPage.createProjectTask}
                 onDeleteTask={projectsPage.deleteTask}
                 deletingTaskIds={projectsPage.deletingTaskIds}
@@ -482,6 +484,11 @@ export function WorkPage() {
               {tasksPage.dueDateError}
             </p>
           ) : null}
+          {tasksPage.titleError ? (
+            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {tasksPage.titleError}
+            </p>
+          ) : null}
           {tasksPage.deleteError ? (
             <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.deleteError}
@@ -517,6 +524,7 @@ export function WorkPage() {
                 onProjectChange={tasksPage.updateProject}
                 onAssigneeChange={tasksPage.updateAssignee}
                 onDueDateChange={tasksPage.updateDueDate}
+                onTitleChange={tasksPage.updateTitle}
                 onDelete={tasksPage.deleteTask}
                 onDeleteSelected={tasksPage.deleteSelectedTasks}
                 deletingTaskIds={tasksPage.deletingTaskIds}

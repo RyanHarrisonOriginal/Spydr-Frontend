@@ -12,12 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker";
 import { ProjectPrioritySelect } from "@/domain/spydr/features/projects/components/ProjectPrioritySelect";
 import { ProjectSelect } from "@/domain/spydr/features/projects/components/ProjectSelect";
 import type { ProjectNode, SpydrPriority } from "@/domain/spydr/utils/types";
 import { isTaskStatus } from "@/domain/spydr/utils/taskStatus";
 import type { CreateTaskFormValues } from "../hooks/useCreateTaskForm";
+import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinProject";
+import { TaskDueDateSelect } from "./TaskDueDateSelect";
 import { TaskStatusSelect } from "./TaskStatusSelect";
 
 interface CreateTaskDialogProps {
@@ -53,6 +54,9 @@ export function CreateTaskDialog({
   onSubmit,
 }: CreateTaskDialogProps) {
   const noProjects = projects.length === 0;
+  const selectedProject =
+    projects.find((project) => project.id === values.projectId) ?? null;
+  const dueGuard = useEnsureTaskDueWithinProject();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,7 +72,11 @@ export function CreateTaskDialog({
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            onSubmit();
+            dueGuard.ensure({
+              project: selectedProject,
+              dueDate: values.dueDate || null,
+              onAllowed: onSubmit,
+            });
           }}
         >
           <DialogHeader>
@@ -91,9 +99,16 @@ export function CreateTaskDialog({
               <ProjectSelect
                 projects={projects}
                 value={values.projectId}
-                onChange={(projectId) =>
-                  onFieldChange("projectId", projectId ?? "")
-                }
+                onChange={(projectId) => {
+                  const nextProject =
+                    projects.find((project) => project.id === (projectId ?? "")) ??
+                    null;
+                  dueGuard.ensure({
+                    project: nextProject,
+                    dueDate: values.dueDate || null,
+                    onAllowed: () => onFieldChange("projectId", projectId ?? ""),
+                  });
+                }}
                 disabled={isSubmitting || noProjects}
               />
               {noProjects ? (
@@ -130,15 +145,14 @@ export function CreateTaskDialog({
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="task-due">Due date</Label>
-                <DatePicker
+                <TaskDueDateSelect
                   id="task-due"
                   value={values.dueDate || null}
                   onChange={(dueDate) => onFieldChange("dueDate", dueDate ?? "")}
                   disabled={isSubmitting || noProjects}
-                  panelLabel="Due date"
-                  clearLabel="Clear due date"
+                  variant="field"
                   placeholder="Select due date"
-                  ariaLabel="Task due date"
+                  project={selectedProject}
                 />
               </div>
               <div className="space-y-2">
@@ -188,6 +202,7 @@ export function CreateTaskDialog({
             </Button>
           </DialogFooter>
         </form>
+        {dueGuard.dialog}
       </DialogContent>
     </Dialog>
   );

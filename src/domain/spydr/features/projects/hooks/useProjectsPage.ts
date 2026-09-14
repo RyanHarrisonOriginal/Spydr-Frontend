@@ -190,6 +190,45 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     );
   };
 
+  const updateTaskAssignee = (
+    taskId: string,
+    assigneePersonNodeId: string | null
+  ) => {
+    setTaskError(null);
+    setUpdatingTaskId(taskId);
+    updateTask.mutate(
+      { taskId, input: { assigneePersonNodeId } },
+      {
+        onError: (error) => {
+          setTaskError(
+            error instanceof Error
+              ? error.message
+              : "Failed to update task assignee"
+          );
+        },
+        onSettled: () => setUpdatingTaskId(null),
+      }
+    );
+  };
+
+  const updateTaskTitle = (taskId: string, title: string) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    setTaskError(null);
+    setUpdatingTaskId(taskId);
+    updateTask.mutate(
+      { taskId, input: { title: trimmed } },
+      {
+        onError: (error) => {
+          setTaskError(
+            error instanceof Error ? error.message : "Failed to update task name"
+          );
+        },
+        onSettled: () => setUpdatingTaskId(null),
+      }
+    );
+  };
+
   const createProjectTask = (
     projectId: string,
     title: string,
@@ -292,6 +331,8 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     updateAssignee,
     updateTaskStatus,
     updateTaskDueDate,
+    updateTaskAssignee,
+    updateTaskTitle,
     createProjectTask,
     deleteTask: deleteTaskById,
     deleteProject: deleteProjectById,

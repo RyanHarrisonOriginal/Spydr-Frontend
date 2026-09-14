@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { ClipboardList, NotebookPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
 import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
@@ -29,6 +28,8 @@ import type {
   TaskDetailSaveState,
 } from "../hooks/useTaskDetailPage";
 import { TaskStatusSelect } from "./TaskStatusSelect";
+import { TaskDueDateSelect } from "./TaskDueDateSelect";
+import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinProject";
 
 function saveLabel(state: TaskDetailSaveState) {
   if (state === "saving" || state === "pending") return "Saving…";
@@ -74,6 +75,9 @@ export function TaskDetailView({
   const hint = saveLabel(saveState);
   const { entries, preamble } = parseTaskNoteEntries(task.body);
   usePageBreadcrumb(formatBreadcrumbEntityId(task.id));
+  const selectedProject =
+    projects.find((project) => project.id === form.projectNodeId) ?? null;
+  const dueGuard = useEnsureTaskDueWithinProject();
 
   return (
     <div className="flex min-w-0">
@@ -144,9 +148,17 @@ export function TaskDetailView({
                     projects={projects}
                     value={form.projectNodeId}
                     allowUnassigned
-                    onChange={(projectId) =>
-                      onFieldChange("projectNodeId", projectId ?? "")
-                    }
+                    onChange={(projectId) => {
+                      const nextProject =
+                        projects.find((project) => project.id === (projectId ?? "")) ??
+                        null;
+                      dueGuard.ensure({
+                        project: nextProject,
+                        dueDate: form.dueDate || null,
+                        onAllowed: () =>
+                          onFieldChange("projectNodeId", projectId ?? ""),
+                      });
+                    }}
                     className="w-full"
                   />
                 </ProjectDetailField>
@@ -162,13 +174,12 @@ export function TaskDetailView({
                   />
                 </ProjectDetailField>
                 <ProjectDetailField label="Due date">
-                  <DatePicker
+                  <TaskDueDateSelect
                     value={form.dueDate || null}
                     onChange={(dueDate) => onFieldChange("dueDate", dueDate ?? "")}
-                    panelLabel="Due date"
-                    clearLabel="Clear due date"
+                    variant="field"
                     placeholder="Select due date"
-                    ariaLabel="Task due date"
+                    project={selectedProject}
                   />
                 </ProjectDetailField>
                 <ProjectDetailField label="Estimate" hint="minutes">
@@ -269,6 +280,7 @@ export function TaskDetailView({
           </ProjectDetailSection>
         </div>
       </div>
+      {dueGuard.dialog}
     </div>
   );
 }

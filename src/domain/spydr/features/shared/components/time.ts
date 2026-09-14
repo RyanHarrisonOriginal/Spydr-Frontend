@@ -22,6 +22,19 @@ export function formatShortDate(value: string | null | undefined): string {
   }).format(date);
 }
 
+export function formatMediumDate(value: string | null | undefined): string {
+  if (!value) return "No date";
+
+  const date = parseCalendarDate(value) ?? new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
 /** Absolute date + time for completed timestamps and similar. */
 export function formatDateTime(value: string | null | undefined): string {
   if (!value) return "No date";

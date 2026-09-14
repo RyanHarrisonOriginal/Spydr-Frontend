@@ -39,6 +39,7 @@ import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/na
 import { PriorityBadge } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
+import { useEnsureTaskDueWithinProject } from "@/domain/spydr/features/tasks/hooks/useEnsureTaskDueWithinProject";
 import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
 import {
   formatRelativeTime,
@@ -230,6 +231,7 @@ export function ProjectDetailView({
   childMutationError,
 }: ProjectDetailViewProps) {
   const isPhone = useIsPhone();
+  const dueGuard = useEnsureTaskDueWithinProject();
   const deletedCount = getDeletedItemCount(deleted);
   const personas = project.personas ?? {
     requester: null,
@@ -620,7 +622,11 @@ export function ProjectDetailView({
               )}
               onSubmit={(event) => {
                 event.preventDefault();
-                onAddTask();
+                dueGuard.ensure({
+                  project,
+                  dueDate: taskForm.dueDate || null,
+                  onAllowed: onAddTask,
+                });
               }}
             >
               <input
@@ -630,13 +636,12 @@ export function ProjectDetailView({
                 className={cn(detailFieldClassName, "h-8")}
               />
               {isPhone ? null : (
-              <DatePicker
+              <TaskDueDateSelect
                 value={taskForm.dueDate || null}
                 onChange={(dueDate) => onTaskFieldChange("dueDate", dueDate ?? "")}
-                panelLabel="Due date"
-                clearLabel="Clear due date"
+                variant="field"
                 placeholder="Due date"
-                ariaLabel="Task due date"
+                project={project}
               />
               )}
               <Button type="submit" size="sm" disabled={!canAddTask}>
@@ -707,6 +712,7 @@ export function ProjectDetailView({
                     showChevron={false}
                     showIcon={false}
                     className="h-7 w-[3.75rem] shrink-0"
+                    project={project}
                     onChange={(dueDate) => {
                       const current = task.details?.dueDate?.slice(0, 10) ?? null;
                       const next = dueDate?.slice(0, 10) ?? null;
@@ -780,6 +786,7 @@ export function ProjectDetailView({
                       value={task.details?.dueDate}
                       disabled={isUpdatingChild}
                       className="w-full"
+                      project={project}
                       onChange={(dueDate) => {
                         const current = task.details?.dueDate?.slice(0, 10) ?? null;
                         const next = dueDate?.slice(0, 10) ?? null;
@@ -792,6 +799,7 @@ export function ProjectDetailView({
                   <div className="ml-auto flex shrink-0 items-center gap-0.5">
                     <ProjectItemActions
                       fieldSet="task"
+                      project={project}
                       values={{
                         title: task.title,
                         body: task.body,
@@ -948,6 +956,7 @@ export function ProjectDetailView({
         </div>
         </div>
       </div>
+      {dueGuard.dialog}
     </div>
   );
 }

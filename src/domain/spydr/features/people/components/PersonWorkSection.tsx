@@ -338,6 +338,7 @@ function ProjectTaskComposer({
 
 function TaskRow({
   entry,
+  project,
   busy,
   reorderEnabled,
   dragHandleProps,
@@ -351,6 +352,7 @@ function TaskRow({
   onStatusChange,
 }: {
   entry: PersonWorkTaskEntry;
+  project?: PersonWorkProjectEntry["project"] | null;
   busy: boolean;
   reorderEnabled: boolean;
   dragHandleProps?: Record<string, unknown>;
@@ -419,6 +421,7 @@ function TaskRow({
           value={entry.task.details?.dueDate}
           disabled={!onDueDateChange || busy}
           className="w-full"
+          project={project}
           onChange={(dueDate) => onDueDateChange?.(entry.task.id, dueDate)}
         />
       </span>
@@ -457,6 +460,14 @@ export function PersonWorkSection({
     }
     setExpandedIds(initial);
     seededExpandRef.current = true;
+  }, [projectEntries]);
+
+  const projectById = useMemo(() => {
+    const map = new Map<string, PersonWorkProjectEntry["project"]>();
+    for (const entry of projectEntries) {
+      map.set(entry.project.id, entry.project);
+    }
+    return map;
   }, [projectEntries]);
 
   const visibleProjects = useMemo(
@@ -701,6 +712,11 @@ export function PersonWorkSection({
               renderItem={(entry, sortable) => (
                 <TaskRow
                   entry={entry}
+                  project={
+                    entry.task.project
+                      ? projectById.get(entry.task.project.id) ?? null
+                      : null
+                  }
                   busy={updatingTaskId === entry.task.id}
                   reorderEnabled={reorderEnabled}
                   dragHandleProps={sortable.dragHandleProps}
@@ -805,6 +821,7 @@ export function PersonWorkSection({
                                   <TaskRow
                                     key={taskEntry.task.id}
                                     entry={taskEntry}
+                                    project={entry.project}
                                     busy={updatingTaskId === taskEntry.task.id}
                                     reorderEnabled={false}
                                     nested
@@ -841,6 +858,11 @@ export function PersonWorkSection({
                     <TaskRow
                       key={taskEntry.task.id}
                       entry={taskEntry}
+                      project={
+                        taskEntry.task.project
+                          ? projectById.get(taskEntry.task.project.id) ?? null
+                          : null
+                      }
                       busy={updatingTaskId === taskEntry.task.id}
                       reorderEnabled={false}
                       onDueDateChange={onDueDateChange}

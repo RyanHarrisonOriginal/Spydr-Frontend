@@ -26,11 +26,13 @@ export function TasksPage() {
     updateProject,
     updateAssignee,
     updateDueDate,
+    updateTitle,
     updatingTaskId,
     statusError,
     projectError,
     assigneeError,
     dueDateError,
+    titleError,
     deleteError,
     deleteTask,
     deleteSelectedTasks,
@@ -96,6 +98,11 @@ export function TasksPage() {
               {dueDateError}
             </p>
           ) : null}
+          {titleError ? (
+            <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {titleError}
+            </p>
+          ) : null}
           {deleteError ? (
             <p className="mx-6 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {deleteError}
@@ -116,6 +123,7 @@ export function TasksPage() {
               onProjectChange={updateProject}
               onAssigneeChange={updateAssignee}
               onDueDateChange={updateDueDate}
+              onTitleChange={updateTitle}
               onDelete={deleteTask}
               onDeleteSelected={deleteSelectedTasks}
               deletingTaskIds={deletingTaskIds}

@@ -22,6 +22,7 @@ import { ShowCompletedToggle } from "@/domain/spydr/features/shared/components/S
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
 import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
+import { TaskTitleInput } from "@/domain/spydr/features/tasks/components/TaskTitleInput";
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,8 @@ interface ProjectListProps {
   onAssigneeChange?(projectId: string, assigneePersonNodeId: string | null): void;
   onTaskStatusChange?(taskId: string, status: string): void;
   onTaskDueDateChange?(taskId: string, dueDate: string | null): void;
+  onTaskAssigneeChange?(taskId: string, assigneePersonNodeId: string | null): void;
+  onTaskTitleChange?(taskId: string, title: string): void;
   onCreateTask?(projectId: string, title: string, onSuccess?: () => void): void;
   onDeleteTask?(taskId: string): void;
   onDelete?(projectId: string): void;
@@ -374,31 +377,44 @@ function ProjectListTitleInput({
   );
 }
 
+function resolveTaskAssigneeId(task: TaskNode): string | null {
+  return task.assignee?.id ?? task.details?.assigneePersonNodeId ?? null;
+}
+
 function NestedTaskRow({
   task,
+  project,
+  people,
   busy,
   compact = false,
   isDeleting = false,
   deleteDisabled = false,
   onStatusChange,
   onDueDateChange,
+  onAssigneeChange,
+  onTitleChange,
   onDelete,
   onTodo = false,
   togglingTodo = false,
   onToggleTodo,
 }: {
   task: TaskNode;
+  project: ProjectNode;
+  people: PersonNode[];
   busy: boolean;
   compact?: boolean;
   isDeleting?: boolean;
   deleteDisabled?: boolean;
   onStatusChange?(taskId: string, status: string): void;
   onDueDateChange?(taskId: string, dueDate: string | null): void;
+  onAssigneeChange?(taskId: string, assigneePersonNodeId: string | null): void;
+  onTitleChange?(taskId: string, title: string): void;
   onDelete?(taskId: string): void;
   onTodo?: boolean;
   togglingTodo?: boolean;
   onToggleTodo?(taskId: string, onTodo: boolean): void;
 }) {
+  const assigneeId = resolveTaskAssigneeId(task);
   const deleteControl = onDelete ? (
     <InlineDeleteButton
       label={task.title}
@@ -414,6 +430,42 @@ function NestedTaskRow({
       onToggle={() => onToggleTodo(task.id, onTodo)}
     />
   ) : null;
+  const assigneeControl = onAssigneeChange ? (
+    <PersonSelect
+      people={people}
+      value={assigneeId}
+      compact
+      disabled={busy}
+      className={compact ? "w-[7.5rem] shrink-0" : "w-[132px] shrink-0"}
+      ariaLabel="Task assignee"
+      onChange={(nextAssigneeId) => {
+        if (nextAssigneeId !== assigneeId) {
+          onAssigneeChange(task.id, nextAssigneeId);
+        }
+      }}
+    />
+  ) : task.assignee ? (
+    <span className="block truncate text-[11px] text-muted-foreground">
+      {task.assignee.details?.fullName ?? task.assignee.title}
+    </span>
+  ) : null;
+  const titleControl = (
+    <TaskTitleInput
+      taskId={task.id}
+      title={task.title}
+      disabled={busy}
+      onTitleChange={onTitleChange}
+    />
+  );
+  const openControl = (
+    <Link
+      to={`/tasks/${task.id}`}
+      aria-label={`Open ${task.title}`}
+      className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-highlight/90"
+    >
+      <ArrowUpRight className="h-3.5 w-3.5" />
+    </Link>
+  );
 
   if (compact) {
     return (
@@ -425,12 +477,9 @@ function NestedTaskRow({
           className="h-7 w-7"
           onChange={(status) => onStatusChange?.(task.id, status)}
         />
-        <Link
-          to={`/tasks/${task.id}`}
-          className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground/90"
-        >
-          {task.title}
-        </Link>
+        {openControl}
+        {titleControl}
+        {assigneeControl}
         <TaskCompletedAt
           status={task.status}
           completedAt={task.details?.completedAt}
@@ -442,17 +491,11 @@ function NestedTaskRow({
           showChevron={false}
           showIcon={false}
           className="h-7 w-[3.75rem] shrink-0"
+          project={project}
           onChange={(dueDate) => onDueDateChange?.(task.id, dueDate)}
         />
         {todoControl}
         {deleteControl}
-        <Link
-          to={`/tasks/${task.id}`}
-          aria-label={`Open ${task.title}`}
-          className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-highlight/90"
-        >
-          <ArrowUpRight className="h-3.5 w-3.5" />
-        </Link>
       </div>
     );
   }
@@ -465,19 +508,9 @@ function NestedTaskRow({
         className="w-[100px] shrink-0"
         onChange={(status) => onStatusChange?.(task.id, status)}
       />
-      <div className="min-w-0 flex-1">
-        <Link
-          to={`/tasks/${task.id}`}
-          className="block truncate text-[13px] font-medium text-foreground/90 transition-colors hover:text-highlight"
-        >
-          {task.title}
-        </Link>
-        {task.assignee ? (
-          <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-            {task.assignee.details?.fullName ?? task.assignee.title}
-          </span>
-        ) : null}
-      </div>
+      {openControl}
+      {titleControl}
+      {assigneeControl}
       <TaskCompletedAt
         status={task.status}
         completedAt={task.details?.completedAt}
@@ -487,6 +520,7 @@ function NestedTaskRow({
           value={task.details?.dueDate}
           disabled={!onDueDateChange || busy}
           className="w-full"
+          project={project}
           onChange={(dueDate) => onDueDateChange?.(task.id, dueDate)}
         />
       </span>
@@ -587,6 +621,8 @@ export function ProjectList({
   onAssigneeChange,
   onTaskStatusChange,
   onTaskDueDateChange,
+  onTaskAssigneeChange,
+  onTaskTitleChange,
   onCreateTask,
   onDeleteTask,
   onDelete,
@@ -894,6 +930,8 @@ export function ProjectList({
                             <NestedTaskRow
                               key={task.id}
                               task={task}
+                              project={project}
+                              people={people}
                               compact
                               busy={
                                 updatingTaskId === task.id ||
@@ -906,6 +944,8 @@ export function ProjectList({
                               }
                               onStatusChange={onTaskStatusChange}
                               onDueDateChange={onTaskDueDateChange}
+                              onAssigneeChange={onTaskAssigneeChange}
+                              onTitleChange={onTaskTitleChange}
                               onDelete={onDeleteTask}
                               onTodo={todoTaskIds?.has(task.id) ?? false}
                               togglingTodo={togglingTodoTaskId === task.id}
@@ -1151,6 +1191,8 @@ export function ProjectList({
                           <NestedTaskRow
                             key={task.id}
                             task={task}
+                            project={project}
+                            people={people}
                             busy={
                               updatingTaskId === task.id ||
                               deletingTaskIds.includes(task.id)
@@ -1162,6 +1204,8 @@ export function ProjectList({
                             }
                             onStatusChange={onTaskStatusChange}
                             onDueDateChange={onTaskDueDateChange}
+                            onAssigneeChange={onTaskAssigneeChange}
+                            onTitleChange={onTaskTitleChange}
                             onDelete={onDeleteTask}
                             onTodo={todoTaskIds?.has(task.id) ?? false}
                             togglingTodo={togglingTodoTaskId === task.id}

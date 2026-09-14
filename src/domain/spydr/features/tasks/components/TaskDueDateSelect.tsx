@@ -1,4 +1,6 @@
 import { DatePicker } from "@/components/ui/date-picker";
+import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinProject";
+import type { TaskDueProjectRef } from "../hooks/useEnsureTaskDueWithinProject";
 
 interface TaskDueDateSelectProps {
   value: string | null | undefined;
@@ -8,6 +10,9 @@ interface TaskDueDateSelectProps {
   placeholder?: string;
   showChevron?: boolean;
   showIcon?: boolean;
+  variant?: "field" | "compact";
+  id?: string;
+  project?: TaskDueProjectRef | null;
 }
 
 export function TaskDueDateSelect({
@@ -18,20 +23,36 @@ export function TaskDueDateSelect({
   placeholder = "No due date",
   showChevron = true,
   showIcon = true,
+  variant = "compact",
+  id,
+  project,
 }: TaskDueDateSelectProps) {
+  const dueGuard = useEnsureTaskDueWithinProject();
+
   return (
-    <DatePicker
-      value={value}
-      onChange={onChange}
-      disabled={disabled}
-      className={className}
-      variant="compact"
-      placeholder={placeholder}
-      showChevron={showChevron}
-      showIcon={showIcon}
-      ariaLabel="Task due date"
-      panelLabel="Due date"
-      clearLabel="Clear due date"
-    />
+    <>
+      <DatePicker
+        id={id}
+        value={value}
+        onChange={(dueDate) => {
+          dueGuard.ensure({
+            project,
+            dueDate,
+            onAllowed: () => onChange(dueDate),
+          });
+        }}
+        disabled={disabled}
+        className={className}
+        variant={variant}
+        placeholder={placeholder}
+        showChevron={showChevron}
+        showIcon={showIcon}
+        highlightAfter={project?.details?.targetDate}
+        ariaLabel="Task due date"
+        panelLabel="Due date"
+        clearLabel="Clear due date"
+      />
+      {dueGuard.dialog}
+    </>
   );
 }

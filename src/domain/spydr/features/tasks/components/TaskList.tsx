@@ -25,6 +25,8 @@ import { ProjectSelect } from "@/domain/spydr/features/projects/components/Proje
 import { PersonSelect } from "@/domain/spydr/features/projects/components/PersonSelect";
 import { TaskDueDateSelect } from "./TaskDueDateSelect";
 import { TaskStatusSelect } from "./TaskStatusSelect";
+import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinProject";
+import { TaskTitleInput } from "./TaskTitleInput";
 import {
   TaskCompletedAt,
   formatTaskListTimestamp,
@@ -60,6 +62,7 @@ interface TaskListProps {
   onProjectChange(taskId: string, projectNodeId: string | null): void;
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
   onDueDateChange(taskId: string, dueDate: string | null): void;
+  onTitleChange?(taskId: string, title: string): void;
   onDelete?(taskId: string): void;
   onDeleteSelected?(taskIds: string[]): void;
   deletingTaskIds?: string[];
@@ -84,6 +87,7 @@ function TaskRow({
   onProjectChange,
   onAssigneeChange,
   onDueDateChange,
+  onTitleChange,
   onDelete,
   deletingTaskIds = [],
   selected = false,
@@ -105,6 +109,7 @@ function TaskRow({
   onProjectChange(taskId: string, projectNodeId: string | null): void;
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
   onDueDateChange(taskId: string, dueDate: string | null): void;
+  onTitleChange?(taskId: string, title: string): void;
   onDelete?: (taskId: string) => void;
   deletingTaskIds?: string[];
   selected?: boolean;
@@ -123,6 +128,8 @@ function TaskRow({
   const area = areas.find((entry) => entry.id === areaId);
   const areaColor = area ? resolveAreaColor(area) : null;
   const timestamp = formatTaskListTimestamp(task);
+  const project = projects.find((entry) => entry.id === (task.project?.id ?? "")) ?? null;
+  const dueGuard = useEnsureTaskDueWithinProject();
 
   if (compact) {
     return (
@@ -155,10 +162,17 @@ function TaskRow({
           />
           <Link
             to={`/tasks/${task.id}`}
-            className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground/90"
+            aria-label={`Open ${task.title}`}
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-highlight/12 bg-highlight/[0.05] text-highlight/90"
           >
-            {task.title}
+            <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
+          <TaskTitleInput
+            taskId={task.id}
+            title={task.title}
+            disabled={isUpdating}
+            onTitleChange={onTitleChange}
+          />
           <TaskCompletedAt
             status={task.status}
             completedAt={task.details?.completedAt}
@@ -170,6 +184,7 @@ function TaskRow({
             showChevron={false}
             showIcon={false}
             className="h-7 w-[3.75rem] shrink-0"
+            project={project}
             onChange={(dueDate) => onDueDateChange(task.id, dueDate)}
           />
           {onToggleTodo ? (
@@ -179,13 +194,6 @@ function TaskRow({
               onToggle={() => onToggleTodo(task.id, onTodo)}
             />
           ) : null}
-          <Link
-            to={`/tasks/${task.id}`}
-            aria-label={`Open ${task.title}`}
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-highlight/12 bg-highlight/[0.05] text-highlight/90"
-          >
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </Link>
         </div>
       </div>
     );
@@ -219,10 +227,17 @@ function TaskRow({
         <div className="flex min-w-0 items-center gap-1.5">
           <Link
             to={`/tasks/${task.id}`}
-            className="min-w-0 truncate text-[13px] text-foreground/90 transition-colors hover:text-highlight"
+            aria-label={`Open ${task.title}`}
+            className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-highlight/90"
           >
-            {task.title}
+            <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
+          <TaskTitleInput
+            taskId={task.id}
+            title={task.title}
+            disabled={isUpdating}
+            onTitleChange={onTitleChange}
+          />
           {task.project ? (
             <Link
               to={`/projects/${task.project.id}`}
@@ -246,9 +261,14 @@ function TaskRow({
         className="w-full min-w-0"
         onChange={(nextProjectId) => {
           const currentProjectId = task.project?.id ?? null;
-          if (nextProjectId !== currentProjectId) {
-            onProjectChange(task.id, nextProjectId);
-          }
+          if (nextProjectId === currentProjectId) return;
+          const nextProject =
+            projects.find((entry) => entry.id === (nextProjectId ?? "")) ?? null;
+          dueGuard.ensure({
+            project: nextProject,
+            dueDate: task.details?.dueDate ?? null,
+            onAllowed: () => onProjectChange(task.id, nextProjectId),
+          });
         }}
       />
       <PersonSelect
@@ -271,6 +291,7 @@ function TaskRow({
         <TaskDueDateSelect
           value={task.details?.dueDate}
           disabled={isUpdating}
+          project={project}
           onChange={(dueDate) => onDueDateChange(task.id, dueDate)}
         />
       </span>
@@ -297,6 +318,7 @@ function TaskRow({
           onDelete={() => onDelete(task.id)}
         />
       ) : null}
+      {dueGuard.dialog}
     </div>
   );
 }
@@ -318,6 +340,7 @@ export function TaskList({
   onProjectChange,
   onAssigneeChange,
   onDueDateChange,
+  onTitleChange,
   onDelete,
   onDeleteSelected,
   deletingTaskIds = [],
@@ -482,6 +505,7 @@ export function TaskList({
             onProjectChange={onProjectChange}
             onAssigneeChange={onAssigneeChange}
             onDueDateChange={onDueDateChange}
+            onTitleChange={onTitleChange}
             onDelete={onDelete}
             deletingTaskIds={deletingTaskIds}
             selected={selection.isSelected(task.id)}
