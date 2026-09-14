@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AuthControls } from "@/components/AuthControls";
+import { WebLoaderScreen } from "@/components/WebLoader";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -34,7 +35,7 @@ export default function OntologyCanvasScreen() {
   if (isLoading || !ontologyId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading…</p>
+        <WebLoaderScreen label="Loading ontology" />
       </div>
     );
   }

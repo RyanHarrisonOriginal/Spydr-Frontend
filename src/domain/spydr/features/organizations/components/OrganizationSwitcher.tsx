@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Building2, Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Building2, Check, ChevronsUpDown, Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,8 +20,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useOrganizationContext } from "../context/OrganizationContext";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function OrganizationSwitcher() {
+  const navigate = useNavigate();
   const {
     organizations,
     activeOrg,
@@ -95,6 +97,12 @@ export function OrganizationSwitcher() {
             <Plus className="h-3.5 w-3.5" />
             Create organization
           </DropdownMenuItem>
+          {activeOrg ? (
+            <DropdownMenuItem className="gap-2" onClick={() => navigate("/settings")}>
+              <Settings className="h-3.5 w-3.5" />
+              Organization settings
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
 

@@ -33,7 +33,8 @@ export async function apiRequest<T>(
     }
   }
 
-  const orgScoped = !path.startsWith("/organizations");
+  const orgScoped =
+    !path.startsWith("/organizations") && !path.startsWith("/invites");
   if (orgScoped && !headers["X-Org-Id"] && orgIdGetter) {
     const orgId = orgIdGetter();
     if (orgId) {

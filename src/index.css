@@ -512,6 +512,50 @@
   .animate-in-fade {
     animation: fadeIn 0.25s ease-out;
   }
+
+  @keyframes spydr-web-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes spydr-web-pulse {
+    0%,
+    100% {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.12);
+    }
+  }
+
+  .spydr-web-loader-mark {
+    transform-origin: 50% 50%;
+    transform-box: view-box;
+    animation: spydr-web-spin 18s linear infinite;
+  }
+
+  .spydr-web-loader-pulse {
+    transform-origin: 64px 64px;
+    transform-box: view-box;
+    animation: spydr-web-pulse 1.8s ease-in-out infinite;
+  }
+
+  .spydr-web-loader-signal {
+    transform-origin: 64px 64px;
+    transform-box: view-box;
+    animation: spydr-web-spin 4.8s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spydr-web-loader-mark,
+    .spydr-web-loader-pulse,
+    .spydr-web-loader-signal {
+      animation: none;
+    }
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────────────────

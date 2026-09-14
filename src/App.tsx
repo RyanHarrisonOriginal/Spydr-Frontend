@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { PhoneLayoutSync } from "@/components/PhoneLayoutSync";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -25,9 +25,23 @@ import PersonDetailScreen from "@/screens/PersonDetailScreen";
 import ResourcesScreen from "@/screens/ResourcesScreen";
 import SignInScreen from "@/screens/SignInScreen";
 import SignUpScreen from "@/screens/SignUpScreen";
+import AcceptInviteScreen from "@/screens/AcceptInviteScreen";
+import OrganizationSettingsScreen from "@/screens/OrganizationSettingsScreen";
 import NotFoundScreen from "@/screens/NotFoundScreen";
 
 const queryClient = new QueryClient();
+
+function AuthenticatedLayout() {
+  return (
+    <RequireAuth>
+      <OrganizationProvider>
+        <CurrentUserPersonProvider>
+          <Outlet />
+        </CurrentUserPersonProvider>
+      </OrganizationProvider>
+    </RequireAuth>
+  );
+}
 
 export default function App() {
   return (
@@ -45,49 +59,43 @@ export default function App() {
             <Routes>
             <Route path="/sign-in" element={<SignInScreen />} />
             <Route path="/sign-up" element={<SignUpScreen />} />
-            <Route
-              element={
-                <RequireAuth>
-                  <OrganizationProvider>
-                    <CurrentUserPersonProvider>
-                      <WorkspaceShellScreen />
-                    </CurrentUserPersonProvider>
-                  </OrganizationProvider>
-                </RequireAuth>
-              }
-            >
-              <Route index element={<Navigate to="/active-note" replace />} />
-              <Route path="/active-note" element={<ActiveNoteScreen />} />
-              <Route path="/active-note/:sessionId" element={<PastActiveNoteScreen />} />
-              <Route path="/dashboard" element={<DashboardScreen />} />
-              <Route path="/today" element={<TodayScreen />} />
-              <Route path="/work" element={<WorkScreen />} />
-              <Route path="/projects" element={<Navigate to="/work" replace />} />
-              <Route path="/projects/:projectId" element={<ProjectDetailScreen />} />
-              <Route
-                path="/project-templates"
-                element={<ProjectTemplatesScreen />}
-              />
-              <Route
-                path="/project-templates/new"
-                element={<ProjectTemplateCreateScreen />}
-              />
-              <Route
-                path="/project-templates/:templateId/edit"
-                element={<ProjectTemplateEditScreen />}
-              />
-              <Route
-                path="/tasks"
-                element={<Navigate to="/work?view=tasks" replace />}
-              />
-              <Route path="/tasks/:taskId" element={<TaskDetailScreen />} />
-              <Route path="/ideas" element={<IdeasScreen />} />
-              <Route path="/decisions" element={<DecisionsScreen />} />
-              <Route path="/notes" element={<NotesScreen />} />
-              <Route path="/notes/:noteId" element={<NoteDetailScreen />} />
-              <Route path="/people" element={<Navigate to="/work" replace />} />
-              <Route path="/people/:personId" element={<PersonDetailScreen />} />
-              <Route path="/resources" element={<ResourcesScreen />} />
+            <Route element={<AuthenticatedLayout />}>
+              <Route path="/invites/:token" element={<AcceptInviteScreen />} />
+              <Route element={<WorkspaceShellScreen />}>
+                <Route index element={<Navigate to="/active-note" replace />} />
+                <Route path="/active-note" element={<ActiveNoteScreen />} />
+                <Route path="/active-note/:sessionId" element={<PastActiveNoteScreen />} />
+                <Route path="/dashboard" element={<DashboardScreen />} />
+                <Route path="/today" element={<TodayScreen />} />
+                <Route path="/work" element={<WorkScreen />} />
+                <Route path="/projects" element={<Navigate to="/work" replace />} />
+                <Route path="/projects/:projectId" element={<ProjectDetailScreen />} />
+                <Route
+                  path="/project-templates"
+                  element={<ProjectTemplatesScreen />}
+                />
+                <Route
+                  path="/project-templates/new"
+                  element={<ProjectTemplateCreateScreen />}
+                />
+                <Route
+                  path="/project-templates/:templateId/edit"
+                  element={<ProjectTemplateEditScreen />}
+                />
+                <Route
+                  path="/tasks"
+                  element={<Navigate to="/work?view=tasks" replace />}
+                />
+                <Route path="/tasks/:taskId" element={<TaskDetailScreen />} />
+                <Route path="/ideas" element={<IdeasScreen />} />
+                <Route path="/decisions" element={<DecisionsScreen />} />
+                <Route path="/notes" element={<NotesScreen />} />
+                <Route path="/notes/:noteId" element={<NoteDetailScreen />} />
+                <Route path="/people" element={<Navigate to="/work" replace />} />
+                <Route path="/people/:personId" element={<PersonDetailScreen />} />
+                <Route path="/resources" element={<ResourcesScreen />} />
+                <Route path="/settings" element={<OrganizationSettingsScreen />} />
+              </Route>
             </Route>
             <Route
               path="/ontology/:ontologyId"

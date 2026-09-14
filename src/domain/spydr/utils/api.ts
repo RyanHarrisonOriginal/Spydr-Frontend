@@ -31,6 +31,10 @@ import type {
   PersonNode,
   Organization,
   CreateOrganizationInput,
+  OrganizationInvite,
+  CreateOrganizationInviteInput,
+  AddOrganizationMemberInput,
+  OrganizationMember,
   TransformNodeTypeInput,
   TransformNodeTypeResult,
   TodoItem,
@@ -54,6 +58,34 @@ export const spydrApi = {
     list: () => apiRequest<Organization[]>("/organizations"),
     create: (input: CreateOrganizationInput) =>
       apiRequest<Organization>("/organizations", { method: "POST", body: input }),
+    listMembers: (orgId: string) =>
+      apiRequest<OrganizationMember[]>(`/organizations/${orgId}/members`),
+    addMember: (orgId: string, input: AddOrganizationMemberInput) =>
+      apiRequest<OrganizationMember>(`/organizations/${orgId}/members`, {
+        method: "POST",
+        body: input,
+      }),
+    removeMember: (orgId: string, memberId: string) =>
+      apiRequest<void>(`/organizations/${orgId}/members/${memberId}`, {
+        method: "DELETE",
+      }),
+    listInvites: (orgId: string) =>
+      apiRequest<OrganizationInvite[]>(`/organizations/${orgId}/invites`),
+    inviteMember: (orgId: string, input: CreateOrganizationInviteInput) =>
+      apiRequest<OrganizationInvite>(`/organizations/${orgId}/invites`, {
+        method: "POST",
+        body: input,
+      }),
+    revokeInvite: (orgId: string, inviteId: string) =>
+      apiRequest<void>(`/organizations/${orgId}/invites/${inviteId}`, {
+        method: "DELETE",
+      }),
+  },
+  invites: {
+    listMine: () => apiRequest<OrganizationInvite[]>("/invites"),
+    get: (token: string) => apiRequest<OrganizationInvite>(`/invites/${token}`),
+    accept: (token: string) =>
+      apiRequest<OrganizationInvite>(`/invites/${token}/accept`, { method: "POST" }),
   },
   people: {
     list: () => apiRequest<PersonNode[]>("/people"),

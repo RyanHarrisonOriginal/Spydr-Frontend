@@ -42,8 +42,8 @@ export function CurrentUserPersonProvider({
   );
 
   const currentUserPerson = useMemo(
-    () => findCurrentUserPerson(peopleQuery.data ?? [], clerkEmails),
-    [clerkEmails, peopleQuery.data]
+    () => findCurrentUserPerson(peopleQuery.data ?? [], clerkEmails, user?.id),
+    [clerkEmails, peopleQuery.data, user?.id]
   );
 
   const isMe = useCallback(
@@ -55,9 +55,10 @@ export function CurrentUserPersonProvider({
       }
 
       if (currentUserPerson?.id === personOrId.id) return true;
+      if (user?.id && personOrId.details?.clerkUserId === user.id) return true;
       return personMatchesEmails(personOrId, clerkEmails);
     },
-    [clerkEmails, currentUserPerson?.id]
+    [clerkEmails, currentUserPerson?.id, user?.id]
   );
 
   const value = useMemo<CurrentUserPersonContextValue>(

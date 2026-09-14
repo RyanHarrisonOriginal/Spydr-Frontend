@@ -4,6 +4,10 @@ export function spydrOrganizationsKey() {
   return [SPYDR_QUERY_ROOT, "organizations"] as const;
 }
 
+export function spydrMyInvitesKey() {
+  return [SPYDR_QUERY_ROOT, "invites"] as const;
+}
+
 export function spydrOrgKey(orgId: string, ...segments: readonly string[]) {
   return [SPYDR_QUERY_ROOT, orgId, ...segments] as const;
 }

@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Lightbulb,
   PenLine,
+  Settings,
   Sun,
 } from "lucide-react";
 
@@ -39,6 +40,7 @@ export const workspaceNavItems: WorkspaceNavItem[] = [
 ];
 
 export const metaNavItems: WorkspaceNavItem[] = [
+  { to: "/settings", icon: Settings, label: "Settings" },
   { icon: Archive, label: "Archived", badge: "later", disabled: true },
 ];
 

@@ -38,8 +38,16 @@ export function personMatchesEmails(
 
 export function findCurrentUserPerson(
   people: PersonNode[],
-  clerkEmails: string[]
+  clerkEmails: string[],
+  clerkUserId?: string | null
 ): PersonNode | null {
+  if (clerkUserId) {
+    const byClerkId = people.find(
+      (person) => person.details?.clerkUserId === clerkUserId
+    );
+    if (byClerkId) return byClerkId;
+  }
+
   if (clerkEmails.length === 0) return null;
   return people.find((person) => personMatchesEmails(person, clerkEmails)) ?? null;
 }

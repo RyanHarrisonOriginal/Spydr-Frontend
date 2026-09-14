@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useOrganizationContext } from "../context/OrganizationContext";
+import { PendingInvitesList } from "./PendingInvitesList";
 
 export function OrganizationOnboarding() {
   const { createOrganization, isCreating } = useOrganizationContext();
@@ -53,6 +54,8 @@ export function OrganizationOnboarding() {
             {isCreating ? "Creating…" : "Create organization"}
           </Button>
         </form>
+
+        <PendingInvitesList className="mt-6 border-t border-border pt-5" />
       </div>
     </div>
   );

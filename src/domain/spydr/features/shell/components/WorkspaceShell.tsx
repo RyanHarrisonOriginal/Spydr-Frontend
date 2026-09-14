@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
+import { WebLoaderScreen } from "@/components/WebLoader";
 import { OrganizationOnboarding } from "@/domain/spydr/features/organizations/components/OrganizationOnboarding";
+import { PendingInvitesList } from "@/domain/spydr/features/organizations/components/PendingInvitesList";
 import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
 import { NavigationBreadcrumbProvider } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import { useIsPhone } from "@/hooks/useIsPhone";
@@ -19,11 +21,7 @@ export function WorkspaceShell() {
   }, [isPhone]);
 
   if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center bg-background text-sm text-muted-foreground">
-        Loading workspace…
-      </div>
-    );
+    return <WebLoaderScreen label="Loading workspace" />;
   }
 
   if (!isReady && organizations.length === 0) {
@@ -36,6 +34,7 @@ export function WorkspaceShell() {
         <Sidebar />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar />
+          <PendingInvitesList className="border-b border-border px-4 py-2" />
           <main className="spydr-surface flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden animate-in-fade">
             <NavigationBreadcrumbProvider>
               <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">

@@ -41,6 +41,45 @@ export interface CreateOrganizationInput {
   creator?: CreateOrganizationCreatorInput;
 }
 
+export interface OrganizationMember {
+  id: string;
+  organizationId: string;
+  userId: string;
+  personId: string | null;
+  role: OrganizationMemberRole;
+  createdAt: string;
+  person: {
+    id: string;
+    fullName: string;
+    email: string | null;
+    clerkUserId: string | null;
+  } | null;
+}
+
+export type OrganizationInviteStatus = "pending" | "accepted" | "revoked" | "expired";
+
+export interface OrganizationInvite {
+  id: string;
+  organizationId: string;
+  organizationName: string;
+  email: string;
+  role: OrganizationMemberRole;
+  status: OrganizationInviteStatus;
+  expiresAt: string;
+  createdAt: string;
+  token?: string;
+}
+
+export interface CreateOrganizationInviteInput {
+  email: string;
+  role?: OrganizationMemberRole;
+}
+
+export interface AddOrganizationMemberInput {
+  email: string;
+  role?: OrganizationMemberRole;
+}
+
 export interface SpydrNode<TType extends SpydrNodeType = SpydrNodeType, TDetails = unknown> {
   id: string;
   organizationId: string;
@@ -81,6 +120,7 @@ export interface PersonDetails {
   title: string | null;
   organization: string | null;
   relationshipContext: string | null;
+  clerkUserId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
