@@ -11,6 +11,7 @@ import { formatRelativeTime } from "@/domain/spydr/features/shared/components/ti
 import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
 import { isClosedCollectionStatus } from "@/domain/spydr/utils/collectionVisibility";
 import type { ProjectListSort, ProjectSortColumn } from "@/domain/spydr/utils/projectListView";
+import type { CollectionSortState } from "@/domain/spydr/utils/collectionView";
 import {
   COLLECTION_REORDER_COLUMN,
   CollectionReorderControls,
@@ -37,6 +38,15 @@ import { ProjectPrioritySelect } from "./ProjectPrioritySelect";
 import { ProjectStatusSelect } from "./ProjectStatusSelect";
 import { ProjectTargetDateSelect } from "./ProjectTargetDateSelect";
 import { PersonSelect } from "./PersonSelect";
+import { CollectionSortableHeader } from "@/domain/spydr/features/shared/components/CollectionSortableHeader";
+import { CollectionSortMenu } from "@/domain/spydr/features/shared/components/CollectionSortMenu";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useNestedTaskSort } from "../hooks/useNestedTaskSort";
+import { sortNestedTasks } from "@/domain/spydr/utils/nestedTaskSort";
 
 interface ProjectListProps {
   projects: ProjectNode[];
@@ -381,6 +391,89 @@ function resolveTaskAssigneeId(task: TaskNode): string | null {
   return task.assignee?.id ?? task.details?.assigneePersonNodeId ?? null;
 }
 
+function NestedTaskSortHeader({
+  sort,
+  onSort,
+  compact = false,
+}: {
+  sort: CollectionSortState;
+  onSort(column: string): void;
+  compact?: boolean;
+}) {
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1 px-1 pb-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+        <span className="w-7 shrink-0" aria-hidden />
+        <span className="w-7 shrink-0" aria-hidden />
+        <span className="min-w-0 flex-1">
+          <CollectionSortableHeader
+            label="Task"
+            column="title"
+            sort={sort}
+            onSort={onSort}
+          />
+        </span>
+        <span className="w-[7.5rem] shrink-0">
+          <CollectionSortableHeader
+            label="Assignee"
+            column="assignee"
+            sort={sort}
+            onSort={onSort}
+          />
+        </span>
+        <span className="w-[3.75rem] shrink-0">
+          <CollectionSortableHeader
+            label="Due"
+            column="due"
+            sort={sort}
+            align="end"
+            onSort={onSort}
+          />
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 px-2.5 pb-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+      <span className="w-[100px] shrink-0">
+        <CollectionSortableHeader
+          label="Status"
+          column="status"
+          sort={sort}
+          onSort={onSort}
+        />
+      </span>
+      <span className="w-7 shrink-0" aria-hidden />
+      <span className="min-w-0 flex-1">
+        <CollectionSortableHeader
+          label="Task"
+          column="title"
+          sort={sort}
+          onSort={onSort}
+        />
+      </span>
+      <span className="w-[132px] shrink-0">
+        <CollectionSortableHeader
+          label="Assignee"
+          column="assignee"
+          sort={sort}
+          onSort={onSort}
+        />
+      </span>
+      <span className="w-[108px] shrink-0">
+        <CollectionSortableHeader
+          label="Due"
+          column="due"
+          sort={sort}
+          align="end"
+          onSort={onSort}
+        />
+      </span>
+    </div>
+  );
+}
+
 function NestedTaskRow({
   task,
   project,
@@ -652,6 +745,7 @@ export function ProjectList({
   const [composingProjectId, setComposingProjectId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const isPhone = useIsPhone();
+  const nestedTaskSort = useNestedTaskSort();
   const gridTemplateColumns = getProjectListGrid(
     visibleColumns,
     reorderEnabled,
@@ -731,13 +825,33 @@ export function ProjectList({
 
   const visibleTasksFor = (projectId: string) => {
     const tasks = tasksByProjectId.get(projectId) ?? [];
-    return showCompletedTasks
+    const visible = showCompletedTasks
       ? tasks
       : tasks.filter((task) => !isClosedCollectionStatus(task.status));
+    return sortNestedTasks(visible, nestedTaskSort.sort);
   };
 
   return (
     <div className={isPhone ? "" : "touch-scroll-x"}>
+      {isPhone ? (
+        <div className="flex items-center justify-end border-b border-border/70 px-2 py-1.5">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]">
+                <ArrowUpDown className="h-3.5 w-3.5" />
+                {nestedTaskSort.sorts.find(
+                  (entry) => entry.id === nestedTaskSort.sort.columnId
+                )?.label ?? "Sort tasks"}
+              </Button>
+            </DropdownMenuTrigger>
+            <CollectionSortMenu
+              sorts={nestedTaskSort.sorts}
+              sort={nestedTaskSort.sort}
+              onToggleSort={nestedTaskSort.toggleSort}
+            />
+          </DropdownMenu>
+        </div>
+      ) : null}
       {showInlineCompletedToggle && completedTaskCount > 0 ? (
         <div className="flex items-center justify-end gap-2 border-b border-border/70 px-4 py-1.5 md:px-6">
           <ShowCompletedToggle
@@ -925,8 +1039,16 @@ export function ProjectList({
                   </div>
                   {showChildren ? (
                     <div className="space-y-1 border-t border-border/50 bg-canvas/80 px-2 py-1.5">
-                      {expanded
-                        ? visibleTasks.map((task) => (
+                      {expanded ? (
+                        <>
+                          {visibleTasks.length > 0 ? (
+                            <NestedTaskSortHeader
+                              compact
+                              sort={nestedTaskSort.sort}
+                              onSort={nestedTaskSort.toggleSort}
+                            />
+                          ) : null}
+                          {visibleTasks.map((task) => (
                             <NestedTaskRow
                               key={task.id}
                               task={task}
@@ -951,8 +1073,9 @@ export function ProjectList({
                               togglingTodo={togglingTodoTaskId === task.id}
                               onToggleTodo={onToggleTodo}
                             />
-                          ))
-                        : null}
+                          ))}
+                        </>
+                      ) : null}
                       {composing && onCreateTask ? (
                         <ProjectTaskComposer
                           projectTitle={project.title}
@@ -1186,8 +1309,15 @@ export function ProjectList({
                       aria-hidden
                       className="pointer-events-none absolute bottom-2 left-9 top-2 w-px bg-[hsl(var(--connector-line))]"
                     />
-                    {expanded
-                      ? visibleTasks.map((task) => (
+                    {expanded ? (
+                      <>
+                        {visibleTasks.length > 0 ? (
+                          <NestedTaskSortHeader
+                            sort={nestedTaskSort.sort}
+                            onSort={nestedTaskSort.toggleSort}
+                          />
+                        ) : null}
+                        {visibleTasks.map((task) => (
                           <NestedTaskRow
                             key={task.id}
                             task={task}
@@ -1211,8 +1341,9 @@ export function ProjectList({
                             togglingTodo={togglingTodoTaskId === task.id}
                             onToggleTodo={onToggleTodo}
                           />
-                        ))
-                      : null}
+                        ))}
+                      </>
+                    ) : null}
                     {composing && onCreateTask ? (
                       <ProjectTaskComposer
                         projectTitle={project.title}

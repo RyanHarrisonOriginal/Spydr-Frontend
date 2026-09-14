@@ -322,11 +322,17 @@ export function applyCollectionView<T>(
     config.sorts.find((sort) => sort.id === state.sort.columnId) ??
     config.sorts.find((sort) => sort.id === config.defaultSortId) ??
     config.sorts[0];
-  if (!sortDef) return result;
+  return sortItems(result, sortDef, state.sort.direction);
+}
 
+export function sortItems<T>(
+  items: T[],
+  sortDef: SortDef<T> | undefined,
+  direction: SortDirection
+): T[] {
+  if (!sortDef) return items;
   const type = sortDef.type ?? "text";
-  const direction = state.sort.direction;
-  return [...result].sort((left, right) =>
+  return [...items].sort((left, right) =>
     compareValues(sortDef.accessor(left), sortDef.accessor(right), type, direction)
   );
 }
