@@ -97,12 +97,6 @@ export default function App() {
                 <Route path="/settings" element={<OrganizationSettingsScreen />} />
               </Route>
             </Route>
-            <Route
-              path="/ontology/:ontologyId"
-              element={
-                <Navigate to="/work" replace />
-              }
-            />
             <Route path="/404" element={<NotFoundScreen />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
