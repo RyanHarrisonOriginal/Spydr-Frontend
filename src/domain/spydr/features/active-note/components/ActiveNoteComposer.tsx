@@ -124,7 +124,7 @@ export function ActiveNoteComposer({
               value={content}
               onValueChange={onContentChange}
               placeholder="Write what happened, what you decided, or what needs to happen next… Use @ to reference projects, tasks, or notes."
-              className="min-h-[200px] border-border bg-muted/15 text-[15px] leading-relaxed md:min-h-[320px]"
+              className="h-[200px] border-border bg-muted/15 text-[15px] leading-relaxed md:h-[320px]"
               disabled={isBusy}
               autoFocus
               aria-labelledby="active-note-content-label"

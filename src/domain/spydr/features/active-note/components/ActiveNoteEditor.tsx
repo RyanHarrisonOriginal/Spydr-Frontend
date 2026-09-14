@@ -109,7 +109,7 @@ export function ActiveNoteEditor({
             : {}),
           ...(ariaDescribedBy ? { "aria-describedby": ariaDescribedBy } : {}),
           class: cn(
-            "active-note-editor focus:outline-none min-h-[inherit] px-3 py-2.5 text-[15px] leading-relaxed",
+            "active-note-editor focus:outline-none min-h-full px-3 py-2.5 text-[15px] leading-relaxed",
             "[&_p]:my-0 [&_p+p]:mt-2"
           ),
         },
@@ -146,12 +146,12 @@ export function ActiveNoteEditor({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-md border border-input bg-background ring-focus focus-within:border-highlight/40",
+        "min-h-0 overflow-y-auto overscroll-contain rounded-md border border-input bg-background ring-focus focus-within:border-highlight/40",
         (disabled || readOnly) && "opacity-80",
         className
       )}
     >
-      <EditorContent editor={editor} className="h-full min-h-[inherit]" />
+      <EditorContent editor={editor} className="min-h-full" />
     </div>
   );
 }

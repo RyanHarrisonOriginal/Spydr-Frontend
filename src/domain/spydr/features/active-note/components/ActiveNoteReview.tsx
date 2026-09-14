@@ -125,7 +125,7 @@ export function ActiveNoteReview({
               id="active-note-review-content"
               value={content}
               onValueChange={onContentChange}
-              className="mt-3 min-h-[120px] flex-1 border-border bg-background text-[14px] leading-relaxed lg:min-h-0"
+              className="mt-3 h-[200px] border-border bg-background text-[14px] leading-relaxed md:h-[320px] lg:h-0 lg:flex-1"
               disabled={noteBusy || !noteEditable}
               readOnly={!noteEditable}
               aria-labelledby="active-note-review-content-label"

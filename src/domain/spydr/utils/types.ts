@@ -226,6 +226,7 @@ export interface ProjectTemplateListItem {
   name: string;
   description: string | null;
   isArchived: boolean;
+  area: string | null;
   parameterCount: number;
   taskCount: number;
   updatedAt: string;

@@ -21,18 +21,20 @@ export function ActiveNoteAnalysisState({
   onReturn,
 }: ActiveNoteAnalysisStateProps) {
   return (
-    <div className="mx-auto grid max-w-4xl gap-6 px-4 py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:px-8">
-      <section className="rounded-md border border-border bg-muted/10 p-4">
-        <h2 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+    <div className="mx-auto grid h-full min-h-0 max-w-4xl content-start gap-6 overflow-y-auto px-4 py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:overflow-hidden md:px-8">
+      <section className="flex min-h-0 flex-col rounded-md border border-border bg-muted/10 p-4">
+        <h2 className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           Saved note
         </h2>
-        <p className="mt-3 whitespace-pre-wrap text-[14px] leading-relaxed text-foreground/90">
-          {noteContent}
-        </p>
+        <div className="mt-3 h-[200px] overflow-y-auto overscroll-contain rounded-md border border-border bg-background px-3 py-2.5 md:h-[320px]">
+          <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-foreground/90">
+            {noteContent}
+          </p>
+        </div>
       </section>
 
       <section
-        className="flex min-h-[220px] flex-col justify-center rounded-md border border-border bg-background p-6"
+        className="flex min-h-[220px] shrink-0 flex-col justify-center rounded-md border border-border bg-background p-6 md:min-h-0"
         aria-busy={isAnalyzing}
         aria-live="polite"
       >
