@@ -1,16 +1,23 @@
-import type { ReactNode } from "react";
 import { StatusDot } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { AreaColorSwatch } from "@/domain/spydr/features/projects/components/AreaColorSwatch";
+import { hslColorCss } from "@/domain/spydr/utils/projectAreaColors";
 import {
+  countTotal,
+  ratioPercent,
   sortedAreaSummaries,
   sortedStatusEntries,
+  statusFillClass,
 } from "@/domain/spydr/utils/dashboardModel";
 import type {
   WorkspaceDashboard,
   WorkspaceDashboardStatusCounts,
 } from "@/domain/spydr/utils/workspaceDashboard";
-import { taskStatusLabels, isTaskStatus } from "@/domain/spydr/utils/taskStatus";
-import { cn } from "@/lib/utils";
+import { isTaskStatus, taskStatusLabels } from "@/domain/spydr/utils/taskStatus";
+import {
+  DashboardRing,
+  DashboardSection,
+  DashboardSegmentBar,
+} from "./DashboardVisuals";
 
 interface DashboardDistributionProps {
   dashboard: WorkspaceDashboard;
@@ -20,48 +27,64 @@ function statusLabel(status: string) {
   return isTaskStatus(status) ? taskStatusLabels[status] : status.replace(/_/g, " ");
 }
 
-function CountList({
+function MixPanel({
   title,
-  rows,
-  empty,
+  counts,
+  ringValue,
+  ringLabel,
+  ringTone,
 }: {
   title: string;
-  rows: Array<{
-    key: string;
-    label: string;
-    count: number;
-    leading?: ReactNode;
-    warn?: boolean;
-  }>;
-  empty: string;
+  counts: WorkspaceDashboardStatusCounts;
+  ringValue: number;
+  ringLabel: string;
+  ringTone: "done" | "active";
 }) {
+  const total = countTotal(counts);
+  const rows = sortedStatusEntries(counts);
+
   return (
-    <div className="min-w-0">
-      <h3 className="mb-2 text-[13px] font-medium text-foreground">{title}</h3>
+    <div className="min-w-0 rounded-sm border border-border/60 bg-muted/10 p-3 md:p-4">
+      <div className="flex items-center gap-4">
+        <DashboardRing
+          value={ringValue}
+          total={total}
+          label={ringLabel}
+          tone={ringTone}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="text-[13px] font-medium text-foreground">{title}</h3>
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+              {total}
+            </span>
+          </div>
+          <DashboardSegmentBar
+            className="mt-3"
+            segments={rows.map((row) => ({
+              key: row.status,
+              value: row.count,
+              label: statusLabel(row.status),
+              className: statusFillClass(row.status),
+            }))}
+          />
+        </div>
+      </div>
       {rows.length === 0 ? (
-        <p className="text-[12px] text-muted-foreground">{empty}</p>
+        <p className="mt-3 text-[12px] text-muted-foreground">Nothing here yet.</p>
       ) : (
-        <ul className="space-y-0.5">
+        <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5">
           {rows.map((row) => (
-            <li
-              key={row.key}
-              className="flex items-center justify-between gap-3 py-1 text-[12px]"
-            >
-              <span className="flex min-w-0 items-center gap-2">
-                {row.leading}
-                <span className="truncate capitalize text-foreground/90">
-                  {row.label}
-                </span>
+            <li key={row.status} className="flex items-center justify-between gap-2">
+              <span className="flex min-w-0 items-center gap-1.5 text-[12px] capitalize text-foreground/90">
+                <StatusDot status={row.status} />
+                <span className="truncate">{statusLabel(row.status)}</span>
               </span>
-              <span
-                className={cn(
-                  "shrink-0 font-mono tabular-nums",
-                  row.warn
-                    ? "text-[hsl(var(--status-blocked))]"
-                    : "text-muted-foreground"
-                )}
-              >
+              <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
                 {row.count}
+                <span className="ml-1 text-[10px] text-muted-foreground/70">
+                  {ratioPercent(row.count, total)}%
+                </span>
               </span>
             </li>
           ))}
@@ -71,39 +94,104 @@ function CountList({
   );
 }
 
-function toStatusRows(counts: WorkspaceDashboardStatusCounts) {
-  return sortedStatusEntries(counts).map((entry) => ({
-    key: entry.status,
-    label: statusLabel(entry.status),
-    count: entry.count,
-    leading: <StatusDot status={entry.status} />,
-    warn: entry.status === "blocked",
-  }));
-}
-
 export function DashboardDistribution({ dashboard }: DashboardDistributionProps) {
-  const areaRows = sortedAreaSummaries(dashboard.areaSummaries)
-    .filter((entry) => entry.projects > 0)
-    .map((entry) => ({
-      key: entry.id ?? `area:${entry.name}`,
-      label: entry.name,
-      count: entry.projects,
-      leading: <AreaColorSwatch color={entry.color} className="h-2.5 w-2.5" />,
-    }));
+  const completedTasks = dashboard.taskStatusCounts.completed ?? 0;
+  const activeProjects = dashboard.summary.activeProjects;
+  const areas = sortedAreaSummaries(dashboard.areaSummaries).filter(
+    (entry) => entry.projects > 0 || entry.openTasks > 0
+  );
+  const maxAreaOpen = areas.reduce((max, area) => Math.max(max, area.openTasks), 0);
+  const maxAreaProjects = areas.reduce((max, area) => Math.max(max, area.projects), 0);
 
   return (
-    <section className="grid gap-6 px-4 py-5 md:grid-cols-3 md:gap-8 md:px-6">
-      <CountList
-        title="Tasks"
-        rows={toStatusRows(dashboard.taskStatusCounts)}
-        empty="No tasks yet."
-      />
-      <CountList
-        title="Projects"
-        rows={toStatusRows(dashboard.projectStatusCounts)}
-        empty="No projects yet."
-      />
-      <CountList title="Areas" rows={areaRows} empty="No areas yet." />
-    </section>
+    <>
+      <DashboardSection title="Mix" meta="Share of current work">
+        <div className="grid gap-3 px-4 pb-5 md:grid-cols-2 md:px-6">
+          <MixPanel
+            title="Tasks"
+            counts={dashboard.taskStatusCounts}
+            ringValue={completedTasks}
+            ringLabel="Tasks completed"
+            ringTone="done"
+          />
+          <MixPanel
+            title="Projects"
+            counts={dashboard.projectStatusCounts}
+            ringValue={activeProjects}
+            ringLabel="Projects in motion"
+            ringTone="active"
+          />
+        </div>
+      </DashboardSection>
+
+      <DashboardSection title="Areas" meta={areas.length ? `${areas.length}` : undefined}>
+        {areas.length === 0 ? (
+          <p className="px-4 pb-6 text-[13px] text-muted-foreground md:px-6">
+            No areas yet.
+          </p>
+        ) : (
+          <ul className="space-y-3 px-4 pb-6 md:px-6">
+            {areas.map((area) => {
+              const projectWidth = ratioPercent(area.projects, maxAreaProjects);
+              const openWidth = ratioPercent(area.openTasks, maxAreaOpen);
+              return (
+                <li key={area.id ?? `area:${area.name}`} className="min-w-0">
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <AreaColorSwatch color={area.color} />
+                      <span className="truncate text-[13px] font-medium">
+                        {area.name}
+                      </span>
+                    </span>
+                    <span className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {area.activeProjects}/{area.projects} active · {area.openTasks} open
+                    </span>
+                  </div>
+                  <div className="grid gap-1.5 sm:grid-cols-2">
+                    <div>
+                      <div
+                        className="h-1.5 overflow-hidden rounded-sm bg-muted/40"
+                        role="img"
+                        aria-label={`${area.projects} projects`}
+                      >
+                        <div
+                          className="h-full rounded-sm"
+                          style={{
+                            width: `${projectWidth}%`,
+                            backgroundColor: hslColorCss(area.color),
+                            opacity: 0.55,
+                          }}
+                        />
+                      </div>
+                      <p className="mt-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                        Projects
+                      </p>
+                    </div>
+                    <div>
+                      <div
+                        className="h-1.5 overflow-hidden rounded-sm bg-muted/40"
+                        role="img"
+                        aria-label={`${area.openTasks} open tasks`}
+                      >
+                        <div
+                          className="h-full rounded-sm"
+                          style={{
+                            width: `${openWidth}%`,
+                            backgroundColor: hslColorCss(area.color),
+                          }}
+                        />
+                      </div>
+                      <p className="mt-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                        Open tasks
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </DashboardSection>
+    </>
   );
 }

@@ -2,13 +2,17 @@ import { Link } from "react-router-dom";
 import {
   dashboardPersonRoleIds,
   dashboardPersonRoleLabels,
+  initialsFromName,
   maxPersonOpenTasks,
+  rankedPersonLoads,
+  ratioPercent,
 } from "@/domain/spydr/utils/dashboardModel";
 import type { WorkspaceDashboard } from "@/domain/spydr/utils/workspaceDashboard";
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import { PersonMeBadge } from "@/domain/spydr/features/people/components/PersonIdentity";
 import { workPersonPath } from "@/domain/spydr/features/work/utils/workPaths";
 import { cn } from "@/lib/utils";
+import { DashboardSection, DashboardSegmentBar } from "./DashboardVisuals";
 
 interface DashboardPersonLoadSectionProps {
   dashboard: WorkspaceDashboard;
@@ -19,234 +23,132 @@ export function DashboardPersonLoadSection({
 }: DashboardPersonLoadSectionProps) {
   const { isMe } = useCurrentUserPerson();
   const maxOpenTasks = maxPersonOpenTasks(dashboard);
-  const loads = dashboard.personLoads.filter(
-    (load) =>
-      load.projects > 0 ||
-      load.tasks > 0 ||
-      dashboardPersonRoleIds.some((role) => load.roleCounts[role] > 0)
-  );
+  const loads = rankedPersonLoads(dashboard);
+  const openWork = loads.reduce((sum, load) => sum + load.openTasks, 0);
 
   return (
-    <section>
-      <div className="flex items-center gap-3 px-4 pb-2 pt-1 md:px-6">
-        <h2 className="text-[13px] font-medium text-foreground">
-          Load by person
-        </h2>
-        <span className="font-mono text-[10px] text-muted-foreground">
-          {loads.length}
-        </span>
-      </div>
+    <DashboardSection title="Load by person" meta={loads.length ? `${loads.length}` : undefined}>
+      {loads.length === 0 ? (
+        <p className="px-4 pb-8 text-center text-[13px] text-muted-foreground md:px-6">
+          Assign people on projects to see workload distribution.
+        </p>
+      ) : (
+        <ul className="space-y-1 px-3 pb-4 md:px-5">
+          {loads.map((load, index) => {
+            const name = load.person?.name ?? "Unassigned";
+            const mine = Boolean(load.person && isMe(load.person.id));
+            const clearOpen = Math.max(load.openTasks - load.blockedTasks, 0);
+            const share = ratioPercent(load.openTasks, openWork);
+            const rankWidth = ratioPercent(load.openTasks, maxOpenTasks);
+            const roles = dashboardPersonRoleIds.filter(
+              (role) => load.roleCounts[role] > 0
+            );
 
-      <div className="md:hidden">
-        {loads.length === 0 ? (
-          <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">
-            Assign people on projects to see workload distribution.
-          </p>
-        ) : (
-          <ul className="space-y-1 px-2 pb-2">
-            {loads.map((load) => {
-              const width =
-                maxOpenTasks > 0
-                  ? Math.round((load.openTasks / maxOpenTasks) * 100)
-                  : 0;
-              const roles = dashboardPersonRoleIds.filter(
-                (role) => load.roleCounts[role] > 0
-              );
-
-              return (
-                <li
-                  key={load.person?.id ?? "unassigned"}
-                  className={cn(
-                    "space-y-2 rounded-sm px-2 py-2.5",
-                    load.person && isMe(load.person.id) && "person-me-row"
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    {load.person ? (
-                      <span className="inline-flex min-w-0 items-center gap-1.5">
-                        <Link
-                          to={workPersonPath(load.person.id)}
-                          className={cn(
-                            "truncate font-medium hover:text-highlight",
-                            isMe(load.person.id) && "text-highlight"
-                          )}
-                        >
-                          {load.person.name}
-                        </Link>
-                        {isMe(load.person.id) ? <PersonMeBadge compact /> : null}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">Unassigned</span>
-                    )}
-                    <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
-                      {load.openTasks} open
-                    </span>
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-sm bg-muted/50">
-                    <div
-                      className={cn(
-                        "h-full rounded-sm",
-                        load.openTasks > 0 ? "bg-highlight/75" : "bg-transparent"
-                      )}
-                      style={{ width: `${width}%` }}
-                    />
-                  </div>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <span>{load.projects} projects</span>
-                    {load.blockedTasks > 0 ? (
-                      <span className="text-[hsl(var(--status-blocked))]">
-                        {load.blockedTasks} blocked
-                      </span>
-                    ) : null}
-                    {load.overdueTasks > 0 ? (
-                      <span className="text-[hsl(var(--status-blocked))]">
-                        {load.overdueTasks} overdue
-                      </span>
-                    ) : null}
-                    {roles.map((role) => (
-                      <span key={role}>
-                        {dashboardPersonRoleLabels[role]} {load.roleCounts[role]}
-                      </span>
-                    ))}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
-
-      <div className="hidden touch-scroll-x md:block">
-        <table className="w-full min-w-[640px] text-left text-[13px]">
-          <thead className="bg-muted/15 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-6 py-2 font-medium">Person</th>
-              <th className="px-3 py-2 text-right font-medium">Projects</th>
-              <th className="px-3 py-2 text-right font-medium">Open</th>
-              <th className="min-w-[7rem] px-3 py-2 font-medium">Load</th>
-              <th className="px-3 py-2 text-right font-medium">Blocked</th>
-              <th className="px-3 py-2 text-right font-medium">Overdue</th>
-              <th className="px-6 py-2 font-medium">Roles</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loads.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-6 py-8 text-center text-muted-foreground"
-                >
-                  Assign people on projects to see workload distribution.
-                </td>
-              </tr>
-            ) : (
-              loads.map((load) => {
-                const width =
-                  maxOpenTasks > 0
-                    ? Math.round((load.openTasks / maxOpenTasks) * 100)
-                    : 0;
-                const roles = dashboardPersonRoleIds.filter(
-                  (role) => load.roleCounts[role] > 0
-                );
-
-                return (
-                  <tr
-                    key={load.person?.id ?? "unassigned"}
+            return (
+              <li
+                key={load.person?.id ?? "unassigned"}
+                className={cn(
+                  "rounded-sm px-2 py-2.5 md:px-3",
+                  mine && "person-me-row"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="w-4 shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground/70">
+                    {index + 1}
+                  </span>
+                  <span
                     className={cn(
-                      "row-hover",
-                      load.person && isMe(load.person.id) && "person-me-row"
+                      "grid h-7 w-7 shrink-0 place-items-center rounded-full border border-border bg-muted/40 font-mono text-[9px] font-medium tracking-tight",
+                      mine && "border-highlight/50 bg-highlight/10 text-highlight"
                     )}
                   >
-                    <td className="px-6 py-2.5">
+                    {load.person ? initialsFromName(name) : "—"}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
                       {load.person ? (
-                        <span className="inline-flex items-center gap-1.5">
+                        <span className="inline-flex min-w-0 items-center gap-1.5">
                           <Link
                             to={workPersonPath(load.person.id)}
                             className={cn(
-                              "font-medium hover:text-highlight",
-                              isMe(load.person.id) && "text-highlight"
+                              "truncate text-[13px] font-medium hover:text-highlight",
+                              mine && "text-highlight"
                             )}
                           >
-                            {load.person.name}
+                            {name}
                           </Link>
-                          {isMe(load.person.id) ? (
-                            <PersonMeBadge compact />
-                          ) : null}
+                          {mine ? <PersonMeBadge compact /> : null}
                         </span>
                       ) : (
-                        <span className="text-muted-foreground">Unassigned</span>
+                        <span className="text-[13px] text-muted-foreground">
+                          Unassigned
+                        </span>
                       )}
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-mono tabular-nums text-muted-foreground">
-                      {load.projects}
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-mono tabular-nums">
-                      {load.openTasks}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <div className="h-1.5 overflow-hidden rounded-sm bg-muted/50">
-                        <div
-                          className={cn(
-                            "h-full rounded-sm",
-                            load.openTasks > 0
-                              ? "bg-highlight/75"
-                              : "bg-transparent"
-                          )}
-                          style={{ width: `${width}%` }}
+                      <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
+                        {load.openTasks} open
+                        {openWork > 0 ? (
+                          <span className="ml-1.5 text-[10px] text-muted-foreground/70">
+                            {share}%
+                          </span>
+                        ) : null}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-2.5 overflow-hidden rounded-sm bg-muted/40">
+                      <div
+                        className="h-full"
+                        style={{
+                          width: `${Math.max(rankWidth, load.openTasks > 0 ? 6 : 0)}%`,
+                        }}
+                      >
+                        <DashboardSegmentBar
+                          className="h-full"
+                          trackClassName="bg-transparent"
+                          segments={[
+                            {
+                              key: "open",
+                              value: clearOpen,
+                              label: "Open",
+                              className: "bg-highlight/80",
+                            },
+                            {
+                              key: "blocked",
+                              value: load.blockedTasks,
+                              label: "Blocked",
+                              className: "bg-[hsl(var(--status-blocked))]",
+                            },
+                          ]}
                         />
                       </div>
-                    </td>
-                    <td
-                      className={cn(
-                        "px-3 py-2.5 text-right font-mono tabular-nums",
-                        load.blockedTasks > 0
-                          ? "text-[hsl(var(--status-blocked))]"
-                          : "text-muted-foreground"
-                      )}
-                    >
-                      {load.blockedTasks}
-                    </td>
-                    <td
-                      className={cn(
-                        "px-3 py-2.5 text-right font-mono tabular-nums",
-                        load.overdueTasks > 0
-                          ? "text-[hsl(var(--status-blocked))]"
-                          : "text-muted-foreground"
-                      )}
-                    >
-                      {load.overdueTasks}
-                    </td>
-                    <td className="px-6 py-2.5">
-                      <div className="flex flex-wrap gap-1">
-                        {roles.length === 0 ? (
-                          <span className="text-muted-foreground">—</span>
-                        ) : (
-                          roles.map((role) => (
-                            <span
-                              key={role}
-                              className="rounded-sm bg-muted/30 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
-                            >
-                              {dashboardPersonRoleLabels[role]}{" "}
-                              {load.roleCounts[role]}
-                            </span>
-                          ))
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="ml-[4.25rem] mt-1.5 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <span>
+                    {load.openProjects}/{load.projects} projects
+                  </span>
+                  {load.overdueTasks > 0 ? (
+                    <span className="text-[hsl(var(--status-blocked))]">
+                      {load.overdueTasks} overdue
+                    </span>
+                  ) : null}
+                  {roles.map((role) => (
+                    <span key={role}>
+                      {dashboardPersonRoleLabels[role]} {load.roleCounts[role]}
+                    </span>
+                  ))}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       {dashboard.summary.unassignedProjects > 0 ? (
-        <p className="px-4 py-2 text-[12px] text-muted-foreground md:px-6">
+        <p className="px-4 pb-5 text-[12px] text-muted-foreground md:px-6">
           {dashboard.summary.unassignedProjects} projects and{" "}
           {dashboard.summary.unassignedProjectTasks} tasks have no assignee.
         </p>
       ) : null}
-    </section>
+    </DashboardSection>
   );
 }

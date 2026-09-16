@@ -8,8 +8,7 @@ import {
 } from "@/domain/spydr/features/shared/components/ListState";
 import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
 import { useWorkspaceDashboardQuery } from "@/domain/spydr/features/shared/hooks/queries";
-import { cn } from "@/lib/utils";
-import { dashboardMetrics } from "@/domain/spydr/utils/dashboardModel";
+import { DashboardMetricStrip } from "../components/DashboardMetricStrip";
 import { DashboardPersonLoadSection } from "../components/DashboardPersonLoadSection";
 import { DashboardDistribution } from "../components/DashboardDistribution";
 
@@ -18,8 +17,12 @@ export function DashboardPage() {
   const dashboard = query.data;
   usePageBreadcrumb("Dashboard");
 
+  const pressure = dashboard
+    ? dashboard.summary.blockedTasks + dashboard.summary.overdueTasks
+    : 0;
+
   return (
-    <div className="pb-8">
+    <div className="pb-10">
       <PageHeader
         dense
         title="Dashboard"
@@ -27,6 +30,16 @@ export function DashboardPage() {
           dashboard ? (
             <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
               Updated {formatRelativeTime(dashboard.generatedAt)}
+              {pressure > 0 ? (
+                <>
+                  {" · "}
+                  <span className="text-[hsl(var(--status-blocked))]">
+                    {pressure} need attention
+                  </span>
+                </>
+              ) : (
+                " · Clear"
+              )}
             </span>
           ) : undefined
         }
@@ -55,38 +68,9 @@ export function DashboardPage() {
 
       {!query.isLoading && !query.isError && dashboard && (
         <>
-          <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2 px-4 py-4 md:gap-x-6 md:px-6">
-            {dashboardMetrics.map((metric) => {
-              const value = metric.getValue(dashboard.summary);
-              const hint = metric.hint?.(dashboard.summary);
-              const warn = metric.tone === "warn" && value > 0;
-              return (
-                <div key={metric.id} className="flex items-baseline gap-2">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                    {metric.label}
-                  </span>
-                  <span
-                    className={cn(
-                      "text-[18px] font-semibold tabular-nums tracking-tight",
-                      warn
-                        ? "text-[hsl(var(--status-blocked))]"
-                        : "text-foreground"
-                    )}
-                  >
-                    {value}
-                  </span>
-                  {hint ? (
-                    <span className="font-mono text-[10px] text-muted-foreground/70">
-                      {hint}
-                    </span>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-
-          <DashboardPersonLoadSection dashboard={dashboard} />
+          <DashboardMetricStrip summary={dashboard.summary} />
           <DashboardDistribution dashboard={dashboard} />
+          <DashboardPersonLoadSection dashboard={dashboard} />
         </>
       )}
     </div>

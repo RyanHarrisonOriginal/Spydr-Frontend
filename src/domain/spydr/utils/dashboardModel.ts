@@ -93,6 +93,58 @@ export function maxPersonOpenTasks(dashboard: WorkspaceDashboard): number {
   );
 }
 
+export function ratioPercent(part: number, whole: number): number {
+  if (whole <= 0) return 0;
+  return Math.round((part / whole) * 100);
+}
+
+export function countTotal(counts: Record<string, number>): number {
+  return Object.values(counts).reduce((sum, count) => sum + count, 0);
+}
+
+export function statusFillClass(status: string): string {
+  switch (status) {
+    case "active":
+      return "bg-[hsl(var(--status-active))]";
+    case "waiting":
+    case "snoozed":
+      return "bg-[hsl(var(--status-doing))]";
+    case "blocked":
+      return "bg-[hsl(var(--status-blocked))]";
+    case "completed":
+      return "bg-[hsl(var(--status-done))]";
+    default:
+      return "bg-[hsl(var(--status-todo))]";
+  }
+}
+
+export function initialsFromName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+}
+
+export function rankedPersonLoads(dashboard: WorkspaceDashboard) {
+  return dashboard.personLoads
+    .filter(
+      (load) =>
+        load.projects > 0 ||
+        load.tasks > 0 ||
+        dashboardPersonRoleIds.some((role) => load.roleCounts[role] > 0)
+    )
+    .slice()
+    .sort((left, right) => {
+      if (right.openTasks !== left.openTasks) return right.openTasks - left.openTasks;
+      if (right.blockedTasks !== left.blockedTasks) {
+        return right.blockedTasks - left.blockedTasks;
+      }
+      return (left.person?.name ?? "Unassigned").localeCompare(
+        right.person?.name ?? "Unassigned"
+      );
+    });
+}
+
 export function sortedStatusEntries(
   counts: WorkspaceDashboard["taskStatusCounts"]
 ): Array<{ status: string; count: number }> {
