@@ -51,9 +51,9 @@ export function ProjectIdeasLog({
   isDeleting = false,
 }: ProjectIdeasLogProps) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
       <form
-        className="flex gap-2 rounded-lg border border-border/50 bg-muted/20 p-2"
+        className="flex gap-2 rounded-sm border border-border/50 bg-muted/20 px-2.5 py-1.5"
         onSubmit={(event) => {
           event.preventDefault();
           onAdd();
@@ -72,7 +72,7 @@ export function ProjectIdeasLog({
       </form>
       {error ? <ProjectDetailInlineError>{error}</ProjectDetailInlineError> : null}
       {ideas.length > 0 ? (
-        <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+        <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
           {ideas.map((idea) => (
             <ProjectDetailEntry key={idea.id}>
               <div className="flex items-center gap-2">

@@ -15,8 +15,8 @@ import type {
   WorkspaceDashboardStatusCounts,
 } from "@/domain/spydr/utils/workspaceDashboard";
 import { isTaskStatus, taskStatusLabels } from "@/domain/spydr/utils/taskStatus";
+import { DashboardStatusDonut } from "@/domain/spydr/features/shared/components/StatusMixChart";
 import {
-  DashboardRing,
   DashboardSection,
   DashboardSegmentBar,
 } from "./DashboardVisuals";
@@ -34,13 +34,13 @@ function MixPanel({
   counts,
   ringValue,
   ringLabel,
-  ringTone,
+  centerCaption,
 }: {
   title: string;
   counts: WorkspaceDashboardStatusCounts;
   ringValue: number;
   ringLabel: string;
-  ringTone: "done" | "active";
+  centerCaption: string;
 }) {
   const total = countTotal(counts);
   const rows = sortedStatusEntries(counts);
@@ -48,11 +48,11 @@ function MixPanel({
   return (
     <div className="min-w-0 rounded-sm border border-border/60 bg-muted/10 p-3 md:p-4">
       <div className="flex items-center gap-4">
-        <DashboardRing
-          value={ringValue}
-          total={total}
-          label={ringLabel}
-          tone={ringTone}
+        <DashboardStatusDonut
+          counts={counts}
+          centerPercent={ratioPercent(ringValue, total)}
+          centerLabel={ringLabel}
+          centerCaption={centerCaption}
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
@@ -115,14 +115,14 @@ export function DashboardDistribution({ dashboard }: DashboardDistributionProps)
             counts={taskCounts}
             ringValue={completedTasks}
             ringLabel="Tasks completed"
-            ringTone="done"
+            centerCaption="complete"
           />
           <MixPanel
             title="Projects"
             counts={projectCounts}
             ringValue={inMotionProjectCount(projectCounts)}
             ringLabel="Projects in motion"
-            ringTone="active"
+            centerCaption="in motion"
           />
         </div>
       </DashboardSection>

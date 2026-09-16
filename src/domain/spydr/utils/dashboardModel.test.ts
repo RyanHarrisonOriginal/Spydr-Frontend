@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  countByStatus,
   initialsFromName,
   rankedPersonLoads,
   ratioPercent,
@@ -50,6 +51,21 @@ describe("dashboard visuals helpers", () => {
       active: 4,
       waiting: 1,
       blocked: 1,
+    });
+  });
+
+  it("counts items by status", () => {
+    expect(
+      countByStatus([
+        { status: "active" },
+        { status: "blocked" },
+        { status: "active" },
+        { status: "completed" },
+      ])
+    ).toEqual({
+      active: 2,
+      blocked: 1,
+      completed: 1,
     });
   });
   it("computes percentages without dividing by zero", () => {

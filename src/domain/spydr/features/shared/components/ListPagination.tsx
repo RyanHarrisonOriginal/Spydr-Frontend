@@ -72,7 +72,7 @@ export function ListPagination({
             onChange={(event) =>
               setPageSize(Number(event.target.value) as ListPageSize)
             }
-            className="h-8 rounded-md border border-input bg-background px-2 text-[12px] ring-focus"
+            className="h-10 rounded-lg border border-input bg-background px-3 text-[13px] ring-focus"
             aria-label="Items per page"
           >
             {LIST_PAGE_SIZE_OPTIONS.map((size) => (

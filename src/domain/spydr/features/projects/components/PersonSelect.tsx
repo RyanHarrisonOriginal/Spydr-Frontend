@@ -70,7 +70,6 @@ export function PersonSelect({
           return <PersonAvatar person={person} size="sm" />;
         }}
         triggerClassName={cn(
-          "h-10 rounded-lg bg-background px-2.5",
           selected && isMe(selected) && "border-highlight/12 bg-highlight/5"
         )}
         labelClassName={cn(

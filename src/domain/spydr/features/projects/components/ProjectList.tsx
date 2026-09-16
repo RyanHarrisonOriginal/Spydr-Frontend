@@ -251,37 +251,18 @@ function OpenTaskCount({ count }: { count: number }) {
 function ProjectOpenDetailButton({
   projectId,
   projectTitle,
-  iconOnly = false,
 }: {
   projectId: string;
   projectTitle: string;
-  iconOnly?: boolean;
 }) {
   return (
     <Link
       to={`/projects/${projectId}`}
       onClick={(event) => event.stopPropagation()}
       aria-label={`Open ${projectTitle}`}
-      className={cn(
-        "group shrink-0 rounded-md text-highlight/90 transition-all duration-200",
-        "border border-highlight/12 bg-highlight/[0.05]",
-        "hover:border-highlight/55 hover:bg-highlight/12 hover:text-highlight",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight/30",
-        iconOnly
-          ? "grid h-7 w-7 place-items-center"
-          : "inline-flex h-6 items-center gap-0.5 px-1.5 text-[10px] font-medium"
-      )}
+      className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-highlight/25 bg-highlight/10 text-highlight hover:border-highlight/50 hover:bg-highlight/18"
     >
-      {iconOnly ? null : (
-        <span className="font-mono text-[10px] uppercase tracking-[0.08em]">Open</span>
-      )}
-      <ArrowUpRight
-        className={cn(
-          "transition-transform duration-200 group-hover:translate-x-px group-hover:-translate-y-px",
-          iconOnly ? "h-3.5 w-3.5" : "h-3.5 w-3.5"
-        )}
-        aria-hidden
-      />
+      <ArrowUpRight className="h-3.5 w-3.5" />
     </Link>
   );
 }
@@ -554,7 +535,7 @@ function NestedTaskRow({
     <Link
       to={`/tasks/${task.id}`}
       aria-label={`Open ${task.title}`}
-      className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-highlight/90"
+      className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-highlight/25 bg-highlight/10 text-highlight hover:border-highlight/50 hover:bg-highlight/18"
     >
       <ArrowUpRight className="h-3.5 w-3.5" />
     </Link>
@@ -572,11 +553,11 @@ function NestedTaskRow({
         />
         {openControl}
         {titleControl}
-        {assigneeControl}
         <TaskCompletedAt
           status={task.status}
           completedAt={task.details?.completedAt}
         />
+        {assigneeControl}
         <TaskDueDateSelect
           value={task.details?.dueDate}
           disabled={!onDueDateChange || busy}
@@ -603,11 +584,11 @@ function NestedTaskRow({
       />
       {openControl}
       {titleControl}
-      {assigneeControl}
       <TaskCompletedAt
         status={task.status}
         completedAt={task.details?.completedAt}
       />
+      {assigneeControl}
       <span className="w-[108px] shrink-0">
         <TaskDueDateSelect
           value={task.details?.dueDate}
@@ -666,7 +647,7 @@ function ProjectTaskComposer({
         placeholder={`New task on ${projectTitle}…`}
         disabled={busy}
         aria-label={`New task for ${projectTitle}`}
-        className="h-7 min-w-0 flex-1 bg-transparent px-1 text-[13px] text-foreground outline-none placeholder:text-muted-foreground/70 disabled:opacity-60"
+        className="h-10 min-w-0 flex-1 bg-transparent px-3 text-[13px] text-foreground outline-none placeholder:text-muted-foreground/70 disabled:opacity-60"
       />
       <button
         type="submit"
@@ -1033,7 +1014,6 @@ export function ProjectList({
                         <ProjectOpenDetailButton
                           projectId={project.id}
                           projectTitle={project.title}
-                          iconOnly
                         />
                     </div>
                   </div>

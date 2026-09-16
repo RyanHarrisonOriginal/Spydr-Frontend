@@ -5,10 +5,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => (
     <input
       type={type}
-      className={cn(
-        "flex h-10 w-full rounded-lg border border-border bg-background px-4 py-2 text-[15px] text-foreground shadow-sm transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground/50 focus:border-highlight/45 focus:outline-none focus:ring-2 focus:ring-highlight/20 disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
+      className={cn("spydr-input", className)}
       ref={ref}
       {...props}
     />

@@ -86,7 +86,7 @@ export function WorkPersonPicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen(true)}
-        className="inline-flex h-10 max-w-[12rem] items-center gap-1.5 rounded-sm border border-border bg-muted/20 px-2 text-[12px] text-foreground transition-colors hover:bg-muted/40 disabled:opacity-60 md:h-8"
+        className="inline-flex h-10 max-w-[12rem] items-center gap-1.5 rounded-lg border border-border bg-muted/20 px-3 text-[13px] text-foreground transition-colors hover:bg-muted/40 disabled:opacity-60"
       >
         {selectedPerson ? (
           <PersonAvatar person={selectedPerson} size="sm" className="h-4 w-4 text-[8px]" />
@@ -110,12 +110,12 @@ export function WorkPersonPicker({
             <DialogTitle className="text-base">Whose work</DialogTitle>
           </DialogHeader>
           <div className="relative">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search people…"
-              className="h-8 pl-8 text-[13px] shadow-none"
+              className="pl-9 shadow-none"
               autoFocus
             />
           </div>

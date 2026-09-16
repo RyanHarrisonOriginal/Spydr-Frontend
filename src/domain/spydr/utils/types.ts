@@ -435,7 +435,8 @@ export interface CreateProjectAreaInput {
 }
 
 export interface UpdateProjectAreaInput {
-  color: string;
+  title?: string;
+  color?: string;
 }
 
 export interface CreateProjectTaskInput {

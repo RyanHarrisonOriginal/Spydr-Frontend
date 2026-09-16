@@ -155,13 +155,13 @@ export function TodayTodoRow({
             }}
             placeholder="Quick update…"
             disabled={updateTask.isPending}
-            className="h-7 min-w-0 flex-1 rounded border border-border/50 bg-muted/15 px-2 text-[12px] outline-none ring-focus placeholder:text-muted-foreground/70"
+            className="spydr-input min-w-0 flex-1 bg-muted/15"
           />
           <Button
             type="button"
             size="sm"
             variant="secondary"
-            className="h-7 shrink-0 px-2.5 text-[11px]"
+            className="h-10 shrink-0 px-3 text-[13px]"
             disabled={!draft.trim() || updateTask.isPending}
             onClick={logNote}
           >

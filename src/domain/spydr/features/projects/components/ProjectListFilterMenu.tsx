@@ -77,7 +77,7 @@ export function ProjectListFilterMenu({
         <div className="sticky top-0 z-10 border-b border-border/80 bg-popover p-2">
           <div className="relative">
             <Search
-              className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground"
+              className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
               aria-hidden
             />
             <Input
@@ -85,7 +85,7 @@ export function ProjectListFilterMenu({
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search filters…"
               aria-label="Search filter options"
-              className="h-7 border-border/70 bg-muted/20 pl-7 text-[11px] shadow-none focus-visible:ring-1"
+              className="pl-9 shadow-none"
               onKeyDown={(event) => event.stopPropagation()}
               onClick={(event) => event.stopPropagation()}
               onPointerDown={(event) => event.stopPropagation()}

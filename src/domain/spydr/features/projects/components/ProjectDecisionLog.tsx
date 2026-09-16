@@ -63,9 +63,9 @@ export function ProjectDecisionLog({
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
       <form
-        className="space-y-2 rounded-lg border border-border/50 bg-muted/20 p-2.5"
+        className="space-y-2 rounded-sm border border-border/50 bg-muted/20 px-2.5 py-1.5"
         onSubmit={(event) => {
           event.preventDefault();
           onAdd();
@@ -97,7 +97,7 @@ export function ProjectDecisionLog({
       </form>
 
       {orderedDecisions.length > 0 ? (
-        <ol className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+        <ol className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
           {orderedDecisions.map((decision) => (
             <DecisionEntry
               key={decision.id}

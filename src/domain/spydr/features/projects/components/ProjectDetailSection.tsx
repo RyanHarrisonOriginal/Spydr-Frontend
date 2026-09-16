@@ -8,11 +8,9 @@ import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsPhone } from "@/hooks/useIsPhone";
 
-export const detailFieldClassName =
-  "h-10 w-full rounded-lg border border-input bg-background px-3 text-[13px] ring-focus transition-colors placeholder:text-muted-foreground";
+export const detailFieldClassName = "spydr-input";
 
-export const detailTextareaClassName =
-  "min-h-[6.5rem] w-full resize-y rounded-lg border border-input bg-background px-3 py-2.5 text-[13px] leading-snug ring-focus transition-colors placeholder:text-muted-foreground";
+export const detailTextareaClassName = "spydr-textarea";
 
 export const detailInsetPanelClassName =
   "rounded-lg border border-border/70 bg-muted/20 p-3";
@@ -224,7 +222,7 @@ export function ProjectDetailEntry({
   className?: string;
 }) {
   return (
-    <li className={cn("rounded-sm bg-muted/20 px-2.5 py-2.5", className)}>
+    <li className={cn("rounded-sm bg-muted/20 px-2.5 py-1.5", className)}>
       {children}
     </li>
   );

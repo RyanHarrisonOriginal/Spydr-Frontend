@@ -5,7 +5,6 @@ import {
   ErrorState,
   LoadingState,
 } from "@/domain/spydr/features/shared/components/ListState";
-import { ProjectAreasPanel } from "../components/ProjectAreasPanel";
 import { ProjectColumnSelector } from "../components/ProjectColumnSelector";
 import { CreateProjectDialog } from "../components/CreateProjectDialog";
 import { ProjectList } from "../components/ProjectList";
@@ -67,7 +66,6 @@ export function ProjectsPage() {
     restoreError,
     isLoading,
     isTrashLoading,
-    isAreasLoading,
     isError,
     errorMessage,
   } = useProjectsPage();
@@ -114,7 +112,6 @@ export function ProjectsPage() {
           </>
         }
       />
-      <ProjectAreasPanel areas={areas} isLoading={isAreasLoading} />
       {(isTrashLoading || deletedCount > 0) && (
         <ProjectTrashPanel
           projects={deletedProjects}

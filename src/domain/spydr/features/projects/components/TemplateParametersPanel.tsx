@@ -93,7 +93,7 @@ export function TemplateParametersPanel({
                 </p>
                 <Input
                   value={param.key}
-                  className="h-8 font-mono text-[12px]"
+                  className="font-mono"
                   onChange={(event) => {
                     const key = normalizeParameterKey(event.target.value);
                     updateParameter(param.id, {
@@ -112,7 +112,6 @@ export function TemplateParametersPanel({
                 </p>
                 <Input
                   value={param.label}
-                  className="h-8 text-[12px]"
                   onChange={(event) =>
                     updateParameter(param.id, { label: event.target.value })
                   }
@@ -147,7 +146,7 @@ export function TemplateParametersPanel({
           <Input
             id="new-param-key"
             value={draftKey}
-            className="h-8 font-mono text-[12px]"
+            className="font-mono"
             placeholder="NEW_COMPANY_NAME"
             onChange={(event) => {
               setDraftKey(event.target.value);
@@ -168,7 +167,6 @@ export function TemplateParametersPanel({
           <Input
             id="new-param-label"
             value={draftLabel}
-            className="h-8 text-[12px]"
             placeholder="New company name"
             onChange={(event) => setDraftLabel(event.target.value)}
             onKeyDown={(event) => {

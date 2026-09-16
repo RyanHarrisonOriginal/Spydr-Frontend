@@ -30,7 +30,7 @@ export function ProjectResourcesList({
   }
 
   return (
-    <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+    <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
       {resources.map((resource) => (
         <ProjectDetailEntry key={resource.id}>
           <div className="flex items-center gap-2">

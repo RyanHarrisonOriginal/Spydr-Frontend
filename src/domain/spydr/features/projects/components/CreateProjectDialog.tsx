@@ -123,7 +123,7 @@ export function CreateProjectDialog({
                   onChange={(event) =>
                     onTemplateChange?.(event.target.value)
                   }
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-focus"
+                  className="spydr-input"
                 >
                   <option value="">Blank</option>
                   {templates.map((template) => (
@@ -196,7 +196,7 @@ export function CreateProjectDialog({
                       onChange={(areaNodeId) =>
                         onFieldChange("areaNodeId", areaNodeId ?? "")
                       }
-                      className="h-10 text-sm normal-case tracking-normal"
+                      className="h-10 normal-case tracking-normal"
                     />
                   </div>
                 </>
@@ -240,7 +240,7 @@ export function CreateProjectDialog({
                             event.target.value as ProjectFormValues["status"]
                           )
                         }
-                        className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-focus"
+                        className="spydr-input"
                       >
                         {statusOptions.map((status) => (
                           <option key={status} value={status}>
@@ -260,7 +260,7 @@ export function CreateProjectDialog({
                             event.target.value as ProjectFormValues["priority"]
                           )
                         }
-                        className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-focus"
+                        className="spydr-input"
                       >
                         {priorityOptions.map((priority) => (
                           <option key={priority} value={priority}>
@@ -280,7 +280,7 @@ export function CreateProjectDialog({
                             event.target.value as ProjectFormValues["riskLevel"]
                           )
                         }
-                        className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-focus"
+                        className="spydr-input"
                       >
                         {priorityOptions.map((priority) => (
                           <option key={priority} value={priority}>
@@ -303,7 +303,7 @@ export function CreateProjectDialog({
                         onChange={(areaNodeId) =>
                           onFieldChange("areaNodeId", areaNodeId ?? "")
                         }
-                        className="h-10 text-sm normal-case tracking-normal"
+                        className="h-10 normal-case tracking-normal"
                       />
                     </div>
                     <div className="space-y-2">

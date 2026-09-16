@@ -93,9 +93,9 @@ export function TemplateParameterizedField({
           ...(id ? { id } : {}),
           ...(ariaLabel ? { "aria-label": ariaLabel } : {}),
           class: cn(
-            "template-param-editor focus:outline-none w-full px-3 py-2 text-sm leading-snug",
+            "template-param-editor focus:outline-none w-full px-3 py-2.5 text-[13px] leading-snug",
             "[&_p]:my-0",
-            multiline ? "min-h-[4.5rem] [&_p+p]:mt-1.5" : "min-h-9"
+            multiline ? "min-h-[4.5rem] [&_p+p]:mt-1.5" : "min-h-10"
           ),
         },
         handleKeyDown: (_view, event) => {
@@ -127,7 +127,7 @@ export function TemplateParameterizedField({
   return (
     <div
       className={cn(
-        "rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+        "rounded-lg border border-input bg-background ring-focus focus-within:border-highlight/40",
         disabled && "opacity-60",
         className
       )}

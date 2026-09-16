@@ -74,7 +74,7 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
             variant === "field" &&
               "h-10 border-input px-3 text-[13px] ring-focus",
             variant === "compact" &&
-              "h-8 border-border/20 bg-background/30 px-2.5 text-[12px]",
+              "h-10 border-input px-3 text-[13px] ring-focus",
             variant === "compact" && !showIcon && "gap-0 px-1.5",
             !hasValue && variant === "compact" && "border-dashed border-border/25 bg-muted/10",
             !hasValue && variant === "field" && "text-muted-foreground",

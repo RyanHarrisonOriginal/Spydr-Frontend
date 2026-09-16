@@ -118,7 +118,7 @@ export function ProjectListFieldSelect({
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/15",
             "disabled:cursor-not-allowed disabled:opacity-50",
             appearance === "field" &&
-              "h-7 w-full gap-1.5 rounded-lg border border-border/20 bg-background/30 px-2 text-[11px] hover:border-border/40 hover:bg-muted/30 data-[state=open]:border-primary/30 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
+              "h-10 w-full gap-1.5 rounded-lg border border-input bg-background px-3 text-[13px] hover:border-border/40 hover:bg-muted/30 data-[state=open]:border-primary/30 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
             appearance === "field" && isEmpty && "border-dashed border-border/25 bg-muted/10",
             appearance === "icon" &&
               "h-8 w-8 shrink-0 justify-center rounded-md border border-border/30 bg-background/40 hover:border-highlight/40 hover:bg-muted/40 data-[state=open]:border-primary/40 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
@@ -174,7 +174,7 @@ export function ProjectListFieldSelect({
           <div className="sticky top-0 z-10 border-b border-border/80 bg-popover px-1.5 pb-2 pt-1">
             <div className="relative">
               <Search
-                className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground"
+                className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
                 aria-hidden
               />
               <Input
@@ -183,7 +183,7 @@ export function ProjectListFieldSelect({
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder={searchPlaceholder}
                 aria-label={`Search ${menuLabel ?? ariaLabel}`}
-                className="h-7 border-border/70 bg-muted/20 pl-7 text-[11px] shadow-none focus-visible:ring-1"
+                className="pl-9"
                 onKeyDown={(event) => event.stopPropagation()}
                 onClick={(event) => event.stopPropagation()}
                 onPointerDown={(event) => event.stopPropagation()}

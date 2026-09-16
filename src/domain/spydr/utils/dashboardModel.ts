@@ -103,6 +103,15 @@ export function countTotal(counts: Record<string, number>): number {
   return Object.values(counts).reduce((sum, count) => sum + count, 0);
 }
 
+export function countByStatus(
+  items: Array<{ status: string }>
+): Record<string, number> {
+  return items.reduce<Record<string, number>>((counts, item) => {
+    counts[item.status] = (counts[item.status] ?? 0) + 1;
+    return counts;
+  }, {});
+}
+
 export function withoutClosedStatusCounts(
   counts: Record<string, number>
 ): Record<string, number> {

@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { ChevronDown, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ProjectAreaNode } from "@/domain/spydr/utils/types";
 import { nextAreaPresetColor } from "@/domain/spydr/utils/projectAreaColors";
-import { cn } from "@/lib/utils";
 import { useCreateProjectAreaMutation } from "../hooks/useCreateProjectAreaMutation";
 import { useDeleteProjectAreaMutation } from "../hooks/useDeleteProjectAreaMutation";
 import { useUpdateProjectAreaMutation } from "../hooks/useUpdateProjectAreaMutation";
@@ -15,7 +14,6 @@ interface ProjectAreasPanelProps {
 }
 
 export function ProjectAreasPanel({ areas, isLoading = false }: ProjectAreasPanelProps) {
-  const [expanded, setExpanded] = useState(areas.length === 0);
   const [draftTitle, setDraftTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
   const createArea = useCreateProjectAreaMutation();
@@ -36,10 +34,7 @@ export function ProjectAreasPanel({ areas, isLoading = false }: ProjectAreasPane
     createArea.mutate(
       { title, color: nextAreaPresetColor(areas.length) },
       {
-        onSuccess: () => {
-          setDraftTitle("");
-          setExpanded(true);
-        },
+        onSuccess: () => setDraftTitle(""),
         onError: (mutationError) => {
           setError(
             mutationError instanceof Error
@@ -88,96 +83,81 @@ export function ProjectAreasPanel({ areas, isLoading = false }: ProjectAreasPane
     );
   };
 
-  const areaSummary =
-    areas.length === 0
-      ? "None defined"
-      : `${areas.length} area${areas.length === 1 ? "" : "s"}`;
+  const renameArea = async (area: ProjectAreaNode, title: string) => {
+    setError(null);
+    await updateArea.mutateAsync(
+      { areaId: area.id, input: { title } },
+      {
+        onError: (mutationError) => {
+          setError(
+            mutationError instanceof Error
+              ? mutationError.message
+              : "Failed to rename project area"
+          );
+        },
+      }
+    );
+  };
 
   return (
-    <section className="border-b border-border/80 px-4 py-2 md:px-6">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <button
-          type="button"
-          onClick={() => setExpanded((open) => !open)}
-          className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
-          aria-expanded={expanded}
-        >
-          <ChevronDown
-            className={cn(
-              "h-3 w-3 transition-transform",
-              !expanded && "-rotate-90"
-            )}
-            aria-hidden
-          />
-          Areas
-          <span className="text-muted-foreground/70">· {areaSummary}</span>
-        </button>
-
-        {!expanded ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => setExpanded(true)}
-            className="ml-auto h-7 gap-1 px-2 text-[11px] text-muted-foreground"
-          >
-            <Plus className="h-3 w-3" />
-            Manage
-          </Button>
-        ) : (
-          <>
-            <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto sm:flex-1">
-              {isLoading ? (
-                <span className="text-[11px] text-muted-foreground">Loading…</span>
-              ) : null}
-              {!isLoading && areas.length === 0 ? (
-                <span className="text-[11px] text-muted-foreground">
-                  Add areas to group projects.
-                </span>
-              ) : null}
-              {areas.map((area) => (
-                <ProjectAreaChip
-                  key={area.id}
-                  area={area}
-                  disabled={isBusy}
-                  onColorChange={changeColor}
-                  onRemove={removeArea}
-                />
-              ))}
-            </div>
-
-            <form
-              className="flex w-full items-center gap-1.5 sm:ml-auto sm:w-auto"
-              onSubmit={(event) => {
-                event.preventDefault();
-                addArea();
-              }}
-            >
-              <input
-                value={draftTitle}
-                onChange={(event) => setDraftTitle(event.target.value)}
-                placeholder="New area…"
-                disabled={isBusy}
-                className="h-7 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-[12px] ring-focus placeholder:text-muted-foreground sm:w-36 sm:flex-none"
-              />
-              <Button
-                type="submit"
-                size="sm"
-                variant="outline"
-                disabled={!draftTitle.trim() || isBusy}
-                className="h-7 gap-1 px-2 text-[11px]"
-              >
-                <Plus className="h-3 w-3" />
-                Add
-              </Button>
-            </form>
-          </>
-        )}
+    <section className="space-y-3 border-b border-border/60 px-4 py-4 md:px-8">
+      <div>
+        <h2 className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          Project areas
+        </h2>
+        <p className="mt-1 text-[12px] text-muted-foreground">
+          Group projects by area. Click an area name to rename it. Colors show up on Work and project lists.
+        </p>
       </div>
 
-      {error ? (
-        <p className="mt-2 text-[11px] text-destructive">{error}</p>
-      ) : null}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {isLoading ? (
+          <span className="text-[12px] text-muted-foreground">Loading…</span>
+        ) : null}
+        {!isLoading && areas.length === 0 ? (
+          <span className="text-[12px] text-muted-foreground">
+            No areas yet. Add one to start grouping projects.
+          </span>
+        ) : null}
+        {areas.map((area) => (
+          <ProjectAreaChip
+            key={area.id}
+            area={area}
+            disabled={isBusy}
+            onColorChange={changeColor}
+            onTitleChange={renameArea}
+            onRemove={removeArea}
+          />
+        ))}
+      </div>
+
+      <form
+        className="flex max-w-md items-center gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          addArea();
+        }}
+      >
+        <input
+          value={draftTitle}
+          onChange={(event) => setDraftTitle(event.target.value)}
+          placeholder="New area…"
+          disabled={isBusy}
+          className="spydr-input min-w-0 flex-1"
+        />
+        <Button
+          type="submit"
+          size="sm"
+          variant="outline"
+          disabled={!draftTitle.trim() || isBusy}
+          className="h-10 gap-1 px-3 text-[13px]"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add
+        </Button>
+      </form>
+
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </section>
   );
 }

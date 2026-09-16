@@ -163,7 +163,7 @@ function TaskRow({
           <Link
             to={`/tasks/${task.id}`}
             aria-label={`Open ${task.title}`}
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-highlight/12 bg-highlight/[0.05] text-highlight/90"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-highlight/25 bg-highlight/10 text-highlight hover:border-highlight/50 hover:bg-highlight/18"
           >
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
@@ -228,7 +228,7 @@ function TaskRow({
           <Link
             to={`/tasks/${task.id}`}
             aria-label={`Open ${task.title}`}
-            className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-highlight/90"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-highlight/25 bg-highlight/10 text-highlight hover:border-highlight/50 hover:bg-highlight/18"
           >
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
@@ -271,19 +271,25 @@ function TaskRow({
           });
         }}
       />
-      <PersonSelect
-        people={people}
-        value={assigneeId}
-        compact
-        disabled={isUpdating}
-        className="w-full min-w-0"
-        ariaLabel="Task assignee"
-        onChange={(nextAssigneeId) => {
-          if (nextAssigneeId !== assigneeId) {
-            onAssigneeChange(task.id, nextAssigneeId);
-          }
-        }}
-      />
+      <div className="flex min-w-0 items-center gap-2">
+        <TaskCompletedAt
+          status={task.status}
+          completedAt={task.details?.completedAt}
+        />
+        <PersonSelect
+          people={people}
+          value={assigneeId}
+          compact
+          disabled={isUpdating}
+          className="min-w-0 flex-1"
+          ariaLabel="Task assignee"
+          onChange={(nextAssigneeId) => {
+            if (nextAssigneeId !== assigneeId) {
+              onAssigneeChange(task.id, nextAssigneeId);
+            }
+          }}
+        />
+      </div>
       <span className="min-w-0">
         <PriorityBadge priority={task.priority} />
       </span>

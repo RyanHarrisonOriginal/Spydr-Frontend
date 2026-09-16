@@ -14,6 +14,7 @@ import {
 } from "@/domain/spydr/utils/projectPersonas";
 import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
 import { isProjectStatus } from "@/domain/spydr/utils/projectStatus";
+import { countByStatus } from "@/domain/spydr/utils/dashboardModel";
 import { countTasksByBucket } from "@/domain/spydr/utils/taskStatus";
 import { useCreateProjectTaskMutation } from "./useCreateProjectTaskMutation";
 import { useCreateProjectNoteMutation } from "./useCreateProjectNoteMutation";
@@ -203,6 +204,7 @@ export function useProjectDetailPage() {
         ? Math.round((closedTasks / tasks.length) * 100)
         : 0,
       openTaskCount: taskBuckets.open,
+      taskStatusCounts: countByStatus(tasks),
     };
   }, [project]);
 

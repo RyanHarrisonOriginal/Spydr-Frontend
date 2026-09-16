@@ -12,6 +12,8 @@ import {
   LoadingState,
 } from "@/domain/spydr/features/shared/components/ListState";
 import { useOrganizationContext } from "../context/OrganizationContext";
+import { useProjectAreasQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import { ProjectAreasPanel } from "@/domain/spydr/features/projects/components/ProjectAreasPanel";
 import {
   useAddOrganizationMemberMutation,
   useOrganizationMembersQuery,
@@ -32,6 +34,7 @@ export function OrganizationSettingsPage() {
   const { userId } = useAuth();
   const { activeOrg, activeOrgId } = useOrganizationContext();
   const membersQuery = useOrganizationMembersQuery(activeOrgId);
+  const areasQuery = useProjectAreasQuery();
   const addMutation = useAddOrganizationMemberMutation(activeOrgId);
   const removeMutation = useRemoveOrganizationMemberMutation(activeOrgId);
 
@@ -96,6 +99,11 @@ export function OrganizationSettingsPage() {
         }
       />
 
+      <ProjectAreasPanel
+        areas={areasQuery.data ?? []}
+        isLoading={areasQuery.isLoading}
+      />
+
       {showInitialLoading ? <LoadingState title="Loading members" /> : null}
 
       {membersQuery.isError ? (
@@ -143,7 +151,7 @@ export function OrganizationSettingsPage() {
                     onChange={(event) =>
                       setRole(event.target.value as OrganizationMemberRole)
                     }
-                    className="flex h-10 w-full rounded-lg border border-border bg-background px-3 text-[15px] text-foreground"
+                    className="spydr-input"
                   >
                     {roles.map((item) => (
                       <option key={item} value={item}>

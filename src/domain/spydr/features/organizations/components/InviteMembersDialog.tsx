@@ -87,7 +87,7 @@ export function InviteMembersDialog({
                 id="invite-role"
                 value={role}
                 onChange={(event) => setRole(event.target.value as OrganizationMemberRole)}
-                className="flex h-10 w-full rounded-lg border border-border bg-background px-3 text-[15px] text-foreground"
+                className="spydr-input"
               >
                 {roles.map((item) => (
                   <option key={item} value={item}>

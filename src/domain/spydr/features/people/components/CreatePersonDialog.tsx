@@ -23,8 +23,7 @@ interface CreatePersonDialogProps {
   }): void;
 }
 
-const fieldClassName =
-  "h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px] ring-focus";
+const fieldClassName = "spydr-input";
 
 export function CreatePersonDialog({
   open,

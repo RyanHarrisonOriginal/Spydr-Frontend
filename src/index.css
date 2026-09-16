@@ -474,12 +474,20 @@
     @apply focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring;
   }
 
+  .spydr-input {
+    @apply flex h-10 w-full rounded-lg border border-input bg-background px-3 text-[13px] text-foreground shadow-none ring-focus transition-colors file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .spydr-textarea {
+    @apply flex min-h-[6.5rem] w-full resize-y rounded-lg border border-input bg-background px-3 py-2.5 text-[13px] leading-snug text-foreground shadow-none ring-focus transition-colors placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
   .dot {
     @apply inline-block h-1.5 w-1.5 rounded-full;
   }
 
   .date-input {
-    @apply rounded-md border border-input bg-background pl-2 pr-8 text-[12px] text-foreground ring-focus;
+    @apply spydr-input pr-8;
     color-scheme: light;
   }
 

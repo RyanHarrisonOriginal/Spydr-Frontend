@@ -68,6 +68,7 @@ import { PersonSelect } from "./PersonSelect";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
 import { ProjectPrioritySelect } from "./ProjectPrioritySelect";
 import { ProjectStatusSelect } from "./ProjectStatusSelect";
+import { StatusMixChart } from "@/domain/spydr/features/shared/components/StatusMixChart";
 import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import { SelectionCheckbox } from "@/domain/spydr/features/shared/components/SelectionCheckbox";
@@ -100,6 +101,7 @@ interface ProjectDetailViewProps {
     };
     progressPercent: number;
     openTaskCount: number;
+    taskStatusCounts: Record<string, number>;
   };
   detailForm: ProjectDetailFormValues;
   detailSaveState: ProjectDetailSaveState;
@@ -272,154 +274,172 @@ export function ProjectDetailView({
   return (
     <div className="flex min-w-0">
       <div className="min-w-0 flex-1">
-        <PageHeader
-          dense={isPhone}
-          titleClassName="w-full max-w-none truncate-none"
-          title={
-            <input
-              value={detailForm.title}
-              onChange={(event) => onDetailFieldChange("title", event.target.value)}
-              className={cn(
-                "w-full min-w-0 bg-transparent font-semibold tracking-tight outline-none ring-focus placeholder:text-muted-foreground",
-                isPhone ? "text-[16px] leading-snug" : "text-[1.35rem]"
-              )}
-              placeholder="Project name"
-            />
-          }
-          meta={
-            isPhone ? (
-              <div className="flex w-full min-w-0 flex-col gap-1.5">
-                <div className="flex min-w-0 items-center gap-1.5">
-                  <ProjectStatusSelect
-                    value={project.status}
-                    onChange={onStatusChange}
-                    disabled={isUpdatingStatus}
-                    className="w-[6.75rem] shrink-0 h-10 rounded-lg px-2.5"
+        <div className="border-b border-border">
+          <div className="flex items-stretch">
+            <div className="min-w-0 flex-1">
+              <PageHeader
+                dense={isPhone}
+                className="border-b-0"
+                titleClassName="w-full max-w-none truncate-none"
+                title={
+                  <input
+                    value={detailForm.title}
+                    onChange={(event) => onDetailFieldChange("title", event.target.value)}
+                    className={cn(
+                      "w-full min-w-0 bg-transparent font-semibold tracking-tight outline-none ring-focus placeholder:text-muted-foreground",
+                      isPhone ? "text-[16px] leading-snug" : "text-[1.35rem]"
+                    )}
+                    placeholder="Project name"
                   />
-                  <ProjectAreaSelect
-                    areas={areas}
-                    value={areaNodeId}
-                    onChange={onAreaChange}
-                    disabled={isUpdatingArea}
-                    className="min-w-0 flex-1 h-10 rounded-lg"
-                  />
-                </div>
-                <div className="flex min-w-0 items-center gap-1.5">
-                  <DatePicker
-                    value={detailForm.targetDate || null}
-                    onChange={(targetDate) =>
-                      onDetailFieldChange("targetDate", targetDate ?? "")
-                    }
-                    variant="compact"
-                    showChevron={false}
-                    showIcon={false}
-                    placeholder="Target"
-                    panelLabel="Target date"
-                    clearLabel="Clear target date"
-                    ariaLabel="Project target date"
-                    className="h-9 w-[5.5rem] shrink-0 rounded-lg"
-                  />
-                  <PriorityBadge priority={project.priority} />
-                  {saveLabel ? (
-                    <span className="ml-auto truncate font-mono text-[10px] tabular-nums text-muted-foreground">
-                      {saveLabel}
-                    </span>
+                }
+                meta={
+                  isPhone ? (
+                    <div className="flex w-full min-w-0 flex-col gap-1.5">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <ProjectStatusSelect
+                          value={project.status}
+                          onChange={onStatusChange}
+                          disabled={isUpdatingStatus}
+                          className="w-[6.75rem] shrink-0 h-10 rounded-lg px-3"
+                        />
+                        <ProjectAreaSelect
+                          areas={areas}
+                          value={areaNodeId}
+                          onChange={onAreaChange}
+                          disabled={isUpdatingArea}
+                          className="min-w-0 flex-1 h-10 rounded-lg"
+                        />
+                      </div>
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <DatePicker
+                          value={detailForm.targetDate || null}
+                          onChange={(targetDate) =>
+                            onDetailFieldChange("targetDate", targetDate ?? "")
+                          }
+                          variant="compact"
+                          showChevron={false}
+                          showIcon={false}
+                          placeholder="Target"
+                          panelLabel="Target date"
+                          clearLabel="Clear target date"
+                          ariaLabel="Project target date"
+                          className="h-10 w-[5.5rem] shrink-0 rounded-lg"
+                        />
+                        <PriorityBadge priority={project.priority} />
+                        {saveLabel ? (
+                          <span className="ml-auto truncate font-mono text-[10px] tabular-nums text-muted-foreground">
+                            {saveLabel}
+                          </span>
+                        ) : (
+                          <ProgressMeta
+                            className="ml-auto"
+                            openCount={stats.openTaskCount}
+                            progressPercent={stats.progressPercent}
+                            compact
+                          />
+                        )}
+                      </div>
+                    </div>
                   ) : (
-                    <ProgressMeta
-                      className="ml-auto"
-                      openCount={stats.openTaskCount}
-                      progressPercent={stats.progressPercent}
-                      compact
-                    />
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center gap-2">
-                <ProjectStatusSelect
-                  value={project.status}
-                  onChange={onStatusChange}
-                  disabled={isUpdatingStatus}
-                  className="w-[110px] h-10 rounded-lg px-2.5"
-                />
-                <PriorityBadge priority={project.priority} />
-                <ProjectAreaSelect
-                  areas={areas}
-                  value={areaNodeId}
-                  onChange={onAreaChange}
-                  disabled={isUpdatingArea}
-                  className="w-[140px] h-10 rounded-lg"
-                />
-                {project.tags.map((tag) => (
-                  <EntityTag key={tag} tag={tag} />
-                ))}
-                <span className="text-border">·</span>
-                <ProgressMeta
-                  openCount={stats.openTaskCount}
-                  progressPercent={stats.progressPercent}
-                  showBar={stats.connected.tasks.total > 0}
-                />
-                <span className="font-mono text-[11px] text-muted-foreground">
-                  updated {formatRelativeTime(project.updatedAt)}
-                  {saveLabel ? ` · ${saveLabel}` : null}
-                </span>
-              </div>
-            )
-          }
-          actions={
-            isPhone && deletedCount === 0 ? undefined : (
-              <div className="flex items-center gap-2">
-                {isPhone ? null : (
-                  <>
-                    <EntityTransformMenu
-                      nodeId={project.id}
-                      sourceType="project"
-                      sourceTitle={project.title}
-                      projects={projects}
-                      excludeProjectId={project.id}
-                    />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <ProjectStatusSelect
+                        value={project.status}
+                        onChange={onStatusChange}
+                        disabled={isUpdatingStatus}
+                        className="w-[110px] h-10 rounded-lg px-3"
+                      />
+                      <PriorityBadge priority={project.priority} />
+                      <ProjectAreaSelect
+                        areas={areas}
+                        value={areaNodeId}
+                        onChange={onAreaChange}
+                        disabled={isUpdatingArea}
+                        className="w-[140px] h-10 rounded-lg"
+                      />
+                      {project.tags.map((tag) => (
+                        <EntityTag key={tag} tag={tag} />
+                      ))}
+                      <span className="text-border">·</span>
+                      <ProgressMeta
+                        openCount={stats.openTaskCount}
+                        progressPercent={stats.progressPercent}
+                        showBar={stats.connected.tasks.total > 0}
+                      />
+                      <span className="font-mono text-[11px] text-muted-foreground">
+                        updated {formatRelativeTime(project.updatedAt)}
+                        {saveLabel ? ` · ${saveLabel}` : null}
+                      </span>
+                    </div>
+                  )
+                }
+                actions={
+                  isPhone && deletedCount === 0 ? undefined : (
+                    <div className="flex items-center gap-2">
+                      {isPhone ? null : (
+                        <>
+                          <EntityTransformMenu
+                            nodeId={project.id}
+                            sourceType="project"
+                            sourceTitle={project.title}
+                            projects={projects}
+                            excludeProjectId={project.id}
+                          />
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2 text-muted-foreground"
+                                aria-label="Project actions"
+                              >
+                                <MoreHorizontal className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem
+                                className="text-[12px]"
+                                onSelect={() => setSaveAsTemplateOpen(true)}
+                              >
+                                Save as template…
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </>
+                      )}
+                      {deletedCount > 0 ? (
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2 text-muted-foreground"
-                          aria-label="Project actions"
+                          className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                          onClick={openTrash}
                         >
-                          <MoreHorizontal className="h-3.5 w-3.5" />
+                          <ArchiveRestore className="h-3 w-3" />
+                          {isPhone ? null : "Trash"}
+                          <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[9px] font-semibold tabular-nums leading-none text-foreground/80">
+                            {deletedCount}
+                          </span>
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem
-                          className="text-[12px]"
-                          onSelect={() => setSaveAsTemplateOpen(true)}
-                        >
-                          Save as template…
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                )}
-                {deletedCount > 0 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                    onClick={openTrash}
-                  >
-                    <ArchiveRestore className="h-3 w-3" />
-                    {isPhone ? null : "Trash"}
-                    <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[9px] font-semibold tabular-nums leading-none text-foreground/80">
-                      {deletedCount}
-                    </span>
-                  </Button>
-                ) : null}
+                      ) : null}
+                    </div>
+                  )
+                }
+              />
+            </div>
+            {isPhone ? null : (
+              <div className="relative z-10 flex w-[min(22rem,40%)] shrink-0 items-center border-l border-border/60 bg-background/70 px-4 py-3">
+                <StatusMixChart
+                  className="w-full border-0 bg-transparent p-0"
+                  title="Status mix"
+                  counts={stats.taskStatusCounts}
+                  centerPercent={stats.progressPercent}
+                  centerLabel="Tasks completed"
+                />
               </div>
-            )
-          }
-        />
+            )}
+          </div>
+        </div>
 
         <SaveAsTemplateDialog
           project={project}
@@ -441,6 +461,15 @@ export function ProjectDetailView({
         )}
 
         <div className="border-b border-border bg-muted/10 px-4 py-3 md:px-6">
+          {isPhone ? (
+            <StatusMixChart
+              className="mb-3"
+              title="Status mix"
+              counts={stats.taskStatusCounts}
+              centerPercent={stats.progressPercent}
+              centerLabel="Tasks completed"
+            />
+          ) : null}
           <textarea
             value={detailForm.body}
             onChange={(event) => onDetailFieldChange("body", event.target.value)}
@@ -522,13 +551,23 @@ export function ProjectDetailView({
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-3 px-4 pb-8 pt-3 md:px-6">
+        <div
+          className={cn(
+            "flex flex-col gap-2 pb-8 pt-2",
+            isPhone ? "px-2" : "px-3 md:px-4"
+          )}
+        >
           {childMutationError ? (
             <ProjectDetailInlineError>{childMutationError}</ProjectDetailInlineError>
           ) : null}
 
           <ProjectDetailSection>
-            <div className="flex min-w-0 items-center gap-2 border-b border-border/70 bg-muted/20 px-2 py-1.5">
+            <div
+              className={cn(
+                "flex min-w-0 items-center gap-2 border-b border-border/70 bg-muted/20 py-2",
+                isPhone ? "px-2" : "px-3"
+              )}
+            >
               <ProjectDetailTabs<ProjectLogTab>
                 value={logTab}
                 onChange={setLogTab}
@@ -575,12 +614,17 @@ export function ProjectDetailView({
                 </div>
               ) : null}
             </div>
-            <ProjectDetailSectionBody className="min-h-0 gap-3 p-3">
+            <ProjectDetailSectionBody
+              className={cn(
+                "min-h-0 gap-2 py-2",
+                isPhone ? "px-2" : "px-3"
+              )}
+            >
               {logTab === "tasks" ? (
                 <div className="flex min-h-0 flex-1 flex-col gap-2">
                   <form
                     className={cn(
-                      "grid items-center gap-2 rounded-lg border border-highlight/20 bg-highlight/[0.04] p-2",
+                      "grid items-center gap-2 rounded-sm border border-highlight/20 bg-highlight/[0.04] px-2.5 py-1.5",
                       isPhone
                         ? "grid-cols-[1fr_auto]"
                         : "md:grid-cols-[1fr_140px_auto]"
@@ -621,12 +665,12 @@ export function ProjectDetailView({
                     <ProjectDetailInlineError>{taskError}</ProjectDetailInlineError>
                   ) : null}
                   {project.tasks.length > 0 ? (
-                    <ul className="min-h-0 space-y-1">
+                    <ul className="min-h-0 space-y-1.5">
                       {project.tasks.map((task) =>
                         isPhone ? (
                           <li
                             key={task.id}
-                            className="flex min-w-0 items-center gap-1 rounded-sm bg-muted/20 px-1.5 py-1 hover:bg-muted/40"
+                            className="flex min-w-0 items-center gap-1 rounded-sm bg-muted/20 px-1 py-0.5 hover:bg-muted/40"
                           >
                             <TaskStatusSelect
                               value={task.status}
@@ -655,7 +699,7 @@ export function ProjectDetailView({
                               placeholder="Due"
                               showChevron={false}
                               showIcon={false}
-                              className="h-9 w-[4.25rem] shrink-0 rounded-lg"
+                              className="h-10 w-[4.25rem] shrink-0 rounded-lg"
                               project={project}
                               onChange={(dueDate) => {
                                 const current =
@@ -669,7 +713,7 @@ export function ProjectDetailView({
                             <Link
                               to={`/tasks/${task.id}`}
                               aria-label={`Open ${task.title}`}
-                              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-highlight/90"
+                              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-highlight/25 bg-highlight/10 text-highlight hover:border-highlight/50 hover:bg-highlight/18"
                             >
                               <ArrowUpRight className="h-3.5 w-3.5" />
                             </Link>
@@ -677,7 +721,7 @@ export function ProjectDetailView({
                         ) : (
                           <li
                             key={task.id}
-                            className="flex min-w-0 items-center gap-2 rounded-sm bg-muted/20 px-2 py-1.5 hover:bg-muted/40"
+                            className="flex min-w-0 items-center gap-2 rounded-sm bg-muted/20 px-2.5 py-1.5 hover:bg-muted/40"
                           >
                             <SelectionCheckbox
                               checked={taskSelection.isSelected(task.id)}
@@ -688,7 +732,7 @@ export function ProjectDetailView({
                             <TaskStatusSelect
                               value={task.status}
                               disabled={isUpdatingChild}
-                              className="w-[120px] shrink-0 h-10 rounded-lg px-2.5"
+                              className="w-[120px] shrink-0 h-10 rounded-lg px-3"
                               onChange={(status) => {
                                 if (status !== task.status) {
                                   onUpdateChild("task", task.id, { status });
@@ -697,10 +741,21 @@ export function ProjectDetailView({
                             />
                             <Link
                               to={`/tasks/${task.id}`}
+                              aria-label={`Open ${task.title}`}
+                              className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-highlight/25 bg-highlight/10 text-highlight hover:border-highlight/50 hover:bg-highlight/18"
+                            >
+                              <ArrowUpRight className="h-3.5 w-3.5" />
+                            </Link>
+                            <Link
+                              to={`/tasks/${task.id}`}
                               className="min-w-0 flex-1 truncate text-[13px] hover:text-primary"
                             >
                               {task.title}
                             </Link>
+                            <TaskCompletedAt
+                              status={task.status}
+                              completedAt={task.details?.completedAt}
+                            />
                             <PersonSelect
                               people={people}
                               value={
@@ -723,10 +778,6 @@ export function ProjectDetailView({
                                   });
                                 }
                               }}
-                            />
-                            <TaskCompletedAt
-                              status={task.status}
-                              completedAt={task.details?.completedAt}
                             />
                             <span className="w-[140px] shrink-0">
                               <TaskDueDateSelect

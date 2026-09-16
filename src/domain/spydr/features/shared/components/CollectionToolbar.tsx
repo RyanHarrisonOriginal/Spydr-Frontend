@@ -54,12 +54,12 @@ export function CollectionToolbar<T>({
           <div className="flex min-w-0 flex-wrap items-center gap-2">{startActions}</div>
         ) : null}
         <div className="relative min-w-0 flex-1 md:min-w-[12rem] md:max-w-xs">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={state.search}
             onChange={(event) => view.setSearch(event.target.value)}
             placeholder={searchPlaceholder}
-            className="h-8 border-border bg-background pl-8 text-[12px] shadow-none"
+            className="pl-9 shadow-none"
             aria-label={searchPlaceholder}
           />
         </div>
