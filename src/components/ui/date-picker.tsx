@@ -26,6 +26,7 @@ export interface DatePickerProps {
   showChevron?: boolean;
   showIcon?: boolean;
   highlightAfter?: string | null;
+  fitContent?: boolean;
 }
 
 export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
@@ -45,6 +46,7 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
       showChevron = true,
       showIcon = true,
       highlightAfter,
+      fitContent = false,
     },
     ref
   ) {
@@ -66,7 +68,8 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
           className={cn(
-            "flex w-full min-w-0 items-center gap-1.5 rounded-lg border transition-colors",
+            "flex min-w-0 items-center gap-1.5 rounded-lg border transition-colors",
+            fitContent ? "w-auto" : "w-full",
             "border-border/20 bg-background/30 hover:border-border/40 hover:bg-muted/30",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/15",
             "disabled:cursor-not-allowed disabled:opacity-50",
@@ -93,7 +96,8 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
           ) : null}
           <span
             className={cn(
-              "min-w-0 flex-1 truncate leading-none",
+              "min-w-0 leading-none",
+              fitContent ? "whitespace-nowrap" : "flex-1 truncate",
               variant === "compact" && "text-right font-mono tabular-nums",
               hasValue
                 ? variant === "compact"

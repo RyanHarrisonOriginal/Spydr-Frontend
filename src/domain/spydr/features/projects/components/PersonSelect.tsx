@@ -18,6 +18,10 @@ interface PersonSelectProps {
   ariaLabel: string;
   className?: string;
   compact?: boolean;
+  /** Size the trigger to the selected name instead of filling the parent. */
+  fitContent?: boolean;
+  /** Wrap the selected name instead of truncating. */
+  wrapLabel?: boolean;
 }
 
 export function PersonSelect({
@@ -28,6 +32,8 @@ export function PersonSelect({
   ariaLabel,
   className,
   compact = false,
+  fitContent = false,
+  wrapLabel = false,
 }: PersonSelectProps) {
   const { isMe } = useCurrentUserPerson();
   const selected = people.find((person) => person.id === value) ?? null;
@@ -40,7 +46,7 @@ export function PersonSelect({
   ];
 
   return (
-    <div className={cn("min-w-0", className)}>
+    <div className={cn(fitContent ? "w-auto" : "min-w-0", className)}>
       <ProjectListFieldSelect
         value={value ?? ""}
         options={options}
@@ -50,8 +56,10 @@ export function PersonSelect({
         menuLabel="People"
         emptyValue=""
         searchable
+        fitContent={fitContent}
+        wrapLabel={wrapLabel}
         triggerLabel={
-          compact && selected
+          compact && !fitContent && selected
             ? isMe(selected)
               ? `${personGivenName(selected)} (You)`
               : personGivenName(selected)

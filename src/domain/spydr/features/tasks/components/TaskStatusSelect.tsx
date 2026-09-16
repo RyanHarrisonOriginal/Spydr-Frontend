@@ -31,6 +31,8 @@ interface TaskStatusSelectProps {
   disabled?: boolean;
   className?: string;
   appearance?: "field" | "icon";
+  fitContent?: boolean;
+  wrapLabel?: boolean;
 }
 
 export function TaskStatusSelect({
@@ -39,6 +41,8 @@ export function TaskStatusSelect({
   disabled = false,
   className,
   appearance = "field",
+  fitContent = false,
+  wrapLabel = false,
 }: TaskStatusSelectProps) {
   const options = taskStatuses.map((status) => ({
     value: status,
@@ -54,6 +58,8 @@ export function TaskStatusSelect({
       ariaLabel="Task status"
       menuLabel="Status"
       appearance={appearance}
+      fitContent={fitContent}
+      wrapLabel={wrapLabel}
       leading={<StatusDot status={value} className="shrink-0" />}
       renderOptionLeading={(option) => (
         <StatusDot status={option.value} className="shrink-0" />

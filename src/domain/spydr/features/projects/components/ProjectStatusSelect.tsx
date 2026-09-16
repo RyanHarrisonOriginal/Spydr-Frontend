@@ -42,6 +42,8 @@ interface ProjectStatusSelectProps {
   onChange(status: string): void;
   disabled?: boolean;
   className?: string;
+  fitContent?: boolean;
+  wrapLabel?: boolean;
 }
 
 export function ProjectStatusSelect({
@@ -49,6 +51,8 @@ export function ProjectStatusSelect({
   onChange,
   disabled = false,
   className,
+  fitContent = false,
+  wrapLabel = false,
 }: ProjectStatusSelectProps) {
   const options = projectStatuses.map((status) => ({
     value: status,
@@ -63,6 +67,8 @@ export function ProjectStatusSelect({
       disabled={disabled}
       ariaLabel="Project status"
       menuLabel="Status"
+      fitContent={fitContent}
+      wrapLabel={wrapLabel}
       leading={<StatusDot status={value} className="shrink-0" />}
       renderOptionLeading={(option) => <StatusDot status={option.value} className="shrink-0" />}
       triggerClassName={cn(statusSurface[value], className)}

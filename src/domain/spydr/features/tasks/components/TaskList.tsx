@@ -38,11 +38,11 @@ import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSe
 import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
 
 const ROW_BASE =
-  "grid grid-cols-[28px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_148px_40px_72px] items-center gap-3";
+  "grid grid-cols-[28px_36px_minmax(148px,0.55fr)_minmax(10rem,8fr)_minmax(8rem,0.4fr)_minmax(10rem,0.8fr)_minmax(128px,0.35fr)_minmax(132px,0.25fr)_148px_40px_72px] items-center gap-3";
 const ROW_WITH_HANDLE =
-  "grid grid-cols-[52px_28px_36px_132px_minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_96px_132px_148px_40px_72px] items-center gap-3";
-const ROW_MIN_WIDTH = 1180;
-const ROW_MIN_WIDTH_WITH_HANDLE = 1232;
+  "grid grid-cols-[52px_28px_36px_minmax(148px,0.55fr)_minmax(10rem,8fr)_minmax(8rem,0.4fr)_minmax(10rem,0.8fr)_minmax(128px,0.35fr)_minmax(132px,0.25fr)_148px_40px_72px] items-center gap-3";
+const ROW_MIN_WIDTH = 1240;
+const ROW_MIN_WIDTH_WITH_HANDLE = 1292;
 
 interface TaskListProps {
   tasks: TaskNode[];
@@ -183,7 +183,7 @@ function TaskRow({
             placeholder="Due"
             showChevron={false}
             showIcon={false}
-            className="h-7 w-[3.75rem] shrink-0"
+            className="h-7 w-[4.5rem] shrink-0"
             project={project}
             onChange={(dueDate) => onDueDateChange(task.id, dueDate)}
           />
@@ -224,7 +224,7 @@ function TaskRow({
         }}
       />
       <div className="min-w-0">
-        <div className="flex min-w-0 items-center gap-1.5">
+        <div className="flex min-w-0 items-start gap-1.5">
           <Link
             to={`/tasks/${task.id}`}
             aria-label={`Open ${task.title}`}
@@ -241,15 +241,15 @@ function TaskRow({
           {task.project ? (
             <Link
               to={`/projects/${task.project.id}`}
-              className="inline-flex max-w-[9rem] shrink-0 items-center rounded border border-border/20 bg-muted/15 px-1.5 py-px text-[10px] text-muted-foreground transition-colors hover:border-highlight/25 hover:bg-highlight/8 hover:text-highlight"
+              className="inline-flex max-w-[12rem] shrink-0 items-center rounded border border-border/20 bg-muted/15 px-1.5 py-px text-[10px] text-muted-foreground transition-colors hover:border-highlight/25 hover:bg-highlight/8 hover:text-highlight"
               title={task.project.title}
             >
-              <span className="truncate">{task.project.title}</span>
+              <span className="whitespace-normal break-words">{task.project.title}</span>
             </Link>
           ) : null}
         </div>
         {task.body ? (
-          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{task.body}</p>
+          <p className="mt-0.5 whitespace-normal break-words text-[11px] text-muted-foreground">{task.body}</p>
         ) : null}
       </div>
       <ProjectSelect
@@ -280,6 +280,7 @@ function TaskRow({
           people={people}
           value={assigneeId}
           compact
+          wrapLabel
           disabled={isUpdating}
           className="min-w-0 flex-1"
           ariaLabel="Task assignee"

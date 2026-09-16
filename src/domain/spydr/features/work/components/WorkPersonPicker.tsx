@@ -86,14 +86,14 @@ export function WorkPersonPicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen(true)}
-        className="inline-flex h-10 max-w-[12rem] items-center gap-1.5 rounded-lg border border-border bg-muted/20 px-3 text-[13px] text-foreground transition-colors hover:bg-muted/40 disabled:opacity-60"
+        className="inline-flex h-10 max-w-full items-center gap-1.5 rounded-lg border border-border bg-muted/20 px-3 text-[13px] text-foreground transition-colors hover:bg-muted/40 disabled:opacity-60"
       >
         {selectedPerson ? (
           <PersonAvatar person={selectedPerson} size="sm" className="h-4 w-4 text-[8px]" />
         ) : (
           <Users className="h-3.5 w-3.5 text-muted-foreground" />
         )}
-        <span className="min-w-0 truncate">{label}</span>
+        <span className="min-w-0 whitespace-nowrap">{label}</span>
         {selectedPerson && isMe(selectedPerson) ? <PersonMeBadge compact /> : null}
         <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
       </button>
@@ -159,7 +159,7 @@ export function WorkPersonPicker({
                       className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left text-[13px]"
                     >
                       <PersonAvatar person={person} size="sm" />
-                      <span className="min-w-0 flex-1 truncate">
+                      <span className="min-w-0 flex-1 whitespace-normal break-words">
                         {personDisplayName(person)}
                       </span>
                       {isMe(person) ? <PersonMeBadge compact /> : null}

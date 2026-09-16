@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, ArrowUpRight, Plus, Trash2, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { ProjectAreaNode, ProjectNode, PersonNode, TaskNode } from "@/domain/spydr/utils/types";
 import {
@@ -106,9 +106,9 @@ function addExpandedId(current: Set<string>, projectId: string): Set<string> {
 
 const columnWidths: Record<ProjectColumnId, string> = {
   area: "148px",
-  assignee: "148px",
-  priority: "104px",
-  status: "128px",
+  assignee: "180px",
+  priority: "132px",
+  status: "160px",
   target: "112px",
   updated: "128px",
 };
@@ -314,10 +314,18 @@ function ProjectListTitleInput({
   className?: string;
 }) {
   const [draft, setDraft] = useState(title);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setDraft(title);
   }, [title]);
+
+  useLayoutEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "0px";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [draft]);
 
   const commit = () => {
     const trimmed = draft.trim();
@@ -333,7 +341,7 @@ function ProjectListTitleInput({
       <Link
         to={`/projects/${projectId}`}
         className={cn(
-          "min-w-0 truncate text-[13px] font-medium hover:text-highlight",
+          "min-w-0 w-full flex-1 whitespace-normal break-words text-[13px] font-medium leading-snug hover:text-highlight",
           className
         )}
       >
@@ -343,8 +351,10 @@ function ProjectListTitleInput({
   }
 
   return (
-    <input
+    <textarea
+      ref={textareaRef}
       value={draft}
+      rows={1}
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commit}
       onKeyDown={(event) => {
@@ -361,7 +371,7 @@ function ProjectListTitleInput({
       disabled={disabled}
       aria-label="Project name"
       className={cn(
-        "min-w-0 flex-1 truncate bg-transparent text-[13px] font-medium outline-none ring-focus placeholder:text-muted-foreground disabled:opacity-60",
+        "min-w-0 w-full flex-1 resize-none overflow-hidden bg-transparent text-[13px] font-medium leading-snug outline-none ring-focus placeholder:text-muted-foreground disabled:opacity-60",
         className
       )}
     />
@@ -371,6 +381,11 @@ function ProjectListTitleInput({
 function resolveTaskAssigneeId(task: TaskNode): string | null {
   return task.assignee?.id ?? task.details?.assigneePersonNodeId ?? null;
 }
+
+const nestedTaskGrid =
+  "grid grid-cols-[minmax(148px,0.55fr)_28px_minmax(10rem,8fr)_minmax(9.5rem,0.35fr)_minmax(11rem,0.8fr)_minmax(108px,0.25fr)_28px_28px] items-center gap-2";
+const nestedTaskGridCompact =
+  "grid grid-cols-[28px_28px_minmax(0,8fr)_minmax(7.5rem,0.35fr)_minmax(9.5rem,0.8fr)_minmax(4.5rem,0.25fr)_28px_28px] items-center gap-1";
 
 function NestedTaskSortHeader({
   sort,
@@ -383,66 +398,22 @@ function NestedTaskSortHeader({
 }) {
   if (compact) {
     return (
-      <div className="flex items-center gap-1 px-1 pb-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-        <span className="w-7 shrink-0" aria-hidden />
-        <span className="w-7 shrink-0" aria-hidden />
-        <span className="min-w-0 flex-1">
-          <CollectionSortableHeader
-            label="Task"
-            column="title"
-            sort={sort}
-            onSort={onSort}
-          />
-        </span>
-        <span className="w-[7.5rem] shrink-0">
-          <CollectionSortableHeader
-            label="Assignee"
-            column="assignee"
-            sort={sort}
-            onSort={onSort}
-          />
-        </span>
-        <span className="w-[3.75rem] shrink-0">
-          <CollectionSortableHeader
-            label="Due"
-            column="due"
-            sort={sort}
-            align="end"
-            onSort={onSort}
-          />
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-2 px-2.5 pb-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-      <span className="w-[100px] shrink-0">
-        <CollectionSortableHeader
-          label="Status"
-          column="status"
-          sort={sort}
-          onSort={onSort}
-        />
-      </span>
-      <span className="w-7 shrink-0" aria-hidden />
-      <span className="min-w-0 flex-1">
+      <div className={cn(nestedTaskGridCompact, "px-1 pb-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground")}>
+        <span aria-hidden />
+        <span aria-hidden />
         <CollectionSortableHeader
           label="Task"
           column="title"
           sort={sort}
           onSort={onSort}
         />
-      </span>
-      <span className="w-[132px] shrink-0">
+        <span>Done</span>
         <CollectionSortableHeader
           label="Assignee"
           column="assignee"
           sort={sort}
           onSort={onSort}
         />
-      </span>
-      <span className="w-[108px] shrink-0">
         <CollectionSortableHeader
           label="Due"
           column="due"
@@ -450,7 +421,43 @@ function NestedTaskSortHeader({
           align="end"
           onSort={onSort}
         />
-      </span>
+        <span aria-hidden />
+        <span aria-hidden />
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn(nestedTaskGrid, "px-2.5 pb-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground")}>
+      <CollectionSortableHeader
+        label="Status"
+        column="status"
+        sort={sort}
+        onSort={onSort}
+      />
+      <span aria-hidden />
+      <CollectionSortableHeader
+        label="Task"
+        column="title"
+        sort={sort}
+        onSort={onSort}
+      />
+      <span>Done</span>
+      <CollectionSortableHeader
+        label="Assignee"
+        column="assignee"
+        sort={sort}
+        onSort={onSort}
+      />
+      <CollectionSortableHeader
+        label="Due"
+        column="due"
+        sort={sort}
+        align="end"
+        onSort={onSort}
+      />
+      <span aria-hidden />
+      <span aria-hidden />
     </div>
   );
 }
@@ -509,8 +516,9 @@ function NestedTaskRow({
       people={people}
       value={assigneeId}
       compact
+      wrapLabel
       disabled={busy}
-      className={compact ? "w-[7.5rem] shrink-0" : "w-[132px] shrink-0"}
+      className="w-full min-w-0"
       ariaLabel="Task assignee"
       onChange={(nextAssigneeId) => {
         if (nextAssigneeId !== assigneeId) {
@@ -519,10 +527,12 @@ function NestedTaskRow({
       }}
     />
   ) : task.assignee ? (
-    <span className="block truncate text-[11px] text-muted-foreground">
+    <span className="block min-w-0 whitespace-normal break-words text-[11px] text-muted-foreground">
       {task.assignee.details?.fullName ?? task.assignee.title}
     </span>
-  ) : null;
+  ) : (
+    <span aria-hidden />
+  );
   const titleControl = (
     <TaskTitleInput
       taskId={task.id}
@@ -540,10 +550,19 @@ function NestedTaskRow({
       <ArrowUpRight className="h-3.5 w-3.5" />
     </Link>
   );
+  const completedControl = (
+    <span className="min-w-0">
+      <TaskCompletedAt
+        status={task.status}
+        completedAt={task.details?.completedAt}
+        className="whitespace-normal break-words leading-tight"
+      />
+    </span>
+  );
 
   if (compact) {
     return (
-      <div className="flex items-center gap-1 rounded-sm border border-border/20 border-l-2 border-l-highlight/18 bg-canvas px-1 py-0.5">
+      <div className={cn(nestedTaskGridCompact, "rounded-sm border border-border/20 border-l-2 border-l-highlight/18 bg-canvas px-1 py-0.5")}>
         <TaskStatusSelect
           value={task.status}
           disabled={!onStatusChange || busy}
@@ -553,10 +572,7 @@ function NestedTaskRow({
         />
         {openControl}
         {titleControl}
-        <TaskCompletedAt
-          status={task.status}
-          completedAt={task.details?.completedAt}
-        />
+        {completedControl}
         {assigneeControl}
         <TaskDueDateSelect
           value={task.details?.dueDate}
@@ -564,42 +580,39 @@ function NestedTaskRow({
           placeholder="Due"
           showChevron={false}
           showIcon={false}
-          className="h-7 w-[3.75rem] shrink-0"
+          className="h-7 w-full"
           project={project}
           onChange={(dueDate) => onDueDateChange?.(task.id, dueDate)}
         />
-        {todoControl}
-        {deleteControl}
+        {todoControl ?? <span aria-hidden />}
+        {deleteControl ?? <span aria-hidden />}
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-sm border border-border/20 border-l-2 border-l-highlight/18 bg-canvas px-2.5 py-1.5">
+    <div className={cn(nestedTaskGrid, "rounded-sm border border-border/20 border-l-2 border-l-highlight/18 bg-canvas px-2.5 py-1.5")}>
       <TaskStatusSelect
         value={task.status}
         disabled={!onStatusChange || busy}
-        className="w-[100px] shrink-0"
+        wrapLabel
+        className="w-full min-w-0"
         onChange={(status) => onStatusChange?.(task.id, status)}
       />
       {openControl}
       {titleControl}
-      <TaskCompletedAt
-        status={task.status}
-        completedAt={task.details?.completedAt}
-      />
+      {completedControl}
       {assigneeControl}
-      <span className="w-[108px] shrink-0">
-        <TaskDueDateSelect
-          value={task.details?.dueDate}
-          disabled={!onDueDateChange || busy}
-          className="w-full"
-          project={project}
-          onChange={(dueDate) => onDueDateChange?.(task.id, dueDate)}
-        />
-      </span>
-      {todoControl}
-      {deleteControl}
+      <TaskDueDateSelect
+        value={task.details?.dueDate}
+        disabled={!onDueDateChange || busy}
+        placeholder="Due"
+        className="w-full"
+        project={project}
+        onChange={(dueDate) => onDueDateChange?.(task.id, dueDate)}
+      />
+      {todoControl ?? <span aria-hidden />}
+      {deleteControl ?? <span aria-hidden />}
     </div>
   );
 }
@@ -963,7 +976,7 @@ export function ProjectList({
                         aria-hidden
                       />
                     )}
-                    <div className="flex min-w-0 flex-1 items-center gap-1 py-0.5 pl-1 pr-1">
+                    <div className="flex min-w-0 flex-1 items-start gap-1 py-0.5 pl-1 pr-1">
                         {reorderEnabled ? rankControls(project.id, sortable.dragHandleProps) : null}
                         {visibleTasks.length > 0 ? (
                           <RowExpandToggle
@@ -987,7 +1000,7 @@ export function ProjectList({
                           placeholder="Due"
                           showChevron={false}
                           showIcon={false}
-                          className="h-7 w-[3.75rem] shrink-0"
+                          className="h-7 w-[4.5rem] shrink-0"
                           onChange={(targetDate) => {
                             const current =
                               project.details?.targetDate?.slice(0, 10) ?? null;
@@ -1100,14 +1113,15 @@ export function ProjectList({
                   )}
                   <CollectionPriorityRank rank={getPriorityRank(project.id)} />
                   <div className="min-w-0">
-                    <div className="flex min-w-0 items-center gap-2">
+                    <div className="flex min-w-0 items-start gap-2">
                       {!hasColumn("status") && onStatusChange ? (
                         <span onClick={(event) => event.stopPropagation()}>
                           <ProjectStatusSelect
                             value={project.status}
                             onChange={(status) => onStatusChange(project.id, status)}
                             disabled={updatingProjectId === project.id}
-                            className="w-[100px] shrink-0"
+                            wrapLabel
+                            className="w-[148px] shrink-0"
                           />
                         </span>
                       ) : (
@@ -1170,6 +1184,7 @@ export function ProjectList({
                         <PersonSelect
                           people={people}
                           compact
+                          wrapLabel
                           value={
                             project.personas?.assignee?.id ??
                             project.details?.assigneePersonNodeId ??
@@ -1182,7 +1197,7 @@ export function ProjectList({
                           ariaLabel="Project assignee"
                         />
                       ) : (
-                        <span className="truncate text-[12px] text-muted-foreground">
+                        <span className="whitespace-normal break-words text-[12px] text-muted-foreground">
                           {project.personas?.assignee?.details?.fullName ??
                             project.personas?.assignee?.title ??
                             "—"}

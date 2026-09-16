@@ -13,6 +13,7 @@ interface TaskDueDateSelectProps {
   variant?: "field" | "compact";
   id?: string;
   project?: TaskDueProjectRef | null;
+  fitContent?: boolean;
 }
 
 export function TaskDueDateSelect({
@@ -26,6 +27,7 @@ export function TaskDueDateSelect({
   variant = "compact",
   id,
   project,
+  fitContent = false,
 }: TaskDueDateSelectProps) {
   const dueGuard = useEnsureTaskDueWithinProject();
 
@@ -48,6 +50,7 @@ export function TaskDueDateSelect({
         showChevron={showChevron}
         showIcon={showIcon}
         highlightAfter={project?.details?.targetDate}
+        fitContent={fitContent}
         ariaLabel="Task due date"
         panelLabel="Due date"
         clearLabel="Clear due date"

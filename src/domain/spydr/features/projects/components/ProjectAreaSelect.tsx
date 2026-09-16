@@ -14,6 +14,8 @@ interface ProjectAreaSelectProps {
   disabled?: boolean;
   className?: string;
   appearance?: "field" | "rail";
+  wrapLabel?: boolean;
+  fitContent?: boolean;
 }
 
 function findArea(areas: ProjectAreaNode[], areaId: string) {
@@ -27,6 +29,8 @@ export function ProjectAreaSelect({
   disabled = false,
   className,
   appearance = "field",
+  wrapLabel = true,
+  fitContent = false,
 }: ProjectAreaSelectProps) {
   const options = [
     { value: "", label: "Unassigned" },
@@ -53,6 +57,8 @@ export function ProjectAreaSelect({
       placeholder="Unassigned"
       emptyValue=""
       searchable
+      wrapLabel={wrapLabel}
+      fitContent={fitContent}
       leading={
         appearance === "field" ? (
           hasValue && selectedColor ? (

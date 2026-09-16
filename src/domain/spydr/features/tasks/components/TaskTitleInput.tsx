@@ -1,6 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+
+function autosizeTextarea(el: HTMLTextAreaElement | null) {
+  if (!el) return;
+  el.style.height = "0px";
+  el.style.height = `${el.scrollHeight}px`;
+}
 
 export function TaskTitleInput({
   taskId,
@@ -16,10 +22,15 @@ export function TaskTitleInput({
   className?: string;
 }) {
   const [draft, setDraft] = useState(title);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setDraft(title);
   }, [title]);
+
+  useLayoutEffect(() => {
+    autosizeTextarea(textareaRef.current);
+  }, [draft]);
 
   const commit = () => {
     const trimmed = draft.trim();
@@ -35,7 +46,7 @@ export function TaskTitleInput({
       <Link
         to={`/tasks/${taskId}`}
         className={cn(
-          "min-w-0 truncate text-[13px] font-medium text-foreground/90 transition-colors hover:text-highlight",
+          "min-w-0 w-full flex-1 whitespace-normal break-words text-[13px] font-medium leading-snug text-foreground/90 transition-colors hover:text-highlight",
           className
         )}
       >
@@ -45,8 +56,10 @@ export function TaskTitleInput({
   }
 
   return (
-    <input
+    <textarea
+      ref={textareaRef}
       value={draft}
+      rows={1}
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commit}
       onKeyDown={(event) => {
@@ -63,7 +76,7 @@ export function TaskTitleInput({
       disabled={disabled}
       aria-label="Task name"
       className={cn(
-        "min-w-0 flex-1 truncate bg-transparent text-[13px] font-medium text-foreground/90 outline-none ring-focus placeholder:text-muted-foreground disabled:opacity-60",
+        "min-w-0 w-full flex-1 resize-none overflow-hidden bg-transparent text-[13px] font-medium leading-snug text-foreground/90 outline-none ring-focus placeholder:text-muted-foreground disabled:opacity-60",
         className
       )}
     />

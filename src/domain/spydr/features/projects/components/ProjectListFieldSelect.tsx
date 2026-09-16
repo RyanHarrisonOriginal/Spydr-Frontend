@@ -39,6 +39,10 @@ interface ProjectListFieldSelectProps {
   appearance?: "field" | "icon" | "rail";
   /** Overrides the selected option label on the trigger. */
   triggerLabel?: string;
+  /** Size the trigger to the selected label instead of filling the parent. */
+  fitContent?: boolean;
+  /** Wrap the selected label instead of truncating with ellipsis. */
+  wrapLabel?: boolean;
 }
 
 export function ProjectListFieldSelect({
@@ -62,6 +66,8 @@ export function ProjectListFieldSelect({
   getOptionStyle,
   appearance = "field",
   triggerLabel,
+  fitContent = false,
+  wrapLabel = false,
 }: ProjectListFieldSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,7 +124,10 @@ export function ProjectListFieldSelect({
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/15",
             "disabled:cursor-not-allowed disabled:opacity-50",
             appearance === "field" &&
-              "h-10 w-full gap-1.5 rounded-lg border border-input bg-background px-3 text-[13px] hover:border-border/40 hover:bg-muted/30 data-[state=open]:border-primary/30 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
+              "gap-1.5 rounded-lg border border-input bg-background px-3 text-[13px] hover:border-border/40 hover:bg-muted/30 data-[state=open]:border-primary/30 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
+            appearance === "field" && !fitContent && !wrapLabel && "h-10 w-full",
+            appearance === "field" && !fitContent && wrapLabel && "h-auto min-h-10 w-full py-2",
+            appearance === "field" && fitContent && "h-auto min-h-10 w-max max-w-full",
             appearance === "field" && isEmpty && "border-dashed border-border/25 bg-muted/10",
             appearance === "icon" &&
               "h-8 w-8 shrink-0 justify-center rounded-md border border-border/30 bg-background/40 hover:border-highlight/40 hover:bg-muted/40 data-[state=open]:border-primary/40 data-[state=open]:ring-2 data-[state=open]:ring-primary/12",
@@ -134,7 +143,12 @@ export function ProjectListFieldSelect({
             <>
               <span
                 className={cn(
-                  "min-w-0 flex-1 truncate text-left leading-none",
+                  "min-w-0 text-left",
+                  fitContent
+                    ? "whitespace-nowrap leading-none"
+                    : wrapLabel
+                      ? "flex-1 whitespace-normal break-words leading-snug"
+                      : "flex-1 truncate leading-none",
                   isEmpty ? "italic text-muted-foreground" : labelClassName
                 )}
               >
@@ -158,7 +172,9 @@ export function ProjectListFieldSelect({
         className={cn(
           "z-[120] overflow-hidden border-border/90 bg-popover p-1 shadow-lg",
           appearance === "field"
-            ? "w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)]"
+            ? fitContent
+              ? "min-w-[12rem]"
+              : "w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)]"
             : "min-w-[14rem]"
         )}
         onClick={(event) => event.stopPropagation()}

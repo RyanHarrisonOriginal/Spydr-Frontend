@@ -8,6 +8,7 @@ interface ProjectTargetDateSelectProps {
   placeholder?: string;
   showChevron?: boolean;
   showIcon?: boolean;
+  fitContent?: boolean;
 }
 
 export function ProjectTargetDateSelect({
@@ -18,6 +19,7 @@ export function ProjectTargetDateSelect({
   placeholder = "No target",
   showChevron = true,
   showIcon = true,
+  fitContent = false,
 }: ProjectTargetDateSelectProps) {
   return (
     <DatePicker
@@ -29,6 +31,7 @@ export function ProjectTargetDateSelect({
       placeholder={placeholder}
       showChevron={showChevron}
       showIcon={showIcon}
+      fitContent={fitContent}
       ariaLabel="Project target date"
       panelLabel="Target date"
       clearLabel="Clear target"
