@@ -27,7 +27,6 @@ import type {
   UpdateTaskInput,
   UpdateNoteInput,
   CreatePersonInput,
-  UpdatePersonInput,
   PersonNode,
   Organization,
   CreateOrganizationInput,
@@ -40,7 +39,6 @@ import type {
   TodoItem,
   TodoItemSource,
 } from "./types";
-import type { PersonWork } from "./personWorkApi";
 import type { WorkspaceDashboard } from "./workspaceDashboard";
 
 function childPath(
@@ -89,22 +87,10 @@ export const spydrApi = {
   },
   people: {
     list: () => apiRequest<PersonNode[]>("/people"),
-    get: (personId: string) => apiRequest<PersonNode>(`/people/${personId}`),
     create: (input: CreatePersonInput) =>
       apiRequest<PersonNode>("/people", { method: "POST", body: input }),
-    update: (personId: string, input: UpdatePersonInput) =>
-      apiRequest<PersonNode>(`/people/${personId}`, { method: "PATCH", body: input }),
     delete: (personId: string) =>
       apiRequest<void>(`/people/${personId}`, { method: "DELETE" }),
-    getWork: (personId: string) => apiRequest<PersonWork>(`/people/${personId}/work`),
-    reorderCollection: (
-      personId: string,
-      input: { nodeType: "project" | "task"; orderedIds: string[] }
-    ) =>
-      apiRequest<void>(`/people/${personId}/collections/reorder`, {
-        method: "POST",
-        body: input,
-      }),
   },
   projectAreas: {
     list: () => apiRequest<ProjectAreaNode[]>("/project-areas"),

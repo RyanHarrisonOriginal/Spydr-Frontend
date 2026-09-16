@@ -26,8 +26,7 @@ export function BreadcrumbTrail({ className }: BreadcrumbTrailProps) {
         const isEntityId =
           /^\/projects\/[^/]+$/.test(entry.pathname) ||
           /^\/tasks\/[^/]+$/.test(entry.pathname) ||
-          /^\/notes\/[^/]+$/.test(entry.pathname) ||
-          /^\/active-note\/[^/]+$/.test(entry.pathname);
+          /^\/notes\/[^/]+$/.test(entry.pathname);
         const labelClassName = cn(
           "truncate",
           isEntityId && "font-mono tabular-nums",

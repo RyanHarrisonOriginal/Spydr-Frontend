@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams } from "react-router-dom";
+import { workPersonPath } from "@/domain/spydr/features/work/utils/workPaths";
 import { PhoneLayoutSync } from "@/components/PhoneLayoutSync";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -19,9 +20,6 @@ import IdeasScreen from "@/screens/IdeasScreen";
 import DecisionsScreen from "@/screens/DecisionsScreen";
 import NotesScreen from "@/screens/NotesScreen";
 import NoteDetailScreen from "@/screens/NoteDetailScreen";
-import ActiveNoteScreen from "@/screens/ActiveNoteScreen";
-import PastActiveNoteScreen from "@/screens/PastActiveNoteScreen";
-import PersonDetailScreen from "@/screens/PersonDetailScreen";
 import ResourcesScreen from "@/screens/ResourcesScreen";
 import SignInScreen from "@/screens/SignInScreen";
 import SignUpScreen from "@/screens/SignUpScreen";
@@ -30,6 +28,11 @@ import OrganizationSettingsScreen from "@/screens/OrganizationSettingsScreen";
 import NotFoundScreen from "@/screens/NotFoundScreen";
 
 const queryClient = new QueryClient();
+
+function RedirectPersonToWork() {
+  const { personId } = useParams<{ personId: string }>();
+  return <Navigate to={personId ? workPersonPath(personId) : "/work"} replace />;
+}
 
 function AuthenticatedLayout() {
   return (
@@ -62,9 +65,7 @@ export default function App() {
             <Route element={<AuthenticatedLayout />}>
               <Route path="/invites/:token" element={<AcceptInviteScreen />} />
               <Route element={<WorkspaceShellScreen />}>
-                <Route index element={<Navigate to="/active-note" replace />} />
-                <Route path="/active-note" element={<ActiveNoteScreen />} />
-                <Route path="/active-note/:sessionId" element={<PastActiveNoteScreen />} />
+                <Route index element={<Navigate to="/today" replace />} />
                 <Route path="/dashboard" element={<DashboardScreen />} />
                 <Route path="/today" element={<TodayScreen />} />
                 <Route path="/work" element={<WorkScreen />} />
@@ -92,7 +93,7 @@ export default function App() {
                 <Route path="/notes" element={<NotesScreen />} />
                 <Route path="/notes/:noteId" element={<NoteDetailScreen />} />
                 <Route path="/people" element={<Navigate to="/work" replace />} />
-                <Route path="/people/:personId" element={<PersonDetailScreen />} />
+                <Route path="/people/:personId" element={<RedirectPersonToWork />} />
                 <Route path="/resources" element={<ResourcesScreen />} />
                 <Route path="/settings" element={<OrganizationSettingsScreen />} />
               </Route>

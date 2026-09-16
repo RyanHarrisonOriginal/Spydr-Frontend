@@ -31,7 +31,7 @@ export default function AcceptInviteScreen() {
     if (!token) return;
     const accepted = await acceptMutation.mutateAsync(token);
     setActiveOrgId(accepted.organizationId);
-    navigate("/active-note", { replace: true });
+    navigate("/today", { replace: true });
   }
 
   const error =

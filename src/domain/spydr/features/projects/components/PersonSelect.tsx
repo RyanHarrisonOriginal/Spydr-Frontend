@@ -7,6 +7,7 @@ import {
   personSelectLabel,
 } from "@/domain/spydr/features/people/components/PersonIdentity";
 import { personGivenName, personSubtitle } from "@/domain/spydr/utils/projectPersonas";
+import { workPersonPath } from "@/domain/spydr/features/work/utils/workPaths";
 import { cn } from "@/lib/utils";
 
 interface PersonSelectProps {
@@ -90,11 +91,11 @@ export function PersonSelect({
             <span />
           )}
           <Link
-            to={`/people/${selected.id}`}
+            to={workPersonPath(selected.id)}
             className="shrink-0 text-[10px] text-primary hover:underline"
             onClick={(event) => event.stopPropagation()}
           >
-            {isMe(selected) ? "Your profile" : "View profile"}
+            {isMe(selected) ? "Your work" : "View work"}
           </Link>
         </div>
       ) : null}

@@ -8,7 +8,6 @@ import {
   Inbox,
   LayoutDashboard,
   Lightbulb,
-  PenLine,
   Settings,
   Sun,
 } from "lucide-react";
@@ -20,10 +19,6 @@ export interface WorkspaceNavItem {
   badge?: string;
   disabled?: boolean;
 }
-
-export const homeNavItems: WorkspaceNavItem[] = [
-  { to: "/active-note", icon: PenLine, label: "Active Note" },
-];
 
 export const outlookNavItems: WorkspaceNavItem[] = [
   { to: "/today", icon: Sun, label: "Today" },
@@ -46,7 +41,6 @@ export const metaNavItems: WorkspaceNavItem[] = [
 
 export const workspaceNavSections: { label: string; items: WorkspaceNavItem[] }[] =
   [
-    { label: "Home", items: homeNavItems },
     { label: "Outlooks", items: outlookNavItems },
     { label: "Workspace", items: workspaceNavItems },
     { label: "Meta", items: metaNavItems },
@@ -62,11 +56,11 @@ export interface MobileTab {
 
 export const mobilePrimaryTabs: MobileTab[] = [
   {
-    id: "active-note",
-    to: "/active-note",
-    label: "Note",
-    icon: PenLine,
-    isActive: (pathname) => pathname.startsWith("/active-note"),
+    id: "today",
+    to: "/today",
+    label: "Today",
+    icon: Sun,
+    isActive: (pathname) => pathname.startsWith("/today"),
   },
   {
     id: "work",
@@ -75,7 +69,6 @@ export const mobilePrimaryTabs: MobileTab[] = [
     icon: FolderKanban,
     isActive: (pathname) =>
       pathname.startsWith("/work") ||
-      pathname.startsWith("/today") ||
       pathname.startsWith("/projects") ||
       pathname.startsWith("/project-templates") ||
       pathname.startsWith("/tasks") ||

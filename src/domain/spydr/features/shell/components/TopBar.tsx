@@ -7,6 +7,7 @@ import { OrganizationSwitcher } from "@/domain/spydr/features/organizations/comp
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import { PersonMeBadge } from "@/domain/spydr/features/people/components/PersonIdentity";
 import { personDisplayName } from "@/domain/spydr/utils/projectPersonas";
+import { workPersonPath } from "@/domain/spydr/features/work/utils/workPaths";
 
 export function TopBar() {
   const { currentUserPerson } = useCurrentUserPerson();
@@ -14,7 +15,7 @@ export function TopBar() {
   return (
     <header className="spydr-rule z-30 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background/85 px-3 backdrop-blur-sm md:gap-3 md:px-4">
       <Link
-        to="/active-note"
+        to="/today"
         className="flex shrink-0 items-center gap-1.5 md:hidden"
         aria-label="Spydr home"
       >
@@ -25,7 +26,7 @@ export function TopBar() {
       <div className="ml-auto flex items-center gap-1.5 md:gap-2">
         {currentUserPerson ? (
           <Link
-            to={`/people/${currentUserPerson.id}`}
+            to={workPersonPath(currentUserPerson.id)}
             className="hidden items-center gap-1.5 rounded-sm border border-highlight/25 bg-highlight/6 px-2 py-1 text-[11px] text-highlight transition-colors hover:border-highlight/40 hover:bg-highlight/10 sm:inline-flex"
           >
             <PersonMeBadge compact />

@@ -41,11 +41,11 @@ function CountList({
       {rows.length === 0 ? (
         <p className="text-[12px] text-muted-foreground">{empty}</p>
       ) : (
-        <ul className="divide-y divide-border/50 border-y border-border/50">
+        <ul className="space-y-0.5">
           {rows.map((row) => (
             <li
               key={row.key}
-              className="flex items-center justify-between gap-3 py-1.5 text-[12px]"
+              className="flex items-center justify-between gap-3 py-1 text-[12px]"
             >
               <span className="flex min-w-0 items-center gap-2">
                 {row.leading}

@@ -5,7 +5,7 @@ export interface NavigationBreadcrumb {
 }
 
 export const WORKSPACE_ROOT_PATHS = new Set([
-  "/active-note",
+  "/today",
   "/dashboard",
   "/work",
   "/projects",
@@ -18,7 +18,7 @@ export const WORKSPACE_ROOT_PATHS = new Set([
 ]);
 
 const ROOT_LABELS: Record<string, string> = {
-  "/active-note": "Active Note",
+  "/today": "Today",
   "/dashboard": "Dashboard",
   "/work": "Work",
   "/projects": "Work",
@@ -54,11 +54,6 @@ export function getDefaultBreadcrumbLabel(pathname: string): string {
 
   const noteId = extractEntityId(pathname, "/notes/");
   if (noteId) return formatBreadcrumbEntityId(noteId);
-
-  const activeNoteId = extractEntityId(pathname, "/active-note/");
-  if (activeNoteId) return formatBreadcrumbEntityId(activeNoteId);
-
-  if (pathname.startsWith("/people/")) return "Person";
 
   return "Page";
 }

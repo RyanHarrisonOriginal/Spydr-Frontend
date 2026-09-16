@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequestAuthed } from "@/lib/apiClient";
 import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
 import { spydrApi } from "@/domain/spydr/utils/api";
-import { activeNoteApi } from "@/domain/spydr/utils/activeNoteApi";
 import type { IdeaNode } from "@/domain/spydr/utils/types";
 import { spydrOrgKey } from "./spydrQueryKeys";
 
@@ -20,28 +19,6 @@ export function usePeopleQuery() {
     queryKey: spydrOrgKey(activeOrgId!, "people"),
     queryFn: spydrApi.people.list,
     enabled: enabled && !!activeOrgId,
-    refetchOnMount: "always",
-  });
-}
-
-export function usePersonQuery(personId: string | undefined) {
-  const enabled = useSpydrQueryEnabled();
-  const { activeOrgId } = useOrganizationContext();
-  return useQuery({
-    queryKey: spydrOrgKey(activeOrgId!, "people", personId ?? ""),
-    queryFn: () => spydrApi.people.get(personId!),
-    enabled: enabled && !!activeOrgId && !!personId,
-    refetchOnMount: "always",
-  });
-}
-
-export function usePersonWorkQuery(personId: string | undefined) {
-  const enabled = useSpydrQueryEnabled();
-  const { activeOrgId } = useOrganizationContext();
-  return useQuery({
-    queryKey: spydrOrgKey(activeOrgId!, "people", personId ?? "", "work"),
-    queryFn: () => spydrApi.people.getWork(personId!),
-    enabled: enabled && !!activeOrgId && !!personId,
     refetchOnMount: "always",
   });
 }
@@ -219,27 +196,5 @@ export function useIdeasQuery() {
       failureCount < 2 &&
       error instanceof Error &&
       error.message === "Unauthorized",
-  });
-}
-
-export function useActiveNotesHistoryQuery() {
-  const enabled = useSpydrQueryEnabled();
-  const { activeOrgId } = useOrganizationContext();
-  return useQuery({
-    queryKey: spydrOrgKey(activeOrgId!, "active-notes"),
-    queryFn: activeNoteApi.list,
-    enabled: enabled && !!activeOrgId,
-    refetchOnMount: "always",
-  });
-}
-
-export function useActiveNoteSessionQuery(sessionId: string | undefined) {
-  const enabled = useSpydrQueryEnabled();
-  const { activeOrgId } = useOrganizationContext();
-  return useQuery({
-    queryKey: spydrOrgKey(activeOrgId!, "active-notes", sessionId ?? ""),
-    queryFn: () => activeNoteApi.getProposal(sessionId!),
-    enabled: enabled && !!activeOrgId && !!sessionId,
-    refetchOnMount: "always",
   });
 }

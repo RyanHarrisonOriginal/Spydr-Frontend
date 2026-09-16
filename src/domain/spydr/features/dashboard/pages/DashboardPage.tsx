@@ -33,7 +33,7 @@ export function DashboardPage() {
         actions={
           <Link
             to="/work?view=tasks"
-            className="inline-flex h-7 items-center gap-1.5 rounded-sm border border-border bg-muted/20 px-2.5 text-[12px] hover:bg-muted/40"
+            className="inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-[12px] text-muted-foreground hover:bg-muted/40 hover:text-foreground"
           >
             View tasks
             <ArrowUpRight className="h-3.5 w-3.5" />
@@ -55,7 +55,7 @@ export function DashboardPage() {
 
       {!query.isLoading && !query.isError && dashboard && (
         <>
-          <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2 border-b border-border px-4 py-3 md:gap-x-6 md:px-6">
+          <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2 px-4 py-4 md:gap-x-6 md:px-6">
             {dashboardMetrics.map((metric) => {
               const value = metric.getValue(dashboard.summary);
               const hint = metric.hint?.(dashboard.summary);

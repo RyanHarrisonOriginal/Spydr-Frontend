@@ -8,13 +8,14 @@ describe("mobilePrimaryTabs", () => {
     expect(work?.isActive("/projects/abc")).toBe(true);
     expect(work?.isActive("/tasks/abc")).toBe(true);
     expect(work?.isActive("/people/abc")).toBe(true);
+    expect(work?.isActive("/today")).toBe(false);
     expect(work?.isActive("/notes/abc")).toBe(false);
   });
 
-  it("treats past active notes as the Note tab", () => {
-    const note = mobilePrimaryTabs.find((tab) => tab.id === "active-note");
-    expect(note?.isActive("/active-note")).toBe(true);
-    expect(note?.isActive("/active-note/session-1")).toBe(true);
-    expect(note?.isActive("/dashboard")).toBe(false);
+  it("treats /today as the Today tab", () => {
+    const today = mobilePrimaryTabs.find((tab) => tab.id === "today");
+    expect(today?.isActive("/today")).toBe(true);
+    expect(today?.isActive("/work")).toBe(false);
+    expect(today?.isActive("/dashboard")).toBe(false);
   });
 });

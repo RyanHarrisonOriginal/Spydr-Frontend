@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowUpRight, ChevronDown, Search, Users } from "lucide-react";
+import { ChevronDown, Search, Users } from "lucide-react";
 import type { PersonNode } from "@/domain/spydr/utils/types";
 import { personDisplayName } from "@/domain/spydr/utils/projectPersonas";
 import {
@@ -150,7 +149,7 @@ export function WorkPersonPicker({
                   <div
                     key={person.id}
                     className={cn(
-                      "flex items-center gap-1 rounded-sm pr-1",
+                      "flex items-center gap-1 rounded-sm",
                       selected && "bg-muted/40"
                     )}
                   >
@@ -165,14 +164,6 @@ export function WorkPersonPicker({
                       </span>
                       {isMe(person) ? <PersonMeBadge compact /> : null}
                     </button>
-                    <Link
-                      to={`/people/${person.id}`}
-                      onClick={() => setOpen(false)}
-                      aria-label="Open profile"
-                      className="grid h-7 w-7 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                    >
-                      <ArrowUpRight className="h-3.5 w-3.5" />
-                    </Link>
                   </div>
                 );
               })
