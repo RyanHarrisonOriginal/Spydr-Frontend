@@ -3,6 +3,7 @@ import type {
   WorkspaceDashboardAreaSummary,
   WorkspaceDashboardSummary,
 } from "./workspaceDashboard";
+import { isClosedCollectionStatus } from "./collectionVisibility";
 
 export const dashboardMetricIds = [
   "activeProjects",
@@ -100,6 +101,22 @@ export function ratioPercent(part: number, whole: number): number {
 
 export function countTotal(counts: Record<string, number>): number {
   return Object.values(counts).reduce((sum, count) => sum + count, 0);
+}
+
+export function withoutClosedStatusCounts(
+  counts: Record<string, number>
+): Record<string, number> {
+  return Object.fromEntries(
+    Object.entries(counts).filter(
+      ([status]) => !isClosedCollectionStatus(status)
+    )
+  );
+}
+
+export function inMotionProjectCount(counts: Record<string, number>): number {
+  return (
+    (counts.active ?? 0) + (counts.waiting ?? 0) + (counts.blocked ?? 0)
+  );
 }
 
 export function statusFillClass(status: string): string {

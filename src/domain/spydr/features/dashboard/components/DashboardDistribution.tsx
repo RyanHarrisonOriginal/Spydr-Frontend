@@ -3,10 +3,12 @@ import { AreaColorSwatch } from "@/domain/spydr/features/projects/components/Are
 import { hslColorCss } from "@/domain/spydr/utils/projectAreaColors";
 import {
   countTotal,
+  inMotionProjectCount,
   ratioPercent,
   sortedAreaSummaries,
   sortedStatusEntries,
   statusFillClass,
+  withoutClosedStatusCounts,
 } from "@/domain/spydr/utils/dashboardModel";
 import type {
   WorkspaceDashboard,
@@ -95,8 +97,9 @@ function MixPanel({
 }
 
 export function DashboardDistribution({ dashboard }: DashboardDistributionProps) {
-  const completedTasks = dashboard.taskStatusCounts.completed ?? 0;
-  const activeProjects = dashboard.summary.activeProjects;
+  const projectCounts = withoutClosedStatusCounts(dashboard.projectStatusCounts);
+  const taskCounts = dashboard.taskStatusCounts;
+  const completedTasks = taskCounts.completed ?? 0;
   const areas = sortedAreaSummaries(dashboard.areaSummaries).filter(
     (entry) => entry.projects > 0 || entry.openTasks > 0
   );
@@ -105,19 +108,19 @@ export function DashboardDistribution({ dashboard }: DashboardDistributionProps)
 
   return (
     <>
-      <DashboardSection title="Mix" meta="Share of current work">
+      <DashboardSection title="Mix" meta="Open projects">
         <div className="grid gap-3 px-4 pb-5 md:grid-cols-2 md:px-6">
           <MixPanel
             title="Tasks"
-            counts={dashboard.taskStatusCounts}
+            counts={taskCounts}
             ringValue={completedTasks}
             ringLabel="Tasks completed"
             ringTone="done"
           />
           <MixPanel
             title="Projects"
-            counts={dashboard.projectStatusCounts}
-            ringValue={activeProjects}
+            counts={projectCounts}
+            ringValue={inMotionProjectCount(projectCounts)}
             ringLabel="Projects in motion"
             ringTone="active"
           />

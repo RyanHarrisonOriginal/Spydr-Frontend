@@ -3,6 +3,7 @@ import {
   initialsFromName,
   rankedPersonLoads,
   ratioPercent,
+  withoutClosedStatusCounts,
 } from "./dashboardModel";
 import type { WorkspaceDashboard } from "./workspaceDashboard";
 
@@ -36,6 +37,21 @@ const emptyRoles = {
 };
 
 describe("dashboard visuals helpers", () => {
+  it("drops completed and archived statuses from mix counts", () => {
+    expect(
+      withoutClosedStatusCounts({
+        active: 4,
+        waiting: 1,
+        completed: 9,
+        archived: 2,
+        blocked: 1,
+      })
+    ).toEqual({
+      active: 4,
+      waiting: 1,
+      blocked: 1,
+    });
+  });
   it("computes percentages without dividing by zero", () => {
     expect(ratioPercent(3, 10)).toBe(30);
     expect(ratioPercent(1, 0)).toBe(0);
