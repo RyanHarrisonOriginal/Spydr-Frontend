@@ -27,6 +27,7 @@ export function TasksPage() {
     updateAssignee,
     updateDueDate,
     updateTitle,
+    updateEmoji,
     updatingTaskId,
     statusError,
     projectError,
@@ -124,6 +125,7 @@ export function TasksPage() {
               onAssigneeChange={updateAssignee}
               onDueDateChange={updateDueDate}
               onTitleChange={updateTitle}
+              onEmojiChange={updateEmoji}
               onDelete={deleteTask}
               onDeleteSelected={deleteSelectedTasks}
               deletingTaskIds={deletingTaskIds}

@@ -32,6 +32,7 @@ export function ProjectsPage() {
     creatingTaskProjectId,
     updateStatus,
     updateTitle,
+    updateEmoji,
     updateArea,
     updatePriority,
     updateTargetDate,
@@ -40,6 +41,7 @@ export function ProjectsPage() {
     updateTaskDueDate,
     updateTaskAssignee,
     updateTaskTitle,
+    updateTaskEmoji,
     createProjectTask,
     deleteTask,
     deleteProject,
@@ -203,6 +205,7 @@ export function ProjectsPage() {
             onSortColumn={listView.toggleSortColumn}
             onClearFilters={listView.clearFilters}
             onTitleChange={updateTitle}
+            onEmojiChange={updateEmoji}
             onStatusChange={updateStatus}
             onAreaChange={updateArea}
             onPriorityChange={updatePriority}
@@ -212,6 +215,7 @@ export function ProjectsPage() {
             onTaskDueDateChange={updateTaskDueDate}
             onTaskAssigneeChange={updateTaskAssignee}
             onTaskTitleChange={updateTaskTitle}
+            onTaskEmojiChange={updateTaskEmoji}
             onCreateTask={createProjectTask}
             onDeleteTask={deleteTask}
             deletingTaskIds={deletingTaskIds}

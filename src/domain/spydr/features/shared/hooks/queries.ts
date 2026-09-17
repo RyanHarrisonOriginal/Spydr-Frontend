@@ -182,6 +182,22 @@ export function useProjectTemplateQuery(templateId: string | undefined) {
   });
 }
 
+export function useTemplateSpawnedProjectsQuery(templateId: string | undefined) {
+  const enabled = useSpydrQueryEnabled();
+  const { activeOrgId } = useOrganizationContext();
+  return useQuery({
+    queryKey: spydrOrgKey(
+      activeOrgId!,
+      "project-templates",
+      templateId ?? "",
+      "spawned-projects"
+    ),
+    queryFn: () => spydrApi.projectTemplates.listSpawnedProjects(templateId!),
+    enabled: enabled && !!activeOrgId && !!templateId,
+    refetchOnMount: "always",
+  });
+}
+
 export function useIdeasQuery() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { isReady, activeOrgId } = useOrganizationContext();

@@ -118,6 +118,7 @@ export function StatusMixChart({
   centerLabel,
   centerCaption = "complete",
   className,
+  quiet = false,
 }: {
   title: string;
   counts: Record<string, number>;
@@ -125,6 +126,7 @@ export function StatusMixChart({
   centerLabel: string;
   centerCaption?: string;
   className?: string;
+  quiet?: boolean;
 }) {
   const total = countTotal(counts);
   const rows = sortedStatusEntries(counts);
@@ -132,28 +134,41 @@ export function StatusMixChart({
   return (
     <div
       className={cn(
-        "min-w-0 rounded-sm border border-border/60 bg-muted/10 p-3 md:p-4",
+        "min-w-0",
+        quiet
+          ? "p-0"
+          : "rounded-sm border border-border/60 bg-muted/10 p-3 md:p-4",
         className
       )}
     >
-      <div className="flex items-center gap-4">
+      <div className={cn("flex items-center", quiet ? "gap-3" : "gap-4")}>
         <DashboardStatusDonut
           counts={counts}
           centerPercent={centerPercent}
           centerLabel={centerLabel}
           centerCaption={centerCaption}
+          size={quiet ? 72 : 88}
+          stroke={quiet ? 9 : 11}
         />
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-[13px] font-medium text-foreground">{title}</h3>
-            <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
-              {total}
-            </span>
-          </div>
-          {rows.length === 0 ? (
-            <p className="mt-2 text-[12px] text-muted-foreground">Nothing here yet.</p>
+          {quiet ? (
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
+              {total} {total === 1 ? "task" : "tasks"}
+            </p>
           ) : (
-            <ul className="mt-2 space-y-1">
+            <div className="flex items-baseline justify-between gap-2">
+              <h3 className="text-[13px] font-medium text-foreground">{title}</h3>
+              <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+                {total}
+              </span>
+            </div>
+          )}
+          {rows.length === 0 ? (
+            <p className={cn("text-[12px] text-muted-foreground", quiet ? "mt-1" : "mt-2")}>
+              Nothing here yet.
+            </p>
+          ) : (
+            <ul className={cn(quiet ? "mt-1.5 space-y-0.5" : "mt-2 space-y-1")}>
               {rows.map((row) => (
                 <li
                   key={row.status}

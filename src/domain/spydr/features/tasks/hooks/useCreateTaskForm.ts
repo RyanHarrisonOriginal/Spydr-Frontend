@@ -11,6 +11,7 @@ export interface CreateTaskFormValues {
   dueDate: string;
   status: TaskStatus;
   priority: SpydrPriority;
+  emoji: string | null;
 }
 
 const emptyForm: CreateTaskFormValues = {
@@ -20,6 +21,7 @@ const emptyForm: CreateTaskFormValues = {
   dueDate: "",
   status: "active",
   priority: "medium",
+  emoji: null,
 };
 
 export interface UseCreateTaskFormOptions {
@@ -59,6 +61,7 @@ export function useCreateTaskForm(options?: UseCreateTaskFormOptions) {
           dueDate: values.dueDate || null,
           status: values.status,
           priority: values.priority,
+          emoji: values.emoji,
           assigneePersonNodeId:
             options?.assigneePersonNodeId ?? currentUserPersonId ?? null,
         },

@@ -140,6 +140,10 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     runUpdate(projectId, { title: trimmed }, setTitleError);
   };
 
+  const updateEmoji = (projectId: string, emoji: string | null) => {
+    runUpdate(projectId, { emoji }, setTitleError);
+  };
+
   const updateArea = (projectId: string, areaNodeId: string | null) => {
     runUpdate(projectId, { areaNodeId }, setAreaError);
   };
@@ -222,6 +226,22 @@ export function useProjectsPage(options?: { personId?: string | null }) {
         onError: (error) => {
           setTaskError(
             error instanceof Error ? error.message : "Failed to update task name"
+          );
+        },
+        onSettled: () => setUpdatingTaskId(null),
+      }
+    );
+  };
+
+  const updateTaskEmoji = (taskId: string, emoji: string | null) => {
+    setTaskError(null);
+    setUpdatingTaskId(taskId);
+    updateTask.mutate(
+      { taskId, input: { emoji } },
+      {
+        onError: (error) => {
+          setTaskError(
+            error instanceof Error ? error.message : "Failed to update task emoji"
           );
         },
         onSettled: () => setUpdatingTaskId(null),
@@ -325,6 +345,7 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     creatingTaskProjectId,
     updateStatus,
     updateTitle,
+    updateEmoji,
     updateArea,
     updatePriority,
     updateTargetDate,
@@ -333,6 +354,7 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     updateTaskDueDate,
     updateTaskAssignee,
     updateTaskTitle,
+    updateTaskEmoji,
     createProjectTask,
     deleteTask: deleteTaskById,
     deleteProject: deleteProjectById,

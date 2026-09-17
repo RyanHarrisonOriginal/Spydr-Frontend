@@ -27,7 +27,9 @@ export function ProjectSelect({
     ...(allowUnassigned ? [{ value: "", label: "No project" }] : []),
     ...projects.map((project) => ({
       value: project.id,
-      label: project.title,
+      label: project.details?.emoji
+        ? `${project.details.emoji} ${project.title}`
+        : project.title,
     })),
   ];
 

@@ -143,6 +143,22 @@ export function useTasksPage(options?: { personId?: string | null }) {
     );
   };
 
+  const updateEmoji = (taskId: string, emoji: string | null) => {
+    setTitleError(null);
+    setUpdatingTaskId(taskId);
+    updateTask.mutate(
+      { taskId, input: { emoji } },
+      {
+        onError: (error) => {
+          setTitleError(
+            error instanceof Error ? error.message : "Failed to update task emoji"
+          );
+        },
+        onSettled: () => setUpdatingTaskId(null),
+      }
+    );
+  };
+
   const deleteTaskById = (taskId: string) => {
     setDeleteError(null);
     setDeletingTaskIds([taskId]);
@@ -200,6 +216,7 @@ export function useTasksPage(options?: { personId?: string | null }) {
     updateAssignee,
     updateDueDate,
     updateTitle,
+    updateEmoji,
     updatingTaskId,
     statusError,
     projectError,

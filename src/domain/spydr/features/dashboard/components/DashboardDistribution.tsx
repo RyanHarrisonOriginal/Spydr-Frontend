@@ -170,7 +170,7 @@ export function DashboardDistribution({ dashboard }: DashboardDistributionProps)
                     <span className="flex min-w-0 items-center gap-2">
                       <AreaColorSwatch color={area.color} />
                       <span className="truncate text-[13px] font-medium">
-                        {area.name}
+                        {area.emoji ? `${area.emoji} ${area.name}` : area.name}
                       </span>
                     </span>
                     <span className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">

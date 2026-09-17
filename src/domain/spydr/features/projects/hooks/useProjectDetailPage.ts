@@ -37,6 +37,7 @@ export interface ProjectTaskFormValues {
   body: string;
   dueDate: string;
   priority: SpydrPriority;
+  emoji: string | null;
 }
 
 export interface ProjectNoteFormValues {
@@ -69,6 +70,7 @@ const emptyTaskForm: ProjectTaskFormValues = {
   body: "",
   dueDate: "",
   priority: "medium",
+  emoji: null,
 };
 
 const emptyNoteForm: ProjectNoteFormValues = {
@@ -244,6 +246,7 @@ export function useProjectDetailPage() {
         priority: taskForm.priority,
         status: "active",
         assigneePersonNodeId: currentUserPersonId,
+        emoji: taskForm.emoji,
       },
       {
         onSuccess: () => setTaskForm(emptyTaskForm),
@@ -350,6 +353,11 @@ export function useProjectDetailPage() {
     );
   };
 
+  const updateEmoji = (emoji: string | null) => {
+    if (!projectId) return;
+    updateProject.mutate({ emoji });
+  };
+
   const updatePersona = (role: ProjectPersonaRole, personNodeId: string | null) => {
     if (!projectId) return;
 
@@ -403,6 +411,7 @@ export function useProjectDetailPage() {
     updateChild,
     updateStatus,
     updateArea,
+    updateEmoji,
     updatePersona,
     deleteChild,
     deleteSelectedChildren,

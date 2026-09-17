@@ -319,6 +319,8 @@ export function WorkPage() {
           view={tasksPage.view}
           startActions={pageControls}
           endActions={listTools}
+          showSort={false}
+          wrap={false}
           sticky
         />
       ) : null}
@@ -427,6 +429,7 @@ export function WorkPage() {
                 onSortColumn={projectsPage.listView.toggleSortColumn}
                 onClearFilters={projectsPage.listView.clearFilters}
                 onTitleChange={projectsPage.updateTitle}
+                onEmojiChange={projectsPage.updateEmoji}
                 onStatusChange={projectsPage.updateStatus}
                 onAreaChange={projectsPage.updateArea}
                 onPriorityChange={projectsPage.updatePriority}
@@ -436,6 +439,7 @@ export function WorkPage() {
                 onTaskDueDateChange={projectsPage.updateTaskDueDate}
                 onTaskAssigneeChange={projectsPage.updateTaskAssignee}
                 onTaskTitleChange={projectsPage.updateTaskTitle}
+                onTaskEmojiChange={projectsPage.updateTaskEmoji}
                 onCreateTask={projectsPage.createProjectTask}
                 onDeleteTask={projectsPage.deleteTask}
                 deletingTaskIds={projectsPage.deletingTaskIds}
@@ -525,6 +529,7 @@ export function WorkPage() {
                 onAssigneeChange={tasksPage.updateAssignee}
                 onDueDateChange={tasksPage.updateDueDate}
                 onTitleChange={tasksPage.updateTitle}
+                onEmojiChange={tasksPage.updateEmoji}
                 onDelete={tasksPage.deleteTask}
                 onDeleteSelected={tasksPage.deleteSelectedTasks}
                 deletingTaskIds={tasksPage.deletingTaskIds}

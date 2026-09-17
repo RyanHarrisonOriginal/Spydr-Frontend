@@ -36,6 +36,7 @@ import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskS
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
 import { useEnsureTaskDueWithinProject } from "@/domain/spydr/features/tasks/hooks/useEnsureTaskDueWithinProject";
 import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
+import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
 import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
 import type {
   ProjectDecisionFormValues,
@@ -55,7 +56,9 @@ import {
   ProjectDetailSection,
   ProjectDetailSectionBody,
   ProjectDetailTabs,
-  detailFieldClassName,
+  detailQuietControlClassName,
+  detailQuietInputClassName,
+  detailStrandControlClassName,
 } from "./ProjectDetailSection";
 import {
   ProjectDeletedItems,
@@ -157,6 +160,7 @@ interface ProjectDetailViewProps {
   isUpdatingStatus?: boolean;
   onAreaChange(areaNodeId: string | null): void;
   isUpdatingArea?: boolean;
+  onEmojiChange(emoji: string | null): void;
   onPersonaChange(role: ProjectPersonaRole, personNodeId: string | null): void;
   isUpdatingPersona?: boolean;
   onDeleteChild(kind: ProjectChildKind, childId: string): void;
@@ -213,6 +217,7 @@ export function ProjectDetailView({
   isUpdatingStatus = false,
   onAreaChange,
   isUpdatingArea = false,
+  onEmojiChange,
   onPersonaChange,
   isUpdatingPersona = false,
   onDeleteChild,
@@ -274,43 +279,53 @@ export function ProjectDetailView({
   return (
     <div className="flex min-w-0">
       <div className="min-w-0 flex-1">
-        <div className="border-b border-border">
+        <div className="border-b border-border spydr-rule">
           <div className="flex items-stretch">
             <div className="min-w-0 flex-1">
               <PageHeader
                 dense={isPhone}
-                className="border-b-0"
+                className="border-b-0 shadow-none after:hidden"
                 titleClassName="w-full max-w-none"
                 title={
-                  <input
+                  <div className="flex min-w-0 items-center gap-2">
+                    <EmojiPicker
+                      value={project.details?.emoji}
+                      size="md"
+                      ariaLabel={`Emoji for ${project.title}`}
+                      onChange={onEmojiChange}
+                    />
+                    <input
                     value={detailForm.title}
                     onChange={(event) => onDetailFieldChange("title", event.target.value)}
                     className={cn(
-                      "w-full min-w-0 bg-transparent font-semibold tracking-tight outline-none ring-focus placeholder:text-muted-foreground",
-                      isPhone ? "text-[16px] leading-snug" : "text-[1.35rem]"
+                      "w-full min-w-0 bg-transparent font-semibold tracking-tight outline-none ring-0 placeholder:text-muted-foreground",
+                      isPhone ? "text-[16px] leading-snug" : "text-[1.5rem]"
                     )}
                     placeholder="Project name"
-                  />
+                    />
+                  </div>
                 }
                 meta={
                   isPhone ? (
-                    <div className="flex w-full min-w-0 flex-col gap-1.5">
-                      <div className="flex min-w-0 items-center gap-1.5">
+                    <div className="flex w-full min-w-0 flex-col gap-1">
+                      <div className="flex min-w-0 items-center gap-1">
                         <ProjectStatusSelect
                           value={project.status}
                           onChange={onStatusChange}
                           disabled={isUpdatingStatus}
-                          className="w-[6.75rem] shrink-0 h-10 rounded-lg px-3"
+                          fitContent
+                          className={cn(detailQuietControlClassName, "w-[6.75rem] shrink-0")}
                         />
                         <ProjectAreaSelect
                           areas={areas}
                           value={areaNodeId}
                           onChange={onAreaChange}
                           disabled={isUpdatingArea}
-                          className="min-w-0 flex-1 h-10 rounded-lg"
+                          quiet
+                          className={cn(detailQuietControlClassName, "min-w-0 flex-1")}
                         />
                       </div>
-                      <div className="flex min-w-0 items-center gap-1.5">
+                      <div className="flex min-w-0 items-center gap-1">
                         <DatePicker
                           value={detailForm.targetDate || null}
                           onChange={(targetDate) =>
@@ -323,9 +338,15 @@ export function ProjectDetailView({
                           panelLabel="Target date"
                           clearLabel="Clear target date"
                           ariaLabel="Project target date"
-                          className="h-10 w-[5.5rem] shrink-0 rounded-lg"
+                          className={cn(
+                            detailQuietControlClassName,
+                            "w-[5.5rem] shrink-0 justify-center"
+                          )}
                         />
-                        <PriorityBadge priority={project.priority} />
+                        <PriorityBadge
+                          priority={project.priority}
+                          className="border-transparent bg-transparent px-1"
+                        />
                         {saveLabel ? (
                           <span className="ml-auto truncate font-mono text-[10px] tabular-nums text-muted-foreground">
                             {saveLabel}
@@ -341,31 +362,36 @@ export function ProjectDetailView({
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
                       <ProjectStatusSelect
                         value={project.status}
                         onChange={onStatusChange}
                         disabled={isUpdatingStatus}
-                        className="w-[110px] h-10 rounded-lg px-3"
+                        fitContent
+                        className={detailQuietControlClassName}
                       />
-                      <PriorityBadge priority={project.priority} />
+                      <PriorityBadge
+                        priority={project.priority}
+                        className="border-transparent bg-transparent px-1"
+                      />
                       <ProjectAreaSelect
                         areas={areas}
                         value={areaNodeId}
                         onChange={onAreaChange}
                         disabled={isUpdatingArea}
-                        className="w-[140px] h-10 rounded-lg"
+                        quiet
+                        fitContent
+                        className={detailQuietControlClassName}
                       />
                       {project.tags.map((tag) => (
                         <EntityTag key={tag} tag={tag} />
                       ))}
-                      <span className="text-border">·</span>
                       <ProgressMeta
                         openCount={stats.openTaskCount}
                         progressPercent={stats.progressPercent}
                         showBar={stats.connected.tasks.total > 0}
                       />
-                      <span className="font-mono text-[11px] text-muted-foreground">
+                      <span className="font-mono text-[11px] text-muted-foreground/80">
                         updated {formatRelativeTime(project.updatedAt)}
                         {saveLabel ? ` · ${saveLabel}` : null}
                       </span>
@@ -374,7 +400,7 @@ export function ProjectDetailView({
                 }
                 actions={
                   isPhone && deletedCount === 0 ? undefined : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       {isPhone ? null : (
                         <>
                           <EntityTransformMenu
@@ -383,12 +409,13 @@ export function ProjectDetailView({
                             sourceTitle={project.title}
                             projects={projects}
                             excludeProjectId={project.id}
+                            className="border-0 bg-transparent shadow-none"
                           />
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 type="button"
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
                                 className="h-7 px-2 text-muted-foreground"
                                 aria-label="Project actions"
@@ -410,14 +437,14 @@ export function ProjectDetailView({
                       {deletedCount > 0 ? (
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                           onClick={openTrash}
                         >
                           <ArchiveRestore className="h-3 w-3" />
                           {isPhone ? null : "Trash"}
-                          <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[9px] font-semibold tabular-nums leading-none text-foreground/80">
+                          <span className="font-mono text-[9px] font-semibold tabular-nums leading-none">
                             {deletedCount}
                           </span>
                         </Button>
@@ -428,9 +455,10 @@ export function ProjectDetailView({
               />
             </div>
             {isPhone ? null : (
-              <div className="relative z-10 flex w-[min(22rem,40%)] shrink-0 items-center border-l border-border/60 bg-background/70 px-4 py-3">
+              <div className="relative z-10 flex w-[min(18rem,34%)] shrink-0 items-center px-5 py-3">
                 <StatusMixChart
-                  className="w-full border-0 bg-transparent p-0"
+                  quiet
+                  className="w-full"
                   title="Status mix"
                   counts={stats.taskStatusCounts}
                   centerPercent={stats.progressPercent}
@@ -448,7 +476,7 @@ export function ProjectDetailView({
         />
 
         {deletedCount > 0 && (
-          <div className="px-4 pt-3 md:px-6">
+          <div className="px-4 pt-4 md:px-8">
             <ProjectDeletedItems
               deleted={deleted}
               expanded={trashExpanded}
@@ -460,10 +488,11 @@ export function ProjectDetailView({
           </div>
         )}
 
-        <div className="border-b border-border bg-muted/10 px-4 py-3 md:px-6">
+        <div className="px-4 pt-5 md:px-8 md:pt-7">
           {isPhone ? (
             <StatusMixChart
-              className="mb-3"
+              quiet
+              className="mb-5"
               title="Status mix"
               counts={stats.taskStatusCounts}
               centerPercent={stats.progressPercent}
@@ -475,16 +504,16 @@ export function ProjectDetailView({
             onChange={(event) => onDetailFieldChange("body", event.target.value)}
             placeholder="Brief — context, intent, and what done looks like."
             rows={3}
-            className="min-h-[4.5rem] w-full resize-y rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5 text-[13px] leading-snug outline-none ring-focus placeholder:text-muted-foreground"
+            className="spydr-strand-field min-h-[4.75rem] w-full resize-y rounded-sm border-0 bg-muted/30 px-3 py-2.5 text-[14px] leading-relaxed outline-none ring-0 placeholder:text-muted-foreground"
           />
 
           <div
             className={cn(
-              "mt-3 grid gap-x-3 gap-y-2",
-              isPhone ? "grid-cols-2" : "sm:grid-cols-3"
+              "mt-6 flex flex-wrap items-end gap-x-6 gap-y-3",
+              isPhone && "grid grid-cols-2 gap-x-4 gap-y-3"
             )}
           >
-            <ProjectDetailField label="Start" className="space-y-1">
+            <ProjectDetailField label="Start" className="w-auto space-y-1">
               <DatePicker
                 value={detailForm.startDate || null}
                 onChange={(startDate) =>
@@ -494,11 +523,13 @@ export function ProjectDetailView({
                 clearLabel="Clear start date"
                 placeholder="Select start date"
                 ariaLabel="Project start date"
-                className="h-10 rounded-lg"
+                fitContent
+                showIcon={false}
+                className={detailStrandControlClassName}
               />
             </ProjectDetailField>
             {isPhone ? null : (
-              <ProjectDetailField label="Target" className="space-y-1">
+              <ProjectDetailField label="Target" className="w-auto space-y-1">
                 <DatePicker
                   value={detailForm.targetDate || null}
                   onChange={(targetDate) =>
@@ -508,11 +539,13 @@ export function ProjectDetailView({
                   clearLabel="Clear target date"
                   placeholder="Select target date"
                   ariaLabel="Project target date"
-                  className="h-10 rounded-lg"
+                  fitContent
+                  showIcon={false}
+                  className={detailStrandControlClassName}
                 />
               </ProjectDetailField>
             )}
-            <ProjectDetailField label="Risk" className="space-y-1">
+            <ProjectDetailField label="Risk" className="w-auto min-w-[7rem] space-y-1">
               <ProjectPrioritySelect
                 value={detailForm.riskLevel}
                 onChange={(riskLevel) =>
@@ -520,17 +553,18 @@ export function ProjectDetailView({
                 }
                 ariaLabel="Project risk"
                 menuLabel="Risk"
-                className="h-10 w-full rounded-lg px-3"
+                className={cn(detailStrandControlClassName, "w-auto")}
               />
             </ProjectDetailField>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-6">
             <ProjectPersonasPanel
               people={people}
               personas={personas}
               disabled={isUpdatingPersona}
               onChange={onPersonaChange}
+              controlClassName={detailStrandControlClassName}
             />
             {personaError ? (
               <p className="mt-2 text-[12px] text-destructive">{personaError}</p>
@@ -538,10 +572,10 @@ export function ProjectDetailView({
           </div>
 
           {project.details?.outcome ? (
-            <p className="mt-3 border-l-2 border-highlight/45 pl-2.5 text-[12px] leading-snug text-foreground/80">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-highlight">
+            <p className="mt-5 text-[13px] leading-relaxed text-foreground/80">
+              <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.16em] text-highlight">
                 Outcome
-              </span>{" "}
+              </span>
               {project.details.outcome}
             </p>
           ) : null}
@@ -553,19 +587,19 @@ export function ProjectDetailView({
 
         <div
           className={cn(
-            "flex flex-col gap-2 pb-8 pt-2",
-            isPhone ? "px-2" : "px-3 md:px-4"
+            "flex flex-col pb-16 pt-8",
+            isPhone ? "px-3" : "px-4 md:px-8"
           )}
         >
           {childMutationError ? (
             <ProjectDetailInlineError>{childMutationError}</ProjectDetailInlineError>
           ) : null}
 
-          <ProjectDetailSection>
+          <ProjectDetailSection variant="plain">
             <div
               className={cn(
-                "flex min-w-0 items-center gap-2 border-b border-border/70 bg-muted/20 py-2",
-                isPhone ? "px-2" : "px-3"
+                "flex min-w-0 items-center gap-2 pb-1",
+                isPhone ? "px-1" : "px-0"
               )}
             >
               <ProjectDetailTabs<ProjectLogTab>
@@ -616,18 +650,18 @@ export function ProjectDetailView({
             </div>
             <ProjectDetailSectionBody
               className={cn(
-                "min-h-0 gap-2 py-2",
-                isPhone ? "px-2" : "px-3"
+                "min-h-0 gap-3 px-0 py-4",
+                isPhone ? "px-1" : "px-0"
               )}
             >
               {logTab === "tasks" ? (
-                <div className="flex min-h-0 flex-1 flex-col gap-2">
+                <div className="flex min-h-0 flex-1 flex-col gap-3">
                   <form
                     className={cn(
-                      "grid items-center gap-2 rounded-sm border border-highlight/20 bg-highlight/[0.04] px-2.5 py-1.5",
+                      "grid items-center gap-2",
                       isPhone
-                        ? "grid-cols-[1fr_auto]"
-                        : "md:grid-cols-[1fr_140px_auto]"
+                        ? "grid-cols-[auto_1fr_auto]"
+                        : "md:grid-cols-[auto_1fr_140px_auto]"
                     )}
                     onSubmit={(event) => {
                       event.preventDefault();
@@ -638,13 +672,18 @@ export function ProjectDetailView({
                       });
                     }}
                   >
+                    <EmojiPicker
+                      value={taskForm.emoji}
+                      ariaLabel="New task emoji"
+                      onChange={(emoji) => onTaskFieldChange("emoji", emoji)}
+                    />
                     <input
                       value={taskForm.title}
                       onChange={(event) =>
                         onTaskFieldChange("title", event.target.value)
                       }
                       placeholder="Add a task..."
-                      className={cn(detailFieldClassName, "min-w-0 bg-background")}
+                      className={detailQuietInputClassName}
                     />
                     {isPhone ? null : (
                       <TaskDueDateSelect
@@ -654,10 +693,12 @@ export function ProjectDetailView({
                         }
                         variant="field"
                         placeholder="Due date"
+                        showIcon={false}
                         project={project}
+                        className={detailStrandControlClassName}
                       />
                     )}
-                    <Button type="submit" className="h-10 rounded-lg" disabled={!canAddTask}>
+                    <Button type="submit" className="h-8 rounded-md px-3 text-[12px]" disabled={!canAddTask}>
                       {isAddingTask ? "Adding..." : "Add"}
                     </Button>
                   </form>
@@ -665,23 +706,31 @@ export function ProjectDetailView({
                     <ProjectDetailInlineError>{taskError}</ProjectDetailInlineError>
                   ) : null}
                   {project.tasks.length > 0 ? (
-                    <ul className="min-h-0 space-y-1.5">
+                    <ul className="min-h-0">
                       {project.tasks.map((task) =>
                         isPhone ? (
                           <li
                             key={task.id}
-                            className="flex min-w-0 items-center gap-1 rounded-sm bg-muted/20 px-1 py-0.5 hover:bg-muted/40"
+                            className="flex min-w-0 items-center gap-1 px-0.5 py-1.5 hover:bg-muted/20"
                           >
                             <TaskStatusSelect
                               value={task.status}
                               disabled={isUpdatingChild}
                               appearance="icon"
-                              className="h-9 w-9"
+                              className="h-9 w-9 border-transparent bg-transparent"
                               onChange={(status) => {
                                 if (status !== task.status) {
                                   onUpdateChild("task", task.id, { status });
                                 }
                               }}
+                            />
+                            <EmojiPicker
+                              value={task.details?.emoji}
+                              disabled={isUpdatingChild}
+                              ariaLabel={`Emoji for ${task.title}`}
+                              onChange={(emoji) =>
+                                onUpdateChild("task", task.id, { emoji })
+                              }
                             />
                             <Link
                               to={`/tasks/${task.id}`}
@@ -699,7 +748,10 @@ export function ProjectDetailView({
                               placeholder="Due"
                               showChevron={false}
                               showIcon={false}
-                              className="h-10 w-[4.25rem] shrink-0 rounded-lg"
+                              className={cn(
+                                detailQuietControlClassName,
+                                "w-[4.25rem] shrink-0 justify-center"
+                              )}
                               project={project}
                               onChange={(dueDate) => {
                                 const current =
@@ -713,7 +765,7 @@ export function ProjectDetailView({
                             <Link
                               to={`/tasks/${task.id}`}
                               aria-label={`Open ${task.title}`}
-                              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-highlight/25 bg-highlight/10 text-highlight hover:border-highlight/50 hover:bg-highlight/18"
+                              className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted/40 hover:text-highlight"
                             >
                               <ArrowUpRight className="h-3.5 w-3.5" />
                             </Link>
@@ -721,7 +773,7 @@ export function ProjectDetailView({
                         ) : (
                           <li
                             key={task.id}
-                            className="flex min-w-0 items-center gap-2 rounded-sm bg-muted/20 px-2.5 py-1.5 hover:bg-muted/40"
+                            className="flex min-w-0 items-center gap-2 px-1 py-2 hover:bg-muted/20"
                           >
                             <SelectionCheckbox
                               checked={taskSelection.isSelected(task.id)}
@@ -732,7 +784,8 @@ export function ProjectDetailView({
                             <TaskStatusSelect
                               value={task.status}
                               disabled={isUpdatingChild}
-                              className="w-[120px] shrink-0 h-10 rounded-lg px-3"
+                              fitContent
+                              className={cn(detailQuietControlClassName, "w-[7.5rem] shrink-0")}
                               onChange={(status) => {
                                 if (status !== task.status) {
                                   onUpdateChild("task", task.id, { status });
@@ -742,10 +795,18 @@ export function ProjectDetailView({
                             <Link
                               to={`/tasks/${task.id}`}
                               aria-label={`Open ${task.title}`}
-                              className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-highlight/25 bg-highlight/10 text-highlight hover:border-highlight/50 hover:bg-highlight/18"
+                              className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted/40 hover:text-highlight"
                             >
                               <ArrowUpRight className="h-3.5 w-3.5" />
                             </Link>
+                            <EmojiPicker
+                              value={task.details?.emoji}
+                              disabled={isUpdatingChild}
+                              ariaLabel={`Emoji for ${task.title}`}
+                              onChange={(emoji) =>
+                                onUpdateChild("task", task.id, { emoji })
+                              }
+                            />
                             <Link
                               to={`/tasks/${task.id}`}
                               className="min-w-0 flex-1 truncate text-[13px] hover:text-primary"
@@ -766,6 +827,7 @@ export function ProjectDetailView({
                               compact
                               disabled={isUpdatingChild}
                               className="w-[132px] shrink-0"
+                              triggerClassName={detailQuietControlClassName}
                               ariaLabel="Task assignee"
                               onChange={(assigneePersonNodeId) => {
                                 const current =
@@ -779,11 +841,12 @@ export function ProjectDetailView({
                                 }
                               }}
                             />
-                            <span className="w-[140px] shrink-0">
+                            <span className="w-[132px] shrink-0">
                               <TaskDueDateSelect
                                 value={task.details?.dueDate}
                                 disabled={isUpdatingChild}
-                                className="h-10 w-full rounded-lg"
+                                showIcon={false}
+                                className={detailQuietControlClassName}
                                 project={project}
                                 onChange={(dueDate) => {
                                   const current =

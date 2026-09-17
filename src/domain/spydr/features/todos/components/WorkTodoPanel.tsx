@@ -85,7 +85,9 @@ export function WorkTodoPanel({
                     to={`/tasks/${item.taskId}`}
                     className="min-w-0 flex-1 truncate text-[13px] text-foreground/90 hover:text-highlight"
                   >
-                    {item.task.title}
+                    {item.task.details?.emoji
+                      ? `${item.task.details.emoji} ${item.task.title}`
+                      : item.task.title}
                   </Link>
                   <span
                     className={cn(

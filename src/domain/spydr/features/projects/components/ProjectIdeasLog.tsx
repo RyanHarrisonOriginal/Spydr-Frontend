@@ -12,7 +12,7 @@ import {
   ProjectDetailEmpty,
   ProjectDetailEntry,
   ProjectDetailInlineError,
-  detailFieldClassName,
+  detailQuietInputClassName,
 } from "./ProjectDetailSection";
 import { ProjectItemActions } from "./ProjectItemActions";
 
@@ -53,7 +53,7 @@ export function ProjectIdeasLog({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       <form
-        className="flex gap-2 rounded-sm border border-border/50 bg-muted/20 px-2.5 py-1.5"
+        className="flex gap-2"
         onSubmit={(event) => {
           event.preventDefault();
           onAdd();
@@ -63,16 +63,16 @@ export function ProjectIdeasLog({
           value={form.title}
           onChange={(event) => onFieldChange("title", event.target.value)}
           placeholder="Capture an idea..."
-          className={detailFieldClassName}
+          className={detailQuietInputClassName}
         />
-        <Button type="submit" className="h-10 rounded-lg" disabled={!canAdd}>
+        <Button type="submit" className="h-8 rounded-md px-3 text-[12px]" disabled={!canAdd}>
           <Plus className="h-3.5 w-3.5" />
           {isAdding ? "Adding..." : "Add"}
         </Button>
       </form>
       {error ? <ProjectDetailInlineError>{error}</ProjectDetailInlineError> : null}
       {ideas.length > 0 ? (
-        <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
+        <ul className="min-h-0 flex-1 overflow-y-auto">
           {ideas.map((idea) => (
             <ProjectDetailEntry key={idea.id}>
               <div className="flex items-center gap-2">

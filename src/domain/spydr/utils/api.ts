@@ -20,6 +20,7 @@ import type {
   ProjectTemplateListItem,
   ResourceNode,
   TaskNode,
+  TemplateSpawnedProject,
   UpdateProjectAreaInput,
   UpdateProjectChildInput,
   UpdateProjectInput,
@@ -111,6 +112,10 @@ export const spydrApi = {
     },
     get: (templateId: string) =>
       apiRequest<ProjectTemplate>(`/project-templates/${templateId}`),
+    listSpawnedProjects: (templateId: string) =>
+      apiRequest<TemplateSpawnedProject[]>(
+        `/project-templates/${templateId}/spawned-projects`
+      ),
     create: (input: CreateProjectTemplateInput) =>
       apiRequest<ProjectTemplate>("/project-templates", {
         method: "POST",

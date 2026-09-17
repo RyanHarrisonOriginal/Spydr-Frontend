@@ -58,6 +58,79 @@ export function extractKeysFromTexts(
   return Array.from(keys);
 }
 
+/** Stored when a connected project has no value yet for a new parameter. */
+export const UNSPECIFIED_PARAM_VALUE = "UNSPECIFIED";
+
+export function newParameterEntries<T extends { key: string; label: string }>(
+  previous: Array<{ key: string }>,
+  next: T[]
+): T[] {
+  const existing = new Set(previous.map((param) => param.key));
+  return next.filter((param) => !existing.has(param.key));
+}
+
+export function newKeysFromTemplateDraft(input: {
+  previousKeys: Array<{ key: string }>;
+  parameters: Array<{ key: string; label: string }>;
+  titleTemplate?: string | null;
+  bodyTemplate?: string | null;
+  outcomeTemplate?: string | null;
+  tasks?: Array<{
+    titleTemplate?: string | null;
+    bodyTemplate?: string | null;
+    tags?: string[];
+  }>;
+}): Array<{ key: string; label: string }> {
+  const previous = new Set(input.previousKeys.map((param) => param.key));
+  const fromParams = new Map(
+    input.parameters.map((param) => [param.key, param.label] as const)
+  );
+  const fromTexts = extractKeysFromTexts(
+    input.titleTemplate,
+    input.bodyTemplate,
+    input.outcomeTemplate,
+    ...(input.tasks ?? []).flatMap((task) => [
+      task.titleTemplate,
+      task.bodyTemplate,
+      ...(task.tags ?? []),
+    ])
+  );
+  const keys = new Set([...fromParams.keys(), ...fromTexts]);
+  return Array.from(keys)
+    .filter((key) => !previous.has(key))
+    .map((key) => ({
+      key,
+      label: fromParams.get(key) || humanizeParameterKey(key),
+    }));
+}
+
+export function defaultSpawnedParamValues(
+  projectIds: string[],
+  keys: string[]
+): Record<string, Record<string, string>> {
+  const values: Record<string, Record<string, string>> = {};
+  for (const projectId of projectIds) {
+    values[projectId] = {};
+    for (const key of keys) {
+      values[projectId][key] = UNSPECIFIED_PARAM_VALUE;
+    }
+  }
+  return values;
+}
+
+export function normalizeSpawnedParamValues(
+  values: Record<string, Record<string, string>>
+): Record<string, Record<string, string>> {
+  const next: Record<string, Record<string, string>> = {};
+  for (const [projectId, params] of Object.entries(values)) {
+    next[projectId] = {};
+    for (const [key, value] of Object.entries(params)) {
+      next[projectId][key] = value.trim() || UNSPECIFIED_PARAM_VALUE;
+    }
+  }
+  return next;
+}
+
 /** Escape plain template text and turn `{{KEY}}` into TipTap mention spans. */
 export function templatePlainTextToHtml(value: string): string {
   if (!value) return "<p></p>";

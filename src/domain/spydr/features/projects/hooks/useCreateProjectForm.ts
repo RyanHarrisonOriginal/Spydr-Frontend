@@ -22,6 +22,7 @@ export interface ProjectFormValues {
   startDate: string;
   targetDate: string;
   riskLevel: SpydrPriority;
+  emoji: string | null;
 }
 
 const initialValues: ProjectFormValues = {
@@ -35,6 +36,7 @@ const initialValues: ProjectFormValues = {
   startDate: "",
   targetDate: "",
   riskLevel: "medium",
+  emoji: null,
 };
 
 export interface UseCreateProjectFormOptions {
@@ -122,6 +124,7 @@ export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
     startDate: values.startDate || null,
     targetDate: values.targetDate || null,
     riskLevel: values.riskLevel,
+    emoji: values.emoji,
   });
 
   const requiredParamsFilled = useMemo(() => {

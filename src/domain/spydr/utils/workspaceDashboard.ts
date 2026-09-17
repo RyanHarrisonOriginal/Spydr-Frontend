@@ -27,6 +27,7 @@ export interface WorkspaceDashboardAreaSummary {
   id: string | null;
   name: string;
   color: string;
+  emoji?: string | null;
   projects: number;
   activeProjects: number;
   tasks: number;

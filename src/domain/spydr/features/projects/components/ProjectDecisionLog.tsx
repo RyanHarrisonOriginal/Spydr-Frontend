@@ -12,14 +12,14 @@ import {
   ProjectDetailEmpty,
   ProjectDetailEntry,
   ProjectDetailInlineError,
-  detailFieldClassName,
+  detailQuietInputClassName,
 } from "./ProjectDetailSection";
 import { ProjectItemActions } from "./ProjectItemActions";
 
 const impactStyles: Record<string, string> = {
-  high: "border-[hsl(var(--status-blocked)/0.3)] bg-[hsl(var(--status-blocked)/0.1)] text-[hsl(var(--status-blocked))]",
-  medium: "border-[hsl(var(--status-doing)/0.3)] bg-[hsl(var(--status-doing)/0.1)] text-[hsl(var(--status-doing))]",
-  low: "border-[hsl(var(--status-todo)/0.3)] bg-[hsl(var(--status-todo)/0.1)] text-[hsl(var(--status-todo))]",
+  high: "text-[hsl(var(--status-blocked))]",
+  medium: "text-[hsl(var(--status-doing))]",
+  low: "text-[hsl(var(--status-todo))]",
 };
 
 interface ProjectDecisionLogProps {
@@ -65,7 +65,7 @@ export function ProjectDecisionLog({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       <form
-        className="space-y-2 rounded-sm border border-border/50 bg-muted/20 px-2.5 py-1.5"
+        className="space-y-2"
         onSubmit={(event) => {
           event.preventDefault();
           onAdd();
@@ -75,18 +75,18 @@ export function ProjectDecisionLog({
           value={form.title}
           onChange={(event) => onFieldChange("title", event.target.value)}
           placeholder="What was decided?"
-          className={detailFieldClassName}
+          className={detailQuietInputClassName}
         />
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
             value={form.rationale}
             onChange={(event) => onFieldChange("rationale", event.target.value)}
             placeholder="Why — context, tradeoffs, constraints (optional)"
-            className={cn(detailFieldClassName, "min-w-0 flex-1")}
+            className={cn(detailQuietInputClassName, "min-w-0 flex-1")}
           />
           <Button
             type="submit"
-            className="h-10 shrink-0 gap-1.5 rounded-lg sm:px-4"
+            className="h-8 shrink-0 gap-1.5 rounded-md sm:px-3"
             disabled={!canAdd}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -97,7 +97,7 @@ export function ProjectDecisionLog({
       </form>
 
       {orderedDecisions.length > 0 ? (
-        <ol className="min-h-0 flex-1 space-y-1.5 overflow-y-auto">
+        <ol className="min-h-0 flex-1 overflow-y-auto">
           {orderedDecisions.map((decision) => (
             <DecisionEntry
               key={decision.id}
@@ -145,8 +145,8 @@ function DecisionEntry({
         <div className="flex shrink-0 items-center gap-1.5">
           <span
             className={cn(
-              "rounded border px-1.5 py-px font-mono text-[9px] uppercase tracking-wider",
-              impactStyles[impact] ?? "border-border text-muted-foreground"
+              "px-1 py-px font-mono text-[9px] uppercase tracking-wider",
+              impactStyles[impact] ?? "text-muted-foreground"
             )}
           >
             {impact} impact

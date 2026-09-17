@@ -20,10 +20,8 @@ import {
   CAPTURE_CARD_META_CLASS,
   CAPTURE_CARD_TITLE_CLASS,
 } from "@/domain/spydr/features/shared/components/captureCardStyles";
-import {
-  isRichTextEmpty,
-  richTextToPlainText,
-} from "@/domain/spydr/utils/richText";
+import { RichTextHtml } from "@/domain/spydr/features/shared/components/RichTextHtml";
+import { isRichTextEmpty } from "@/domain/spydr/utils/richText";
 import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
 import { cn } from "@/lib/utils";
 
@@ -34,10 +32,6 @@ interface NoteListProps {
   onReorder?(orderedIds: string[]): void;
   onDelete?(noteId: string): void;
   deletingNoteId?: string | null;
-}
-
-function notePreview(note: NoteNode): string {
-  return richTextToPlainText(note.body).trim();
 }
 
 export function NoteList({
@@ -65,8 +59,7 @@ export function NoteList({
       className={CAPTURE_CARD_GRID_CLASS}
       onReorder={(orderedIds) => onReorder?.(orderedIds)}
       renderItem={(note, sortable) => {
-        const preview = notePreview(note);
-        const emptyPreview = isRichTextEmpty(note.body) || !preview;
+        const emptyPreview = isRichTextEmpty(note.body);
 
         return (
           <div className={CAPTURE_CARD_CLASS}>
@@ -129,7 +122,7 @@ export function NoteList({
                 {emptyPreview ? (
                   <p className={CAPTURE_CARD_BODY_EMPTY_CLASS}>No description yet.</p>
                 ) : (
-                  <p className={CAPTURE_CARD_BODY_CLASS}>{preview}</p>
+                  <RichTextHtml html={note.body} className={CAPTURE_CARD_BODY_CLASS} />
                 )}
 
                 <div className={CAPTURE_CARD_FOOTER_CLASS}>

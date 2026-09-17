@@ -15,6 +15,19 @@ export const detailTextareaClassName = "spydr-textarea";
 export const detailInsetPanelClassName =
   "rounded-lg border border-border/70 bg-muted/20 p-3";
 
+/** Borderless control — hover wash only. Use on created rows so lists stay open. */
+export const detailQuietControlClassName =
+  "h-8 min-h-8 border-transparent bg-transparent px-2 shadow-none hover:border-transparent hover:bg-muted/30 data-[state=open]:border-transparent data-[state=open]:bg-muted/30 data-[state=open]:ring-0";
+
+/** Composer / labeled field — muted well + baseline strand. Findable, not boxed. */
+export const detailStrandControlClassName =
+  "spydr-strand-field h-8 min-h-8 rounded-sm border-transparent bg-muted/30 px-2.5 shadow-none hover:border-transparent hover:bg-muted/45 data-[state=open]:border-transparent data-[state=open]:bg-muted/45 data-[state=open]:ring-0";
+
+export const detailQuietInputClassName =
+  "spydr-strand-field h-9 w-full min-w-0 rounded-sm border-0 bg-muted/30 px-2.5 text-[13px] shadow-none outline-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0";
+
+export const detailStrandInputClassName = detailQuietInputClassName;
+
 interface SectionCollapseContextValue {
   collapsible: boolean;
   expanded: boolean;
@@ -222,7 +235,7 @@ export function ProjectDetailEntry({
   className?: string;
 }) {
   return (
-    <li className={cn("rounded-sm bg-muted/20 px-2.5 py-1.5", className)}>
+    <li className={cn("px-1 py-2 hover:bg-muted/20", className)}>
       {children}
     </li>
   );
@@ -279,7 +292,7 @@ export function ProjectDetailTabs<T extends string>({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className="flex h-8 min-w-0 flex-1 items-center overflow-hidden rounded-sm border border-border/80 bg-muted/30 p-0.5"
+      className="flex min-w-0 flex-1 items-end gap-0.5 overflow-x-auto"
     >
       {items.map((item) => {
         const active = item.id === value;
@@ -291,9 +304,9 @@ export function ProjectDetailTabs<T extends string>({
             role="tab"
             aria-selected={active}
             className={cn(
-              "h-full min-w-0 flex-1 truncate rounded-sm px-2 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors",
+              "relative h-8 shrink-0 px-2.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors",
               active
-                ? "bg-background text-foreground shadow-sm"
+                ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
             onClick={() => onChange(item.id)}
@@ -307,11 +320,17 @@ export function ProjectDetailTabs<T extends string>({
                     ? "text-highlight"
                     : hasItems
                       ? "text-highlight/70"
-                      : "text-muted-foreground/70"
+                      : "text-muted-foreground/55"
                 )}
               >
                 {item.count}
               </span>
+            ) : null}
+            {active ? (
+              <span
+                className="absolute inset-x-2 -bottom-px h-px bg-gradient-to-r from-[hsl(var(--highlight-secondary))] via-[hsl(var(--highlight))] to-transparent"
+                aria-hidden
+              />
             ) : null}
           </button>
         );

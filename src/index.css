@@ -638,6 +638,42 @@
       transparent 72%
     );
   }
+
+  /* Input strand — a well with a web filament on the baseline.
+     Findable without boxing the page. */
+  .spydr-strand-field {
+    background-image: linear-gradient(
+      90deg,
+      hsl(var(--highlight-secondary) / 0.95),
+      hsl(var(--highlight) / 0.55) 1.75rem,
+      hsl(var(--highlight) / 0.2) 3rem,
+      hsl(var(--border) / 0.7) 3rem
+    );
+    background-size: 100% 1px;
+    background-position: left bottom;
+    background-repeat: no-repeat;
+  }
+  .spydr-strand-field:hover {
+    background-image: linear-gradient(
+      90deg,
+      hsl(var(--highlight-secondary) / 1),
+      hsl(var(--highlight) / 0.65) 2rem,
+      hsl(var(--highlight) / 0.28) 3.5rem,
+      hsl(var(--border) / 0.85) 3.5rem
+    );
+  }
+  .spydr-strand-field:focus,
+  .spydr-strand-field:focus-visible,
+  .spydr-strand-field:focus-within,
+  .spydr-strand-field[data-state="open"] {
+    background-image: linear-gradient(
+      90deg,
+      hsl(var(--highlight-secondary)),
+      hsl(var(--highlight) / 0.75) 2.25rem,
+      hsl(var(--highlight) / 0.4) 5.5rem,
+      hsl(var(--highlight) / 0.22)
+    );
+  }
 }
 
 @layer components {
@@ -764,10 +800,85 @@
   .spydr-rich-text {
     @apply prose prose-sm max-w-none;
     color: hsl(var(--foreground));
+    overflow-wrap: anywhere;
   }
 
   .dark .spydr-rich-text {
     @apply prose-invert;
+  }
+
+  /* Explicit rules: Tailwind preflight zeros lists/headings, and @apply prose
+     does not always expand nested typography selectors. */
+  .spydr-rich-text p {
+    margin: 0.35em 0;
+  }
+
+  .spydr-rich-text > :first-child {
+    margin-top: 0;
+  }
+
+  .spydr-rich-text > :last-child {
+    margin-bottom: 0;
+  }
+
+  .spydr-rich-text ul {
+    list-style-type: disc;
+    list-style-position: outside;
+    margin: 0.35em 0;
+    padding-left: 1.25rem;
+  }
+
+  .spydr-rich-text ol {
+    list-style-type: decimal;
+    list-style-position: outside;
+    margin: 0.35em 0;
+    padding-left: 1.25rem;
+  }
+
+  .spydr-rich-text ul ul {
+    list-style-type: circle;
+  }
+
+  .spydr-rich-text li {
+    display: list-item;
+    margin: 0.15em 0;
+  }
+
+  .spydr-rich-text li p {
+    margin: 0;
+  }
+
+  .spydr-rich-text :is(h1, h2, h3) {
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0.6em 0 0.25em;
+  }
+
+  .spydr-rich-text h1 {
+    font-size: 1.15rem;
+  }
+
+  .spydr-rich-text h2 {
+    font-size: 1.05rem;
+  }
+
+  .spydr-rich-text h3 {
+    font-size: 0.95rem;
+  }
+
+  .spydr-rich-text blockquote {
+    border-left: 2px solid hsl(var(--border));
+    color: hsl(var(--muted-foreground));
+    margin: 0.5em 0;
+    padding-left: 0.75rem;
+  }
+
+  .spydr-rich-text code {
+    border-radius: 0.25rem;
+    background: hsl(var(--muted));
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.9em;
+    padding: 0.1em 0.3em;
   }
 
   .spydr-rich-text :is(strong, b) {

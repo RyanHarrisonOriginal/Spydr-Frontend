@@ -101,7 +101,7 @@ interface ProjectTemplateEditorFormProps {
   onSubmit(payload: {
     create: CreateProjectTemplateInput;
     update: UpdateProjectTemplateInput;
-  }): void;
+  }): void | Promise<void>;
 }
 
 export function ProjectTemplateEditorForm({

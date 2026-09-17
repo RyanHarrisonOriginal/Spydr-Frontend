@@ -26,7 +26,13 @@ export function useUpdateProjectTemplateMutation() {
       templateId: string;
       input: UpdateProjectTemplateInput;
     }) => spydrApi.projectTemplates.update(templateId, input),
-    onSuccess: () => invalidateTemplates(queryClient, activeOrgId),
+    onSuccess: () => {
+      invalidateTemplates(queryClient, activeOrgId);
+      if (!activeOrgId) return;
+      queryClient.invalidateQueries({
+        queryKey: spydrOrgKey(activeOrgId, "projects"),
+      });
+    },
   });
 }
 

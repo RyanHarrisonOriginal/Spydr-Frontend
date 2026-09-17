@@ -53,7 +53,7 @@ export function AreaColorPicker({
       <DropdownMenuContent
         align="start"
         sideOffset={6}
-        className="z-[120] w-[11.5rem] border-border/90 bg-popover p-2 shadow-lg"
+        className="z-[120] w-[13rem] overflow-x-hidden border-border/90 bg-popover p-2 shadow-lg"
         onClick={(event) => event.stopPropagation()}
       >
         <p className="px-0.5 pb-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">

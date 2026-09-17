@@ -78,6 +78,7 @@ export function ProjectDetailPage() {
       isUpdatingStatus={detailPage.isUpdatingStatus}
       onAreaChange={detailPage.updateArea}
       isUpdatingArea={detailPage.isUpdatingArea}
+      onEmojiChange={detailPage.updateEmoji}
       onPersonaChange={detailPage.updatePersona}
       isUpdatingPersona={detailPage.isUpdatingPersona}
       onDeleteChild={detailPage.deleteChild}

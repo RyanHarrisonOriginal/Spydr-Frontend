@@ -69,12 +69,12 @@ export function ProjectDeletedItems({
   return (
     <section
       id={PROJECT_TRASH_SECTION_ID}
-      className="overflow-hidden rounded-md border border-border bg-card"
+      className="overflow-hidden"
     >
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-1.5 px-3 py-2 text-left transition-colors hover:bg-muted/30"
+        className="flex w-full items-center gap-1.5 py-1.5 text-left transition-colors hover:text-foreground"
       >
         {expanded ? (
           <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -91,14 +91,14 @@ export function ProjectDeletedItems({
           </span>
         )}
         {expanded && <span className="min-w-0 flex-1" />}
-        <span className="shrink-0 rounded-full border border-border/60 bg-background px-1.5 py-px font-mono text-[9px] font-semibold tabular-nums leading-none text-muted-foreground">
+        <span className="shrink-0 font-mono text-[9px] font-semibold tabular-nums leading-none text-muted-foreground">
           {entries.length}
         </span>
       </button>
 
       {expanded && (
         <>
-          <ul className="max-h-44 divide-y divide-border/50 overflow-y-auto border-t border-border/70">
+          <ul className="max-h-44 overflow-y-auto">
           {entries.map((entry) => {
             const restoring = isRestoring && restoringId === entry.id;
             return (

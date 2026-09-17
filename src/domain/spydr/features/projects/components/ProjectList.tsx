@@ -24,6 +24,7 @@ import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskS
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
 import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
 import { TaskTitleInput } from "@/domain/spydr/features/tasks/components/TaskTitleInput";
+import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
 import { cn } from "@/lib/utils";
@@ -68,6 +69,7 @@ interface ProjectListProps {
   onSortColumn?(column: ProjectSortColumn): void;
   onClearFilters?(): void;
   onTitleChange?(projectId: string, title: string): void;
+  onEmojiChange?(projectId: string, emoji: string | null): void;
   onStatusChange?(projectId: string, status: string): void;
   onAreaChange?(projectId: string, areaNodeId: string | null): void;
   onPriorityChange?(projectId: string, priority: string): void;
@@ -77,6 +79,7 @@ interface ProjectListProps {
   onTaskDueDateChange?(taskId: string, dueDate: string | null): void;
   onTaskAssigneeChange?(taskId: string, assigneePersonNodeId: string | null): void;
   onTaskTitleChange?(taskId: string, title: string): void;
+  onTaskEmojiChange?(taskId: string, emoji: string | null): void;
   onCreateTask?(projectId: string, title: string, onSuccess?: () => void): void;
   onDeleteTask?(taskId: string): void;
   onDelete?(projectId: string): void;
@@ -464,6 +467,7 @@ function NestedTaskRow({
   onDueDateChange,
   onAssigneeChange,
   onTitleChange,
+  onEmojiChange,
   onDelete,
   onTodo = false,
   togglingTodo = false,
@@ -480,6 +484,7 @@ function NestedTaskRow({
   onDueDateChange?(taskId: string, dueDate: string | null): void;
   onAssigneeChange?(taskId: string, assigneePersonNodeId: string | null): void;
   onTitleChange?(taskId: string, title: string): void;
+  onEmojiChange?(taskId: string, emoji: string | null): void;
   onDelete?(taskId: string): void;
   onTodo?: boolean;
   togglingTodo?: boolean;
@@ -523,12 +528,20 @@ function NestedTaskRow({
     <span aria-hidden />
   );
   const titleControl = (
-    <TaskTitleInput
-      taskId={task.id}
-      title={task.title}
-      disabled={busy}
-      onTitleChange={onTitleChange}
-    />
+    <div className="flex min-w-0 flex-1 items-center gap-0.5">
+      <EmojiPicker
+        value={task.details?.emoji}
+        disabled={busy || !onEmojiChange}
+        ariaLabel={`Emoji for ${task.title}`}
+        onChange={(emoji) => onEmojiChange?.(task.id, emoji)}
+      />
+      <TaskTitleInput
+        taskId={task.id}
+        title={task.title}
+        disabled={busy}
+        onTitleChange={onTitleChange}
+      />
+    </div>
   );
   const openControl = (
     <Link
@@ -689,6 +702,7 @@ export function ProjectList({
   onSortColumn,
   onClearFilters,
   onTitleChange,
+  onEmojiChange,
   onStatusChange,
   onAreaChange,
   onPriorityChange,
@@ -698,6 +712,7 @@ export function ProjectList({
   onTaskDueDateChange,
   onTaskAssigneeChange,
   onTaskTitleChange,
+  onTaskEmojiChange,
   onCreateTask,
   onDeleteTask,
   onDelete,
@@ -976,6 +991,14 @@ export function ProjectList({
                           rank={getPriorityRank(project.id)}
                           className="min-w-[1.15rem] px-0.5"
                         />
+                        <EmojiPicker
+                          value={project.details?.emoji}
+                          disabled={
+                            updatingProjectId === project.id || !onEmojiChange
+                          }
+                          ariaLabel={`Emoji for ${project.title}`}
+                          onChange={(emoji) => onEmojiChange?.(project.id, emoji)}
+                        />
                         <ProjectListTitleInput
                           projectId={project.id}
                           title={project.title}
@@ -1049,6 +1072,7 @@ export function ProjectList({
                               onDueDateChange={onTaskDueDateChange}
                               onAssigneeChange={onTaskAssigneeChange}
                               onTitleChange={onTaskTitleChange}
+                              onEmojiChange={onTaskEmojiChange}
                               onDelete={onDeleteTask}
                               onTodo={todoTaskIds?.has(task.id) ?? false}
                               togglingTodo={togglingTodoTaskId === task.id}
@@ -1118,6 +1142,14 @@ export function ProjectList({
                         <ProjectOpenDetailButton
                           projectId={project.id}
                           projectTitle={project.title}
+                        />
+                        <EmojiPicker
+                          value={project.details?.emoji}
+                          disabled={
+                            updatingProjectId === project.id || !onEmojiChange
+                          }
+                          ariaLabel={`Emoji for ${project.title}`}
+                          onChange={(emoji) => onEmojiChange?.(project.id, emoji)}
                         />
                         <ProjectListTitleInput
                           projectId={project.id}
@@ -1317,6 +1349,7 @@ export function ProjectList({
                             onDueDateChange={onTaskDueDateChange}
                             onAssigneeChange={onTaskAssigneeChange}
                             onTitleChange={onTaskTitleChange}
+                            onEmojiChange={onTaskEmojiChange}
                             onDelete={onDeleteTask}
                             onTodo={todoTaskIds?.has(task.id) ?? false}
                             togglingTodo={togglingTodoTaskId === task.id}

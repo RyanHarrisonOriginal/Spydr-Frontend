@@ -27,6 +27,7 @@ import { TaskDueDateSelect } from "./TaskDueDateSelect";
 import { TaskStatusSelect } from "./TaskStatusSelect";
 import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinProject";
 import { TaskTitleInput } from "./TaskTitleInput";
+import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
 import {
   TaskCompletedAt,
   formatTaskListTimestamp,
@@ -38,9 +39,9 @@ import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSe
 import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
 
 const ROW_BASE =
-  "grid grid-cols-[28px_36px_minmax(148px,0.55fr)_minmax(10rem,8fr)_minmax(8rem,0.4fr)_minmax(10rem,0.8fr)_minmax(128px,0.35fr)_minmax(132px,0.25fr)_148px_40px_72px] items-center gap-3";
+  "grid grid-cols-[28px_36px_minmax(148px,0.55fr)_minmax(10rem,8fr)_minmax(8rem,0.4fr)_minmax(10rem,0.8fr)_minmax(128px,0.35fr)_minmax(132px,0.25fr)_148px_40px_72px] items-center gap-3 whitespace-nowrap";
 const ROW_WITH_HANDLE =
-  "grid grid-cols-[52px_28px_36px_minmax(148px,0.55fr)_minmax(10rem,8fr)_minmax(8rem,0.4fr)_minmax(10rem,0.8fr)_minmax(128px,0.35fr)_minmax(132px,0.25fr)_148px_40px_72px] items-center gap-3";
+  "grid grid-cols-[52px_28px_36px_minmax(148px,0.55fr)_minmax(10rem,8fr)_minmax(8rem,0.4fr)_minmax(10rem,0.8fr)_minmax(128px,0.35fr)_minmax(132px,0.25fr)_148px_40px_72px] items-center gap-3 whitespace-nowrap";
 const ROW_MIN_WIDTH = 1240;
 const ROW_MIN_WIDTH_WITH_HANDLE = 1292;
 
@@ -63,6 +64,7 @@ interface TaskListProps {
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
   onDueDateChange(taskId: string, dueDate: string | null): void;
   onTitleChange?(taskId: string, title: string): void;
+  onEmojiChange?(taskId: string, emoji: string | null): void;
   onDelete?(taskId: string): void;
   onDeleteSelected?(taskIds: string[]): void;
   deletingTaskIds?: string[];
@@ -88,6 +90,7 @@ function TaskRow({
   onAssigneeChange,
   onDueDateChange,
   onTitleChange,
+  onEmojiChange,
   onDelete,
   deletingTaskIds = [],
   selected = false,
@@ -110,6 +113,7 @@ function TaskRow({
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
   onDueDateChange(taskId: string, dueDate: string | null): void;
   onTitleChange?(taskId: string, title: string): void;
+  onEmojiChange?(taskId: string, emoji: string | null): void;
   onDelete?: (taskId: string) => void;
   deletingTaskIds?: string[];
   selected?: boolean;
@@ -167,6 +171,12 @@ function TaskRow({
           >
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
+          <EmojiPicker
+            value={task.details?.emoji}
+            disabled={isUpdating || !onEmojiChange}
+            ariaLabel={`Emoji for ${task.title}`}
+            onChange={(emoji) => onEmojiChange?.(task.id, emoji)}
+          />
           <TaskTitleInput
             taskId={task.id}
             title={task.title}
@@ -232,6 +242,12 @@ function TaskRow({
           >
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
+          <EmojiPicker
+            value={task.details?.emoji}
+            disabled={isUpdating || !onEmojiChange}
+            ariaLabel={`Emoji for ${task.title}`}
+            onChange={(emoji) => onEmojiChange?.(task.id, emoji)}
+          />
           <TaskTitleInput
             taskId={task.id}
             title={task.title}
@@ -248,9 +264,6 @@ function TaskRow({
             </Link>
           ) : null}
         </div>
-        {task.body ? (
-          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{task.body}</p>
-        ) : null}
       </div>
       <ProjectSelect
         projects={projects}
@@ -347,6 +360,7 @@ export function TaskList({
   onAssigneeChange,
   onDueDateChange,
   onTitleChange,
+  onEmojiChange,
   onDelete,
   onDeleteSelected,
   deletingTaskIds = [],
@@ -512,6 +526,7 @@ export function TaskList({
             onAssigneeChange={onAssigneeChange}
             onDueDateChange={onDueDateChange}
             onTitleChange={onTitleChange}
+            onEmojiChange={onEmojiChange}
             onDelete={onDelete}
             deletingTaskIds={deletingTaskIds}
             selected={selection.isSelected(task.id)}

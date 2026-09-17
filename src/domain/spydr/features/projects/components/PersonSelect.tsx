@@ -17,6 +17,7 @@ interface PersonSelectProps {
   disabled?: boolean;
   ariaLabel: string;
   className?: string;
+  triggerClassName?: string;
   compact?: boolean;
   /** Size the trigger to the selected name instead of filling the parent. */
   fitContent?: boolean;
@@ -31,6 +32,7 @@ export function PersonSelect({
   disabled = false,
   ariaLabel,
   className,
+  triggerClassName,
   compact = false,
   fitContent = false,
   wrapLabel = false,
@@ -78,7 +80,8 @@ export function PersonSelect({
           return <PersonAvatar person={person} size="sm" />;
         }}
         triggerClassName={cn(
-          selected && isMe(selected) && "border-highlight/12 bg-highlight/5"
+          selected && isMe(selected) && "border-highlight/12 bg-highlight/5",
+          triggerClassName
         )}
         labelClassName={cn(
           "text-[12px] text-foreground/90",

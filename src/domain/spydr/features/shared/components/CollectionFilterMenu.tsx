@@ -27,8 +27,11 @@ export function CollectionFilterMenu({
   const facetsWithOptions = facets.filter((facet) => facet.options.length > 0);
 
   return (
-    <DropdownMenuContent align="start" className="w-56 p-0">
-      <div className="max-h-[min(24rem,70vh)] overflow-y-auto p-1">
+    <DropdownMenuContent
+      align="start"
+      className="min-w-[16rem] w-max max-w-[min(24rem,calc(100vw-1.5rem))] overflow-x-hidden p-0"
+    >
+      <div className="max-h-[min(24rem,70vh)] overflow-y-auto overflow-x-hidden p-1">
         {facetsWithOptions.length === 0 ? (
           <p className="px-2 py-2 text-[11px] text-muted-foreground">
             No filters available
@@ -47,7 +50,10 @@ export function CollectionFilterMenu({
                     event.preventDefault();
                     onToggleFacet(facet.id, option.value);
                   }}
-                  className={cn("gap-2 text-[12px]", option.itemClassName)}
+                  className={cn(
+                    "gap-2 whitespace-nowrap text-[12px]",
+                    option.itemClassName
+                  )}
                 >
                   <FilterCheckbox checked={facet.selected.includes(option.value)} />
                   {option.label}

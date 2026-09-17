@@ -20,6 +20,7 @@ import type { CreateTaskFormValues } from "../hooks/useCreateTaskForm";
 import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinProject";
 import { TaskDueDateSelect } from "./TaskDueDateSelect";
 import { TaskStatusSelect } from "./TaskStatusSelect";
+import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
 
 interface CreateTaskDialogProps {
   projects: ProjectNode[];
@@ -120,14 +121,23 @@ export function CreateTaskDialog({
 
             <div className="space-y-2">
               <Label htmlFor="task-title">Title</Label>
-              <Input
-                id="task-title"
-                value={values.title}
-                onChange={(event) => onFieldChange("title", event.target.value)}
-                placeholder="Draft API contract"
-                autoFocus={!noProjects}
-                disabled={isSubmitting || noProjects}
-              />
+              <div className="flex items-center gap-2">
+                <EmojiPicker
+                  value={values.emoji}
+                  size="md"
+                  ariaLabel="Task emoji"
+                  onChange={(emoji) => onFieldChange("emoji", emoji)}
+                />
+                <Input
+                  id="task-title"
+                  value={values.title}
+                  onChange={(event) => onFieldChange("title", event.target.value)}
+                  placeholder="Draft API contract"
+                  autoFocus={!noProjects}
+                  disabled={isSubmitting || noProjects}
+                  className="flex-1"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

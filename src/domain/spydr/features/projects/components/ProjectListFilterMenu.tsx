@@ -72,7 +72,10 @@ export function ProjectListFilterMenu({
   }, [facetSections, query, showSearch]);
 
   return (
-    <DropdownMenuContent align="start" className="w-56 p-0">
+    <DropdownMenuContent
+      align="start"
+      className="min-w-[16rem] w-max max-w-[min(24rem,calc(100vw-1.5rem))] overflow-x-hidden p-0"
+    >
       {showSearch ? (
         <div className="sticky top-0 z-10 border-b border-border/80 bg-popover p-2">
           <div className="relative">
@@ -94,7 +97,7 @@ export function ProjectListFilterMenu({
         </div>
       ) : null}
 
-      <div className="max-h-[min(24rem,70vh)] overflow-y-auto p-1">
+      <div className="max-h-[min(24rem,70vh)] overflow-y-auto overflow-x-hidden p-1">
         {visibleSections.length === 0 ? (
           <p className="px-2 py-3 text-center text-[11px] text-muted-foreground">
             No matches
@@ -116,7 +119,10 @@ export function ProjectListFilterMenu({
                       event.preventDefault();
                       onToggleFacet(facet.id, option.value);
                     }}
-                    className={cn("gap-2 text-[12px]", option.itemClassName)}
+                    className={cn(
+                      "gap-2 whitespace-nowrap text-[12px]",
+                      option.itemClassName
+                    )}
                   >
                     <FilterCheckbox checked={selections.includes(option.value)} />
                     {option.label}

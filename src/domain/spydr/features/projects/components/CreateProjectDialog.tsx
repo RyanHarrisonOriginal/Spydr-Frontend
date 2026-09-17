@@ -22,6 +22,7 @@ import type {
 import type { ProjectFormValues } from "../hooks/useCreateProjectForm";
 import { renderTemplatePreview } from "../utils/renderTemplatePreview";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
+import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
 
 interface CreateProjectDialogProps {
   areas: ProjectAreaNode[];
@@ -204,15 +205,24 @@ export function CreateProjectDialog({
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="project-title">Title</Label>
-                    <Input
-                      id="project-title"
-                      value={values.title}
-                      onChange={(event) =>
-                        onFieldChange("title", event.target.value)
-                      }
-                      placeholder="Atlas platform migration"
-                      autoFocus
-                    />
+                    <div className="flex items-center gap-2">
+                      <EmojiPicker
+                        value={values.emoji}
+                        size="md"
+                        ariaLabel="Project emoji"
+                        onChange={(emoji) => onFieldChange("emoji", emoji)}
+                      />
+                      <Input
+                        id="project-title"
+                        value={values.title}
+                        onChange={(event) =>
+                          onFieldChange("title", event.target.value)
+                        }
+                        placeholder="Atlas platform migration"
+                        autoFocus
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">

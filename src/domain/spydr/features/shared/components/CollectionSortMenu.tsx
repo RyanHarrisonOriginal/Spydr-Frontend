@@ -19,7 +19,10 @@ export function CollectionSortMenu({
   onToggleSort,
 }: CollectionSortMenuProps) {
   return (
-    <DropdownMenuContent align="start" className="w-48 p-1">
+    <DropdownMenuContent
+      align="start"
+      className="min-w-[14rem] w-max max-w-[min(20rem,calc(100vw-1.5rem))] overflow-x-hidden p-1"
+    >
       <DropdownMenuLabel className="px-2 py-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
         Sort by
       </DropdownMenuLabel>
@@ -35,7 +38,7 @@ export function CollectionSortMenu({
               onToggleSort(option.id);
             }}
             className={cn(
-              "justify-between gap-2 text-[12px]",
+              "justify-between gap-2 whitespace-nowrap text-[12px]",
               isActive ? "text-foreground" : "text-muted-foreground"
             )}
           >

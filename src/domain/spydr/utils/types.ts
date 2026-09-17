@@ -101,6 +101,7 @@ export interface SpydrNode<TType extends SpydrNodeType = SpydrNodeType, TDetails
 }
 
 export interface ProjectDetails {
+  emoji?: string | null;
   outcome: string | null;
   startDate: string | null;
   targetDate: string | null;
@@ -136,11 +137,13 @@ export interface ProjectPersonas {
 
 export interface ProjectAreaDetails {
   color: string;
+  emoji?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface TaskDetails {
+  emoji?: string | null;
   dueDate: string | null;
   completedAt: string | null;
   isBlocked: boolean;
@@ -219,6 +222,7 @@ export interface CreateProjectInput {
   startDate?: string | null;
   targetDate?: string | null;
   riskLevel?: SpydrPriority;
+  emoji?: string | null;
 }
 
 export interface ProjectTemplateListItem {
@@ -230,6 +234,12 @@ export interface ProjectTemplateListItem {
   parameterCount: number;
   taskCount: number;
   updatedAt: string;
+}
+
+/** Open project spawned from a template (sync-enabled). */
+export interface TemplateSpawnedProject {
+  id: string;
+  title: string;
 }
 
 export interface ProjectTemplateParameter {
@@ -348,6 +358,8 @@ export interface UpdateProjectTemplateInput {
     tags?: string[];
     sortOrder?: number;
   }>;
+  /** Per connected project, values for newly introduced parameters. */
+  spawnedParamValues?: Record<string, Record<string, string>>;
 }
 
 export interface InvokeProjectTemplateInput {
@@ -383,6 +395,7 @@ export interface UpdateProjectChildInput {
   impact?: string;
   estimatedMinutes?: number | null;
   assigneePersonNodeId?: string | null;
+  emoji?: string | null;
 }
 
 export type IdeaDetails = {
@@ -408,6 +421,7 @@ export interface UpdateProjectInput {
   assigneePersonNodeId?: string | null;
   sponsorPersonNodeId?: string | null;
   reviewerPersonNodeId?: string | null;
+  emoji?: string | null;
 }
 
 export interface CreatePersonInput {
@@ -432,11 +446,13 @@ export interface CreateProjectAreaInput {
   title: string;
   body?: string;
   color?: string;
+  emoji?: string | null;
 }
 
 export interface UpdateProjectAreaInput {
   title?: string;
   color?: string;
+  emoji?: string | null;
 }
 
 export interface CreateProjectTaskInput {
@@ -447,6 +463,7 @@ export interface CreateProjectTaskInput {
   dueDate?: string | null;
   estimatedMinutes?: number | null;
   assigneePersonNodeId?: string | null;
+  emoji?: string | null;
 }
 
 export interface UpdateTaskInput {
@@ -458,6 +475,7 @@ export interface UpdateTaskInput {
   estimatedMinutes?: number | null;
   projectNodeId?: string | null;
   assigneePersonNodeId?: string | null;
+  emoji?: string | null;
 }
 
 export interface UpdateNoteInput {

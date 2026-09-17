@@ -16,6 +16,7 @@ interface ProjectPersonasPanelProps {
   personas: ProjectPersonas;
   disabled?: boolean;
   compact?: boolean;
+  controlClassName?: string;
   onChange(role: ProjectPersonaRole, personNodeId: string | null): void;
 }
 
@@ -24,6 +25,7 @@ export function ProjectPersonasPanel({
   personas,
   disabled = false,
   compact = false,
+  controlClassName,
   onChange,
 }: ProjectPersonasPanelProps) {
   const isPhone = useIsPhone();
@@ -59,6 +61,7 @@ export function ProjectPersonasPanel({
             value={personas[role]?.id ?? null}
             disabled={disabled}
             compact
+            triggerClassName={controlClassName}
             ariaLabel={`${projectPersonaLabels[role]} — ${projectPersonaHints[role]}`}
             onChange={(personNodeId) => onChange(role, personNodeId)}
           />

@@ -30,6 +30,7 @@ export function TaskDetailPage() {
       onFieldChange={detail.updateField}
       onNoteDraftChange={detail.setNoteDraft}
       onLogNote={detail.logNote}
+      onEmojiChange={detail.updateEmoji}
     />
   );
 }

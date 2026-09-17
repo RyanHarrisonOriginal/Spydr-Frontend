@@ -8,6 +8,7 @@ import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/na
 import { formatDateTime, formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
 import { ProjectPrioritySelect } from "@/domain/spydr/features/projects/components/ProjectPrioritySelect";
 import { ProjectSelect } from "@/domain/spydr/features/projects/components/ProjectSelect";
+import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
 import { PersonSelect } from "@/domain/spydr/features/projects/components/PersonSelect";
 import {
   ProjectDetailEmpty,
@@ -58,6 +59,7 @@ interface TaskDetailViewProps {
   ): void;
   onNoteDraftChange(value: string): void;
   onLogNote(): void;
+  onEmojiChange(emoji: string | null): void;
 }
 
 export function TaskDetailView({
@@ -71,6 +73,7 @@ export function TaskDetailView({
   onFieldChange,
   onNoteDraftChange,
   onLogNote,
+  onEmojiChange,
 }: TaskDetailViewProps) {
   const hint = saveLabel(saveState);
   const { entries, preamble } = parseTaskNoteEntries(task.body);
@@ -85,12 +88,20 @@ export function TaskDetailView({
         <PageHeader
           titleClassName="w-full max-w-none"
           title={
-            <input
-              value={form.title}
-              onChange={(event) => onFieldChange("title", event.target.value)}
-              className="w-full min-w-0 bg-transparent text-[1.35rem] font-semibold tracking-tight outline-none ring-focus placeholder:text-muted-foreground"
-              placeholder="Task title"
-            />
+            <div className="flex min-w-0 items-center gap-2">
+              <EmojiPicker
+                value={task.details?.emoji}
+                size="md"
+                ariaLabel={`Emoji for ${task.title}`}
+                onChange={onEmojiChange}
+              />
+              <input
+                value={form.title}
+                onChange={(event) => onFieldChange("title", event.target.value)}
+                className="w-full min-w-0 bg-transparent text-[1.35rem] font-semibold tracking-tight outline-none ring-focus placeholder:text-muted-foreground"
+                placeholder="Task title"
+              />
+            </div>
           }
           meta={
             <span className="font-mono text-[11px] text-muted-foreground">

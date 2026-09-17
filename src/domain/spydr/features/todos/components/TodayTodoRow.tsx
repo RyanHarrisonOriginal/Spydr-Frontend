@@ -103,7 +103,9 @@ export function TodayTodoRow({
               to={`/tasks/${item.taskId}`}
               className="min-w-0 truncate text-[13px] font-medium text-foreground/95 hover:text-highlight"
             >
-              {item.task.title}
+              {item.task.details?.emoji
+                ? `${item.task.details.emoji} ${item.task.title}`
+                : item.task.title}
             </Link>
             {item.task.project ? (
               <Link

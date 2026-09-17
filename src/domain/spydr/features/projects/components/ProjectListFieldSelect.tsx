@@ -170,12 +170,10 @@ export function ProjectListFieldSelect({
         align="start"
         sideOffset={6}
         className={cn(
-          "z-[120] overflow-hidden border-border/90 bg-popover p-1 shadow-lg",
-          appearance === "field"
-            ? fitContent
-              ? "min-w-[12rem]"
-              : "w-[var(--radix-dropdown-menu-trigger-width)] min-w-[var(--radix-dropdown-menu-trigger-width)]"
-            : "min-w-[14rem]"
+          "z-[120] overflow-x-hidden border-border/90 bg-popover p-1 shadow-lg",
+          "w-max min-w-[14rem] max-w-[min(24rem,calc(100vw-1.5rem))]",
+          appearance === "field" &&
+            "min-w-[max(14rem,var(--radix-dropdown-menu-trigger-width))]"
         )}
         onClick={(event) => event.stopPropagation()}
         onPointerDown={(event) => event.stopPropagation()}
@@ -208,7 +206,7 @@ export function ProjectListFieldSelect({
           </div>
         ) : null}
 
-        <div className="max-h-56 overflow-y-auto">
+        <div className="max-h-56 overflow-y-auto overflow-x-hidden">
           {visibleOptions.length === 0 ? (
             <p className="px-2 py-3 text-center text-[11px] text-muted-foreground">
               No matches
@@ -240,7 +238,7 @@ export function ProjectListFieldSelect({
                   </span>
                   <span
                     className={cn(
-                      "min-w-0 flex-1 truncate text-left",
+                      "min-w-0 flex-1 whitespace-nowrap text-left",
                       isEmptyOption && "italic",
                       getOptionLabelClassName?.(option, isSelected)
                     )}

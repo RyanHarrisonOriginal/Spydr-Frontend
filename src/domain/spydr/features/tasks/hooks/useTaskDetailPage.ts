@@ -123,6 +123,11 @@ export function useTaskDetailPage() {
     value: TaskDetailFormValues[TField]
   ) => setForm((current) => ({ ...current, [field]: value }));
 
+  const updateEmoji = (emoji: string | null) => {
+    if (!task) return;
+    updateTask.mutate({ taskId: task.id, input: { emoji } });
+  };
+
   const logNote = () => {
     const text = noteDraft.trim();
     if (!text || !task) return;
@@ -156,6 +161,7 @@ export function useTaskDetailPage() {
     isLoggingNote,
     setNoteDraft,
     updateField,
+    updateEmoji,
     logNote,
     isLoading: query.isLoading || projectsQuery.isLoading,
     isError: query.isError,

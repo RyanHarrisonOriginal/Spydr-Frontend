@@ -83,6 +83,22 @@ export function ProjectAreasPanel({ areas, isLoading = false }: ProjectAreasPane
     );
   };
 
+  const changeEmoji = (areaId: string, emoji: string | null) => {
+    setError(null);
+    updateArea.mutate(
+      { areaId, input: { emoji } },
+      {
+        onError: (mutationError) => {
+          setError(
+            mutationError instanceof Error
+              ? mutationError.message
+              : "Failed to update area emoji"
+          );
+        },
+      }
+    );
+  };
+
   const renameArea = async (area: ProjectAreaNode, title: string) => {
     setError(null);
     await updateArea.mutateAsync(
@@ -125,6 +141,7 @@ export function ProjectAreasPanel({ areas, isLoading = false }: ProjectAreasPane
             area={area}
             disabled={isBusy}
             onColorChange={changeColor}
+            onEmojiChange={changeEmoji}
             onTitleChange={renameArea}
             onRemove={removeArea}
           />

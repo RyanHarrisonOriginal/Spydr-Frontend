@@ -16,6 +16,7 @@ interface ProjectAreaSelectProps {
   appearance?: "field" | "rail";
   wrapLabel?: boolean;
   fitContent?: boolean;
+  quiet?: boolean;
 }
 
 function findArea(areas: ProjectAreaNode[], areaId: string) {
@@ -31,12 +32,15 @@ export function ProjectAreaSelect({
   appearance = "field",
   wrapLabel = false,
   fitContent = false,
+  quiet = false,
 }: ProjectAreaSelectProps) {
   const options = [
     { value: "", label: "Unassigned" },
     ...areas.map((area) => ({
       value: area.id,
-      label: area.title,
+      label: area.details?.emoji
+        ? `${area.details.emoji} ${area.title}`
+        : area.title,
     })),
   ];
 
@@ -77,13 +81,15 @@ export function ProjectAreaSelect({
       }
       triggerClassName={className}
       triggerStyle={
-        appearance === "rail"
-          ? selectedColor
-            ? { backgroundColor: hslColorCss(selectedColor) }
-            : undefined
-          : hasValue && selectedColor
-            ? areaColorSurfaceStyle(selectedColor)
-            : undefined
+        quiet
+          ? undefined
+          : appearance === "rail"
+            ? selectedColor
+              ? { backgroundColor: hslColorCss(selectedColor) }
+              : undefined
+            : hasValue && selectedColor
+              ? areaColorSurfaceStyle(selectedColor)
+              : undefined
       }
       labelClassName="font-medium tracking-tight text-foreground/90"
       getOptionStyle={(option, selected) => {

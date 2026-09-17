@@ -44,12 +44,19 @@ export function StatusPill({ status }: { status: string }) {
   );
 }
 
-export function PriorityBadge({ priority }: { priority: string }) {
+export function PriorityBadge({
+  priority,
+  className,
+}: {
+  priority: string;
+  className?: string;
+}) {
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded border px-1.5 py-px font-mono text-[10px] uppercase tracking-wider",
-        priorityColors[priority] ?? "border-border/20 text-muted-foreground"
+        priorityColors[priority] ?? "border-border/20 text-muted-foreground",
+        className
       )}
     >
       {priority}

@@ -4,11 +4,13 @@ import type { ProjectAreaNode } from "@/domain/spydr/utils/types";
 import { resolveAreaColor } from "@/domain/spydr/utils/projectAreaColors";
 import { cn } from "@/lib/utils";
 import { AreaColorPicker } from "./AreaColorPicker";
+import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
 
 interface ProjectAreaChipProps {
   area: ProjectAreaNode;
   disabled?: boolean;
   onColorChange(areaId: string, color: string): void;
+  onEmojiChange(areaId: string, emoji: string | null): void;
   onTitleChange(area: ProjectAreaNode, title: string): Promise<void> | void;
   onRemove(area: ProjectAreaNode): void;
 }
@@ -17,6 +19,7 @@ export function ProjectAreaChip({
   area,
   disabled = false,
   onColorChange,
+  onEmojiChange,
   onTitleChange,
   onRemove,
 }: ProjectAreaChipProps) {
@@ -57,6 +60,12 @@ export function ProjectAreaChip({
         disabled={disabled}
         ariaLabel={`Color for ${area.title}`}
         onChange={(nextColor) => onColorChange(area.id, nextColor)}
+      />
+      <EmojiPicker
+        value={area.details?.emoji}
+        disabled={disabled}
+        ariaLabel={`Emoji for ${area.title}`}
+        onChange={(emoji) => onEmojiChange(area.id, emoji)}
       />
       <input
         value={draft}
