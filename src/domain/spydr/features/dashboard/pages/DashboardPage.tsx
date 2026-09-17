@@ -22,7 +22,7 @@ export function DashboardPage() {
     : 0;
 
   return (
-    <div className="pb-10">
+    <div className="absolute inset-0 flex min-h-0 flex-col overflow-y-auto md:overflow-hidden">
       <PageHeader
         dense
         title="Dashboard"
@@ -67,11 +67,13 @@ export function DashboardPage() {
       )}
 
       {!query.isLoading && !query.isError && dashboard && (
-        <>
+        <div className="flex min-h-0 flex-1 flex-col md:overflow-hidden">
           <DashboardMetricStrip summary={dashboard.summary} />
-          <DashboardDistribution dashboard={dashboard} />
-          <DashboardPersonLoadSection dashboard={dashboard} />
-        </>
+          <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-2 md:grid-rows-[auto_minmax(0,1fr)] md:overflow-hidden">
+            <DashboardDistribution dashboard={dashboard} />
+            <DashboardPersonLoadSection dashboard={dashboard} />
+          </div>
+        </div>
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import type { TaskNode } from "@/domain/spydr/utils/types";
 import { projectPriorities } from "@/domain/spydr/utils/projectPriority";
 import { personDisplayName } from "@/domain/spydr/utils/projectPersonas";
 import {
+  isOverdueTask,
   isTaskStatus,
   taskStatuses,
   taskStatusLabels,
@@ -90,6 +91,19 @@ export const tasksCollection: CollectionConfig<TaskNode> = {
         ),
       valueOf: (task) =>
         task.assignee?.id ?? task.details?.assigneePersonNodeId ?? null,
+    },
+    {
+      id: "due",
+      label: "Due",
+      options: () => [
+        { value: "overdue", label: "Overdue" },
+        { value: "upcoming", label: "Has due date" },
+      ],
+      valueOf: (task) => {
+        if (isOverdueTask(task.status, task.details?.dueDate)) return "overdue";
+        if (task.details?.dueDate) return "upcoming";
+        return null;
+      },
     },
   ],
   sorts: [

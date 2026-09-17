@@ -159,7 +159,7 @@ export function WorkPersonPicker({
                       className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left text-[13px]"
                     >
                       <PersonAvatar person={person} size="sm" />
-                      <span className="min-w-0 flex-1 whitespace-normal break-words">
+                      <span className="min-w-0 flex-1 truncate">
                         {personDisplayName(person)}
                       </span>
                       {isMe(person) ? <PersonMeBadge compact /> : null}

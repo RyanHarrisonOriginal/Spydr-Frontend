@@ -77,13 +77,13 @@ export function WorkTodoPanel({
                 <li
                   key={item.id}
                   className={cn(
-                    "flex items-start gap-2 px-3 py-1.5",
+                    "flex items-center gap-2 px-3 py-1.5",
                     item.isStale && "bg-destructive/[0.04]"
                   )}
                 >
                   <Link
                     to={`/tasks/${item.taskId}`}
-                    className="min-w-0 flex-1 whitespace-normal break-words text-[13px] text-foreground/90 hover:text-highlight"
+                    className="min-w-0 flex-1 truncate text-[13px] text-foreground/90 hover:text-highlight"
                   >
                     {item.task.title}
                   </Link>

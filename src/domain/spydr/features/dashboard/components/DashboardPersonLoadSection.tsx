@@ -10,7 +10,11 @@ import {
 import type { WorkspaceDashboard } from "@/domain/spydr/utils/workspaceDashboard";
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import { PersonMeBadge } from "@/domain/spydr/features/people/components/PersonIdentity";
-import { workPersonPath } from "@/domain/spydr/features/work/utils/workPaths";
+import {
+  openTaskFilterStatuses,
+  workPersonPath,
+  workTasksPath,
+} from "@/domain/spydr/features/work/utils/workPaths";
 import { cn } from "@/lib/utils";
 import { DashboardSection, DashboardSegmentBar } from "./DashboardVisuals";
 
@@ -29,11 +33,11 @@ export function DashboardPersonLoadSection({
   return (
     <DashboardSection title="Load by person" meta={loads.length ? `${loads.length}` : undefined}>
       {loads.length === 0 ? (
-        <p className="px-4 pb-8 text-center text-[13px] text-muted-foreground md:px-6">
+        <p className="px-4 pb-4 text-center text-[13px] text-muted-foreground md:px-6">
           Assign people on projects to see workload distribution.
         </p>
       ) : (
-        <ul className="space-y-1 px-3 pb-4 md:px-5">
+        <ul className="space-y-0.5 px-3 pb-3 md:px-5">
           {loads.map((load, index) => {
             const name = load.person?.name ?? "Unassigned";
             const mine = Boolean(load.person && isMe(load.person.id));
@@ -48,7 +52,7 @@ export function DashboardPersonLoadSection({
               <li
                 key={load.person?.id ?? "unassigned"}
                 className={cn(
-                  "rounded-sm px-2 py-2.5 md:px-3",
+                  "rounded-sm px-2 py-2 md:px-3",
                   mine && "person-me-row"
                 )}
               >
@@ -84,14 +88,31 @@ export function DashboardPersonLoadSection({
                           Unassigned
                         </span>
                       )}
-                      <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
-                        {load.openTasks} open
-                        {openWork > 0 ? (
-                          <span className="ml-1.5 text-[10px] text-muted-foreground/70">
-                            {share}%
-                          </span>
-                        ) : null}
-                      </span>
+                      {load.person ? (
+                        <Link
+                          to={workTasksPath({
+                            status: openTaskFilterStatuses,
+                            person: load.person.id,
+                          })}
+                          className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground hover:text-highlight"
+                        >
+                          {load.openTasks} open
+                          {openWork > 0 ? (
+                            <span className="ml-1.5 text-[10px] text-muted-foreground/70">
+                              {share}%
+                            </span>
+                          ) : null}
+                        </Link>
+                      ) : (
+                        <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
+                          {load.openTasks} open
+                          {openWork > 0 ? (
+                            <span className="ml-1.5 text-[10px] text-muted-foreground/70">
+                              {share}%
+                            </span>
+                          ) : null}
+                        </span>
+                      )}
                     </div>
                     <div className="mt-1.5 h-2.5 overflow-hidden rounded-sm bg-muted/40">
                       <div
@@ -109,12 +130,24 @@ export function DashboardPersonLoadSection({
                               value: clearOpen,
                               label: "Open",
                               className: "bg-highlight/80",
+                              to: load.person
+                                ? workTasksPath({
+                                    status: ["active", "waiting"],
+                                    person: load.person.id,
+                                  })
+                                : undefined,
                             },
                             {
                               key: "blocked",
                               value: load.blockedTasks,
                               label: "Blocked",
                               className: "bg-[hsl(var(--status-blocked))]",
+                              to: load.person
+                                ? workTasksPath({
+                                    status: "blocked",
+                                    person: load.person.id,
+                                  })
+                                : undefined,
                             },
                           ]}
                         />
@@ -127,9 +160,21 @@ export function DashboardPersonLoadSection({
                     {load.openProjects}/{load.projects} projects
                   </span>
                   {load.overdueTasks > 0 ? (
-                    <span className="text-[hsl(var(--status-blocked))]">
-                      {load.overdueTasks} overdue
-                    </span>
+                    load.person ? (
+                      <Link
+                        to={workTasksPath({
+                          due: "overdue",
+                          person: load.person.id,
+                        })}
+                        className="text-[hsl(var(--status-blocked))] hover:underline"
+                      >
+                        {load.overdueTasks} overdue
+                      </Link>
+                    ) : (
+                      <span className="text-[hsl(var(--status-blocked))]">
+                        {load.overdueTasks} overdue
+                      </span>
+                    )
                   ) : null}
                   {roles.map((role) => (
                     <span key={role}>
@@ -144,7 +189,7 @@ export function DashboardPersonLoadSection({
       )}
 
       {dashboard.summary.unassignedProjects > 0 ? (
-        <p className="px-4 pb-5 text-[12px] text-muted-foreground md:px-6">
+        <p className="px-4 pb-3 text-[12px] text-muted-foreground md:px-6">
           {dashboard.summary.unassignedProjects} projects and{" "}
           {dashboard.summary.unassignedProjectTasks} tasks have no assignee.
         </p>

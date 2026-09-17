@@ -224,7 +224,7 @@ function TaskRow({
         }}
       />
       <div className="min-w-0">
-        <div className="flex min-w-0 items-start gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.5">
           <Link
             to={`/tasks/${task.id}`}
             aria-label={`Open ${task.title}`}
@@ -244,12 +244,12 @@ function TaskRow({
               className="inline-flex max-w-[12rem] shrink-0 items-center rounded border border-border/20 bg-muted/15 px-1.5 py-px text-[10px] text-muted-foreground transition-colors hover:border-highlight/25 hover:bg-highlight/8 hover:text-highlight"
               title={task.project.title}
             >
-              <span className="whitespace-normal break-words">{task.project.title}</span>
+              <span className="truncate">{task.project.title}</span>
             </Link>
           ) : null}
         </div>
         {task.body ? (
-          <p className="mt-0.5 whitespace-normal break-words text-[11px] text-muted-foreground">{task.body}</p>
+          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{task.body}</p>
         ) : null}
       </div>
       <ProjectSelect
@@ -280,7 +280,6 @@ function TaskRow({
           people={people}
           value={assigneeId}
           compact
-          wrapLabel
           disabled={isUpdating}
           className="min-w-0 flex-1"
           ariaLabel="Task assignee"

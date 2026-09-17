@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, ArrowUpRight, Plus, Trash2, X } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { ProjectAreaNode, ProjectNode, PersonNode, TaskNode } from "@/domain/spydr/utils/types";
 import {
@@ -314,18 +314,10 @@ function ProjectListTitleInput({
   className?: string;
 }) {
   const [draft, setDraft] = useState(title);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setDraft(title);
   }, [title]);
-
-  useLayoutEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "0px";
-    el.style.height = `${el.scrollHeight}px`;
-  }, [draft]);
 
   const commit = () => {
     const trimmed = draft.trim();
@@ -341,7 +333,7 @@ function ProjectListTitleInput({
       <Link
         to={`/projects/${projectId}`}
         className={cn(
-          "min-w-0 w-full flex-1 whitespace-normal break-words text-[13px] font-medium leading-snug hover:text-highlight",
+          "min-w-0 truncate text-[13px] font-medium hover:text-highlight",
           className
         )}
       >
@@ -351,10 +343,8 @@ function ProjectListTitleInput({
   }
 
   return (
-    <textarea
-      ref={textareaRef}
+    <input
       value={draft}
-      rows={1}
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commit}
       onKeyDown={(event) => {
@@ -371,7 +361,7 @@ function ProjectListTitleInput({
       disabled={disabled}
       aria-label="Project name"
       className={cn(
-        "min-w-0 w-full flex-1 resize-none overflow-hidden bg-transparent text-[13px] font-medium leading-snug outline-none ring-focus placeholder:text-muted-foreground disabled:opacity-60",
+        "min-w-0 flex-1 truncate bg-transparent text-[13px] font-medium outline-none ring-focus placeholder:text-muted-foreground disabled:opacity-60",
         className
       )}
     />
@@ -516,7 +506,6 @@ function NestedTaskRow({
       people={people}
       value={assigneeId}
       compact
-      wrapLabel
       disabled={busy}
       className="w-full min-w-0"
       ariaLabel="Task assignee"
@@ -527,7 +516,7 @@ function NestedTaskRow({
       }}
     />
   ) : task.assignee ? (
-    <span className="block min-w-0 whitespace-normal break-words text-[11px] text-muted-foreground">
+    <span className="block min-w-0 truncate text-[11px] text-muted-foreground">
       {task.assignee.details?.fullName ?? task.assignee.title}
     </span>
   ) : (
@@ -555,7 +544,7 @@ function NestedTaskRow({
       <TaskCompletedAt
         status={task.status}
         completedAt={task.details?.completedAt}
-        className="whitespace-normal break-words leading-tight"
+        className="truncate"
       />
     </span>
   );
@@ -595,7 +584,6 @@ function NestedTaskRow({
       <TaskStatusSelect
         value={task.status}
         disabled={!onStatusChange || busy}
-        wrapLabel
         className="w-full min-w-0"
         onChange={(status) => onStatusChange?.(task.id, status)}
       />
@@ -976,7 +964,7 @@ export function ProjectList({
                         aria-hidden
                       />
                     )}
-                    <div className="flex min-w-0 flex-1 items-start gap-1 py-0.5 pl-1 pr-1">
+                    <div className="flex min-w-0 flex-1 items-center gap-1 py-0.5 pl-1 pr-1">
                         {reorderEnabled ? rankControls(project.id, sortable.dragHandleProps) : null}
                         {visibleTasks.length > 0 ? (
                           <RowExpandToggle
@@ -1113,14 +1101,13 @@ export function ProjectList({
                   )}
                   <CollectionPriorityRank rank={getPriorityRank(project.id)} />
                   <div className="min-w-0">
-                    <div className="flex min-w-0 items-start gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
                       {!hasColumn("status") && onStatusChange ? (
                         <span onClick={(event) => event.stopPropagation()}>
                           <ProjectStatusSelect
                             value={project.status}
                             onChange={(status) => onStatusChange(project.id, status)}
                             disabled={updatingProjectId === project.id}
-                            wrapLabel
                             className="w-[148px] shrink-0"
                           />
                         </span>
@@ -1184,7 +1171,6 @@ export function ProjectList({
                         <PersonSelect
                           people={people}
                           compact
-                          wrapLabel
                           value={
                             project.personas?.assignee?.id ??
                             project.details?.assigneePersonNodeId ??
@@ -1197,7 +1183,7 @@ export function ProjectList({
                           ariaLabel="Project assignee"
                         />
                       ) : (
-                        <span className="whitespace-normal break-words text-[12px] text-muted-foreground">
+                        <span className="truncate text-[12px] text-muted-foreground">
                           {project.personas?.assignee?.details?.fullName ??
                             project.personas?.assignee?.title ??
                             "—"}

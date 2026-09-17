@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
 import {
   applyCollectionView,
@@ -9,6 +9,7 @@ import {
   getSelection,
   hasActiveFilters,
   removeFacetValue,
+  replaceSelections,
   sanitizeState,
   setSearch,
   setSort,
@@ -45,6 +46,7 @@ export interface CollectionView<T> {
   setSearch(search: string): void;
   toggleFacet(facetId: string, value: string): void;
   removeFacet(facetId: string, value: string): void;
+  replaceFilters(selections: Record<string, string[]>): void;
   clearFilters(): void;
   setSort(columnId: string, direction: SortDirection): void;
   toggleSort(columnId: string): void;
@@ -97,6 +99,13 @@ export function useCollectionView<T extends { id: string; sortOrder?: number }>(
     state.sort.direction
   );
 
+  const replaceFilters = useCallback(
+    (selections: Record<string, string[]>) => {
+      setState((prev) => replaceSelections(config, prev, selections));
+    },
+    [config, setState]
+  );
+
   return {
     items,
     state,
@@ -114,6 +123,7 @@ export function useCollectionView<T extends { id: string; sortOrder?: number }>(
       setState((prev) => toggleFacetValue(prev, facetId, value)),
     removeFacet: (facetId, value) =>
       setState((prev) => removeFacetValue(prev, facetId, value)),
+    replaceFilters,
     clearFilters: () => setState((prev) => clearFilters(prev)),
     setSort: (columnId, direction) =>
       setState((prev) => setSort(config, prev, columnId, direction)),

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { StatusDot } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { AreaColorSwatch } from "@/domain/spydr/features/projects/components/AreaColorSwatch";
 import { hslColorCss } from "@/domain/spydr/utils/projectAreaColors";
@@ -16,6 +17,7 @@ import type {
 } from "@/domain/spydr/utils/workspaceDashboard";
 import { isTaskStatus, taskStatusLabels } from "@/domain/spydr/utils/taskStatus";
 import { DashboardStatusDonut } from "@/domain/spydr/features/shared/components/StatusMixChart";
+import { workTasksPath } from "@/domain/spydr/features/work/utils/workPaths";
 import {
   DashboardSection,
   DashboardSegmentBar,
@@ -35,18 +37,20 @@ function MixPanel({
   ringValue,
   ringLabel,
   centerCaption,
+  hrefForStatus,
 }: {
   title: string;
   counts: WorkspaceDashboardStatusCounts;
   ringValue: number;
   ringLabel: string;
   centerCaption: string;
+  hrefForStatus?: (status: string) => string;
 }) {
   const total = countTotal(counts);
   const rows = sortedStatusEntries(counts);
 
   return (
-    <div className="min-w-0 rounded-sm border border-border/60 bg-muted/10 p-3 md:p-4">
+    <div className="min-w-0 rounded-sm border border-border/60 bg-muted/10 p-3">
       <div className="flex items-center gap-4">
         <DashboardStatusDonut
           counts={counts}
@@ -62,34 +66,52 @@ function MixPanel({
             </span>
           </div>
           <DashboardSegmentBar
-            className="mt-3"
+            className="mt-2"
             segments={rows.map((row) => ({
               key: row.status,
               value: row.count,
               label: statusLabel(row.status),
               className: statusFillClass(row.status),
+              to: hrefForStatus?.(row.status),
             }))}
           />
         </div>
       </div>
       {rows.length === 0 ? (
-        <p className="mt-3 text-[12px] text-muted-foreground">Nothing here yet.</p>
+        <p className="mt-2 text-[12px] text-muted-foreground">Nothing here yet.</p>
       ) : (
-        <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5">
-          {rows.map((row) => (
-            <li key={row.status} className="flex items-center justify-between gap-2">
-              <span className="flex min-w-0 items-center gap-1.5 text-[12px] capitalize text-foreground/90">
-                <StatusDot status={row.status} />
-                <span className="truncate">{statusLabel(row.status)}</span>
-              </span>
-              <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
-                {row.count}
-                <span className="ml-1 text-[10px] text-muted-foreground/70">
-                  {ratioPercent(row.count, total)}%
+        <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+          {rows.map((row) => {
+            const content = (
+              <>
+                <span className="flex min-w-0 items-center gap-1.5 text-[12px] capitalize text-foreground/90">
+                  <StatusDot status={row.status} />
+                  <span className="truncate">{statusLabel(row.status)}</span>
                 </span>
-              </span>
-            </li>
-          ))}
+                <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
+                  {row.count}
+                  <span className="ml-1 text-[10px] text-muted-foreground/70">
+                    {ratioPercent(row.count, total)}%
+                  </span>
+                </span>
+              </>
+            );
+
+            return (
+              <li key={row.status}>
+                {hrefForStatus ? (
+                  <Link
+                    to={hrefForStatus(row.status)}
+                    className="flex items-center justify-between gap-2 rounded-sm hover:text-highlight"
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <div className="flex items-center justify-between gap-2">{content}</div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -108,14 +130,19 @@ export function DashboardDistribution({ dashboard }: DashboardDistributionProps)
 
   return (
     <>
-      <DashboardSection title="Mix" meta="Open projects">
-        <div className="grid gap-3 px-4 pb-5 md:grid-cols-2 md:px-6">
+      <DashboardSection
+        title="Mix"
+        meta="Open projects"
+        className="col-span-full"
+      >
+        <div className="grid gap-2 px-4 pb-3 md:grid-cols-2 md:px-6">
           <MixPanel
             title="Tasks"
             counts={taskCounts}
             ringValue={completedTasks}
             ringLabel="Tasks completed"
             centerCaption="complete"
+            hrefForStatus={(status) => workTasksPath({ status })}
           />
           <MixPanel
             title="Projects"
@@ -129,11 +156,11 @@ export function DashboardDistribution({ dashboard }: DashboardDistributionProps)
 
       <DashboardSection title="Areas" meta={areas.length ? `${areas.length}` : undefined}>
         {areas.length === 0 ? (
-          <p className="px-4 pb-6 text-[13px] text-muted-foreground md:px-6">
+          <p className="px-4 pb-4 text-[13px] text-muted-foreground md:px-6">
             No areas yet.
           </p>
         ) : (
-          <ul className="space-y-3 px-4 pb-6 md:px-6">
+          <ul className="space-y-2.5 px-4 pb-3 md:px-6">
             {areas.map((area) => {
               const projectWidth = ratioPercent(area.projects, maxAreaProjects);
               const openWidth = ratioPercent(area.openTasks, maxAreaOpen);

@@ -1,3 +1,6 @@
+import { isClosedCollectionStatus } from "@/domain/spydr/utils/collectionVisibility";
+import { parseCalendarDate } from "@/domain/spydr/utils/dateOnly";
+
 /** Canonical statuses assignable to task nodes — keep in sync with backend. */
 export const taskStatuses = ["active", "waiting", "blocked", "completed"] as const;
 
@@ -22,6 +25,29 @@ export const taskStatusBucketLabels: Record<TaskStatusBucket, string> = {
 
 export function isTaskStatus(status: string): status is TaskStatus {
   return (taskStatuses as readonly string[]).includes(status);
+}
+
+/** Open / incomplete statuses matching dashboard `openTasks` (not completed/archived). */
+export const openTaskFilterStatuses = taskStatuses.filter(
+  (status) => status !== "completed"
+);
+
+export function isOpenTaskStatus(status: string): boolean {
+  return !isClosedCollectionStatus(status);
+}
+
+/** Open task whose due date is before today, matching dashboard overdue counts. */
+export function isOverdueTask(
+  status: string,
+  dueDate: string | null | undefined,
+  now = new Date()
+): boolean {
+  if (!dueDate || !isOpenTaskStatus(status)) return false;
+  const due = parseCalendarDate(dueDate) ?? new Date(dueDate);
+  if (Number.isNaN(due.getTime())) return false;
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime();
+  return dueDay < today;
 }
 
 export function getTaskStatusBucket(status: string): TaskStatusBucket {

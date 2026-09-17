@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 export function DashboardSection({
@@ -13,8 +14,13 @@ export function DashboardSection({
   className?: string;
 }) {
   return (
-    <section className={cn("border-t border-border/70", className)}>
-      <div className="flex items-baseline gap-2 px-4 pb-3 pt-5 md:px-6">
+    <section
+      className={cn(
+        "flex h-full min-h-0 flex-col overflow-hidden border-t border-border/70 md:last:border-l",
+        className
+      )}
+    >
+      <div className="flex shrink-0 items-baseline gap-2 px-4 pb-2 pt-3 md:px-6">
         <h2 className="text-[13px] font-medium tracking-tight text-foreground">
           {title}
         </h2>
@@ -24,7 +30,7 @@ export function DashboardSection({
           </span>
         ) : null}
       </div>
-      {children}
+      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
     </section>
   );
 }
@@ -34,7 +40,13 @@ export function DashboardSegmentBar({
   className,
   trackClassName,
 }: {
-  segments: Array<{ key: string; value: number; className: string; label: string }>;
+  segments: Array<{
+    key: string;
+    value: number;
+    className: string;
+    label: string;
+    to?: string;
+  }>;
   className?: string;
   trackClassName?: string;
 }) {
@@ -43,6 +55,7 @@ export function DashboardSegmentBar({
   const aria = visible
     .map((segment) => `${segment.label} ${segment.value}`)
     .join(", ");
+  const hasLinks = visible.some((segment) => Boolean(segment.to));
 
   return (
     <div
@@ -51,17 +64,33 @@ export function DashboardSegmentBar({
         trackClassName,
         className
       )}
-      role="img"
+      role={hasLinks ? "group" : "img"}
       aria-label={total > 0 ? aria : "No values"}
     >
-      {visible.map((segment) => (
-        <div
-          key={segment.key}
-          className={cn("h-full min-w-[3px]", segment.className)}
-          style={{ width: `${(segment.value / total) * 100}%` }}
-          title={`${segment.label}: ${segment.value}`}
-        />
-      ))}
+      {visible.map((segment) => {
+        const width = `${(segment.value / total) * 100}%`;
+        const title = `${segment.label}: ${segment.value}`;
+        if (segment.to) {
+          return (
+            <Link
+              key={segment.key}
+              to={segment.to}
+              className={cn("h-full min-w-[3px] hover:opacity-80", segment.className)}
+              style={{ width }}
+              title={title}
+              aria-label={`${segment.label} tasks`}
+            />
+          );
+        }
+        return (
+          <div
+            key={segment.key}
+            className={cn("h-full min-w-[3px]", segment.className)}
+            style={{ width }}
+            title={title}
+          />
+        );
+      })}
     </div>
   );
 }

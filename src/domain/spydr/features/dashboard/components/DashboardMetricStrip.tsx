@@ -13,6 +13,10 @@ import {
   type DashboardMetricId,
 } from "@/domain/spydr/utils/dashboardModel";
 import type { WorkspaceDashboardSummary } from "@/domain/spydr/utils/workspaceDashboard";
+import {
+  openTaskFilterStatuses,
+  workTasksPath,
+} from "@/domain/spydr/features/work/utils/workPaths";
 
 const metricIcons: Record<
   DashboardMetricId,
@@ -26,9 +30,9 @@ const metricIcons: Record<
 
 const metricHrefs: Record<DashboardMetricId, string> = {
   activeProjects: "/work",
-  openTasks: "/work?view=tasks",
-  blockedTasks: "/work?view=tasks",
-  overdueTasks: "/work?view=tasks",
+  openTasks: workTasksPath({ status: openTaskFilterStatuses }),
+  blockedTasks: workTasksPath({ status: "blocked" }),
+  overdueTasks: workTasksPath({ due: "overdue" }),
 };
 
 function metricRatio(id: DashboardMetricId, summary: WorkspaceDashboardSummary) {
@@ -50,7 +54,7 @@ export function DashboardMetricStrip({
   summary: WorkspaceDashboardSummary;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-2 px-4 py-4 md:grid-cols-4 md:gap-3 md:px-6">
+    <div className="grid shrink-0 grid-cols-2 gap-2 px-4 py-2.5 md:grid-cols-4 md:px-6">
       {dashboardMetrics.map((metric) => {
         const value = metric.getValue(summary);
         const hint = metric.hint?.(summary);
@@ -64,7 +68,7 @@ export function DashboardMetricStrip({
             key={metric.id}
             to={metricHrefs[metric.id]}
             className={cn(
-              "group min-w-0 rounded-sm border border-border/70 bg-muted/10 px-3 py-3 transition-colors hover:border-highlight/35 hover:bg-muted/20",
+              "group min-w-0 rounded-sm border border-border/70 bg-muted/10 px-3 py-2 transition-colors hover:border-highlight/35 hover:bg-muted/20",
               warn &&
                 "border-[hsl(var(--status-blocked)/0.4)] bg-[hsl(var(--status-blocked)/0.07)] hover:border-[hsl(var(--status-blocked)/0.55)]"
             )}
@@ -80,10 +84,10 @@ export function DashboardMetricStrip({
                 )}
               />
             </div>
-            <div className="mt-2 flex items-baseline gap-2">
+            <div className="mt-1 flex items-baseline gap-2">
               <span
                 className={cn(
-                  "text-[28px] font-semibold leading-none tabular-nums tracking-tight",
+                  "text-[22px] font-semibold leading-none tabular-nums tracking-tight",
                   warn ? "text-[hsl(var(--status-blocked))]" : "text-foreground"
                 )}
               >
@@ -95,7 +99,7 @@ export function DashboardMetricStrip({
                 </span>
               ) : null}
             </div>
-            <div className="mt-3 h-1 overflow-hidden rounded-sm bg-muted/50">
+            <div className="mt-2 h-1 overflow-hidden rounded-sm bg-muted/50">
               <div
                 className={cn(
                   "h-full rounded-sm",
@@ -104,7 +108,7 @@ export function DashboardMetricStrip({
                 style={{ width: `${percent}%` }}
               />
             </div>
-            <p className="mt-1.5 font-mono text-[10px] tabular-nums text-muted-foreground/80">
+            <p className="mt-1 font-mono text-[10px] tabular-nums text-muted-foreground/80">
               {whole > 0 ? `${percent}% of ${whole}` : "No baseline yet"}
             </p>
           </Link>

@@ -29,7 +29,7 @@ export function ProjectAreaSelect({
   disabled = false,
   className,
   appearance = "field",
-  wrapLabel = true,
+  wrapLabel = false,
   fitContent = false,
 }: ProjectAreaSelectProps) {
   const options = [

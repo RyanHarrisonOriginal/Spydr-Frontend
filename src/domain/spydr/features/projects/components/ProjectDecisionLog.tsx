@@ -138,8 +138,8 @@ function DecisionEntry({
 
   return (
     <ProjectDetailEntry>
-      <div className="flex flex-wrap items-start gap-x-2 gap-y-1">
-        <h3 className="min-w-0 flex-1 text-[13px] font-semibold leading-snug">
+      <div className="flex min-w-0 items-center gap-x-2 gap-y-1">
+        <h3 className="min-w-0 flex-1 truncate text-[13px] font-semibold">
           {decision.title}
         </h3>
         <div className="flex shrink-0 items-center gap-1.5">

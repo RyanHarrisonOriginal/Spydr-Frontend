@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   usePeopleQuery,
   useProjectsQuery,
@@ -11,12 +12,14 @@ import {
   getTaskStatusBucket,
   isTaskStatus,
 } from "@/domain/spydr/utils/taskStatus";
+import { parseWorkTaskFilterSelections } from "@/domain/spydr/features/work/utils/workPaths";
 import { useUpdateTaskMutation } from "./useUpdateTaskMutation";
 import { useDeleteTaskMutation } from "./useDeleteTaskMutation";
 import { useCollectionReorder } from "@/domain/spydr/features/shared/hooks/useCollectionReorder";
 
 export function useTasksPage(options?: { personId?: string | null }) {
   const personId = options?.personId ?? null;
+  const [params, setParams] = useSearchParams();
   const query = useTasksQuery();
   const projectsQuery = useProjectsQuery();
   const peopleQuery = usePeopleQuery();
@@ -28,6 +31,15 @@ export function useTasksPage(options?: { personId?: string | null }) {
     [personId, tasks]
   );
   const view = useCollectionView(tasksCollection, scopedTasks);
+  const statusParam = params.get("status");
+  const dueParam = params.get("due");
+  const replaceFilters = view.replaceFilters;
+
+  useEffect(() => {
+    const selections = parseWorkTaskFilterSelections(statusParam, dueParam);
+    if (!selections) return;
+    replaceFilters(selections);
+  }, [dueParam, replaceFilters, statusParam]);
   const reorder = useCollectionReorder("task", view);
   const updateTask = useUpdateTaskMutation();
   const deleteTask = useDeleteTaskMutation();
@@ -163,7 +175,22 @@ export function useTasksPage(options?: { personId?: string | null }) {
     orgTaskCount: tasks.length,
     projects,
     people,
-    view,
+    view: {
+      ...view,
+      clearFilters: () => {
+        view.clearFilters();
+        setParams(
+          (current) => {
+            if (!current.has("status") && !current.has("due")) return current;
+            const next = new URLSearchParams(current);
+            next.delete("status");
+            next.delete("due");
+            return next;
+          },
+          { replace: true }
+        );
+      },
+    },
     reorder,
     getPriorityRank: view.getPriorityRank,
     totalCount: scopedTasks.length,

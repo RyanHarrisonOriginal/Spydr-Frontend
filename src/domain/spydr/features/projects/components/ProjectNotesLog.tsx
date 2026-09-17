@@ -196,7 +196,7 @@ function NoteEntry({
 
   return (
     <ProjectDetailEntry>
-      <div className="flex min-w-0 items-start gap-x-2 gap-y-1">
+      <div className="flex min-w-0 items-center gap-x-2 gap-y-1">
         <SelectionCheckbox
           className="mt-0.5"
           checked={selected}
@@ -204,7 +204,7 @@ function NoteEntry({
           label={`Select ${note.title || "note"}`}
           onChange={onToggleSelected}
         />
-        <h3 className="min-w-0 flex-1 text-[13px] font-semibold leading-snug">
+        <h3 className="min-w-0 flex-1 truncate text-[13px] font-semibold">
           {note.title}
         </h3>
         <time

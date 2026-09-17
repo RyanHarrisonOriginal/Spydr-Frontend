@@ -37,7 +37,7 @@ export function WorkspaceShell() {
           <PendingInvitesList className="border-b border-border px-4 py-2" />
           <main className="spydr-surface flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden animate-in-fade">
             <NavigationBreadcrumbProvider>
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+              <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
                 <Outlet />
               </div>
             </NavigationBreadcrumbProvider>

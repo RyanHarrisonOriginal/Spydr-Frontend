@@ -176,6 +176,24 @@ export function clearFilters(state: CollectionViewState): CollectionViewState {
   return { ...state, search: "", selections: {} };
 }
 
+/** Replace all facet selections (and clear search) with the given map. */
+export function replaceSelections<T>(
+  config: CollectionConfig<T>,
+  state: CollectionViewState,
+  selections: Record<string, string[]>
+): CollectionViewState {
+  const facetIds = new Set(config.facets.map((facet) => facet.id));
+  const next: Record<string, string[]> = {};
+  for (const [facetId, values] of Object.entries(selections)) {
+    if (!facetIds.has(facetId) || !Array.isArray(values)) continue;
+    const cleaned = values.filter(
+      (entry): entry is string => typeof entry === "string" && entry.length > 0
+    );
+    if (cleaned.length > 0) next[facetId] = cleaned;
+  }
+  return { ...state, search: "", selections: next };
+}
+
 export function setSort<T>(
   config: CollectionConfig<T>,
   state: CollectionViewState,

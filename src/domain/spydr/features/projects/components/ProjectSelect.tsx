@@ -42,7 +42,6 @@ export function ProjectSelect({
       placeholder={allowUnassigned ? "No project" : placeholder}
       emptyValue=""
       searchable
-      wrapLabel
       leading={
         compact ? undefined : (
           <FolderKanban className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />

@@ -83,7 +83,7 @@ export function TaskDetailView({
     <div className="flex min-w-0">
       <div className="min-w-0 flex-1">
         <PageHeader
-          titleClassName="w-full max-w-none truncate-none"
+          titleClassName="w-full max-w-none"
           title={
             <input
               value={form.title}

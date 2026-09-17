@@ -280,7 +280,7 @@ export function ProjectDetailView({
               <PageHeader
                 dense={isPhone}
                 className="border-b-0"
-                titleClassName="w-full max-w-none truncate-none"
+                titleClassName="w-full max-w-none"
                 title={
                   <input
                     value={detailForm.title}
