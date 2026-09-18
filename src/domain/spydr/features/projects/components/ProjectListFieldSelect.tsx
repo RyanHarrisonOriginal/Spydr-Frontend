@@ -38,7 +38,9 @@ interface ProjectListFieldSelectProps {
   getOptionStyle?(option: ProjectListFieldOption, selected: boolean): CSSProperties | undefined;
   appearance?: "field" | "icon" | "rail";
   /** Overrides the selected option label on the trigger. */
-  triggerLabel?: string;
+  triggerLabel?: ReactNode;
+  /** Native tooltip on the trigger (full name, etc.). */
+  title?: string;
   /** Size the trigger to the selected label instead of filling the parent. */
   fitContent?: boolean;
   /** Wrap the selected label instead of truncating with ellipsis. */
@@ -68,6 +70,7 @@ export function ProjectListFieldSelect({
   triggerLabel,
   fitContent = false,
   wrapLabel = false,
+  title,
 }: ProjectListFieldSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,6 +79,7 @@ export function ProjectListFieldSelect({
 
   const selected = options.find((option) => option.value === value);
   const displayLabel = triggerLabel ?? selected?.label ?? placeholder;
+  const labelIsPlainText = typeof displayLabel === "string";
   const isEmpty = !value || value === emptyValue;
 
   const visibleOptions = useMemo(() => {
@@ -114,7 +118,7 @@ export function ProjectListFieldSelect({
           type="button"
           disabled={disabled}
           aria-label={ariaLabel}
-          title={appearance === "rail" ? ariaLabel : undefined}
+          title={title ?? (appearance === "rail" ? ariaLabel : undefined)}
           aria-haspopup="listbox"
           aria-expanded={open}
           onClick={(event) => event.stopPropagation()}
@@ -148,7 +152,7 @@ export function ProjectListFieldSelect({
                     ? "whitespace-nowrap leading-none"
                     : wrapLabel
                       ? "flex-1 whitespace-normal break-words leading-snug"
-                      : "flex-1 truncate leading-none",
+                      : cn("flex-1 min-w-0 leading-none", labelIsPlainText && "truncate"),
                   isEmpty ? "italic text-muted-foreground" : labelClassName
                 )}
               >

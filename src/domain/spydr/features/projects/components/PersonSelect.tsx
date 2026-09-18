@@ -4,9 +4,10 @@ import { ProjectListFieldSelect } from "@/domain/spydr/features/projects/compone
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import {
   PersonAvatar,
+  PersonNameFit,
   personSelectLabel,
 } from "@/domain/spydr/features/people/components/PersonIdentity";
-import { personGivenName, personSubtitle } from "@/domain/spydr/utils/projectPersonas";
+import { personSubtitle } from "@/domain/spydr/utils/projectPersonas";
 import { workPersonPath } from "@/domain/spydr/features/work/utils/workPaths";
 import { cn } from "@/lib/utils";
 
@@ -60,12 +61,11 @@ export function PersonSelect({
         searchable
         fitContent={fitContent}
         wrapLabel={wrapLabel}
+        title={selected ? personSelectLabel(selected, isMe) : undefined}
         triggerLabel={
-          compact && !fitContent && selected
-            ? isMe(selected)
-              ? `${personGivenName(selected)} (You)`
-              : personGivenName(selected)
-            : undefined
+          compact && !fitContent && selected ? (
+            <PersonNameFit person={selected} you={isMe(selected)} />
+          ) : undefined
         }
         leading={
           selected ? (
@@ -84,11 +84,11 @@ export function PersonSelect({
           triggerClassName
         )}
         labelClassName={cn(
-          "text-[12px] text-foreground/90",
+          "text-[length:var(--pl-control-size,0.75rem)] text-foreground/90",
           selected && isMe(selected) && "text-highlight"
         )}
         getOptionLabelClassName={(option, _selected) =>
-          cn("text-[12px]", option.value && isMe(option.value) && "text-highlight")
+          cn("text-[length:var(--pl-control-size,0.75rem)]", option.value && isMe(option.value) && "text-highlight")
         }
       />
       {!compact && selected ? (

@@ -37,6 +37,7 @@ export function ProjectsPage() {
     updatePriority,
     updateTargetDate,
     updateAssignee,
+    updateRequester,
     updateTaskStatus,
     updateTaskDueDate,
     updateTaskAssignee,
@@ -63,6 +64,7 @@ export function ProjectsPage() {
     priorityError,
     targetError,
     assigneeError,
+    requesterError,
     taskError,
     deleteError,
     restoreError,
@@ -183,6 +185,11 @@ export function ProjectsPage() {
               {assigneeError}
             </p>
           )}
+          {requesterError && (
+            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {requesterError}
+            </p>
+          )}
           {taskError && (
             <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {taskError}
@@ -211,6 +218,7 @@ export function ProjectsPage() {
             onPriorityChange={updatePriority}
             onTargetDateChange={updateTargetDate}
             onAssigneeChange={updateAssignee}
+            onRequesterChange={updateRequester}
             onTaskStatusChange={updateTaskStatus}
             onTaskDueDateChange={updateTaskDueDate}
             onTaskAssigneeChange={updateTaskAssignee}

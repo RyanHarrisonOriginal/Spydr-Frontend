@@ -378,6 +378,69 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  /*
+   * Project list density tokens. Steps, not a continuous font-size formula:
+   * comfortable → cozy (spacing) → compact (spacing + one type step).
+   */
+  .project-list {
+    --pl-header-size: 0.625rem;
+    --pl-body-size: 0.8125rem;
+    --pl-meta-size: 0.6875rem;
+    --pl-control-size: 0.75rem;
+    --pl-gap: 1rem;
+    --pl-row-py: 0.625rem;
+  }
+
+  .project-list[data-list-density="cozy"] {
+    --pl-header-size: 0.625rem;
+    --pl-body-size: 0.75rem;
+    --pl-meta-size: 0.625rem;
+    --pl-control-size: 0.75rem;
+    --pl-gap: 0.75rem;
+    --pl-row-py: 0.5rem;
+  }
+
+  .project-list[data-list-density="compact"] {
+    --pl-header-size: 0.5625rem;
+    --pl-body-size: 0.75rem;
+    --pl-meta-size: 0.625rem;
+    --pl-control-size: 0.6875rem;
+    --pl-gap: 0.5rem;
+    --pl-row-py: 0.375rem;
+  }
+
+  /*
+   * Full name when the slot is wide enough; given name when it is not.
+   * The container is the available column/field width, not the text itself.
+   */
+  .person-name-fit {
+    container-type: inline-size;
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .person-name-fit__full,
+  .person-name-fit__given {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .person-name-fit__given {
+    display: none;
+  }
+
+  @container (max-width: 8.25rem) {
+    .person-name-fit > .person-name-fit__full {
+      display: none;
+    }
+
+    .person-name-fit > .person-name-fit__given {
+      display: block;
+    }
+  }
+
   :root {
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);

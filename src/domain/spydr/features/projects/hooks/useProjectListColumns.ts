@@ -4,6 +4,7 @@ import { usePersistentState } from "@/domain/spydr/features/shared/hooks/usePers
 
 export const optionalProjectColumns = [
   { id: "area", label: "Area", width: "128px" },
+  { id: "requester", label: "Requester", width: "148px" },
   { id: "assignee", label: "Assignee", width: "148px" },
   { id: "priority", label: "Priority", width: "96px" },
   { id: "status", label: "Status", width: "112px" },
@@ -15,6 +16,18 @@ export type ProjectColumnId = (typeof optionalProjectColumns)[number]["id"];
 
 const defaultVisibleColumns = optionalProjectColumns.map((column) => column.id);
 const validColumnIds = new Set<string>(defaultVisibleColumns);
+const legacyDefaultColumns: ProjectColumnId[] = [
+  "area",
+  "assignee",
+  "priority",
+  "status",
+  "target",
+  "updated",
+];
+
+function sameColumnIds(left: ProjectColumnId[], right: readonly ProjectColumnId[]) {
+  return left.length === right.length && left.every((id, index) => id === right[index]);
+}
 
 function sanitizeColumns(
   raw: unknown,
@@ -25,6 +38,9 @@ function sanitizeColumns(
     (entry): entry is ProjectColumnId =>
       typeof entry === "string" && validColumnIds.has(entry)
   );
+  if (sameColumnIds(cleaned, legacyDefaultColumns)) {
+    return defaultVisibleColumns;
+  }
   return cleaned;
 }
 

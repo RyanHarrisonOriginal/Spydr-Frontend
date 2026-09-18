@@ -1,6 +1,6 @@
 import { Sparkles } from "lucide-react";
 import type { PersonNode } from "@/domain/spydr/utils/types";
-import { personDisplayName, personInitials } from "@/domain/spydr/utils/projectPersonas";
+import { personDisplayName, personGivenName, personInitials } from "@/domain/spydr/utils/projectPersonas";
 import { useCurrentUserPerson } from "../context/CurrentUserPersonContext";
 import { cn } from "@/lib/utils";
 
@@ -91,4 +91,33 @@ export function personSelectLabel(
 ): string {
   const name = personDisplayName(person);
   return isMe(person) ? `${name} (You)` : name;
+}
+
+interface PersonNameFitProps {
+  person: PersonNode;
+  you?: boolean;
+  className?: string;
+}
+
+/**
+ * Spells the full name when the parent slot is wide enough; falls back to the
+ * given name in a narrow slot. The slot must have a defined width (flex-1 / grid track).
+ */
+export function PersonNameFit({ person, you = false, className }: PersonNameFitProps) {
+  const full = personDisplayName(person);
+  const given = personGivenName(person) || full;
+  const suffix = you ? " (You)" : "";
+
+  return (
+    <span className={cn("person-name-fit", className)} title={`${full}${suffix}`}>
+      <span className="person-name-fit__full">
+        {full}
+        {suffix}
+      </span>
+      <span className="person-name-fit__given">
+        {given}
+        {suffix}
+      </span>
+    </span>
+  );
 }

@@ -103,6 +103,7 @@ export function useProjectsPage(options?: { personId?: string | null }) {
   const [priorityError, setPriorityError] = useState<string | null>(null);
   const [targetError, setTargetError] = useState<string | null>(null);
   const [assigneeError, setAssigneeError] = useState<string | null>(null);
+  const [requesterError, setRequesterError] = useState<string | null>(null);
   const [taskError, setTaskError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
@@ -159,6 +160,10 @@ export function useProjectsPage(options?: { personId?: string | null }) {
 
   const updateAssignee = (projectId: string, assigneePersonNodeId: string | null) => {
     runUpdate(projectId, { assigneePersonNodeId }, setAssigneeError);
+  };
+
+  const updateRequester = (projectId: string, requesterPersonNodeId: string | null) => {
+    runUpdate(projectId, { requesterPersonNodeId }, setRequesterError);
   };
 
   const updateTaskStatus = (taskId: string, status: string) => {
@@ -350,6 +355,7 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     updatePriority,
     updateTargetDate,
     updateAssignee,
+    updateRequester,
     updateTaskStatus,
     updateTaskDueDate,
     updateTaskAssignee,
@@ -388,6 +394,7 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     priorityError,
     targetError,
     assigneeError,
+    requesterError,
     taskError,
     deleteError,
     restoreError,

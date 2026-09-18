@@ -114,9 +114,7 @@ function getTaskListGrid(
     TASK_CHECKBOX_WIDTH,
     TASK_RANK_WIDTH,
     widths.status,
-    widths.title === TASK_LIST_COLUMN_DEFAULTS.title
-      ? `minmax(${widths.title}px, 1fr)`
-      : widths.title,
+    widths.title,
     widths.project,
     widths.assignee,
     widths.priority,
@@ -326,7 +324,7 @@ function TaskRow({
   }
 
   return (
-    <div className={cn(ROW_LAYOUT, "px-4 py-2.5 row-hover md:px-6")} style={{ gridTemplateColumns, minWidth }}>
+    <div className={cn(ROW_LAYOUT, "px-4 py-2.5 row-hover md:px-6")} style={{ gridTemplateColumns, minWidth, justifyContent: "start" }}>
       {reorderEnabled ? rankControls : null}
       {onToggleSelected ? (
         <SelectionCheckbox
@@ -576,7 +574,7 @@ export function TaskList({
           ROW_LAYOUT,
           "border-b border-border bg-muted/20 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:px-6"
         )}
-        style={{ gridTemplateColumns, minWidth }}
+        style={{ gridTemplateColumns, minWidth, justifyContent: "start" }}
       >
         {reorderEnabled ? <span aria-hidden /> : null}
         {canSelect ? (

@@ -44,16 +44,16 @@ export function ProjectPersonasPanel({
 
   return (
     <div
-      className={cn(
-        "grid gap-x-3 gap-y-2",
-        tight ? "grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-4"
-      )}
+          className={cn(
+            "grid min-w-0 gap-x-3 gap-y-2",
+            tight ? "grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-4"
+          )}
     >
       {projectPersonaRoles.map((role) => (
         <ProjectDetailField
           key={role}
           label={projectPersonaLabels[role]}
-          className="space-y-1 [&_span:nth-child(2)]:sr-only"
+          className="min-w-0 space-y-1 [&_span:nth-child(2)]:sr-only"
           hint={projectPersonaHints[role]}
         >
           <PersonSelect

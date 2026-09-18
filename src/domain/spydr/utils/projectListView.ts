@@ -29,6 +29,7 @@ export const projectSortColumns = [
   "order",
   "name",
   "area",
+  "requester",
   "assignee",
   "priority",
   "status",
@@ -83,10 +84,25 @@ function compareNullableNumbers(
 export function sortProjects(
   projects: ProjectNode[],
   areas: ProjectAreaNode[],
-  sort: ProjectListSort
+  sort: ProjectListSort,
+  people: PersonNode[] = []
 ): ProjectNode[] {
   const sorted = [...projects];
   const directionMultiplier = sort.direction === "asc" ? 1 : -1;
+
+  const personaName = (
+    project: ProjectNode,
+    role: "requester" | "assignee"
+  ) => {
+    const linked = project.personas?.[role];
+    if (linked) return personDisplayName(linked);
+    const id =
+      role === "requester"
+        ? project.details?.requesterPersonNodeId
+        : project.details?.assigneePersonNodeId;
+    if (!id) return "";
+    return personDisplayName(people.find((person) => person.id === id) ?? null);
+  };
 
   sorted.sort((left, right) => {
     let result = 0;
@@ -103,11 +119,11 @@ export function sortProjects(
       case "area":
         result = compareStrings(left.area ?? "", right.area ?? "");
         break;
+      case "requester":
+        result = compareStrings(personaName(left, "requester"), personaName(right, "requester"));
+        break;
       case "assignee":
-        result = compareStrings(
-          personDisplayName(left.personas?.assignee ?? null),
-          personDisplayName(right.personas?.assignee ?? null)
-        );
+        result = compareStrings(personaName(left, "assignee"), personaName(right, "assignee"));
         break;
       case "priority":
         result =
@@ -148,7 +164,7 @@ export function applyProjectListView(
   sort: ProjectListSort
 ): ProjectNode[] {
   const context: ProjectListFilterContext = { areas, people };
-  return sortProjects(filterProjectsByFacets(projects, filters, context), areas, sort);
+  return sortProjects(filterProjectsByFacets(projects, filters, context), areas, sort, people);
 }
 
 export function toggleSort(

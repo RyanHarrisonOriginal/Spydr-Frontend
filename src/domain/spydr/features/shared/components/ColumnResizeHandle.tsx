@@ -48,12 +48,7 @@ export function ColumnResizeHandle({
         if (event.button !== 0) return;
         event.preventDefault();
         event.stopPropagation();
-        const cell = event.currentTarget.parentElement;
-        const measured = Math.round(
-          cell?.getBoundingClientRect().width ?? width
-        );
-        drag.current = { startX: event.clientX, startWidth: measured };
-        if (measured !== width) onWidthChange(measured);
+        drag.current = { startX: event.clientX, startWidth: width };
         setDragging(true);
         event.currentTarget.setPointerCapture(event.pointerId);
       }}

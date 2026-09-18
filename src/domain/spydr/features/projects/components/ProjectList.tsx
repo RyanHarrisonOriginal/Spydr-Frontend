@@ -45,6 +45,10 @@ import {
   gridTemplateFromTracks,
   useResizableColumns,
 } from "@/domain/spydr/features/shared/hooks/useResizableColumns";
+import { useListDensity } from "@/domain/spydr/features/shared/hooks/useListDensity";
+import {
+  LIST_DENSITY_GAP_PX,
+} from "@/domain/spydr/features/shared/utils/listDensity";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -80,6 +84,7 @@ interface ProjectListProps {
   onPriorityChange?(projectId: string, priority: string): void;
   onTargetDateChange?(projectId: string, targetDate: string | null): void;
   onAssigneeChange?(projectId: string, assigneePersonNodeId: string | null): void;
+  onRequesterChange?(projectId: string, requesterPersonNodeId: string | null): void;
   onTaskStatusChange?(taskId: string, status: string): void;
   onTaskDueDateChange?(taskId: string, dueDate: string | null): void;
   onTaskAssigneeChange?(taskId: string, assigneePersonNodeId: string | null): void;
@@ -117,6 +122,7 @@ type ProjectListWidthColumn = "name" | ProjectColumnId;
 const PROJECT_LIST_COLUMN_DEFAULTS: Record<ProjectListWidthColumn, number> = {
   name: 320,
   area: 148,
+  requester: 180,
   assignee: 180,
   priority: 132,
   status: 160,
@@ -127,6 +133,7 @@ const PROJECT_LIST_COLUMN_DEFAULTS: Record<ProjectListWidthColumn, number> = {
 const PROJECT_LIST_COLUMN_MIN: Partial<Record<ProjectListWidthColumn, number>> = {
   name: 160,
   area: 108,
+  requester: 128,
   assignee: 128,
   priority: 104,
   status: 120,
@@ -139,7 +146,6 @@ const actionsColumnWidthWithCreate = 76;
 const rankColumnWidth = 36;
 const expandColumnWidth = 32;
 const reorderColumnWidth = 52;
-const PROJECT_LIST_GAP_PX = 16;
 const PROJECT_LIST_PADDING_X = 48;
 
 function getProjectListTracks(
@@ -170,9 +176,7 @@ function getProjectListGrid(
     ...(reorderEnabled ? [reorderColumnWidth] : []),
     expandColumnWidth,
     rankColumnWidth,
-    widths.name === PROJECT_LIST_COLUMN_DEFAULTS.name
-      ? `minmax(${widths.name}px, 1fr)`
-      : widths.name,
+    widths.name,
     ...visibleColumns.map((id) => widths[id]),
     actionWidth,
   ]);
@@ -402,7 +406,7 @@ function ProjectListTitleInput({
       <Link
         to={`/projects/${projectId}`}
         className={cn(
-          "min-w-0 truncate text-[13px] font-medium hover:text-highlight",
+          "min-w-0 truncate text-[length:var(--pl-body-size,0.8125rem)] font-medium hover:text-highlight",
           className
         )}
       >
@@ -430,7 +434,7 @@ function ProjectListTitleInput({
       disabled={disabled}
       aria-label="Project name"
       className={cn(
-        "min-w-0 flex-1 truncate bg-transparent text-[13px] font-medium outline-none ring-focus placeholder:text-muted-foreground disabled:opacity-60",
+        "min-w-0 flex-1 truncate bg-transparent text-[length:var(--pl-body-size,0.8125rem)] font-medium outline-none ring-focus placeholder:text-muted-foreground disabled:opacity-60",
         className
       )}
     />
@@ -439,6 +443,44 @@ function ProjectListTitleInput({
 
 function resolveTaskAssigneeId(task: TaskNode): string | null {
   return task.assignee?.id ?? task.details?.assigneePersonNodeId ?? null;
+}
+
+function ProjectPersonaCell({
+  people,
+  person,
+  personId,
+  disabled,
+  ariaLabel,
+  onChange,
+}: {
+  people: PersonNode[];
+  person: PersonNode | null | undefined;
+  personId: string | null;
+  disabled?: boolean;
+  ariaLabel: string;
+  onChange?(personNodeId: string | null): void;
+}) {
+  return (
+    <span
+      className="block min-w-0 w-full"
+      onClick={(event) => event.stopPropagation()}
+    >
+      {onChange ? (
+        <PersonSelect
+          people={people}
+          compact
+          value={person?.id ?? personId}
+          onChange={onChange}
+          disabled={disabled}
+          ariaLabel={ariaLabel}
+        />
+      ) : (
+        <span className="truncate text-[length:var(--pl-control-size,0.75rem)] text-muted-foreground">
+          {person?.details?.fullName ?? person?.title ?? "—"}
+        </span>
+      )}
+    </span>
+  );
 }
 
 const nestedTaskGrid =
@@ -775,6 +817,7 @@ export function ProjectList({
   onPriorityChange,
   onTargetDateChange,
   onAssigneeChange,
+  onRequesterChange,
   onTaskStatusChange,
   onTaskDueDateChange,
   onTaskAssigneeChange,
@@ -827,9 +870,20 @@ export function ProjectList({
     reorderEnabled,
     Boolean(onCreateTask)
   );
+  const requiredWidth = gridMinWidth(
+    getProjectListTracks(
+      visibleColumns,
+      PROJECT_LIST_COLUMN_DEFAULTS,
+      reorderEnabled,
+      Boolean(onCreateTask)
+    ),
+    LIST_DENSITY_GAP_PX.comfortable,
+    PROJECT_LIST_PADDING_X
+  );
+  const { density, ref: densityRef } = useListDensity(requiredWidth);
   const minWidth = gridMinWidth(
     gridTracks,
-    PROJECT_LIST_GAP_PX,
+    LIST_DENSITY_GAP_PX[density],
     PROJECT_LIST_PADDING_X
   );
   const hasColumn = (columnId: ProjectColumnId) => visibleColumns.includes(columnId);
@@ -919,7 +973,11 @@ export function ProjectList({
   };
 
   return (
-    <div className={isPhone ? "" : "touch-scroll-x"}>
+    <div
+      ref={densityRef}
+      className={cn(isPhone ? "" : "project-list touch-scroll-x")}
+      data-list-density={isPhone ? undefined : density}
+    >
       {isPhone ? (
         <div className="flex items-center justify-end border-b border-border/70 px-2 py-1.5">
           <DropdownMenu>
@@ -950,8 +1008,14 @@ export function ProjectList({
       ) : null}
       {isPhone ? null : (
       <div
-        className="grid items-center gap-4 border-b border-border bg-muted/20 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground [&>*]:min-w-0 md:px-6"
-        style={{ gridTemplateColumns, minWidth }}
+        className="grid items-center border-b border-border bg-muted/20 px-4 py-2 font-mono uppercase tracking-wider text-muted-foreground [&>*]:min-w-0 md:px-6"
+        style={{
+          gridTemplateColumns,
+          minWidth,
+          gap: "var(--pl-gap)",
+          fontSize: "var(--pl-header-size)",
+          justifyContent: "start",
+        }}
       >
         {reorderEnabled ? <span aria-hidden /> : null}
         <span aria-hidden />
@@ -964,6 +1028,16 @@ export function ProjectList({
             <SortableHeader
               label="Area"
               column="area"
+              sort={sort}
+              onSort={onSortColumn}
+            />
+          </ProjectResizableHeader>
+        )}
+        {hasColumn("requester") && (
+          <ProjectResizableHeader label="Requester" column="requester" sizing={columnSizing}>
+            <SortableHeader
+              label="Requester"
+              column="requester"
               sort={sort}
               onSort={onSortColumn}
             />
@@ -1218,11 +1292,18 @@ export function ProjectList({
               >
                 <div
                   className={cn(
-                    "grid items-center gap-4 px-3 py-2.5 [&>*]:min-w-0",
+                    "grid items-center px-3 [&>*]:min-w-0",
                     showChildren && "border-b border-border/50 bg-muted/45",
                     !showChildren && "row-hover"
                   )}
-                  style={{ gridTemplateColumns, minWidth: `calc(${minWidth}px - 1.5rem)` }}
+                  style={{
+                    gridTemplateColumns,
+                    minWidth: `calc(${minWidth}px - 1.5rem)`,
+                    gap: "var(--pl-gap)",
+                    paddingTop: "var(--pl-row-py)",
+                    paddingBottom: "var(--pl-row-py)",
+                    justifyContent: "start",
+                  }}
                 >
                   {reorderEnabled ? rankControls(project.id, sortable.dragHandleProps) : null}
                   {canExpand ? (
@@ -1276,7 +1357,7 @@ export function ProjectList({
                       </div>
                       <OpenTaskCount count={openCount} />
                     </div>
-                    <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <div className="mt-0.5 flex items-center gap-1.5 text-[length:var(--pl-meta-size,0.6875rem)] text-muted-foreground">
                       {project.tags.slice(0, 3).map((tag) => (
                         <EntityTag key={tag} tag={tag} />
                       ))}
@@ -1310,34 +1391,35 @@ export function ProjectList({
                       )}
                     </span>
                   )}
+                  {hasColumn("requester") && (
+                    <ProjectPersonaCell
+                      people={people}
+                      person={project.personas?.requester}
+                      personId={project.details?.requesterPersonNodeId ?? null}
+                      disabled={updatingProjectId === project.id}
+                      ariaLabel="Project requester"
+                      onChange={
+                        onRequesterChange
+                          ? (requesterPersonNodeId) =>
+                              onRequesterChange(project.id, requesterPersonNodeId)
+                          : undefined
+                      }
+                    />
+                  )}
                   {hasColumn("assignee") && (
-                    <span
-                      className="block min-w-0 w-full"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      {onAssigneeChange ? (
-                        <PersonSelect
-                          people={people}
-                          compact
-                          value={
-                            project.personas?.assignee?.id ??
-                            project.details?.assigneePersonNodeId ??
-                            null
-                          }
-                          onChange={(assigneePersonNodeId) =>
-                            onAssigneeChange(project.id, assigneePersonNodeId)
-                          }
-                          disabled={updatingProjectId === project.id}
-                          ariaLabel="Project assignee"
-                        />
-                      ) : (
-                        <span className="truncate text-[12px] text-muted-foreground">
-                          {project.personas?.assignee?.details?.fullName ??
-                            project.personas?.assignee?.title ??
-                            "—"}
-                        </span>
-                      )}
-                    </span>
+                    <ProjectPersonaCell
+                      people={people}
+                      person={project.personas?.assignee}
+                      personId={project.details?.assigneePersonNodeId ?? null}
+                      disabled={updatingProjectId === project.id}
+                      ariaLabel="Project assignee"
+                      onChange={
+                        onAssigneeChange
+                          ? (assigneePersonNodeId) =>
+                              onAssigneeChange(project.id, assigneePersonNodeId)
+                          : undefined
+                      }
+                    />
                   )}
                   {hasColumn("priority") && (
                     <span
@@ -1396,7 +1478,7 @@ export function ProjectList({
                     </span>
                   )}
                   {hasColumn("updated") && (
-                    <span className="justify-self-end text-right font-mono text-[11px] text-muted-foreground">
+                    <span className="justify-self-end text-right font-mono text-[length:var(--pl-meta-size,0.6875rem)] text-muted-foreground">
                       {formatRelativeTime(project.updatedAt)}
                     </span>
                   )}

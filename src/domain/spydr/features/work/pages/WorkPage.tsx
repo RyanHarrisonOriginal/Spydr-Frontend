@@ -379,6 +379,11 @@ export function WorkPage() {
               {projectsPage.assigneeError}
             </p>
           )}
+          {projectsPage.requesterError && (
+            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {projectsPage.requesterError}
+            </p>
+          )}
           {projectsPage.taskError && (
             <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectsPage.taskError}
@@ -443,6 +448,7 @@ export function WorkPage() {
                 onPriorityChange={projectsPage.updatePriority}
                 onTargetDateChange={projectsPage.updateTargetDate}
                 onAssigneeChange={projectsPage.updateAssignee}
+                onRequesterChange={projectsPage.updateRequester}
                 onTaskStatusChange={projectsPage.updateTaskStatus}
                 onTaskDueDateChange={projectsPage.updateTaskDueDate}
                 onTaskAssigneeChange={projectsPage.updateTaskAssignee}
