@@ -27,6 +27,7 @@ interface ProjectPrioritySelectProps {
   className?: string;
   ariaLabel?: string;
   menuLabel?: string;
+  fitContent?: boolean;
 }
 
 export function ProjectPrioritySelect({
@@ -36,6 +37,7 @@ export function ProjectPrioritySelect({
   className,
   ariaLabel = "Project priority",
   menuLabel = "Priority",
+  fitContent = false,
 }: ProjectPrioritySelectProps) {
   const options = projectPriorities.map((priority) => ({
     value: priority,
@@ -50,6 +52,7 @@ export function ProjectPrioritySelect({
       disabled={disabled}
       ariaLabel={ariaLabel}
       menuLabel={menuLabel}
+      fitContent={fitContent}
       leading={<PriorityMarker priority={value} />}
       renderOptionLeading={(option) => <PriorityMarker priority={option.value} />}
       triggerClassName={cn(

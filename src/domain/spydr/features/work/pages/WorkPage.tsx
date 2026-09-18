@@ -41,7 +41,7 @@ import {
   useClientPagination,
   useListPageSize,
 } from "@/domain/spydr/features/shared/hooks/useClientPagination";
-import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
+import { moveIdInOrder, moveIdToRank } from "@/domain/spydr/utils/collectionReorder";
 import { useWorkScope } from "../hooks/useWorkScope";
 
 export function WorkPage() {
@@ -422,6 +422,14 @@ export function WorkPage() {
                   );
                   if (next) projectsPage.reorder.onReorder(next);
                 }}
+                onSetRank={(id, rank) => {
+                  const next = moveIdToRank(
+                    projectsPage.projects.map((project) => project.id),
+                    id,
+                    rank
+                  );
+                  if (next) projectsPage.reorder.onReorder(next);
+                }}
                 hasActiveFilters={projectsPage.listView.hasActiveFilters}
                 updatingProjectId={projectsPage.updatingProjectId}
                 updatingTaskId={projectsPage.updatingTaskId}
@@ -521,6 +529,14 @@ export function WorkPage() {
                     tasksPage.view.items.map((task) => task.id),
                     id,
                     direction
+                  );
+                  if (next) tasksPage.reorder.onReorder(next);
+                }}
+                onSetRank={(id, rank) => {
+                  const next = moveIdToRank(
+                    tasksPage.view.items.map((task) => task.id),
+                    id,
+                    rank
                   );
                   if (next) tasksPage.reorder.onReorder(next);
                 }}

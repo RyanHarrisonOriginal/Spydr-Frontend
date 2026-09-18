@@ -97,7 +97,7 @@ export function ProjectDecisionLog({
       </form>
 
       {orderedDecisions.length > 0 ? (
-        <ol className="min-h-0 flex-1 overflow-y-auto">
+        <ol>
           {orderedDecisions.map((decision) => (
             <DecisionEntry
               key={decision.id}

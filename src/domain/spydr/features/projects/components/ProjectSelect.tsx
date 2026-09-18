@@ -11,6 +11,7 @@ interface ProjectSelectProps {
   placeholder?: string;
   allowUnassigned?: boolean;
   compact?: boolean;
+  fitContent?: boolean;
 }
 
 export function ProjectSelect({
@@ -22,6 +23,7 @@ export function ProjectSelect({
   placeholder = "Select project…",
   allowUnassigned = false,
   compact = false,
+  fitContent = false,
 }: ProjectSelectProps) {
   const options = [
     ...(allowUnassigned ? [{ value: "", label: "No project" }] : []),
@@ -44,6 +46,7 @@ export function ProjectSelect({
       placeholder={allowUnassigned ? "No project" : placeholder}
       emptyValue=""
       searchable
+      fitContent={fitContent}
       leading={
         compact ? undefined : (
           <FolderKanban className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />

@@ -910,9 +910,6 @@ export function ProjectDetailView({
                   onAdd={onAddNote}
                   onUpdate={(childId, input) => onUpdateChild("note", childId, input)}
                   onDelete={(childId) => onDeleteChild("note", childId)}
-                  onDeleteSelected={(childIds) =>
-                    onDeleteSelectedChildren("note", childIds)
-                  }
                   isUpdating={isUpdatingChild}
                   isDeleting={isDeletingChild}
                   deletingChildIds={deletingChildIds}

@@ -4,6 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import type { PersonNode, ProjectAreaNode, ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
 import { PriorityBadge } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { CollectionSortableHeader } from "@/domain/spydr/features/shared/components/CollectionSortableHeader";
+import { ResizableHeaderCell } from "@/domain/spydr/features/shared/components/ColumnResizeHandle";
 import { CollectionReorderControls } from "@/domain/spydr/features/shared/components/CollectionReorderControls";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
 import {
@@ -12,6 +13,7 @@ import {
 import type { CollectionSortState } from "@/domain/spydr/utils/collectionView";
 import {
   moveIdInOrder,
+  moveIdToRank,
   type RankMoveDirection,
 } from "@/domain/spydr/utils/collectionReorder";
 import { cn } from "@/lib/utils";
@@ -37,13 +39,118 @@ import { SelectionCheckbox } from "@/domain/spydr/features/shared/components/Sel
 import { BulkDeleteBar } from "@/domain/spydr/features/shared/components/BulkDeleteBar";
 import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSelection";
 import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
+import {
+  gridMinWidth,
+  gridTemplateFromTracks,
+  useResizableColumns,
+} from "@/domain/spydr/features/shared/hooks/useResizableColumns";
 
-const ROW_BASE =
-  "grid grid-cols-[28px_36px_minmax(148px,0.55fr)_minmax(10rem,8fr)_minmax(8rem,0.4fr)_minmax(10rem,0.8fr)_minmax(128px,0.35fr)_minmax(132px,0.25fr)_148px_40px_72px] items-center gap-3 whitespace-nowrap";
-const ROW_WITH_HANDLE =
-  "grid grid-cols-[52px_28px_36px_minmax(148px,0.55fr)_minmax(10rem,8fr)_minmax(8rem,0.4fr)_minmax(10rem,0.8fr)_minmax(128px,0.35fr)_minmax(132px,0.25fr)_148px_40px_72px] items-center gap-3 whitespace-nowrap";
-const ROW_MIN_WIDTH = 1240;
-const ROW_MIN_WIDTH_WITH_HANDLE = 1292;
+type TaskListWidthColumn =
+  | "status"
+  | "title"
+  | "project"
+  | "assignee"
+  | "priority"
+  | "due"
+  | "updated";
+
+const TASK_LIST_COLUMN_DEFAULTS: Record<TaskListWidthColumn, number> = {
+  status: 148,
+  title: 360,
+  project: 160,
+  assignee: 180,
+  priority: 128,
+  due: 132,
+  updated: 148,
+};
+
+const TASK_LIST_COLUMN_MIN: Partial<Record<TaskListWidthColumn, number>> = {
+  status: 120,
+  title: 180,
+  project: 120,
+  assignee: 128,
+  priority: 96,
+  due: 104,
+  updated: 96,
+};
+
+const TASK_LIST_GAP_PX = 12;
+const TASK_LIST_PADDING_X = 48;
+const TASK_CHECKBOX_WIDTH = 28;
+const TASK_RANK_WIDTH = 36;
+const TASK_REORDER_WIDTH = 52;
+const TASK_TODAY_WIDTH = 40;
+const TASK_ACTIONS_WIDTH = 72;
+
+const ROW_LAYOUT =
+  "grid items-center gap-3 whitespace-nowrap [&>*]:min-w-0";
+
+function getTaskListTracks(
+  widths: Record<TaskListWidthColumn, number>,
+  reorderEnabled: boolean
+): number[] {
+  return [
+    ...(reorderEnabled ? [TASK_REORDER_WIDTH] : []),
+    TASK_CHECKBOX_WIDTH,
+    TASK_RANK_WIDTH,
+    widths.status,
+    widths.title,
+    widths.project,
+    widths.assignee,
+    widths.priority,
+    widths.due,
+    widths.updated,
+    TASK_TODAY_WIDTH,
+    TASK_ACTIONS_WIDTH,
+  ];
+}
+
+function getTaskListGrid(
+  widths: Record<TaskListWidthColumn, number>,
+  reorderEnabled: boolean
+): string {
+  return gridTemplateFromTracks([
+    ...(reorderEnabled ? [TASK_REORDER_WIDTH] : []),
+    TASK_CHECKBOX_WIDTH,
+    TASK_RANK_WIDTH,
+    widths.status,
+    widths.title === TASK_LIST_COLUMN_DEFAULTS.title
+      ? `minmax(${widths.title}px, 1fr)`
+      : widths.title,
+    widths.project,
+    widths.assignee,
+    widths.priority,
+    widths.due,
+    widths.updated,
+    TASK_TODAY_WIDTH,
+    TASK_ACTIONS_WIDTH,
+  ]);
+}
+
+function TaskResizableHeader({
+  label,
+  column,
+  sizing,
+  children,
+}: {
+  label: string;
+  column: TaskListWidthColumn;
+  sizing: ReturnType<typeof useResizableColumns<TaskListWidthColumn>>;
+  children: ReactNode;
+}) {
+  return (
+    <ResizableHeaderCell
+      label={label}
+      width={sizing.widths[column]}
+      minWidth={sizing.minWidthOf(column)}
+      maxWidth={sizing.maxWidth}
+      onWidthChange={(width) => sizing.setColumnWidth(column, width)}
+      onReset={() => sizing.resetColumnWidth(column)}
+    >
+      {children}
+    </ResizableHeaderCell>
+  );
+}
 
 interface TaskListProps {
   tasks: TaskNode[];
@@ -59,6 +166,7 @@ interface TaskListProps {
   onSortColumn(column: string): void;
   onReorder?(orderedIds: string[]): void;
   onMoveRank?(id: string, direction: RankMoveDirection): void;
+  onSetRank?(id: string, rank: number): void;
   onStatusChange(taskId: string, status: string): void;
   onProjectChange(taskId: string, projectNodeId: string | null): void;
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
@@ -84,6 +192,8 @@ function TaskRow({
   reorderEnabled,
   getPriorityRank,
   rankControls,
+  maxRank,
+  onRankChange,
   isUpdating,
   onStatusChange,
   onProjectChange,
@@ -100,6 +210,8 @@ function TaskRow({
   onTodo = false,
   togglingTodo = false,
   onToggleTodo,
+  gridTemplateColumns,
+  minWidth,
 }: {
   task: TaskNode;
   projects: ProjectNode[];
@@ -107,6 +219,8 @@ function TaskRow({
   reorderEnabled: boolean;
   getPriorityRank(id: string): number | undefined;
   rankControls?: ReactNode;
+  maxRank?: number;
+  onRankChange?(rank: number): void;
   isUpdating: boolean;
   onStatusChange(taskId: string, status: string): void;
   onProjectChange(taskId: string, projectNodeId: string | null): void;
@@ -123,9 +237,9 @@ function TaskRow({
   onTodo?: boolean;
   togglingTodo?: boolean;
   onToggleTodo?(taskId: string, onTodo: boolean): void;
+  gridTemplateColumns: string;
+  minWidth: number;
 }) {
-  const rowClass = reorderEnabled ? ROW_WITH_HANDLE : ROW_BASE;
-  const minWidth = reorderEnabled ? ROW_MIN_WIDTH_WITH_HANDLE : ROW_MIN_WIDTH;
   const projectId = task.project?.id ?? "";
   const assigneeId = resolveAssigneeId(task);
   const areaId = findAreaIdByTitle(task.area, areas);
@@ -151,6 +265,8 @@ function TaskRow({
           {reorderEnabled ? rankControls : null}
           <CollectionPriorityRank
             rank={getPriorityRank(task.id)}
+            maxRank={maxRank}
+            onRankChange={onRankChange}
             className="min-w-[1.15rem] px-0.5"
           />
           <TaskStatusSelect
@@ -210,7 +326,7 @@ function TaskRow({
   }
 
   return (
-    <div className={cn(rowClass, "px-4 py-2.5 row-hover md:px-6")} style={{ minWidth }}>
+    <div className={cn(ROW_LAYOUT, "px-4 py-2.5 row-hover md:px-6")} style={{ gridTemplateColumns, minWidth }}>
       {reorderEnabled ? rankControls : null}
       {onToggleSelected ? (
         <SelectionCheckbox
@@ -222,7 +338,11 @@ function TaskRow({
       ) : (
         <span aria-hidden />
       )}
-      <CollectionPriorityRank rank={getPriorityRank(task.id)} />
+      <CollectionPriorityRank
+        rank={getPriorityRank(task.id)}
+        maxRank={maxRank}
+        onRankChange={onRankChange}
+      />
       <TaskStatusSelect
         value={task.status}
         disabled={isUpdating}
@@ -355,6 +475,7 @@ export function TaskList({
   onSortColumn,
   onReorder,
   onMoveRank,
+  onSetRank,
   onStatusChange,
   onProjectChange,
   onAssigneeChange,
@@ -368,8 +489,6 @@ export function TaskList({
   togglingTodoTaskId = null,
   onToggleTodo,
 }: TaskListProps) {
-  const headerClass = reorderEnabled ? ROW_WITH_HANDLE : ROW_BASE;
-  const minWidth = reorderEnabled ? ROW_MIN_WIDTH_WITH_HANDLE : ROW_MIN_WIDTH;
   const taskIds = useMemo(() => tasks.map((task) => task.id), [tasks]);
   const orderIds = useMemo(
     () => rankOrderIds ?? taskIds,
@@ -378,6 +497,14 @@ export function TaskList({
   const selection = useItemSelection(taskIds);
   const canSelect = Boolean(onDeleteSelected);
   const isPhone = useIsPhone();
+  const columnSizing = useResizableColumns(
+    "tasks",
+    TASK_LIST_COLUMN_DEFAULTS,
+    { minWidths: TASK_LIST_COLUMN_MIN }
+  );
+  const gridTracks = getTaskListTracks(columnSizing.widths, reorderEnabled);
+  const gridTemplateColumns = getTaskListGrid(columnSizing.widths, reorderEnabled);
+  const minWidth = gridMinWidth(gridTracks, TASK_LIST_GAP_PX, TASK_LIST_PADDING_X);
 
   const moveRank = (id: string, direction: RankMoveDirection) => {
     if (onMoveRank) {
@@ -387,6 +514,17 @@ export function TaskList({
     const next = moveIdInOrder(orderIds, id, direction);
     if (next) onReorder?.(next);
   };
+
+  const setRank = (id: string, rank: number) => {
+    if (onSetRank) {
+      onSetRank(id, rank);
+      return;
+    }
+    const next = moveIdToRank(orderIds, id, rank);
+    if (next) onReorder?.(next);
+  };
+
+  const canEditRank = reorderEnabled && Boolean(onSetRank || onReorder);
 
   const rankControlsFor = (
     taskId: string,
@@ -435,10 +573,10 @@ export function TaskList({
       {isPhone ? null : (
       <div
         className={cn(
-          headerClass,
+          ROW_LAYOUT,
           "border-b border-border bg-muted/20 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:px-6"
         )}
-        style={{ minWidth }}
+        style={{ gridTemplateColumns, minWidth }}
       >
         {reorderEnabled ? <span aria-hidden /> : null}
         {canSelect ? (
@@ -458,50 +596,64 @@ export function TaskList({
           sort={sort}
           onSort={onSortColumn}
         />
-        <CollectionSortableHeader
-          label="Status"
-          column="status"
-          sort={sort}
-          onSort={onSortColumn}
-        />
-        <CollectionSortableHeader
-          label="Task"
-          column="title"
-          sort={sort}
-          onSort={onSortColumn}
-        />
-        <CollectionSortableHeader
-          label="Project"
-          column="project"
-          sort={sort}
-          onSort={onSortColumn}
-        />
-        <CollectionSortableHeader
-          label="Assignee"
-          column="assignee"
-          sort={sort}
-          onSort={onSortColumn}
-        />
-        <CollectionSortableHeader
-          label="Priority"
-          column="priority"
-          sort={sort}
-          onSort={onSortColumn}
-        />
-        <CollectionSortableHeader
-          label="Due"
-          column="due"
-          sort={sort}
-          align="end"
-          onSort={onSortColumn}
-        />
-        <CollectionSortableHeader
-          label="Updated"
-          column="updated"
-          sort={sort}
-          align="end"
-          onSort={onSortColumn}
-        />
+        <TaskResizableHeader label="Status" column="status" sizing={columnSizing}>
+          <CollectionSortableHeader
+            label="Status"
+            column="status"
+            sort={sort}
+            onSort={onSortColumn}
+          />
+        </TaskResizableHeader>
+        <TaskResizableHeader label="Task" column="title" sizing={columnSizing}>
+          <CollectionSortableHeader
+            label="Task"
+            column="title"
+            sort={sort}
+            onSort={onSortColumn}
+          />
+        </TaskResizableHeader>
+        <TaskResizableHeader label="Project" column="project" sizing={columnSizing}>
+          <CollectionSortableHeader
+            label="Project"
+            column="project"
+            sort={sort}
+            onSort={onSortColumn}
+          />
+        </TaskResizableHeader>
+        <TaskResizableHeader label="Assignee" column="assignee" sizing={columnSizing}>
+          <CollectionSortableHeader
+            label="Assignee"
+            column="assignee"
+            sort={sort}
+            onSort={onSortColumn}
+          />
+        </TaskResizableHeader>
+        <TaskResizableHeader label="Priority" column="priority" sizing={columnSizing}>
+          <CollectionSortableHeader
+            label="Priority"
+            column="priority"
+            sort={sort}
+            onSort={onSortColumn}
+          />
+        </TaskResizableHeader>
+        <TaskResizableHeader label="Due" column="due" sizing={columnSizing}>
+          <CollectionSortableHeader
+            label="Due"
+            column="due"
+            sort={sort}
+            align="end"
+            onSort={onSortColumn}
+          />
+        </TaskResizableHeader>
+        <TaskResizableHeader label="Updated" column="updated" sizing={columnSizing}>
+          <CollectionSortableHeader
+            label="Updated"
+            column="updated"
+            sort={sort}
+            align="end"
+            onSort={onSortColumn}
+          />
+        </TaskResizableHeader>
         <span className="text-center">Today</span>
         <span />
       </div>
@@ -520,6 +672,8 @@ export function TaskList({
             reorderEnabled={reorderEnabled}
             getPriorityRank={getPriorityRank}
             rankControls={rankControlsFor(task.id, sortable.dragHandleProps)}
+            maxRank={orderIds.length}
+            onRankChange={canEditRank ? (rank) => setRank(task.id, rank) : undefined}
             isUpdating={updatingTaskId === task.id}
             onStatusChange={onStatusChange}
             onProjectChange={onProjectChange}
@@ -536,6 +690,8 @@ export function TaskList({
             onTodo={todoTaskIds?.has(task.id) ?? false}
             togglingTodo={togglingTodoTaskId === task.id}
             onToggleTodo={onToggleTodo}
+            gridTemplateColumns={gridTemplateColumns}
+            minWidth={minWidth}
           />
         )}
       />

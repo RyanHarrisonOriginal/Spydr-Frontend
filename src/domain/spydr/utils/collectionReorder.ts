@@ -14,3 +14,17 @@ export function moveIdInOrder(
   if (nextIndex < 0 || nextIndex >= orderedIds.length) return null;
   return arrayMove([...orderedIds], index, nextIndex);
 }
+
+/** Move `id` to a 1-based rank. Rank is clamped to the list. */
+export function moveIdToRank(
+  orderedIds: readonly string[],
+  id: string,
+  rank: number
+): string[] | null {
+  const fromIndex = orderedIds.indexOf(id);
+  if (fromIndex === -1 || orderedIds.length === 0) return null;
+  if (!Number.isFinite(rank)) return null;
+  const toIndex = Math.min(Math.max(1, Math.trunc(rank)), orderedIds.length) - 1;
+  if (toIndex === fromIndex) return null;
+  return arrayMove([...orderedIds], fromIndex, toIndex);
+}

@@ -292,7 +292,7 @@ export function ProjectDetailTabs<T extends string>({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className="flex min-w-0 flex-1 items-end gap-0.5 overflow-x-auto"
+      className="flex min-w-0 flex-1 items-end gap-0.5 overflow-hidden"
     >
       {items.map((item) => {
         const active = item.id === value;
@@ -304,7 +304,7 @@ export function ProjectDetailTabs<T extends string>({
             role="tab"
             aria-selected={active}
             className={cn(
-              "relative h-8 shrink-0 px-2.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors",
+              "relative h-8 min-w-0 flex-1 truncate px-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors sm:flex-none sm:px-2.5",
               active
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"
@@ -328,7 +328,7 @@ export function ProjectDetailTabs<T extends string>({
             ) : null}
             {active ? (
               <span
-                className="absolute inset-x-2 -bottom-px h-px bg-gradient-to-r from-[hsl(var(--highlight-secondary))] via-[hsl(var(--highlight))] to-transparent"
+                className="absolute inset-x-2 bottom-0 h-px bg-gradient-to-r from-[hsl(var(--highlight-secondary))] via-[hsl(var(--highlight))] to-transparent"
                 aria-hidden
               />
             ) : null}

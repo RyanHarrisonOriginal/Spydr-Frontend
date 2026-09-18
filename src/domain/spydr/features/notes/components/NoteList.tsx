@@ -20,8 +20,8 @@ import {
   CAPTURE_CARD_META_CLASS,
   CAPTURE_CARD_TITLE_CLASS,
 } from "@/domain/spydr/features/shared/components/captureCardStyles";
-import { RichTextHtml } from "@/domain/spydr/features/shared/components/RichTextHtml";
 import { isRichTextEmpty } from "@/domain/spydr/utils/richText";
+import { getNotePreview } from "@/domain/spydr/features/notes/utils/notePreview";
 import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +60,7 @@ export function NoteList({
       onReorder={(orderedIds) => onReorder?.(orderedIds)}
       renderItem={(note, sortable) => {
         const emptyPreview = isRichTextEmpty(note.body);
+        const preview = getNotePreview(note.title, note.body);
 
         return (
           <div className={CAPTURE_CARD_CLASS}>
@@ -90,7 +91,7 @@ export function NoteList({
                       "min-w-0 flex-1 hover:text-highlight"
                     )}
                   >
-                    {note.title || "Untitled note"}
+                    {preview.title}
                   </Link>
                   {onDelete ? (
                     <InlineDeleteButton
@@ -119,10 +120,12 @@ export function NoteList({
                   <div className={CAPTURE_CARD_META_CLASS} aria-hidden />
                 )}
 
-                {emptyPreview ? (
-                  <p className={CAPTURE_CARD_BODY_EMPTY_CLASS}>No description yet.</p>
+                {preview.snippet ? (
+                  <p className={CAPTURE_CARD_BODY_CLASS}>{preview.snippet}</p>
                 ) : (
-                  <RichTextHtml html={note.body} className={CAPTURE_CARD_BODY_CLASS} />
+                  <p className={CAPTURE_CARD_BODY_EMPTY_CLASS}>
+                    {emptyPreview ? "No description yet." : "\u00a0"}
+                  </p>
                 )}
 
                 <div className={CAPTURE_CARD_FOOTER_CLASS}>

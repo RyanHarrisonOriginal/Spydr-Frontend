@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, ArrowUpRight, Plus, Trash2, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { ProjectAreaNode, ProjectNode, PersonNode, TaskNode } from "@/domain/spydr/utils/types";
 import {
@@ -12,10 +12,7 @@ import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
 import { isClosedCollectionStatus } from "@/domain/spydr/utils/collectionVisibility";
 import type { ProjectListSort, ProjectSortColumn } from "@/domain/spydr/utils/projectListView";
 import type { CollectionSortState } from "@/domain/spydr/utils/collectionView";
-import {
-  COLLECTION_REORDER_COLUMN,
-  CollectionReorderControls,
-} from "@/domain/spydr/features/shared/components/CollectionReorderControls";
+import { CollectionReorderControls } from "@/domain/spydr/features/shared/components/CollectionReorderControls";
 import { CollectionPriorityRank } from "@/domain/spydr/features/shared/components/CollectionPriorityRank";
 import { RowExpandToggle } from "@/domain/spydr/features/shared/components/RowExpandToggle";
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
@@ -31,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import {
   moveIdInOrder,
+  moveIdToRank,
   type RankMoveDirection,
 } from "@/domain/spydr/utils/collectionReorder";
 import type { ProjectColumnId } from "../hooks/useProjectListColumns";
@@ -40,7 +38,13 @@ import { ProjectStatusSelect } from "./ProjectStatusSelect";
 import { ProjectTargetDateSelect } from "./ProjectTargetDateSelect";
 import { PersonSelect } from "./PersonSelect";
 import { CollectionSortableHeader } from "@/domain/spydr/features/shared/components/CollectionSortableHeader";
+import { ResizableHeaderCell } from "@/domain/spydr/features/shared/components/ColumnResizeHandle";
 import { CollectionSortMenu } from "@/domain/spydr/features/shared/components/CollectionSortMenu";
+import {
+  gridMinWidth,
+  gridTemplateFromTracks,
+  useResizableColumns,
+} from "@/domain/spydr/features/shared/hooks/useResizableColumns";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -62,6 +66,7 @@ interface ProjectListProps {
   getPriorityRank(id: string): number | undefined;
   onReorder?(orderedIds: string[]): void;
   onMoveRank?(id: string, direction: RankMoveDirection): void;
+  onSetRank?(id: string, rank: number): void;
   updatingProjectId?: string | null;
   updatingTaskId?: string | null;
   creatingTaskProjectId?: string | null;
@@ -107,34 +112,95 @@ function addExpandedId(current: Set<string>, projectId: string): Set<string> {
   return next;
 }
 
-const columnWidths: Record<ProjectColumnId, string> = {
-  area: "148px",
-  assignee: "180px",
-  priority: "132px",
-  status: "160px",
-  target: "112px",
-  updated: "128px",
+type ProjectListWidthColumn = "name" | ProjectColumnId;
+
+const PROJECT_LIST_COLUMN_DEFAULTS: Record<ProjectListWidthColumn, number> = {
+  name: 320,
+  area: 148,
+  assignee: 180,
+  priority: 132,
+  status: 160,
+  target: 112,
+  updated: 128,
 };
 
-const actionsColumnWidth = "48px";
-const actionsColumnWidthWithCreate = "76px";
-const rankColumnWidth = "36px";
-const expandColumnWidth = "32px";
+const PROJECT_LIST_COLUMN_MIN: Partial<Record<ProjectListWidthColumn, number>> = {
+  name: 160,
+  area: 108,
+  assignee: 128,
+  priority: 104,
+  status: 120,
+  target: 96,
+  updated: 96,
+};
+
+const actionsColumnWidth = 48;
+const actionsColumnWidthWithCreate = 76;
+const rankColumnWidth = 36;
+const expandColumnWidth = 32;
+const reorderColumnWidth = 52;
+const PROJECT_LIST_GAP_PX = 16;
+const PROJECT_LIST_PADDING_X = 48;
+
+function getProjectListTracks(
+  visibleColumns: ProjectColumnId[],
+  widths: Record<ProjectListWidthColumn, number>,
+  reorderEnabled = false,
+  showCreateTask = false
+): number[] {
+  const actionWidth = showCreateTask ? actionsColumnWidthWithCreate : actionsColumnWidth;
+  return [
+    ...(reorderEnabled ? [reorderColumnWidth] : []),
+    expandColumnWidth,
+    rankColumnWidth,
+    widths.name,
+    ...visibleColumns.map((id) => widths[id]),
+    actionWidth,
+  ];
+}
 
 function getProjectListGrid(
   visibleColumns: ProjectColumnId[],
+  widths: Record<ProjectListWidthColumn, number>,
   reorderEnabled = false,
   showCreateTask = false
 ) {
   const actionWidth = showCreateTask ? actionsColumnWidthWithCreate : actionsColumnWidth;
-  return [
-    ...(reorderEnabled ? [COLLECTION_REORDER_COLUMN] : []),
+  return gridTemplateFromTracks([
+    ...(reorderEnabled ? [reorderColumnWidth] : []),
     expandColumnWidth,
     rankColumnWidth,
-    "minmax(280px,1fr)",
-    ...visibleColumns.map((id) => columnWidths[id]),
+    widths.name === PROJECT_LIST_COLUMN_DEFAULTS.name
+      ? `minmax(${widths.name}px, 1fr)`
+      : widths.name,
+    ...visibleColumns.map((id) => widths[id]),
     actionWidth,
-  ].join(" ");
+  ]);
+}
+
+function ProjectResizableHeader({
+  label,
+  column,
+  sizing,
+  children,
+}: {
+  label: string;
+  column: ProjectListWidthColumn;
+  sizing: ReturnType<typeof useResizableColumns<ProjectListWidthColumn>>;
+  children: ReactNode;
+}) {
+  return (
+    <ResizableHeaderCell
+      label={label}
+      width={sizing.widths[column]}
+      minWidth={sizing.minWidthOf(column)}
+      maxWidth={sizing.maxWidth}
+      onWidthChange={(width) => sizing.setColumnWidth(column, width)}
+      onReset={() => sizing.resetColumnWidth(column)}
+    >
+      {children}
+    </ResizableHeaderCell>
+  );
 }
 
 function SortableHeader({
@@ -695,6 +761,7 @@ export function ProjectList({
   getPriorityRank,
   onReorder,
   onMoveRank,
+  onSetRank,
   updatingProjectId = null,
   updatingTaskId = null,
   creatingTaskProjectId = null,
@@ -743,16 +810,28 @@ export function ProjectList({
   const [draftTitle, setDraftTitle] = useState("");
   const isPhone = useIsPhone();
   const nestedTaskSort = useNestedTaskSort();
-  const gridTemplateColumns = getProjectListGrid(
+  const columnSizing = useResizableColumns(
+    "projects",
+    PROJECT_LIST_COLUMN_DEFAULTS,
+    { minWidths: PROJECT_LIST_COLUMN_MIN }
+  );
+  const gridTracks = getProjectListTracks(
     visibleColumns,
+    columnSizing.widths,
     reorderEnabled,
     Boolean(onCreateTask)
   );
-  const minWidth =
-    448 +
-    visibleColumns.length * 112 +
-    (onCreateTask ? 144 : 108) +
-    (reorderEnabled ? 52 : 0);
+  const gridTemplateColumns = getProjectListGrid(
+    visibleColumns,
+    columnSizing.widths,
+    reorderEnabled,
+    Boolean(onCreateTask)
+  );
+  const minWidth = gridMinWidth(
+    gridTracks,
+    PROJECT_LIST_GAP_PX,
+    PROJECT_LIST_PADDING_X
+  );
   const hasColumn = (columnId: ProjectColumnId) => visibleColumns.includes(columnId);
   const orderIds = useMemo(
     () => rankOrderIds ?? projects.map((project) => project.id),
@@ -767,6 +846,17 @@ export function ProjectList({
     const next = moveIdInOrder(orderIds, id, direction);
     if (next) onReorder?.(next);
   };
+
+  const setRank = (id: string, rank: number) => {
+    if (onSetRank) {
+      onSetRank(id, rank);
+      return;
+    }
+    const next = moveIdToRank(orderIds, id, rank);
+    if (next) onReorder?.(next);
+  };
+
+  const canEditRank = reorderEnabled && Boolean(onSetRank || onReorder);
 
   const rankControls = (projectId: string, dragHandleProps?: Record<string, unknown>) => {
     const rankIndex = orderIds.indexOf(projectId);
@@ -860,62 +950,76 @@ export function ProjectList({
       ) : null}
       {isPhone ? null : (
       <div
-        className="grid items-center gap-4 border-b border-border bg-muted/20 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:px-6"
+        className="grid items-center gap-4 border-b border-border bg-muted/20 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground [&>*]:min-w-0 md:px-6"
         style={{ gridTemplateColumns, minWidth }}
       >
         {reorderEnabled ? <span aria-hidden /> : null}
         <span aria-hidden />
         <SortableHeader label="Rank" column="order" sort={sort} onSort={onSortColumn} />
-        <SortableHeader label="Name" column="name" sort={sort} onSort={onSortColumn} />
+        <ProjectResizableHeader label="Name" column="name" sizing={columnSizing}>
+          <SortableHeader label="Name" column="name" sort={sort} onSort={onSortColumn} />
+        </ProjectResizableHeader>
         {hasColumn("area") && (
-          <SortableHeader
-            label="Area"
-            column="area"
-            sort={sort}
-            onSort={onSortColumn}
-          />
+          <ProjectResizableHeader label="Area" column="area" sizing={columnSizing}>
+            <SortableHeader
+              label="Area"
+              column="area"
+              sort={sort}
+              onSort={onSortColumn}
+            />
+          </ProjectResizableHeader>
         )}
         {hasColumn("assignee") && (
-          <SortableHeader
-            label="Assignee"
-            column="assignee"
-            sort={sort}
-            onSort={onSortColumn}
-          />
+          <ProjectResizableHeader label="Assignee" column="assignee" sizing={columnSizing}>
+            <SortableHeader
+              label="Assignee"
+              column="assignee"
+              sort={sort}
+              onSort={onSortColumn}
+            />
+          </ProjectResizableHeader>
         )}
         {hasColumn("priority") && (
-          <SortableHeader
-            label="Priority"
-            column="priority"
-            sort={sort}
-            onSort={onSortColumn}
-          />
+          <ProjectResizableHeader label="Priority" column="priority" sizing={columnSizing}>
+            <SortableHeader
+              label="Priority"
+              column="priority"
+              sort={sort}
+              onSort={onSortColumn}
+            />
+          </ProjectResizableHeader>
         )}
         {hasColumn("status") && (
-          <SortableHeader
-            label="Status"
-            column="status"
-            sort={sort}
-            onSort={onSortColumn}
-          />
+          <ProjectResizableHeader label="Status" column="status" sizing={columnSizing}>
+            <SortableHeader
+              label="Status"
+              column="status"
+              sort={sort}
+              onSort={onSortColumn}
+            />
+          </ProjectResizableHeader>
         )}
         {hasColumn("target") && (
-          <SortableHeader
-            label="Target"
-            column="target"
-            sort={sort}
-            align="end"
-            onSort={onSortColumn}
-          />
+          <ProjectResizableHeader label="Target" column="target" sizing={columnSizing}>
+            <SortableHeader
+              label="Target"
+              column="target"
+              sort={sort}
+              align="end"
+              onSort={onSortColumn}
+            />
+          </ProjectResizableHeader>
         )}
         {hasColumn("updated") && (
-          <SortableHeader
-            label="Updated"
-            column="updated"
-            sort={sort}
-            align="end"
-            onSort={onSortColumn}
-          />
+          <ProjectResizableHeader label="Updated" column="updated" sizing={columnSizing}>
+            <SortableHeader
+              label="Updated"
+              column="updated"
+              sort={sort}
+              align="end"
+              onSort={onSortColumn}
+            />
+          </ProjectResizableHeader>
         )}
         <span />
       </div>
@@ -989,6 +1093,12 @@ export function ProjectList({
                         ) : null}
                         <CollectionPriorityRank
                           rank={getPriorityRank(project.id)}
+                          maxRank={orderIds.length}
+                          onRankChange={
+                            canEditRank
+                              ? (rank) => setRank(project.id, rank)
+                              : undefined
+                          }
                           className="min-w-[1.15rem] px-0.5"
                         />
                         <EmojiPicker
@@ -1108,7 +1218,7 @@ export function ProjectList({
               >
                 <div
                   className={cn(
-                    "grid items-center gap-4 px-3 py-2.5",
+                    "grid items-center gap-4 px-3 py-2.5 [&>*]:min-w-0",
                     showChildren && "border-b border-border/50 bg-muted/45",
                     !showChildren && "row-hover"
                   )}
@@ -1123,7 +1233,13 @@ export function ProjectList({
                   ) : (
                     <span aria-hidden className="h-7 w-7" />
                   )}
-                  <CollectionPriorityRank rank={getPriorityRank(project.id)} />
+                  <CollectionPriorityRank
+                    rank={getPriorityRank(project.id)}
+                    maxRank={orderIds.length}
+                    onRankChange={
+                      canEditRank ? (rank) => setRank(project.id, rank) : undefined
+                    }
+                  />
                   <div className="min-w-0">
                     <div className="flex min-w-0 items-center gap-2">
                       {!hasColumn("status") && onStatusChange ? (

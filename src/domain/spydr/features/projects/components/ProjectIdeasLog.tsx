@@ -72,7 +72,7 @@ export function ProjectIdeasLog({
       </form>
       {error ? <ProjectDetailInlineError>{error}</ProjectDetailInlineError> : null}
       {ideas.length > 0 ? (
-        <ul className="min-h-0 flex-1 overflow-y-auto">
+        <ul>
           {ideas.map((idea) => (
             <ProjectDetailEntry key={idea.id}>
               <div className="flex items-center gap-2">
