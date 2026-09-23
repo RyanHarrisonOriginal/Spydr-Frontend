@@ -36,11 +36,11 @@ import { WorkCreateMenu } from "../components/WorkCreateMenu";
 import { WorkMoreMenu } from "../components/WorkMoreMenu";
 import { ExpandCollapseControls } from "@/domain/spydr/features/shared/components/ExpandCollapseControls";
 import { ShowCompletedToggle } from "@/domain/spydr/features/shared/components/ShowCompletedToggle";
-import { ListPagination } from "@/domain/spydr/features/shared/components/ListPagination";
 import {
-  useClientPagination,
-  useListPageSize,
-} from "@/domain/spydr/features/shared/hooks/useClientPagination";
+  InfiniteScrollSentinel,
+  useScrollListToStart,
+} from "@/domain/spydr/features/shared/components/InfiniteScrollSentinel";
+import { useInfiniteList } from "@/domain/spydr/features/shared/hooks/useInfiniteList";
 import { moveIdInOrder, moveIdToRank } from "@/domain/spydr/utils/collectionReorder";
 import { useWorkScope } from "../hooks/useWorkScope";
 
@@ -73,26 +73,24 @@ export function WorkPage() {
   });
   const projectColumns = useProjectListColumns();
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
-  const [pageSize, setPageSize] = useListPageSize("work");
-
-  const projectsPagination = useClientPagination(projectsPage.projects, {
-    pageSize,
-    setPageSize,
-    resetKey: [
-      personId ?? "all",
-      JSON.stringify(projectsPage.listView.filters),
-      projectsPage.listView.sort.column,
-      projectsPage.listView.sort.direction,
-    ].join("|"),
+  const projectsResetKey = [
+    personId ?? "all",
+    JSON.stringify(projectsPage.listView.filters),
+    projectsPage.listView.sort.column,
+    projectsPage.listView.sort.direction,
+  ].join("|");
+  const tasksResetKey = [personId ?? "all", JSON.stringify(tasksPage.view.state)].join(
+    "|"
+  );
+  const projectsList = useInfiniteList(projectsPage.projects, {
+    resetKey: projectsResetKey,
   });
-  const tasksPagination = useClientPagination(tasksPage.view.items, {
-    pageSize,
-    setPageSize,
-    resetKey: [
-      personId ?? "all",
-      JSON.stringify(tasksPage.view.state),
-    ].join("|"),
+  const tasksList = useInfiniteList(tasksPage.view.items, {
+    resetKey: tasksResetKey,
   });
+  const listAnchorRef = useScrollListToStart(
+    view === "hierarchy" ? `projects:${projectsResetKey}` : `tasks:${tasksResetKey}`
+  );
 
   usePageBreadcrumb("Work");
 
@@ -258,7 +256,7 @@ export function WorkPage() {
   );
 
   return (
-    <div>
+    <div ref={listAnchorRef}>
       <PageHeader
         dense
         title="Work"
@@ -405,7 +403,7 @@ export function WorkPage() {
           ) : (
             <>
               <ProjectList
-                projects={projectsPagination.pageItems}
+                projects={projectsList.visibleItems}
                 areas={projectsPage.areas}
                 people={projectsPage.people}
                 tasksByProjectId={projectsPage.tasksByProjectId}
@@ -416,7 +414,7 @@ export function WorkPage() {
                 getPriorityRank={projectsPage.getPriorityRank}
                 onReorder={(orderedIds) =>
                   projectsPage.reorder.onReorder(
-                    projectsPagination.mergePageReorder(orderedIds)
+                    projectsList.mergeVisibleReorder(orderedIds)
                   )
                 }
                 onMoveRank={(id, direction) => {
@@ -467,7 +465,12 @@ export function WorkPage() {
                 togglingTodoTaskId={togglingTodoTaskId}
                 onToggleTodo={toggleTodo}
               />
-              <ListPagination pagination={projectsPagination} noun="projects" />
+              <InfiniteScrollSentinel
+                hasMore={projectsList.hasMore}
+                onLoadMore={projectsList.loadMore}
+                loadedCount={projectsList.visibleItems.length}
+                noun="projects"
+              />
             </>
           )}
         </>
@@ -515,7 +518,7 @@ export function WorkPage() {
           {tasksPage.view.items.length > 0 ? (
             <>
               <TaskList
-                tasks={tasksPagination.pageItems}
+                tasks={tasksList.visibleItems}
                 projects={tasksPage.projects}
                 people={tasksPage.people}
                 areas={projectsPage.areas}
@@ -527,7 +530,7 @@ export function WorkPage() {
                 onSortColumn={tasksPage.view.toggleSort}
                 onReorder={(orderedIds) =>
                   tasksPage.reorder.onReorder(
-                    tasksPagination.mergePageReorder(orderedIds)
+                    tasksList.mergeVisibleReorder(orderedIds)
                   )
                 }
                 onMoveRank={(id, direction) => {
@@ -559,7 +562,12 @@ export function WorkPage() {
                 togglingTodoTaskId={togglingTodoTaskId}
                 onToggleTodo={toggleTodo}
               />
-              <ListPagination pagination={tasksPagination} noun="tasks" />
+              <InfiniteScrollSentinel
+                hasMore={tasksList.hasMore}
+                onLoadMore={tasksList.loadMore}
+                loadedCount={tasksList.visibleItems.length}
+                noun="tasks"
+              />
             </>
           ) : (
             <CollectionNoResults
