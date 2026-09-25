@@ -23,6 +23,7 @@ import NoteDetailScreen from "@/screens/NoteDetailScreen";
 import ResourcesScreen from "@/screens/ResourcesScreen";
 import SignInScreen from "@/screens/SignInScreen";
 import SignUpScreen from "@/screens/SignUpScreen";
+import OAuthConsentScreen from "@/screens/OAuthConsentScreen";
 import AcceptInviteScreen from "@/screens/AcceptInviteScreen";
 import OrganizationSettingsScreen from "@/screens/OrganizationSettingsScreen";
 import NotFoundScreen from "@/screens/NotFoundScreen";
@@ -62,6 +63,14 @@ export default function App() {
             <Routes>
             <Route path="/sign-in" element={<SignInScreen />} />
             <Route path="/sign-up" element={<SignUpScreen />} />
+            <Route
+              path="/oauth-consent"
+              element={
+                <RequireAuth>
+                  <OAuthConsentScreen />
+                </RequireAuth>
+              }
+            />
             <Route element={<AuthenticatedLayout />}>
               <Route path="/invites/:token" element={<AcceptInviteScreen />} />
               <Route element={<WorkspaceShellScreen />}>
