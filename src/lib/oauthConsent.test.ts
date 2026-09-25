@@ -36,6 +36,14 @@ describe("oauthConsent", () => {
     ).toEqual({ type: "external", href: authorize });
   });
 
+  it("resumes Clerk Account Portal consent from the live redirect_url", () => {
+    const consent =
+      "https://accounts.spydr-app.cloud/oauth-consent?client_id=https://claude.ai/oauth/mcp-oauth-client-metadata&redirect_uri=https://claude.ai/api/mcp/auth_callback";
+    expect(
+      oauthNavigationTarget(`?redirect_url=${encodeURIComponent(consent)}`)
+    ).toEqual({ type: "external", href: consent });
+  });
+
   it("does not treat the product home page as an OAuth resume", () => {
     expect(
       oauthNavigationTarget(

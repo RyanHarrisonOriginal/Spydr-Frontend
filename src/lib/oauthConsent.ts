@@ -64,6 +64,7 @@ function isTrustedClerkOAuthUrl(url: URL): boolean {
   return (
     path.includes("/oauth/authorize") ||
     path.includes("/oauth/consent") ||
+    path.includes("/oauth-consent") ||
     path.includes("/v1/oauth")
   );
 }
