@@ -1,19 +1,31 @@
-import { SignIn } from "@clerk/react";
+import { SignIn, useAuth } from "@clerk/react";
+import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { WebField } from "@/components/WebField";
 import { clerkAppearance } from "@/lib/clerkAppearance";
 import { authRoutes } from "@/config/auth";
-import {
-  isOAuthAuthorizeRequest,
-  oauthConsentPath,
-} from "@/lib/oauthConsent";
+import { oauthNavigationTarget } from "@/lib/oauthConsent";
+
+function oauthReturnUrl(search: string, hash: string): string | undefined {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const target = oauthNavigationTarget(search, hash, origin);
+  if (target?.type === "consent") return target.to;
+  if (target?.type === "external") return target.href;
+  return undefined;
+}
 
 export default function SignInScreen() {
   const location = useLocation();
-  const oauthReturn = isOAuthAuthorizeRequest(location.search, location.hash)
-    ? oauthConsentPath(location.search, location.hash)
-    : undefined;
+  const { isLoaded, isSignedIn } = useAuth();
+  const oauthReturn = oauthReturnUrl(location.search, location.hash);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !oauthReturn) return;
+    if (oauthReturn.startsWith("http")) {
+      window.location.replace(oauthReturn);
+    }
+  }, [isLoaded, isSignedIn, oauthReturn]);
 
   return (
     <div className="spydr-surface relative flex h-full flex-col overflow-y-auto bg-background">

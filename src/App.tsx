@@ -1,10 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useParams } from "react-router-dom";
-import {
-  isOAuthAuthorizeRequest,
-  oauthConsentPath,
-} from "@/lib/oauthConsent";
+import { oauthNavigationTarget } from "@/lib/oauthConsent";
+import { WebLoaderScreen } from "@/components/WebLoader";
 import { workPersonPath } from "@/domain/spydr/features/work/utils/workPaths";
 import { PhoneLayoutSync } from "@/components/PhoneLayoutSync";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -40,19 +38,39 @@ function RedirectPersonToWork() {
   return <Navigate to={personId ? workPersonPath(personId) : "/work"} replace />;
 }
 
-function OAuthAuthorizeRedirect({ children }: { children: ReactNode }) {
+function ResumeClerkOAuth({ children }: { children: ReactNode }) {
   const location = useLocation();
-  if (
-    location.pathname !== "/oauth-consent" &&
-    location.pathname !== "/sign-in" &&
-    location.pathname !== "/sign-up" &&
-    isOAuthAuthorizeRequest(location.search, location.hash)
-  ) {
-    return (
-      <Navigate to={oauthConsentPath(location.search, location.hash)} replace />
-    );
+  const skip =
+    location.pathname === "/oauth-consent" ||
+    location.pathname === "/sign-in" ||
+    location.pathname === "/sign-up";
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const target = skip
+    ? null
+    : oauthNavigationTarget(location.search, location.hash, origin);
+
+  if (target?.type === "consent") {
+    return <Navigate to={target.to} replace />;
+  }
+  if (target?.type === "external") {
+    window.location.replace(target.href);
+    return <WebLoaderScreen label="Continuing sign in" />;
   }
   return <>{children}</>;
+}
+
+function WorkspaceHomeRedirect() {
+  const location = useLocation();
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const target = oauthNavigationTarget(location.search, location.hash, origin);
+  if (target?.type === "consent") {
+    return <Navigate to={target.to} replace />;
+  }
+  if (target?.type === "external") {
+    window.location.replace(target.href);
+    return <WebLoaderScreen label="Continuing sign in" />;
+  }
+  return <Navigate to="/today" replace />;
 }
 
 function AuthenticatedLayout() {
@@ -80,7 +98,7 @@ export default function App() {
           }}
         >
           <div className="h-full">
-            <OAuthAuthorizeRedirect>
+            <ResumeClerkOAuth>
             <Routes>
             <Route path="/sign-in" element={<SignInScreen />} />
             <Route path="/sign-up" element={<SignUpScreen />} />
@@ -88,7 +106,7 @@ export default function App() {
             <Route element={<AuthenticatedLayout />}>
               <Route path="/invites/:token" element={<AcceptInviteScreen />} />
               <Route element={<WorkspaceShellScreen />}>
-                <Route index element={<Navigate to="/today" replace />} />
+                <Route index element={<WorkspaceHomeRedirect />} />
                 <Route path="/dashboard" element={<DashboardScreen />} />
                 <Route path="/today" element={<TodayScreen />} />
                 <Route path="/work" element={<WorkScreen />} />
@@ -124,7 +142,7 @@ export default function App() {
             <Route path="/404" element={<NotFoundScreen />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
-            </OAuthAuthorizeRedirect>
+            </ResumeClerkOAuth>
           </div>
         </BrowserRouter>
       </QueryClientProvider>

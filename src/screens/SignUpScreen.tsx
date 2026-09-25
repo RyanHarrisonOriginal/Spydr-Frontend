@@ -4,16 +4,18 @@ import { Logo } from "@/components/Logo";
 import { WebField } from "@/components/WebField";
 import { clerkAppearance } from "@/lib/clerkAppearance";
 import { authRoutes } from "@/config/auth";
-import {
-  isOAuthAuthorizeRequest,
-  oauthConsentPath,
-} from "@/lib/oauthConsent";
+import { oauthNavigationTarget } from "@/lib/oauthConsent";
 
 export default function SignUpScreen() {
   const location = useLocation();
-  const oauthReturn = isOAuthAuthorizeRequest(location.search, location.hash)
-    ? oauthConsentPath(location.search, location.hash)
-    : undefined;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const target = oauthNavigationTarget(location.search, location.hash, origin);
+  const oauthReturn =
+    target?.type === "consent"
+      ? target.to
+      : target?.type === "external"
+        ? target.href
+        : undefined;
 
   return (
     <div className="spydr-surface relative flex h-full flex-col overflow-y-auto bg-background">
