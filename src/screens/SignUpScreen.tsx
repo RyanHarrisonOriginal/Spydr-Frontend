@@ -1,11 +1,20 @@
 import { SignUp } from "@clerk/react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { WebField } from "@/components/WebField";
 import { clerkAppearance } from "@/lib/clerkAppearance";
 import { authRoutes } from "@/config/auth";
+import {
+  isOAuthAuthorizeRequest,
+  oauthConsentPath,
+} from "@/lib/oauthConsent";
 
 export default function SignUpScreen() {
+  const location = useLocation();
+  const oauthReturn = isOAuthAuthorizeRequest(location.search, location.hash)
+    ? oauthConsentPath(location.search, location.hash)
+    : undefined;
+
   return (
     <div className="spydr-surface relative flex h-full flex-col overflow-y-auto bg-background">
       <div
@@ -43,7 +52,8 @@ export default function SignUpScreen() {
           data-clerk-sign-up-container
         >
           <SignUp
-            fallbackRedirectUrl="/"
+            fallbackRedirectUrl={oauthReturn ?? "/"}
+            forceRedirectUrl={oauthReturn}
             signInUrl={authRoutes.signInUrl}
             appearance={clerkAppearance}
           />

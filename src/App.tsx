@@ -1,5 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams } from "react-router-dom";
+import type { ReactNode } from "react";
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useParams } from "react-router-dom";
+import {
+  isOAuthAuthorizeRequest,
+  oauthConsentPath,
+} from "@/lib/oauthConsent";
 import { workPersonPath } from "@/domain/spydr/features/work/utils/workPaths";
 import { PhoneLayoutSync } from "@/components/PhoneLayoutSync";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -35,6 +40,21 @@ function RedirectPersonToWork() {
   return <Navigate to={personId ? workPersonPath(personId) : "/work"} replace />;
 }
 
+function OAuthAuthorizeRedirect({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  if (
+    location.pathname !== "/oauth-consent" &&
+    location.pathname !== "/sign-in" &&
+    location.pathname !== "/sign-up" &&
+    isOAuthAuthorizeRequest(location.search, location.hash)
+  ) {
+    return (
+      <Navigate to={oauthConsentPath(location.search, location.hash)} replace />
+    );
+  }
+  return <>{children}</>;
+}
+
 function AuthenticatedLayout() {
   return (
     <RequireAuth>
@@ -60,17 +80,11 @@ export default function App() {
           }}
         >
           <div className="h-full">
+            <OAuthAuthorizeRedirect>
             <Routes>
             <Route path="/sign-in" element={<SignInScreen />} />
             <Route path="/sign-up" element={<SignUpScreen />} />
-            <Route
-              path="/oauth-consent"
-              element={
-                <RequireAuth>
-                  <OAuthConsentScreen />
-                </RequireAuth>
-              }
-            />
+            <Route path="/oauth-consent" element={<OAuthConsentScreen />} />
             <Route element={<AuthenticatedLayout />}>
               <Route path="/invites/:token" element={<AcceptInviteScreen />} />
               <Route element={<WorkspaceShellScreen />}>
@@ -110,6 +124,7 @@ export default function App() {
             <Route path="/404" element={<NotFoundScreen />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
+            </OAuthAuthorizeRedirect>
           </div>
         </BrowserRouter>
       </QueryClientProvider>
