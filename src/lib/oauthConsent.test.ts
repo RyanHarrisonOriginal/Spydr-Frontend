@@ -25,7 +25,10 @@ describe("oauthConsent", () => {
   });
 
   it("sends a bare app URL with authorize params to consent", () => {
-    expect(oauthNavigationTarget(search)?.to).toBe(oauthConsentPath(search));
+    expect(oauthNavigationTarget(search)).toEqual({
+      type: "consent",
+      to: oauthConsentPath(search),
+    });
   });
 
   it("resumes Clerk authorize when only redirect_url is present", () => {
