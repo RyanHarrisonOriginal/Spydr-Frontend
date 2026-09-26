@@ -57,14 +57,14 @@ export function CollectionToolbar<T>({
           "flex items-center gap-2 bg-muted/10 px-4 py-2 md:px-6",
           wrap
             ? "flex-col md:flex-row md:flex-wrap"
-            : "flex-nowrap overflow-x-auto"
+            : "flex-wrap"
         )}
       >
         {startActions ? (
           <div
             className={cn(
               "flex min-w-0 items-center gap-2",
-              wrap ? "flex-wrap" : "shrink-0 flex-nowrap"
+              "min-w-0 flex-wrap"
             )}
           >
             {startActions}
@@ -84,7 +84,7 @@ export function CollectionToolbar<T>({
         <div
           className={cn(
             "flex min-w-0 items-center gap-2",
-            wrap ? "flex-wrap" : "shrink-0 flex-nowrap"
+            "min-w-0 flex-wrap"
           )}
         >
         {hasFacets ? (

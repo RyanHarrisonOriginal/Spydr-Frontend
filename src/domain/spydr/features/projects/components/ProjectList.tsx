@@ -1144,7 +1144,7 @@ export function ProjectList({
                         aria-hidden
                       />
                     )}
-                    <div className="flex min-w-0 flex-1 items-center gap-1 py-0.5 pl-1 pr-1">
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1 py-0.5 pl-1 pr-1">
                         {reorderEnabled ? rankControls(project.id, sortable.dragHandleProps) : null}
                         {visibleTasks.length > 0 ? (
                           <RowExpandToggle

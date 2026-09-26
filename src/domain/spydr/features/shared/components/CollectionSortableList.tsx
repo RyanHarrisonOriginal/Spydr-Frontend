@@ -17,8 +17,10 @@ import {
   type SortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { CSSProperties, ReactNode } from "react";
+import { useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useMeasuredVirtualWindow } from "@/domain/spydr/features/shared/hooks/useMeasuredVirtualWindow";
+import { VIRTUALIZE_AFTER } from "@/domain/spydr/features/shared/utils/measuredVirtualWindow";
 
 export interface SortableItemRenderProps {
   dragHandleProps: Record<string, unknown> | undefined;
@@ -35,12 +37,21 @@ interface CollectionSortableListProps<T extends { id: string }> {
   renderItem(item: T, props: SortableItemRenderProps): ReactNode;
 }
 
+function assignNode(
+  ...refs: Array<((node: HTMLElement | null) => void) | undefined>
+) {
+  return (node: HTMLElement | null) => {
+    for (const ref of refs) ref?.(node);
+  };
+}
+
 function SortableItem<T extends { id: string }>({
   item,
   enabled,
   index,
   className,
   style,
+  setMeasuredRef,
   children,
 }: {
   item: T;
@@ -48,6 +59,7 @@ function SortableItem<T extends { id: string }>({
   index: number;
   className?: string;
   style?: CSSProperties;
+  setMeasuredRef?: (node: HTMLElement | null) => void;
   children: (props: SortableItemRenderProps) => ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -64,11 +76,11 @@ function SortableItem<T extends { id: string }>({
 
   return (
     <li
-      ref={setNodeRef}
+      ref={assignNode(setNodeRef, setMeasuredRef)}
       style={sortableStyle}
       className={cn(
         className,
-        isDragging && "relative z-10 opacity-60"
+        isDragging && "z-10 opacity-60"
       )}
     >
       {children({
@@ -92,9 +104,35 @@ export function CollectionSortableList<T extends { id: string }>({
     layout === "grid" ? rectSortingStrategy : verticalListSortingStrategy;
   const itemClassName = layout === "grid" ? "h-full min-h-0" : undefined;
 
+  const virtual = layout === "list" && items.length > VIRTUALIZE_AFTER;
+  const ids = useMemo(() => items.map((item) => item.id), [items]);
+  const windowed = useMeasuredVirtualWindow(ids, virtual);
+  const visibleItems = virtual ? items.slice(windowed.start, windowed.end) : items;
+  const listStyle: CSSProperties | undefined = virtual
+    ? { position: "relative", height: windowed.totalSize }
+    : undefined;
+
+  const rowStyle = (index: number): CSSProperties | undefined =>
+    virtual
+      ? {
+          position: "absolute",
+          top: windowed.offsetOf(index),
+          left: 0,
+          right: 0,
+          margin: 0,
+        }
+      : undefined;
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const setListRef = useCallback(
+    (node: HTMLUListElement | null) => {
+      windowed.rootRef.current = node;
+    },
+    [windowed.rootRef]
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -110,16 +148,24 @@ export function CollectionSortableList<T extends { id: string }>({
 
   if (!enabled) {
     return (
-      <ul className={className}>
-        {items.map((item, index) => (
-          <li key={item.id} className={itemClassName}>
-            {renderItem(item, {
-              dragHandleProps: undefined,
-              isDragging: false,
-              index,
-            })}
-          </li>
-        ))}
+      <ul ref={setListRef} className={cn(className, virtual && "w-full")} style={listStyle}>
+        {visibleItems.map((item, localIndex) => {
+          const index = virtual ? windowed.start + localIndex : localIndex;
+          return (
+            <li
+              key={item.id}
+              ref={virtual ? windowed.setRowRef(item.id) : undefined}
+              className={itemClassName}
+              style={rowStyle(index)}
+            >
+              {renderItem(item, {
+                dragHandleProps: undefined,
+                isDragging: false,
+                index,
+              })}
+            </li>
+          );
+        })}
       </ul>
     );
   }
@@ -130,19 +176,24 @@ export function CollectionSortableList<T extends { id: string }>({
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext items={items.map((item) => item.id)} strategy={strategy}>
-        <ul className={className}>
-          {items.map((item, index) => (
-            <SortableItem
-              key={item.id}
-              item={item}
-              enabled={enabled}
-              index={index}
-              className={itemClassName}
-            >
-              {(props) => renderItem(item, props)}
-            </SortableItem>
-          ))}
+      <SortableContext items={visibleItems.map((item) => item.id)} strategy={strategy}>
+        <ul ref={setListRef} className={cn(className, virtual && "w-full")} style={listStyle}>
+          {visibleItems.map((item, localIndex) => {
+            const index = virtual ? windowed.start + localIndex : localIndex;
+            return (
+              <SortableItem
+                key={item.id}
+                item={item}
+                enabled={enabled}
+                index={index}
+                className={itemClassName}
+                style={rowStyle(index)}
+                setMeasuredRef={virtual ? windowed.setRowRef(item.id) : undefined}
+              >
+                {(props) => renderItem(item, props)}
+              </SortableItem>
+            );
+          })}
         </ul>
       </SortableContext>
     </DndContext>

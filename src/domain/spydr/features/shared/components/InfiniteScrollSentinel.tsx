@@ -1,16 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-
-function scrollParent(node: HTMLElement | null): HTMLElement | null {
-  let current = node;
-  while (current) {
-    const { overflowY } = getComputedStyle(current);
-    if (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") {
-      return current;
-    }
-    current = current.parentElement;
-  }
-  return null;
-}
+import { findScrollParent } from "@/domain/spydr/features/shared/utils/scrollParent";
 
 /** Scroll the list's overflow parent back to the top when filters or view change. */
 export function useScrollListToStart(resetKey: string | number) {
@@ -20,7 +9,7 @@ export function useScrollListToStart(resetKey: string | number) {
   useLayoutEffect(() => {
     if (previousKey.current === resetKey) return;
     previousKey.current = resetKey;
-    const parent = scrollParent(anchorRef.current);
+    const parent = findScrollParent(anchorRef.current);
     if (parent) parent.scrollTop = 0;
   }, [resetKey]);
 
@@ -51,7 +40,7 @@ export function InfiniteScrollSentinel({
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) onLoadMore();
       },
-      { root: scrollParent(node), rootMargin: "320px 0px" }
+      { root: findScrollParent(node), rootMargin: "320px 0px" }
     );
     observer.observe(node);
     return () => observer.disconnect();

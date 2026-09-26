@@ -250,7 +250,7 @@ function TaskRow({
           title={task.area ?? "No area"}
           aria-label={task.area ? `Area: ${task.area}` : "No area"}
         />
-        <div className="flex min-w-0 flex-1 items-center gap-1 py-0.5 pl-1 pr-1">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1 py-0.5 pl-1 pr-1">
           {reorderEnabled ? rankControls : null}
           <CollectionPriorityRank
             rank={getPriorityRank(task.id)}
@@ -298,7 +298,7 @@ function TaskRow({
             placeholder="Due"
             showChevron={false}
             showIcon={false}
-            className="h-7 w-[4.5rem] shrink-0"
+            className="h-7 w-[4.5rem] max-w-full"
             project={project}
             onChange={(dueDate) => onDueDateChange(task.id, dueDate)}
           />

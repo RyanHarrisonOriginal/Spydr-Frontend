@@ -18,7 +18,7 @@ export function BreadcrumbTrail({ className }: BreadcrumbTrailProps) {
   return (
     <nav
       aria-label="Breadcrumb"
-      className={cn("flex min-w-0 items-center gap-2 overflow-x-auto", className)}
+      className={cn("flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1", className)}
     >
       {stack.map((entry, index) => {
         const isLast = index === stack.length - 1;
