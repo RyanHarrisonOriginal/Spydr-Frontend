@@ -24,7 +24,11 @@ export function WorkCreateMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" className="h-8 gap-1.5 px-3 text-[12px]">
+        <Button
+          variant="secondary"
+          size="sm"
+          className="h-8 gap-1.5 border border-foreground/15 bg-foreground px-3 text-[12px] text-background shadow-sm hover:bg-foreground/88 hover:text-background"
+        >
           <Plus className="h-3.5 w-3.5" />
           New
         </Button>

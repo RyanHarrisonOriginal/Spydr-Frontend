@@ -297,7 +297,7 @@ function ProjectListDeleteButton({
         onRequestDelete();
       }}
       aria-label={`Delete ${projectTitle}`}
-      className="grid h-7 w-7 shrink-0 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+      className="grid h-7 w-7 shrink-0 place-items-center rounded-sm text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
     >
       <Trash2 className="h-3.5 w-3.5" />
     </button>
@@ -360,8 +360,8 @@ function ProjectAddTaskButton({
       className={cn(
         "grid h-7 w-7 shrink-0 place-items-center rounded-sm transition-colors disabled:opacity-50",
         composing
-          ? "bg-highlight/15 text-highlight"
-          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+          ? "bg-emerald-500/15 text-emerald-300"
+          : "text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
       )}
     >
       <Plus className="h-3.5 w-3.5" />
@@ -770,7 +770,7 @@ function ProjectTaskComposer({
       <button
         type="submit"
         disabled={busy || draft.trim().length === 0}
-        className="h-7 shrink-0 rounded-sm bg-primary px-2.5 font-mono text-[10px] uppercase tracking-[0.12em] text-primary-foreground transition-opacity disabled:opacity-40"
+        className="h-7 shrink-0 rounded-sm bg-emerald-600 px-2.5 font-mono text-[10px] uppercase tracking-[0.12em] text-white transition-colors hover:bg-emerald-500 disabled:opacity-40"
       >
         {busy ? "…" : "Add"}
       </button>
