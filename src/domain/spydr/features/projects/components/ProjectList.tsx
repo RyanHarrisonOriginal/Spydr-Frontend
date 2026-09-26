@@ -40,15 +40,9 @@ import { PersonSelect } from "./PersonSelect";
 import { CollectionSortableHeader } from "@/domain/spydr/features/shared/components/CollectionSortableHeader";
 import { ResizableHeaderCell } from "@/domain/spydr/features/shared/components/ColumnResizeHandle";
 import { CollectionSortMenu } from "@/domain/spydr/features/shared/components/CollectionSortMenu";
-import {
-  gridMinWidth,
-  gridTemplateFromTracks,
-  useResizableColumns,
-} from "@/domain/spydr/features/shared/hooks/useResizableColumns";
-import { useListDensity } from "@/domain/spydr/features/shared/hooks/useListDensity";
-import {
-  LIST_DENSITY_GAP_PX,
-} from "@/domain/spydr/features/shared/utils/listDensity";
+import { useFittedColumns } from "@/domain/spydr/features/shared/hooks/useFittedColumns";
+import { useResizableColumns } from "@/domain/spydr/features/shared/hooks/useResizableColumns";
+import type { FittedTrack } from "@/domain/spydr/features/shared/utils/fitGridTracks";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -102,6 +96,9 @@ interface ProjectListProps {
   todoTaskIds?: Set<string>;
   togglingTodoTaskId?: string | null;
   onToggleTodo?(taskId: string, onTodo: boolean): void;
+  /** Rendered inside the list scrollport, after the rows. */
+  footer?: ReactNode;
+  scrollRef?: { current: HTMLDivElement | null };
 }
 
 function toggleExpandedId(current: Set<string>, projectId: string): Set<string> {
@@ -131,10 +128,10 @@ const PROJECT_LIST_COLUMN_DEFAULTS: Record<ProjectListWidthColumn, number> = {
 };
 
 const PROJECT_LIST_COLUMN_MIN: Partial<Record<ProjectListWidthColumn, number>> = {
-  name: 160,
+  name: 128,
   area: 108,
-  requester: 128,
-  assignee: 128,
+  requester: 112,
+  assignee: 112,
   priority: 104,
   status: 120,
   target: 96,
@@ -146,61 +143,60 @@ const actionsColumnWidthWithCreate = 76;
 const rankColumnWidth = 36;
 const expandColumnWidth = 32;
 const reorderColumnWidth = 52;
-const PROJECT_LIST_PADDING_X = 48;
+const PROJECT_LIST_PADDING_X = 32;
 
-function getProjectListTracks(
+function buildProjectTracks(
   visibleColumns: ProjectColumnId[],
   widths: Record<ProjectListWidthColumn, number>,
   reorderEnabled = false,
   showCreateTask = false
-): number[] {
+): Array<FittedTrack & { id: string }> {
   const actionWidth = showCreateTask ? actionsColumnWidthWithCreate : actionsColumnWidth;
+  const minOf = (column: ProjectListWidthColumn) =>
+    PROJECT_LIST_COLUMN_MIN[column] ?? 80;
   return [
-    ...(reorderEnabled ? [reorderColumnWidth] : []),
-    expandColumnWidth,
-    rankColumnWidth,
-    widths.name,
-    ...visibleColumns.map((id) => widths[id]),
-    actionWidth,
+    ...(reorderEnabled
+      ? [{ id: "reorder", preferred: reorderColumnWidth, min: reorderColumnWidth }]
+      : []),
+    { id: "expand", preferred: expandColumnWidth, min: expandColumnWidth },
+    { id: "rank", preferred: rankColumnWidth, min: rankColumnWidth },
+    { id: "name", preferred: widths.name, min: minOf("name"), flexible: true },
+    ...visibleColumns.map((id) => ({
+      id,
+      preferred: widths[id],
+      min: minOf(id),
+    })),
+    { id: "actions", preferred: actionWidth, min: actionWidth },
   ];
 }
 
-function getProjectListGrid(
-  visibleColumns: ProjectColumnId[],
-  widths: Record<ProjectListWidthColumn, number>,
-  reorderEnabled = false,
-  showCreateTask = false
-) {
-  const actionWidth = showCreateTask ? actionsColumnWidthWithCreate : actionsColumnWidth;
-  return gridTemplateFromTracks([
-    ...(reorderEnabled ? [reorderColumnWidth] : []),
-    expandColumnWidth,
-    rankColumnWidth,
-    widths.name,
-    ...visibleColumns.map((id) => widths[id]),
-    actionWidth,
-  ]);
+interface ProjectHeaderApi {
+  visualWidth(column: ProjectListWidthColumn): number;
+  fitMax(column: ProjectListWidthColumn): number;
+  resizeColumn(column: ProjectListWidthColumn, width: number): void;
 }
 
 function ProjectResizableHeader({
   label,
   column,
   sizing,
+  api,
   children,
 }: {
   label: string;
   column: ProjectListWidthColumn;
   sizing: ReturnType<typeof useResizableColumns<ProjectListWidthColumn>>;
+  api: ProjectHeaderApi;
   children: ReactNode;
 }) {
   return (
     <ResizableHeaderCell
       label={label}
-      width={sizing.widths[column]}
+      width={api.visualWidth(column)}
       minWidth={sizing.minWidthOf(column)}
-      maxWidth={sizing.maxWidth}
-      onWidthChange={(width) => sizing.setColumnWidth(column, width)}
-      onReset={() => sizing.resetColumnWidth(column)}
+      maxWidth={api.fitMax(column)}
+      onWidthChange={(width) => api.resizeColumn(column, width)}
+      onReset={() => api.resizeColumn(column, PROJECT_LIST_COLUMN_DEFAULTS[column])}
     >
       {children}
     </ResizableHeaderCell>
@@ -234,12 +230,12 @@ function SortableHeader({
       type="button"
       onClick={() => onSort(column)}
       className={cn(
-        "inline-flex items-center gap-1 transition-colors hover:text-foreground",
+        "inline-flex max-w-full min-w-0 items-center gap-1 transition-colors hover:text-foreground",
         align === "end" && "ml-auto",
         isActive ? "text-foreground" : "text-muted-foreground"
       )}
     >
-      <span>{label}</span>
+      <span className="min-w-0 whitespace-normal text-left">{label}</span>
       <Icon className={cn("h-3 w-3", isActive && "text-primary")} aria-hidden />
     </button>
   );
@@ -484,9 +480,9 @@ function ProjectPersonaCell({
 }
 
 const nestedTaskGrid =
-  "grid grid-cols-[minmax(148px,0.55fr)_28px_minmax(10rem,8fr)_minmax(9.5rem,0.35fr)_minmax(11rem,0.8fr)_minmax(108px,0.25fr)_28px_28px] items-center gap-2";
+  "grid grid-cols-[minmax(0,9rem)_1.75rem_minmax(0,1fr)_minmax(0,5.5rem)_minmax(0,8rem)_minmax(0,5.5rem)_1.75rem_1.75rem] items-center gap-2 [&>*]:min-w-0";
 const nestedTaskGridCompact =
-  "grid grid-cols-[28px_28px_minmax(0,8fr)_minmax(7.5rem,0.35fr)_minmax(9.5rem,0.8fr)_minmax(4.5rem,0.25fr)_28px_28px] items-center gap-1";
+  "grid grid-cols-[1.75rem_1.75rem_minmax(0,1fr)_minmax(0,4.5rem)_minmax(0,7rem)_minmax(0,4.5rem)_1.75rem_1.75rem] items-center gap-1 [&>*]:min-w-0";
 
 function NestedTaskSortHeader({
   sort,
@@ -835,6 +831,8 @@ export function ProjectList({
   todoTaskIds,
   togglingTodoTaskId = null,
   onToggleTodo,
+  footer,
+  scrollRef,
 }: ProjectListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [uncontrolledShowCompletedTasks, setUncontrolledShowCompletedTasks] =
@@ -858,34 +856,25 @@ export function ProjectList({
     PROJECT_LIST_COLUMN_DEFAULTS,
     { minWidths: PROJECT_LIST_COLUMN_MIN }
   );
-  const gridTracks = getProjectListTracks(
+  const tracks = buildProjectTracks(
     visibleColumns,
     columnSizing.widths,
     reorderEnabled,
     Boolean(onCreateTask)
   );
-  const gridTemplateColumns = getProjectListGrid(
-    visibleColumns,
+  const fitted = useFittedColumns(
+    tracks,
     columnSizing.widths,
-    reorderEnabled,
-    Boolean(onCreateTask)
+    columnSizing.replaceWidths,
+    PROJECT_LIST_PADDING_X,
+    columnSizing.maxWidth
   );
-  const requiredWidth = gridMinWidth(
-    getProjectListTracks(
-      visibleColumns,
-      PROJECT_LIST_COLUMN_DEFAULTS,
-      reorderEnabled,
-      Boolean(onCreateTask)
-    ),
-    LIST_DENSITY_GAP_PX.comfortable,
-    PROJECT_LIST_PADDING_X
-  );
-  const { density, ref: densityRef } = useListDensity(requiredWidth);
-  const minWidth = gridMinWidth(
-    gridTracks,
-    LIST_DENSITY_GAP_PX[density],
-    PROJECT_LIST_PADDING_X
-  );
+  const { layout, gridStyle } = fitted;
+  const headerApi: ProjectHeaderApi = {
+    visualWidth: fitted.visualWidth,
+    fitMax: fitted.fitMax,
+    resizeColumn: fitted.resizeColumn,
+  };
   const hasColumn = (columnId: ProjectColumnId) => visibleColumns.includes(columnId);
   const orderIds = useMemo(
     () => rankOrderIds ?? projects.map((project) => project.id),
@@ -974,9 +963,12 @@ export function ProjectList({
 
   return (
     <div
-      ref={densityRef}
-      className={cn(isPhone ? "" : "project-list touch-scroll-x")}
-      data-list-density={isPhone ? undefined : density}
+      ref={(node) => {
+        layout.ref.current = node;
+        if (scrollRef) scrollRef.current = node;
+      }}
+      className={cn("min-h-0 min-w-0 w-full", isPhone ? "" : "project-list h-full overflow-auto")}
+      data-list-density={isPhone ? undefined : layout.density}
     >
       {isPhone ? (
         <div className="flex items-center justify-end border-b border-border/70 px-2 py-1.5">
@@ -998,7 +990,7 @@ export function ProjectList({
         </div>
       ) : null}
       {showInlineCompletedToggle && completedTaskCount > 0 ? (
-        <div className="flex items-center justify-end gap-2 border-b border-border/70 px-4 py-1.5 md:px-6">
+        <div className="flex items-center justify-end gap-2 border-b border-border/70 px-4 py-1.5">
           <ShowCompletedToggle
             showCompleted={showCompletedTasks}
             completedCount={completedTaskCount}
@@ -1008,23 +1000,20 @@ export function ProjectList({
       ) : null}
       {isPhone ? null : (
       <div
-        className="grid items-center border-b border-border bg-muted/20 px-4 py-2 font-mono uppercase tracking-wider text-muted-foreground [&>*]:min-w-0 md:px-6"
+        className="sticky top-0 z-20 grid items-center border-b border-border bg-background px-4 py-2 font-mono uppercase tracking-wider text-muted-foreground [&>*]:min-w-0"
         style={{
-          gridTemplateColumns,
-          minWidth,
-          gap: "var(--pl-gap)",
+          ...gridStyle,
           fontSize: "var(--pl-header-size)",
-          justifyContent: "start",
         }}
       >
         {reorderEnabled ? <span aria-hidden /> : null}
         <span aria-hidden />
         <SortableHeader label="Rank" column="order" sort={sort} onSort={onSortColumn} />
-        <ProjectResizableHeader label="Name" column="name" sizing={columnSizing}>
+        <ProjectResizableHeader label="Name" column="name" sizing={columnSizing} api={headerApi}>
           <SortableHeader label="Name" column="name" sort={sort} onSort={onSortColumn} />
         </ProjectResizableHeader>
         {hasColumn("area") && (
-          <ProjectResizableHeader label="Area" column="area" sizing={columnSizing}>
+          <ProjectResizableHeader label="Area" column="area" sizing={columnSizing} api={headerApi}>
             <SortableHeader
               label="Area"
               column="area"
@@ -1034,7 +1023,7 @@ export function ProjectList({
           </ProjectResizableHeader>
         )}
         {hasColumn("requester") && (
-          <ProjectResizableHeader label="Requester" column="requester" sizing={columnSizing}>
+          <ProjectResizableHeader label="Requester" column="requester" sizing={columnSizing} api={headerApi}>
             <SortableHeader
               label="Requester"
               column="requester"
@@ -1044,7 +1033,7 @@ export function ProjectList({
           </ProjectResizableHeader>
         )}
         {hasColumn("assignee") && (
-          <ProjectResizableHeader label="Assignee" column="assignee" sizing={columnSizing}>
+          <ProjectResizableHeader label="Assignee" column="assignee" sizing={columnSizing} api={headerApi}>
             <SortableHeader
               label="Assignee"
               column="assignee"
@@ -1054,7 +1043,7 @@ export function ProjectList({
           </ProjectResizableHeader>
         )}
         {hasColumn("priority") && (
-          <ProjectResizableHeader label="Priority" column="priority" sizing={columnSizing}>
+          <ProjectResizableHeader label="Priority" column="priority" sizing={columnSizing} api={headerApi}>
             <SortableHeader
               label="Priority"
               column="priority"
@@ -1064,7 +1053,7 @@ export function ProjectList({
           </ProjectResizableHeader>
         )}
         {hasColumn("status") && (
-          <ProjectResizableHeader label="Status" column="status" sizing={columnSizing}>
+          <ProjectResizableHeader label="Status" column="status" sizing={columnSizing} api={headerApi}>
             <SortableHeader
               label="Status"
               column="status"
@@ -1074,7 +1063,7 @@ export function ProjectList({
           </ProjectResizableHeader>
         )}
         {hasColumn("target") && (
-          <ProjectResizableHeader label="Target" column="target" sizing={columnSizing}>
+          <ProjectResizableHeader label="Target" column="target" sizing={columnSizing} api={headerApi}>
             <SortableHeader
               label="Target"
               column="target"
@@ -1085,7 +1074,7 @@ export function ProjectList({
           </ProjectResizableHeader>
         )}
         {hasColumn("updated") && (
-          <ProjectResizableHeader label="Updated" column="updated" sizing={columnSizing}>
+          <ProjectResizableHeader label="Updated" column="updated" sizing={columnSizing} api={headerApi}>
             <SortableHeader
               label="Updated"
               column="updated"
@@ -1117,9 +1106,7 @@ export function ProjectList({
         <CollectionSortableList
           items={projects}
           enabled={reorderEnabled && !isPhone}
-          className={
-            isPhone ? "space-y-1.5 px-2 py-2" : "space-y-1.5 px-3 py-2 md:px-4"
-          }
+          className={isPhone ? "space-y-1.5 px-2 py-2" : "space-y-1.5 py-1"}
           onReorder={(orderedIds) => onReorder?.(orderedIds)}
           renderItem={(project, sortable) => {
             const allProjectTasks = tasksByProjectId.get(project.id) ?? [];
@@ -1195,7 +1182,7 @@ export function ProjectList({
                           placeholder="Due"
                           showChevron={false}
                           showIcon={false}
-                          className="h-7 w-[4.5rem] shrink-0"
+                          className="h-7 w-full min-w-0 max-w-full"
                           onChange={(targetDate) => {
                             const current =
                               project.details?.targetDate?.slice(0, 10) ?? null;
@@ -1289,20 +1276,20 @@ export function ProjectList({
                     ? "border-border bg-muted/15 ring-1 ring-border/60"
                     : "border-border/70 bg-background"
                 )}
+                style={
+                  layout.scrollMinWidth ? { minWidth: layout.scrollMinWidth } : undefined
+                }
               >
                 <div
                   className={cn(
-                    "grid items-center px-3 [&>*]:min-w-0",
+                    "grid items-center px-4 [&>*]:min-w-0",
                     showChildren && "border-b border-border/50 bg-muted/45",
                     !showChildren && "row-hover"
                   )}
                   style={{
-                    gridTemplateColumns,
-                    minWidth: `calc(${minWidth}px - 1.5rem)`,
-                    gap: "var(--pl-gap)",
+                    ...gridStyle,
                     paddingTop: "var(--pl-row-py)",
                     paddingBottom: "var(--pl-row-py)",
-                    justifyContent: "start",
                   }}
                 >
                   {reorderEnabled ? rankControls(project.id, sortable.dragHandleProps) : null}
@@ -1329,7 +1316,7 @@ export function ProjectList({
                             value={project.status}
                             onChange={(status) => onStatusChange(project.id, status)}
                             disabled={updatingProjectId === project.id}
-                            className="w-[148px] shrink-0"
+                            className="w-full min-w-0 max-w-full"
                           />
                         </span>
                       ) : (
@@ -1482,7 +1469,7 @@ export function ProjectList({
                       {formatRelativeTime(project.updatedAt)}
                     </span>
                   )}
-                  <div className="flex shrink-0 items-center justify-end gap-1.5">
+                  <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
                     {onCreateTask ? (
                       <ProjectAddTaskButton
                         projectTitle={project.title}
@@ -1573,6 +1560,7 @@ export function ProjectList({
           }}
         />
       )}
+      {footer}
     </div>
   );
 }

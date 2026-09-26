@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 
 function scrollParent(node: HTMLElement | null): HTMLElement | null {
-  let current = node?.parentElement ?? null;
+  let current = node;
   while (current) {
     const { overflowY } = getComputedStyle(current);
     if (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") {
