@@ -90,10 +90,10 @@ export function NoteDetailView({
                   <span aria-hidden>·</span>
                   <Link
                     to={`/projects/${project.id}`}
-                    className="inline-flex min-w-0 max-w-[12rem] items-center gap-1 truncate text-muted-foreground hover:text-primary"
+                    className="inline-flex min-w-0 max-w-full items-center gap-1 text-muted-foreground hover:text-primary"
                   >
                     <FolderKanban className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{project.title}</span>
+                    <span className="min-w-0 truncate">{project.title}</span>
                   </Link>
                 </>
               ) : null}
@@ -162,17 +162,17 @@ export function NoteDetailView({
             </dd>
           </div>
           {project ? (
-            <div>
+            <div className="min-w-0">
               <dt className="font-mono text-[10px] uppercase tracking-wider">
                 Project
               </dt>
-              <dd className="mt-0.5">
+              <dd className="mt-0.5 min-w-0">
                 <Link
                   to={`/projects/${project.id}`}
-                  className="inline-flex items-center gap-1.5 text-foreground/90 hover:text-primary"
+                  className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-foreground/90 hover:text-primary"
                 >
                   <FolderKanban className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{project.title}</span>
+                  <span className="min-w-0 truncate">{project.title}</span>
                 </Link>
               </dd>
             </div>

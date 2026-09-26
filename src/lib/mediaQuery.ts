@@ -6,12 +6,14 @@
  * they go stale. CSS Media Queries Level 4 + `window.matchMedia` is the
  * current platform API (MDN, W3C, Chrome).
  *
- * Layout uses the same max-width as Tailwind `md` (768px). Interaction
- * capability uses `pointer: coarse` / `hover: none` for tap-target sizing.
+ * Layout uses the same max-width as Tailwind `md` (`MD_BREAKPOINT_PX`).
+ * Interaction capability uses `pointer: coarse` / `hover: none` for tap-target sizing.
  */
-export const PHONE_BREAKPOINT_PX = 768;
-
-export const PHONE_LAYOUT_QUERY = `(max-width: ${PHONE_BREAKPOINT_PX - 0.02}px)`;
+export {
+  MD_BREAKPOINT_PX,
+  MD_BREAKPOINT_PX as PHONE_BREAKPOINT_PX,
+  PHONE_LAYOUT_QUERY,
+} from "./breakpoints";
 
 export const COARSE_POINTER_QUERY = "(pointer: coarse)";
 

@@ -13,7 +13,7 @@ interface CollectionToolbarProps<T> {
   view: CollectionView<T>;
   /** Hide the sort dropdown when the list provides its own column sorting. */
   showSort?: boolean;
-  /** Keep the toolbar on one row instead of wrapping onto new lines. */
+  /** Stack the toolbar in a column below `md` instead of a wrapping row. */
   wrap?: boolean;
   startActions?: ReactNode;
   endActions?: ReactNode;
@@ -48,25 +48,18 @@ export function CollectionToolbar<T>({
   return (
     <div
       className={cn(
-        "border-b border-border",
+        "min-w-0 max-w-full border-b border-border",
         sticky && "sticky top-0 z-20 bg-background/95 backdrop-blur-sm"
       )}
     >
       <div
         className={cn(
-          "flex items-center gap-2 bg-muted/10 px-4 py-2 md:px-6",
-          wrap
-            ? "flex-col md:flex-row md:flex-wrap"
-            : "flex-nowrap overflow-x-auto"
+          "flex min-w-0 max-w-full items-center gap-2 bg-muted/10 px-4 py-2 md:px-6",
+          wrap ? "flex-col md:flex-row md:flex-wrap" : "flex-wrap"
         )}
       >
         {startActions ? (
-          <div
-            className={cn(
-              "flex min-w-0 items-center gap-2",
-              wrap ? "flex-wrap" : "shrink-0 flex-nowrap"
-            )}
-          >
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
             {startActions}
           </div>
         ) : null}
@@ -81,16 +74,15 @@ export function CollectionToolbar<T>({
           />
         </div>
 
-        <div
-          className={cn(
-            "flex min-w-0 items-center gap-2",
-            wrap ? "flex-wrap" : "shrink-0 flex-nowrap"
-          )}
-        >
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
         {hasFacets ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-auto min-h-8 min-w-0 max-w-full gap-1.5 whitespace-normal text-left text-[11px]"
+              >
                 <Filter className="h-3.5 w-3.5" />
                 Filter
                 {activeFilterCount > 0 ? (
@@ -107,7 +99,11 @@ export function CollectionToolbar<T>({
         {showSort ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-auto min-h-8 min-w-0 max-w-full gap-1.5 whitespace-normal text-left text-[11px]"
+              >
                 <ArrowUpDown className="h-3.5 w-3.5" />
                 {activeSortLabel}
               </Button>
@@ -126,20 +122,20 @@ export function CollectionToolbar<T>({
             variant="ghost"
             size="sm"
             onClick={view.clearFilters}
-            className="h-8 gap-1 px-2 text-[11px] text-muted-foreground"
+            className="h-auto min-h-8 min-w-0 max-w-full gap-1 whitespace-normal px-2 text-left text-[11px] text-muted-foreground"
           >
             <X className="h-3 w-3" />
             Clear all
           </Button>
         ) : (
-          <span className="hidden font-mono text-[10px] text-muted-foreground/80 sm:inline">
+          <span className="hidden min-w-0 max-w-full font-mono text-[10px] text-muted-foreground/80 sm:inline">
             Drag rows to set priority
           </span>
         )}
 
         <span
           className={cn(
-            "ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground",
+            "ml-auto min-w-0 max-w-full font-mono text-[10px] uppercase tracking-wider text-muted-foreground",
             hasActiveFilters && "text-foreground/70"
           )}
         >
@@ -147,7 +143,11 @@ export function CollectionToolbar<T>({
             ? `${totalCount} ${noun}`
             : `${filteredCount} of ${totalCount}`}
         </span>
-        {endActions}
+        {endActions ? (
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
+            {endActions}
+          </div>
+        ) : null}
         </div>
       </div>
 

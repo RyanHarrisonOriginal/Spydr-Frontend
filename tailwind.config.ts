@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import plugin from "tailwindcss/plugin";
+import { MD_BREAKPOINT_PX } from "./src/lib/breakpoints";
 
 export default {
   darkMode: ["class"],
@@ -11,6 +12,9 @@ export default {
       screens: { "2xl": "1400px" },
     },
     extend: {
+      screens: {
+        md: `${MD_BREAKPOINT_PX}px`,
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

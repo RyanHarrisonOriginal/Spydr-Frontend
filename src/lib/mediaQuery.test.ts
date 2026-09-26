@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { MD_BREAKPOINT_PX } from "./breakpoints";
 import {
   COARSE_POINTER_QUERY,
   getMediaQueryMatches,
@@ -54,7 +55,8 @@ describe("mediaQuery", () => {
   });
 
   it("uses a max-width query aligned to the Tailwind md breakpoint", () => {
-    expect(PHONE_LAYOUT_QUERY).toBe("(max-width: 767.98px)");
+    expect(MD_BREAKPOINT_PX).toBe(768);
+    expect(PHONE_LAYOUT_QUERY).toBe(`(max-width: ${MD_BREAKPOINT_PX - 0.02}px)`);
   });
 
   it("reads the current matchMedia result for the phone layout query", () => {

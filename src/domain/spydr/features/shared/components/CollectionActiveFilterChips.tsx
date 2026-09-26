@@ -22,7 +22,7 @@ export function CollectionActiveFilterChips({
           variant="secondary"
           size="sm"
           onClick={() => onRemove(chip.facetId, chip.value)}
-          className="h-6 gap-1 rounded-full px-2 text-[10px] font-normal"
+          className="h-auto min-h-6 min-w-0 max-w-full gap-1 whitespace-normal rounded-full px-2 text-left text-[10px] font-normal"
         >
           <span className="font-mono uppercase tracking-wider text-muted-foreground">
             {chip.facetLabel}
