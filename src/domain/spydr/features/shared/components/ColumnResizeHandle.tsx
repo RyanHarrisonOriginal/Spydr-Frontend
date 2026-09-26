@@ -120,7 +120,7 @@ export function ResizableHeaderCell({
 }: ResizableHeaderCellProps) {
   return (
     <div className={cn("relative flex min-w-0 items-center pr-1", className)}>
-      <div className="min-w-0 flex-1 overflow-hidden">{children}</div>
+      <div className="min-w-0 flex-1">{children}</div>
       <ColumnResizeHandle
         label={label}
         width={width}

@@ -256,7 +256,7 @@ export function WorkPage() {
   );
 
   return (
-    <div ref={listAnchorRef}>
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-y-auto">
       <PageHeader
         dense
         title="Work"
@@ -401,7 +401,7 @@ export function WorkPage() {
               }
             />
           ) : (
-            <>
+            <div className="min-h-48 min-w-0 flex-1">
               <ProjectList
                 projects={projectsList.visibleItems}
                 areas={projectsPage.areas}
@@ -464,14 +464,17 @@ export function WorkPage() {
                 todoTaskIds={todoTaskIds}
                 togglingTodoTaskId={togglingTodoTaskId}
                 onToggleTodo={toggleTodo}
+                scrollRef={listAnchorRef}
+                footer={
+                  <InfiniteScrollSentinel
+                    hasMore={projectsList.hasMore}
+                    onLoadMore={projectsList.loadMore}
+                    loadedCount={projectsList.visibleItems.length}
+                    noun="projects"
+                  />
+                }
               />
-              <InfiniteScrollSentinel
-                hasMore={projectsList.hasMore}
-                onLoadMore={projectsList.loadMore}
-                loadedCount={projectsList.visibleItems.length}
-                noun="projects"
-              />
-            </>
+            </div>
           )}
         </>
       )}
@@ -516,7 +519,7 @@ export function WorkPage() {
             </p>
           ) : null}
           {tasksPage.view.items.length > 0 ? (
-            <>
+            <div className="min-h-48 min-w-0 flex-1">
               <TaskList
                 tasks={tasksList.visibleItems}
                 projects={tasksPage.projects}
@@ -561,14 +564,17 @@ export function WorkPage() {
                 todoTaskIds={todoTaskIds}
                 togglingTodoTaskId={togglingTodoTaskId}
                 onToggleTodo={toggleTodo}
+                scrollRef={listAnchorRef}
+                footer={
+                  <InfiniteScrollSentinel
+                    hasMore={tasksList.hasMore}
+                    onLoadMore={tasksList.loadMore}
+                    loadedCount={tasksList.visibleItems.length}
+                    noun="tasks"
+                  />
+                }
               />
-              <InfiniteScrollSentinel
-                hasMore={tasksList.hasMore}
-                onLoadMore={tasksList.loadMore}
-                loadedCount={tasksList.visibleItems.length}
-                noun="tasks"
-              />
-            </>
+            </div>
           ) : (
             <CollectionNoResults
               noun={tasksPage.view.noun}

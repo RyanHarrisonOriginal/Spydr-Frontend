@@ -64,7 +64,7 @@ export function InlineDeleteButton({
         setIsConfirming(true);
       }}
       aria-label={`Delete ${label}`}
-      className="ml-auto rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+      className="ml-auto rounded p-1 text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
     >
       <Trash2 className="h-3.5 w-3.5" />
     </button>

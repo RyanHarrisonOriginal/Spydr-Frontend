@@ -37,20 +37,7 @@ export function sanitizeColumnWidths<T extends string>(
   return next;
 }
 
-export function gridTemplateFromTracks(tracks: Array<string | number>): string {
-  return tracks
-    .map((track) => (typeof track === "number" ? `${track}px` : track))
-    .join(" ");
-}
-
-export function gridMinWidth(
-  tracks: number[],
-  gapPx: number,
-  paddingX = 0
-): number {
-  if (tracks.length === 0) return paddingX;
-  return tracks.reduce((sum, track) => sum + track, 0) + gapPx * (tracks.length - 1) + paddingX;
-}
+export { gridMinWidth, gridTemplateFromTracks } from "@/domain/spydr/features/shared/utils/fitGridTracks";
 
 interface UseResizableColumnsOptions<T extends string> {
   minWidth?: number;
@@ -101,6 +88,15 @@ export function useResizableColumns<T extends string>(
     [defaults, setColumnWidth]
   );
 
+  const replaceWidths = useCallback(
+    (next: Record<T, number>) => {
+      setWidths(
+        sanitizeColumnWidths(next, defaults, minWidth, maxWidth, minWidths)
+      );
+    },
+    [defaults, maxWidth, minWidth, minWidths, setWidths]
+  );
+
   return {
     widths,
     minWidth,
@@ -108,5 +104,6 @@ export function useResizableColumns<T extends string>(
     minWidthOf,
     setColumnWidth,
     resetColumnWidth,
+    replaceWidths,
   };
 }

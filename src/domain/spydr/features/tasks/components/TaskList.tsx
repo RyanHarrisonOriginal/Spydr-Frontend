@@ -39,11 +39,9 @@ import { SelectionCheckbox } from "@/domain/spydr/features/shared/components/Sel
 import { BulkDeleteBar } from "@/domain/spydr/features/shared/components/BulkDeleteBar";
 import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSelection";
 import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
-import {
-  gridMinWidth,
-  gridTemplateFromTracks,
-  useResizableColumns,
-} from "@/domain/spydr/features/shared/hooks/useResizableColumns";
+import { useFittedColumns } from "@/domain/spydr/features/shared/hooks/useFittedColumns";
+import { useResizableColumns } from "@/domain/spydr/features/shared/hooks/useResizableColumns";
+import type { FittedTrack } from "@/domain/spydr/features/shared/utils/fitGridTracks";
 
 type TaskListWidthColumn =
   | "status"
@@ -74,76 +72,65 @@ const TASK_LIST_COLUMN_MIN: Partial<Record<TaskListWidthColumn, number>> = {
   updated: 96,
 };
 
-const TASK_LIST_GAP_PX = 12;
-const TASK_LIST_PADDING_X = 48;
+const TASK_LIST_PADDING_X = 32;
 const TASK_CHECKBOX_WIDTH = 28;
 const TASK_RANK_WIDTH = 36;
 const TASK_REORDER_WIDTH = 52;
 const TASK_TODAY_WIDTH = 40;
 const TASK_ACTIONS_WIDTH = 72;
 
-const ROW_LAYOUT =
-  "grid items-center gap-3 whitespace-nowrap [&>*]:min-w-0";
+const ROW_LAYOUT = "grid items-center [&>*]:min-w-0";
 
-function getTaskListTracks(
+function buildTaskTracks(
   widths: Record<TaskListWidthColumn, number>,
   reorderEnabled: boolean
-): number[] {
+): Array<FittedTrack & { id: string }> {
+  const minOf = (column: TaskListWidthColumn) => TASK_LIST_COLUMN_MIN[column] ?? 80;
   return [
-    ...(reorderEnabled ? [TASK_REORDER_WIDTH] : []),
-    TASK_CHECKBOX_WIDTH,
-    TASK_RANK_WIDTH,
-    widths.status,
-    widths.title,
-    widths.project,
-    widths.assignee,
-    widths.priority,
-    widths.due,
-    widths.updated,
-    TASK_TODAY_WIDTH,
-    TASK_ACTIONS_WIDTH,
+    ...(reorderEnabled
+      ? [{ id: "reorder", preferred: TASK_REORDER_WIDTH, min: TASK_REORDER_WIDTH }]
+      : []),
+    { id: "select", preferred: TASK_CHECKBOX_WIDTH, min: TASK_CHECKBOX_WIDTH },
+    { id: "rank", preferred: TASK_RANK_WIDTH, min: TASK_RANK_WIDTH },
+    { id: "status", preferred: widths.status, min: minOf("status") },
+    { id: "title", preferred: widths.title, min: minOf("title"), flexible: true },
+    { id: "project", preferred: widths.project, min: minOf("project") },
+    { id: "assignee", preferred: widths.assignee, min: minOf("assignee") },
+    { id: "priority", preferred: widths.priority, min: minOf("priority") },
+    { id: "due", preferred: widths.due, min: minOf("due") },
+    { id: "updated", preferred: widths.updated, min: minOf("updated") },
+    { id: "today", preferred: TASK_TODAY_WIDTH, min: TASK_TODAY_WIDTH },
+    { id: "actions", preferred: TASK_ACTIONS_WIDTH, min: TASK_ACTIONS_WIDTH },
   ];
 }
 
-function getTaskListGrid(
-  widths: Record<TaskListWidthColumn, number>,
-  reorderEnabled: boolean
-): string {
-  return gridTemplateFromTracks([
-    ...(reorderEnabled ? [TASK_REORDER_WIDTH] : []),
-    TASK_CHECKBOX_WIDTH,
-    TASK_RANK_WIDTH,
-    widths.status,
-    widths.title,
-    widths.project,
-    widths.assignee,
-    widths.priority,
-    widths.due,
-    widths.updated,
-    TASK_TODAY_WIDTH,
-    TASK_ACTIONS_WIDTH,
-  ]);
+interface TaskHeaderApi {
+  visualWidth(column: TaskListWidthColumn): number;
+  fitMax(column: TaskListWidthColumn): number;
+  resizeColumn(column: TaskListWidthColumn, width: number): void;
 }
 
 function TaskResizableHeader({
   label,
   column,
   sizing,
+  api,
   children,
 }: {
   label: string;
   column: TaskListWidthColumn;
   sizing: ReturnType<typeof useResizableColumns<TaskListWidthColumn>>;
+  api: TaskHeaderApi;
   children: ReactNode;
 }) {
   return (
     <ResizableHeaderCell
       label={label}
-      width={sizing.widths[column]}
+      width={api.visualWidth(column)}
       minWidth={sizing.minWidthOf(column)}
-      maxWidth={sizing.maxWidth}
-      onWidthChange={(width) => sizing.setColumnWidth(column, width)}
-      onReset={() => sizing.resetColumnWidth(column)}
+      maxWidth={api.fitMax(column)}
+      onWidthChange={(width) => api.resizeColumn(column, width)}
+      onReset={() => api.resizeColumn(column, TASK_LIST_COLUMN_DEFAULTS[column])}
     >
       {children}
     </ResizableHeaderCell>
@@ -177,6 +164,8 @@ interface TaskListProps {
   todoTaskIds?: Set<string>;
   togglingTodoTaskId?: string | null;
   onToggleTodo?(taskId: string, onTodo: boolean): void;
+  footer?: ReactNode;
+  scrollRef?: { current: HTMLDivElement | null };
 }
 
 function resolveAssigneeId(task: TaskNode): string | null {
@@ -210,6 +199,7 @@ function TaskRow({
   onToggleTodo,
   gridTemplateColumns,
   minWidth,
+  gapPx,
 }: {
   task: TaskNode;
   projects: ProjectNode[];
@@ -236,7 +226,8 @@ function TaskRow({
   togglingTodo?: boolean;
   onToggleTodo?(taskId: string, onTodo: boolean): void;
   gridTemplateColumns: string;
-  minWidth: number;
+  minWidth?: number;
+  gapPx: number;
 }) {
   const projectId = task.project?.id ?? "";
   const assigneeId = resolveAssigneeId(task);
@@ -324,7 +315,10 @@ function TaskRow({
   }
 
   return (
-    <div className={cn(ROW_LAYOUT, "px-4 py-2.5 row-hover md:px-6")} style={{ gridTemplateColumns, minWidth, justifyContent: "start" }}>
+    <div
+      className={cn(ROW_LAYOUT, "px-4 py-2.5 row-hover")}
+      style={{ gridTemplateColumns, minWidth, gap: gapPx, justifyContent: "start" }}
+    >
       {reorderEnabled ? rankControls : null}
       {onToggleSelected ? (
         <SelectionCheckbox
@@ -375,7 +369,7 @@ function TaskRow({
           {task.project ? (
             <Link
               to={`/projects/${task.project.id}`}
-              className="inline-flex max-w-[12rem] shrink-0 items-center rounded border border-border/20 bg-muted/15 px-1.5 py-px text-[10px] text-muted-foreground transition-colors hover:border-highlight/25 hover:bg-highlight/8 hover:text-highlight"
+              className="inline-flex min-w-0 max-w-[40%] shrink items-center overflow-hidden rounded border border-border/20 bg-muted/15 px-1.5 py-px text-[10px] text-muted-foreground transition-colors hover:border-highlight/25 hover:bg-highlight/8 hover:text-highlight"
               title={task.project.title}
             >
               <span className="truncate">{task.project.title}</span>
@@ -486,6 +480,8 @@ export function TaskList({
   todoTaskIds,
   togglingTodoTaskId = null,
   onToggleTodo,
+  footer,
+  scrollRef,
 }: TaskListProps) {
   const taskIds = useMemo(() => tasks.map((task) => task.id), [tasks]);
   const orderIds = useMemo(
@@ -500,9 +496,20 @@ export function TaskList({
     TASK_LIST_COLUMN_DEFAULTS,
     { minWidths: TASK_LIST_COLUMN_MIN }
   );
-  const gridTracks = getTaskListTracks(columnSizing.widths, reorderEnabled);
-  const gridTemplateColumns = getTaskListGrid(columnSizing.widths, reorderEnabled);
-  const minWidth = gridMinWidth(gridTracks, TASK_LIST_GAP_PX, TASK_LIST_PADDING_X);
+  const tracks = buildTaskTracks(columnSizing.widths, reorderEnabled);
+  const fitted = useFittedColumns(
+    tracks,
+    columnSizing.widths,
+    columnSizing.replaceWidths,
+    TASK_LIST_PADDING_X,
+    columnSizing.maxWidth
+  );
+  const { layout, gridStyle } = fitted;
+  const headerApi: TaskHeaderApi = {
+    visualWidth: fitted.visualWidth,
+    fitMax: fitted.fitMax,
+    resizeColumn: fitted.resizeColumn,
+  };
 
   const moveRank = (id: string, direction: RankMoveDirection) => {
     if (onMoveRank) {
@@ -542,11 +549,17 @@ export function TaskList({
   };
 
   return (
-    <div className={isPhone ? "" : "touch-scroll-x"}>
+    <div
+      ref={(node) => {
+        layout.ref.current = node;
+        if (scrollRef) scrollRef.current = node;
+      }}
+      className={isPhone ? "min-w-0 w-full" : "h-full min-h-0 min-w-0 w-full overflow-auto"}
+    >
       {canSelect && !isPhone && selection.selectedCount > 0 ? (
         <div
-          className="flex items-center gap-3 border-b border-border bg-destructive/5 px-4 py-1.5 md:px-6"
-        style={isPhone ? undefined : { minWidth }}
+          className="flex min-w-0 flex-wrap items-center gap-3 border-b border-border bg-destructive/5 px-4 py-1.5"
+          style={{ minWidth: layout.scrollMinWidth }}
         >
           <SelectionCheckbox
             checked={selection.allSelected}
@@ -572,9 +585,9 @@ export function TaskList({
       <div
         className={cn(
           ROW_LAYOUT,
-          "border-b border-border bg-muted/20 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground md:px-6"
+          "sticky top-0 z-20 border-b border-border bg-background px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
         )}
-        style={{ gridTemplateColumns, minWidth, justifyContent: "start" }}
+        style={gridStyle}
       >
         {reorderEnabled ? <span aria-hidden /> : null}
         {canSelect ? (
@@ -594,7 +607,7 @@ export function TaskList({
           sort={sort}
           onSort={onSortColumn}
         />
-        <TaskResizableHeader label="Status" column="status" sizing={columnSizing}>
+        <TaskResizableHeader label="Status" column="status" sizing={columnSizing} api={headerApi}>
           <CollectionSortableHeader
             label="Status"
             column="status"
@@ -602,7 +615,7 @@ export function TaskList({
             onSort={onSortColumn}
           />
         </TaskResizableHeader>
-        <TaskResizableHeader label="Task" column="title" sizing={columnSizing}>
+        <TaskResizableHeader label="Task" column="title" sizing={columnSizing} api={headerApi}>
           <CollectionSortableHeader
             label="Task"
             column="title"
@@ -610,7 +623,7 @@ export function TaskList({
             onSort={onSortColumn}
           />
         </TaskResizableHeader>
-        <TaskResizableHeader label="Project" column="project" sizing={columnSizing}>
+        <TaskResizableHeader label="Project" column="project" sizing={columnSizing} api={headerApi}>
           <CollectionSortableHeader
             label="Project"
             column="project"
@@ -618,7 +631,7 @@ export function TaskList({
             onSort={onSortColumn}
           />
         </TaskResizableHeader>
-        <TaskResizableHeader label="Assignee" column="assignee" sizing={columnSizing}>
+        <TaskResizableHeader label="Assignee" column="assignee" sizing={columnSizing} api={headerApi}>
           <CollectionSortableHeader
             label="Assignee"
             column="assignee"
@@ -626,7 +639,7 @@ export function TaskList({
             onSort={onSortColumn}
           />
         </TaskResizableHeader>
-        <TaskResizableHeader label="Priority" column="priority" sizing={columnSizing}>
+        <TaskResizableHeader label="Priority" column="priority" sizing={columnSizing} api={headerApi}>
           <CollectionSortableHeader
             label="Priority"
             column="priority"
@@ -634,7 +647,7 @@ export function TaskList({
             onSort={onSortColumn}
           />
         </TaskResizableHeader>
-        <TaskResizableHeader label="Due" column="due" sizing={columnSizing}>
+        <TaskResizableHeader label="Due" column="due" sizing={columnSizing} api={headerApi}>
           <CollectionSortableHeader
             label="Due"
             column="due"
@@ -643,7 +656,7 @@ export function TaskList({
             onSort={onSortColumn}
           />
         </TaskResizableHeader>
-        <TaskResizableHeader label="Updated" column="updated" sizing={columnSizing}>
+        <TaskResizableHeader label="Updated" column="updated" sizing={columnSizing} api={headerApi}>
           <CollectionSortableHeader
             label="Updated"
             column="updated"
@@ -688,11 +701,13 @@ export function TaskList({
             onTodo={todoTaskIds?.has(task.id) ?? false}
             togglingTodo={togglingTodoTaskId === task.id}
             onToggleTodo={onToggleTodo}
-            gridTemplateColumns={gridTemplateColumns}
-            minWidth={minWidth}
+            gridTemplateColumns={layout.template}
+            minWidth={layout.scrollMinWidth}
+            gapPx={layout.gapPx}
           />
         )}
       />
+      {footer}
     </div>
   );
 }

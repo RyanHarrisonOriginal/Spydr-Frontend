@@ -30,12 +30,12 @@ export function CollectionSortableHeader({
       type="button"
       onClick={() => onSort(column)}
       className={cn(
-        "inline-flex items-center gap-1 transition-colors hover:text-foreground",
+        "inline-flex max-w-full min-w-0 items-center gap-1 transition-colors hover:text-foreground",
         align === "end" && "ml-auto",
         isActive ? "text-foreground" : "text-muted-foreground"
       )}
     >
-      <span>{label}</span>
+      <span className="min-w-0 whitespace-normal text-left">{label}</span>
       <Icon className={cn("h-3 w-3", isActive && "text-primary")} aria-hidden />
     </button>
   );
