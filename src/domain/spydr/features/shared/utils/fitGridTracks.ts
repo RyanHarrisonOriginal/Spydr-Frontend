@@ -37,10 +37,28 @@ function trackBudget(availableWidth: number, count: number, gapPx: number, paddi
   return Math.floor(availableWidth - paddingX - gaps);
 }
 
+function giveExtraToFlexible(tracks: FittedTrack[], widths: number[], extra: number) {
+  if (extra <= 0) return;
+  const indexes = tracks.flatMap((track, index) => (track.flexible ? [index] : []));
+  if (indexes.length === 0) return;
+
+  const weight = indexes.reduce((sum, index) => sum + Math.max(tracks[index].preferred, 1), 0);
+  let given = 0;
+  indexes.forEach((index, position) => {
+    const share =
+      position === indexes.length - 1
+        ? extra - given
+        : Math.floor((Math.max(tracks[index].preferred, 1) / weight) * extra);
+    widths[index] += share;
+    given += share;
+  });
+}
+
 /**
  * Assigns pixel tracks that stay inside the content budget.
- * The flexible track gives up space first. Other tracks shrink only after that,
- * and never under their minimum.
+ * Free space goes to the flexible track, so the row fills the pane.
+ * When the pane is tight, that track gives space up first. Other tracks
+ * shrink only after that, and never under their minimum.
  */
 export function fitTracksToWidth(
   tracks: FittedTrack[],
@@ -64,7 +82,9 @@ export function fitTracksToWidth(
 
   const preferredSum = tracks.reduce((sum, track) => sum + track.preferred, 0);
   if (preferredSum <= budget) {
-    return { widths: tracks.map((track) => track.preferred), overflows: false };
+    const widths = tracks.map((track) => track.preferred);
+    giveExtraToFlexible(tracks, widths, budget - preferredSum);
+    return { widths, overflows: false };
   }
 
   const widths = tracks.map((track) => track.preferred);
@@ -120,9 +140,99 @@ export function maxTrackWidth(
   return Math.min(hardMax, fittedMax);
 }
 
+function clampTrackWidth(width: number, min: number, max: number) {
+  if (!Number.isFinite(width)) return min;
+  const ceiling = Math.max(min, max);
+  return Math.min(ceiling, Math.max(min, Math.round(width)));
+}
+
+function isStoredWidth<T extends string>(widths: Record<T, number>, id: string): id is T {
+  return Object.prototype.hasOwnProperty.call(widths, id);
+}
+
+function sameWidths<T extends string>(left: Record<T, number>, right: Record<T, number>) {
+  const keys = Object.keys(left) as T[];
+  return keys.length === Object.keys(right).length && keys.every((key) => left[key] === right[key]);
+}
+
+/**
+ * Persists the column the user dragged.
+ * A flexible column keeps its saved width and moves the boundary by resizing
+ * the columns to its right, so the row still fills and the drag is not undone.
+ */
+export function columnWidthsAfterResize<T extends string>(
+  tracks: Array<FittedTrack & { id: string }>,
+  widths: Record<T, number>,
+  columnId: T,
+  requestedWidth: number,
+  availableWidth: number,
+  gapPx: number,
+  paddingX: number,
+  hardMax: number
+): Record<T, number> {
+  const index = tracks.findIndex((track) => track.id === columnId);
+  const track = tracks[index];
+  if (!track || !isStoredWidth(widths, columnId)) return widths;
+
+  if (availableWidth <= 0) {
+    const nextWidth = clampTrackWidth(requestedWidth, track.min, hardMax);
+    if (nextWidth === widths[columnId]) return widths;
+    return { ...widths, [columnId]: nextWidth };
+  }
+
+  const currentFit = fitTracksToWidth(tracks, availableWidth, gapPx, paddingX);
+  const current = currentFit.widths[index] ?? track.preferred;
+  const ceiling = maxTrackWidth(tracks, index, availableWidth, gapPx, paddingX, hardMax);
+  const target = clampTrackWidth(requestedWidth, track.min, ceiling);
+  if (target === current) return widths;
+
+  if (track.flexible) {
+    const next = { ...widths };
+    let remaining = current - target;
+    for (let entryIndex = index + 1; entryIndex < tracks.length && remaining !== 0; entryIndex += 1) {
+      const entry = tracks[entryIndex];
+      if (!entry || entry.flexible || !isStoredWidth(next, entry.id)) continue;
+      const id = entry.id as T;
+      const proposed = clampTrackWidth(next[id] + remaining, entry.min, Math.max(entry.min, hardMax));
+      remaining -= proposed - next[id];
+      next[id] = proposed;
+    }
+    return sameWidths(next, widths) ? widths : next;
+  }
+
+  const locked = tracks.map((entry, entryIndex) =>
+    entryIndex === index ? { ...entry, preferred: target, min: target } : entry
+  );
+  const fitted = fitTracksToWidth(locked, availableWidth, gapPx, paddingX);
+  const next = { ...widths };
+  fitted.widths.forEach((value, entryIndex) => {
+    const entry = locked[entryIndex];
+    if (!entry || entry.flexible || !isStoredWidth(next, entry.id)) return;
+    next[entry.id as T] = value;
+  });
+  return sameWidths(next, widths) ? widths : next;
+}
+
+function flexibleTrackFills(tracks: FittedTrack[], widths: number[], overflows: boolean) {
+  if (overflows || !tracks.some((track) => track.flexible)) return false;
+  return tracks.every((track, index) => track.flexible || widths[index] === track.preferred);
+}
+
+/** Pixel tracks, except a flexible track that still owns the free space uses 1fr. */
+function layoutTemplate(tracks: FittedTrack[], widths: number[], fillFlexible: boolean) {
+  if (!fillFlexible) return gridTemplateFromTracks(widths);
+  return tracks
+    .map((track, index) =>
+      track.flexible ? `minmax(${track.min}px, 1fr)` : `${widths[index]}px`
+    )
+    .join(" ");
+}
+
 /**
  * Tighten spacing only after preferred widths no longer fit.
  * Scroll only when even compact spacing cannot hold every column at its minimum.
+ * While the columns fit, the flexible track is 1fr so it grows and shrinks
+ * with the pane, including when the sidebar collapses.
  */
 export function resolveWorkGridLayout(
   tracks: FittedTrack[],
@@ -134,12 +244,13 @@ export function resolveWorkGridLayout(
   for (const density of listDensities) {
     const gapPx = LIST_DENSITY_GAP_PX[density];
     const fitted = fitTracksToWidth(tracks, availableWidth, gapPx, paddingX);
+    const fillFlexible = flexibleTrackFills(tracks, fitted.widths, fitted.overflows);
     const layout: FittedGridLayout = {
       density,
       gapPx,
       widths: fitted.widths,
       overflows: fitted.overflows,
-      template: gridTemplateFromTracks(fitted.widths),
+      template: layoutTemplate(tracks, fitted.widths, fillFlexible),
       scrollMinWidth: fitted.overflows
         ? gridMinWidth(fitted.widths, gapPx, paddingX)
         : undefined,

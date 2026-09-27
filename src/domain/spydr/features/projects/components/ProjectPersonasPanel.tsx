@@ -53,7 +53,7 @@ export function ProjectPersonasPanel({
         <ProjectDetailField
           key={role}
           label={projectPersonaLabels[role]}
-          className="min-w-0 space-y-1 [&_span:nth-child(2)]:sr-only"
+          className="min-w-0 space-y-1 [&_.detail-field-hint]:sr-only"
           hint={projectPersonaHints[role]}
         >
           <PersonSelect
@@ -61,7 +61,9 @@ export function ProjectPersonasPanel({
             value={personas[role]?.id ?? null}
             disabled={disabled}
             compact
-            triggerClassName={controlClassName}
+            whenTight="initials"
+            className="min-w-0"
+            triggerClassName={cn(controlClassName, "w-full min-w-0")}
             ariaLabel={`${projectPersonaLabels[role]} — ${projectPersonaHints[role]}`}
             onChange={(personNodeId) => onChange(role, personNodeId)}
           />

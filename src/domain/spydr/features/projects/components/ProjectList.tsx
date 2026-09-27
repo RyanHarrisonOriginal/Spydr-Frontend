@@ -196,7 +196,7 @@ function ProjectResizableHeader({
       minWidth={sizing.minWidthOf(column)}
       maxWidth={api.fitMax(column)}
       onWidthChange={(width) => api.resizeColumn(column, width)}
-      onReset={() => api.resizeColumn(column, PROJECT_LIST_COLUMN_DEFAULTS[column])}
+      onReset={() => sizing.resetColumnWidth(column)}
     >
       {children}
     </ResizableHeaderCell>

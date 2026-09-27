@@ -1,20 +1,14 @@
 import {
-  fitTracksToWidth,
+  columnWidthsAfterResize,
   maxTrackWidth,
   type FittedTrack,
 } from "@/domain/spydr/features/shared/utils/fitGridTracks";
 import { useWorkGridLayout } from "./useWorkGridLayout";
 
-function clampWidth(width: number, min: number, max: number) {
-  if (!Number.isFinite(width)) return min;
-  const ceiling = Math.max(min, max);
-  return Math.min(ceiling, Math.max(min, Math.round(width)));
-}
-
 /**
  * Fits column preferences into the measured list pane.
- * A resize locks the dragged column and takes space from the flexible track
- * first, then from the other columns down to their minimums.
+ * The flexible track fills leftover space. A resize writes the dragged
+ * column, and writes a neighbor only when that column had to give space up.
  */
 export function useFittedColumns<T extends string>(
   tracks: Array<FittedTrack & { id: string }>,
@@ -41,27 +35,17 @@ export function useFittedColumns<T extends string>(
     );
 
   const resizeColumn = (column: T, width: number) => {
-    const index = tracks.findIndex((track) => track.id === column);
-    const track = tracks[index];
-    if (!track) return;
-    const locked = clampWidth(width, track.min, fitMax(column));
-    const nextTracks = tracks.map((entry, entryIndex) =>
-      entryIndex === index ? { ...entry, preferred: locked, min: locked } : entry
-    );
-    const fitted = fitTracksToWidth(
-      nextTracks,
+    const next = columnWidthsAfterResize(
+      tracks,
+      widths,
+      column,
+      width,
       layout.availableWidth,
       layout.gapPx,
-      paddingX
+      paddingX,
+      hardMax
     );
-    const next = { ...widths };
-    fitted.widths.forEach((value, entryIndex) => {
-      const id = nextTracks[entryIndex]?.id;
-      if (id && Object.prototype.hasOwnProperty.call(next, id)) {
-        next[id as T] = value;
-      }
-    });
-    replaceWidths(next);
+    if (next !== widths) replaceWidths(next);
   };
 
   return {

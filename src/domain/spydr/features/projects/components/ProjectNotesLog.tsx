@@ -11,7 +11,7 @@ import type { ProjectNoteFormValues } from "../hooks/useProjectDetailPage";
 import {
   ProjectDetailEmpty,
   ProjectDetailInlineError,
-  detailQuietInputClassName,
+  detailCanvasInputClassName,
 } from "./ProjectDetailSection";
 import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
@@ -70,7 +70,7 @@ export function ProjectNotesLog({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <form
-        className="rounded-md bg-muted/25 px-3 py-2.5"
+        className="flex flex-col gap-2"
         onSubmit={(event) => {
           event.preventDefault();
           onAdd();
@@ -80,9 +80,9 @@ export function ProjectNotesLog({
           value={form.title}
           onChange={(event) => onFieldChange("title", event.target.value)}
           placeholder="Title (optional)"
-          className={cn(detailQuietInputClassName, "bg-transparent")}
+          className={detailCanvasInputClassName}
         />
-        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-start">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
           <RichTextEditor
             key={formResetKey}
             value={form.body}
@@ -94,7 +94,7 @@ export function ProjectNotesLog({
           />
           <Button
             type="submit"
-            className="h-8 shrink-0 gap-1.5 rounded-md sm:px-3"
+            className="h-8 shrink-0 gap-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-500 hover:shadow-none sm:px-3"
             disabled={!canAdd}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -203,8 +203,8 @@ function NoteEntry({
   return (
     <li
       className={cn(
-        "group rounded-md px-2 py-2",
-        editing ? "bg-muted/30" : "hover:bg-muted/25"
+        "group border-b border-border/60 px-1 py-2 last:border-b-0",
+        editing ? "bg-muted/20" : "hover:bg-muted/20"
       )}
     >
       {editing ? (
@@ -225,7 +225,7 @@ function NoteEntry({
             value={draftTitle}
             onChange={(event) => setDraftTitle(event.target.value)}
             placeholder="Title (optional)"
-            className={cn(detailQuietInputClassName, "h-8")}
+            className={cn(detailCanvasInputClassName, "h-8")}
             autoFocus
             onKeyDown={(event) => {
               if (event.key === "Escape") {

@@ -12,7 +12,7 @@ import {
   ProjectDetailEmpty,
   ProjectDetailEntry,
   ProjectDetailInlineError,
-  detailQuietInputClassName,
+  detailCanvasInputClassName,
 } from "./ProjectDetailSection";
 import { ProjectItemActions } from "./ProjectItemActions";
 
@@ -63,9 +63,9 @@ export function ProjectIdeasLog({
           value={form.title}
           onChange={(event) => onFieldChange("title", event.target.value)}
           placeholder="Capture an idea..."
-          className={detailQuietInputClassName}
+          className={detailCanvasInputClassName}
         />
-        <Button type="submit" className="h-8 rounded-md px-3 text-[12px]" disabled={!canAdd}>
+        <Button type="submit" className="h-8 rounded-md bg-emerald-600 px-3 text-[12px] text-white hover:bg-emerald-500 hover:shadow-none" disabled={!canAdd}>
           <Plus className="h-3.5 w-3.5" />
           {isAdding ? "Adding..." : "Add"}
         </Button>

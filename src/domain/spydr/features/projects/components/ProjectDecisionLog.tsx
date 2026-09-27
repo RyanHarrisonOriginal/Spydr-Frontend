@@ -12,7 +12,7 @@ import {
   ProjectDetailEmpty,
   ProjectDetailEntry,
   ProjectDetailInlineError,
-  detailQuietInputClassName,
+  detailCanvasInputClassName,
 } from "./ProjectDetailSection";
 import { ProjectItemActions } from "./ProjectItemActions";
 
@@ -75,14 +75,14 @@ export function ProjectDecisionLog({
           value={form.title}
           onChange={(event) => onFieldChange("title", event.target.value)}
           placeholder="What was decided?"
-          className={detailQuietInputClassName}
+          className={detailCanvasInputClassName}
         />
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
             value={form.rationale}
             onChange={(event) => onFieldChange("rationale", event.target.value)}
             placeholder="Why — context, tradeoffs, constraints (optional)"
-            className={cn(detailQuietInputClassName, "min-w-0 flex-1")}
+            className={cn(detailCanvasInputClassName, "min-w-0 flex-1")}
           />
           <Button
             type="submit"

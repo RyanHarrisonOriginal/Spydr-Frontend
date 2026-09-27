@@ -23,6 +23,13 @@ export const detailQuietControlClassName =
 export const detailStrandControlClassName =
   "spydr-strand-field h-8 min-h-8 rounded-sm border-transparent bg-muted/30 px-2.5 shadow-none hover:border-transparent hover:bg-muted/45 data-[state=open]:border-transparent data-[state=open]:bg-muted/45 data-[state=open]:ring-0";
 
+/** Project detail fields sit on the page. The strand marks the field; no well. */
+export const detailCanvasControlClassName =
+  "spydr-strand-field h-8 min-h-8 w-auto max-w-full border-solid border-transparent bg-transparent px-1 shadow-none hover:border-transparent hover:bg-muted/25 data-[state=open]:border-transparent data-[state=open]:bg-muted/25 data-[state=open]:ring-0";
+
+export const detailCanvasInputClassName =
+  "spydr-strand-field h-9 w-full min-w-0 border-0 bg-transparent px-1 text-[13px] shadow-none outline-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0";
+
 export const detailQuietInputClassName =
   "spydr-strand-field h-9 w-full min-w-0 rounded-sm border-0 bg-muted/30 px-2.5 text-[13px] shadow-none outline-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0";
 
@@ -235,7 +242,7 @@ export function ProjectDetailEntry({
   className?: string;
 }) {
   return (
-    <li className={cn("px-1 py-2 hover:bg-muted/20", className)}>
+    <li className={cn("border-b border-border/60 px-1 py-2 last:border-b-0 hover:bg-muted/20", className)}>
       {children}
     </li>
   );
@@ -267,7 +274,7 @@ export function ProjectDetailField({
           {label}
         </span>
         {hint ? (
-          <span className="text-[10px] normal-case text-muted-foreground/75">
+          <span className="detail-field-hint text-[10px] normal-case text-muted-foreground/75">
             {hint}
           </span>
         ) : null}

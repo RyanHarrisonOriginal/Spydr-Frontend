@@ -75,7 +75,7 @@ export function RichTextEditor({
           class: cn(
             editorContentClassName,
             minHeightClassName,
-            quiet && "px-2.5 py-2"
+            quiet && "px-1 py-2"
           ),
         },
       },
@@ -98,7 +98,7 @@ export function RichTextEditor({
       <div
         className={cn(
         quiet
-          ? cn("spydr-strand-field bg-muted/30", minHeightClassName)
+          ? cn("spydr-strand-field bg-transparent", minHeightClassName)
           : "rounded-lg border border-input bg-background",
           !quiet && minHeightClassName,
           className
@@ -111,7 +111,7 @@ export function RichTextEditor({
     <div
       className={cn(
         quiet
-          ? "spydr-strand-field overflow-hidden rounded-sm bg-muted/30 focus-within:bg-muted/40"
+          ? "spydr-strand-field bg-transparent"
           : "overflow-hidden rounded-lg border border-input bg-background ring-focus focus-within:border-highlight/40",
         className
       )}
@@ -119,7 +119,7 @@ export function RichTextEditor({
       <div
         className={cn(
           "flex items-center gap-0.5 py-1",
-          quiet ? "px-2" : "border-b border-border/70 bg-muted/20 px-2"
+          quiet ? "px-1" : "border-b border-border/70 bg-muted/20 px-2"
         )}
       >
         <ToolbarButton

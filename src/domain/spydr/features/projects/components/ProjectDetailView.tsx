@@ -53,12 +53,10 @@ import {
   ProjectDetailEmpty,
   ProjectDetailField,
   ProjectDetailInlineError,
-  ProjectDetailSection,
-  ProjectDetailSectionBody,
   ProjectDetailTabs,
+  detailCanvasControlClassName,
+  detailCanvasInputClassName,
   detailQuietControlClassName,
-  detailQuietInputClassName,
-  detailStrandControlClassName,
 } from "./ProjectDetailSection";
 import {
   ProjectDeletedItems,
@@ -277,14 +275,9 @@ export function ProjectDetailView({
   usePageBreadcrumb(formatBreadcrumbEntityId(project.id));
 
   return (
-    <div className="flex min-w-0">
-      <div className="min-w-0 flex-1">
-        <div className="border-b border-border spydr-rule">
-          <div className="flex items-stretch">
-            <div className="min-w-0 flex-1">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-y-auto">
               <PageHeader
-                dense={isPhone}
-                className="border-b-0 shadow-none after:hidden"
+                dense
                 titleClassName="w-full max-w-none"
                 title={
                   <div className="flex min-w-0 items-center gap-2">
@@ -299,7 +292,7 @@ export function ProjectDetailView({
                     onChange={(event) => onDetailFieldChange("title", event.target.value)}
                     className={cn(
                       "w-full min-w-0 bg-transparent font-semibold tracking-tight outline-none ring-0 placeholder:text-muted-foreground",
-                      isPhone ? "text-[16px] leading-snug" : "text-[1.5rem]"
+                      isPhone ? "text-[16px] leading-snug" : "text-[18px]"
                     )}
                     placeholder="Project name"
                     />
@@ -399,7 +392,18 @@ export function ProjectDetailView({
                   )
                 }
                 actions={
-                  isPhone && deletedCount === 0 ? undefined : (
+                  <div className="flex items-center gap-3">
+                    {isPhone ? null : (
+                      <StatusMixChart
+                        quiet
+                        className="w-56"
+                        title="Status mix"
+                        counts={stats.taskStatusCounts}
+                        centerPercent={stats.progressPercent}
+                        centerLabel="Tasks completed"
+                      />
+                    )}
+                    {isPhone && deletedCount === 0 ? null : (
                     <div className="flex items-center gap-1">
                       {isPhone ? null : (
                         <>
@@ -450,24 +454,10 @@ export function ProjectDetailView({
                         </Button>
                       ) : null}
                     </div>
-                  )
+                    )}
+                  </div>
                 }
               />
-            </div>
-            {isPhone ? null : (
-              <div className="relative z-10 flex w-[min(18rem,34%)] shrink-0 items-center px-5 py-3">
-                <StatusMixChart
-                  quiet
-                  className="w-full"
-                  title="Status mix"
-                  counts={stats.taskStatusCounts}
-                  centerPercent={stats.progressPercent}
-                  centerLabel="Tasks completed"
-                />
-              </div>
-            )}
-          </div>
-        </div>
 
         <SaveAsTemplateDialog
           project={project}
@@ -476,7 +466,7 @@ export function ProjectDetailView({
         />
 
         {deletedCount > 0 && (
-          <div className="px-4 pt-4 md:px-8">
+          <div className="px-4 pt-3">
             <ProjectDeletedItems
               deleted={deleted}
               expanded={trashExpanded}
@@ -488,7 +478,7 @@ export function ProjectDetailView({
           </div>
         )}
 
-        <div className="px-4 pt-5 md:px-8 md:pt-7">
+        <div className="px-4 py-4">
           {isPhone ? (
             <StatusMixChart
               quiet
@@ -504,7 +494,7 @@ export function ProjectDetailView({
             onChange={(event) => onDetailFieldChange("body", event.target.value)}
             placeholder="Brief — context, intent, and what done looks like."
             rows={3}
-            className="spydr-strand-field min-h-[4.75rem] w-full resize-y rounded-sm border-0 bg-muted/30 px-3 py-2.5 text-[14px] leading-relaxed outline-none ring-0 placeholder:text-muted-foreground"
+            className="spydr-strand-field min-h-[4.75rem] w-full resize-y border-0 bg-transparent px-1 py-2 text-[14px] leading-relaxed outline-none ring-0 placeholder:text-muted-foreground"
           />
 
           <div
@@ -525,7 +515,7 @@ export function ProjectDetailView({
                 ariaLabel="Project start date"
                 fitContent
                 showIcon={false}
-                className={detailStrandControlClassName}
+                className={detailCanvasControlClassName}
               />
             </ProjectDetailField>
             {isPhone ? null : (
@@ -541,7 +531,7 @@ export function ProjectDetailView({
                   ariaLabel="Project target date"
                   fitContent
                   showIcon={false}
-                  className={detailStrandControlClassName}
+                  className={detailCanvasControlClassName}
                 />
               </ProjectDetailField>
             )}
@@ -553,7 +543,7 @@ export function ProjectDetailView({
                 }
                 ariaLabel="Project risk"
                 menuLabel="Risk"
-                className={cn(detailStrandControlClassName, "w-auto")}
+                className={cn(detailCanvasControlClassName, "w-auto")}
               />
             </ProjectDetailField>
           </div>
@@ -564,7 +554,7 @@ export function ProjectDetailView({
               personas={personas}
               disabled={isUpdatingPersona}
               onChange={onPersonaChange}
-              controlClassName={detailStrandControlClassName}
+              controlClassName={detailCanvasControlClassName}
             />
             {personaError ? (
               <p className="mt-2 text-[12px] text-destructive">{personaError}</p>
@@ -585,23 +575,14 @@ export function ProjectDetailView({
           ) : null}
         </div>
 
-        <div
-          className={cn(
-            "flex flex-col pb-16 pt-8",
-            isPhone ? "px-3" : "px-4 md:px-8"
-          )}
-        >
+        <div className="flex min-h-0 flex-1 flex-col border-t border-border pb-16">
           {childMutationError ? (
-            <ProjectDetailInlineError>{childMutationError}</ProjectDetailInlineError>
+            <div className="px-4 pt-3">
+              <ProjectDetailInlineError>{childMutationError}</ProjectDetailInlineError>
+            </div>
           ) : null}
 
-          <ProjectDetailSection variant="plain">
-            <div
-              className={cn(
-                "flex min-w-0 items-center gap-2 pb-1",
-                isPhone ? "px-1" : "px-0"
-              )}
-            >
+            <div className="sticky top-0 z-20 flex min-w-0 items-center gap-2 border-b border-border bg-background px-4">
               <ProjectDetailTabs<ProjectLogTab>
                 value={logTab}
                 onChange={setLogTab}
@@ -648,12 +629,7 @@ export function ProjectDetailView({
                 </div>
               ) : null}
             </div>
-            <ProjectDetailSectionBody
-              className={cn(
-                "min-h-0 gap-3 px-0 py-4",
-                isPhone ? "px-1" : "px-0"
-              )}
-            >
+            <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-3">
               {logTab === "tasks" ? (
                 <div className="flex min-h-0 flex-1 flex-col gap-3">
                   <form
@@ -683,7 +659,7 @@ export function ProjectDetailView({
                         onTaskFieldChange("title", event.target.value)
                       }
                       placeholder="Add a task..."
-                      className={detailQuietInputClassName}
+                      className={detailCanvasInputClassName}
                     />
                     {isPhone ? null : (
                       <TaskDueDateSelect
@@ -695,10 +671,10 @@ export function ProjectDetailView({
                         placeholder="Due date"
                         showIcon={false}
                         project={project}
-                        className={detailStrandControlClassName}
+                        className={detailCanvasControlClassName}
                       />
                     )}
-                    <Button type="submit" className="h-8 rounded-md px-3 text-[12px]" disabled={!canAddTask}>
+                    <Button type="submit" className="h-8 rounded-md bg-emerald-600 px-3 text-[12px] text-white hover:bg-emerald-500 hover:shadow-none" disabled={!canAddTask}>
                       {isAddingTask ? "Adding..." : "Add"}
                     </Button>
                   </form>
@@ -711,7 +687,7 @@ export function ProjectDetailView({
                         isPhone ? (
                           <li
                             key={task.id}
-                            className="flex min-w-0 items-center gap-1 px-0.5 py-1.5 hover:bg-muted/20"
+                            className="flex min-w-0 items-center gap-1 border-b border-border/60 px-0.5 py-1.5 last:border-b-0 hover:bg-muted/20"
                           >
                             <TaskStatusSelect
                               value={task.status}
@@ -773,7 +749,7 @@ export function ProjectDetailView({
                         ) : (
                           <li
                             key={task.id}
-                            className="flex min-w-0 items-center gap-2 px-1 py-2 hover:bg-muted/20"
+                            className="flex min-w-0 items-center gap-2 border-b border-border/60 px-1 py-2 last:border-b-0 hover:bg-muted/20"
                           >
                             <SelectionCheckbox
                               checked={taskSelection.isSelected(task.id)}
@@ -960,10 +936,8 @@ export function ProjectDetailView({
                   isDeleting={isDeletingChild}
                 />
               ) : null}
-            </ProjectDetailSectionBody>
-          </ProjectDetailSection>
+            </div>
         </div>
-      </div>
       {dueGuard.dialog}
     </div>
   );

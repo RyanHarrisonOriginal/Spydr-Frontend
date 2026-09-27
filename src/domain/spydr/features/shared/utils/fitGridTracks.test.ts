@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  columnWidthsAfterResize,
   fitTracksToWidth,
   maxTrackWidth,
   resolveWorkGridLayout,
@@ -13,10 +14,15 @@ const tracks = [
 ];
 
 describe("fitTracksToWidth", () => {
-  it("keeps preferred widths when they fit inside the surface", () => {
+  it("gives free space to the flexible track", () => {
     const fitted = fitTracksToWidth(tracks, 800, 16, 48);
+    const budget = 800 - 48 - 16 * 3;
     expect(fitted.overflows).toBe(false);
-    expect(fitted.widths).toEqual([32, 320, 160, 48]);
+    expect(fitted.widths[0]).toBe(32);
+    expect(fitted.widths[2]).toBe(160);
+    expect(fitted.widths[3]).toBe(48);
+    expect(fitted.widths.reduce((sum, width) => sum + width, 0)).toBe(budget);
+    expect(fitted.widths[1]).toBeGreaterThan(320);
   });
 
   it("shrinks the flexible track before the columns the user sized", () => {
@@ -65,6 +71,11 @@ describe("resolveWorkGridLayout", () => {
     expect(layout.density).toBe("comfortable");
     expect(layout.overflows).toBe(false);
     expect(layout.scrollMinWidth).toBeUndefined();
+    expect(layout.template).toContain("minmax(160px, 1fr)");
+    const budget = 900 - 48 - layout.gapPx * 3;
+    const fixed = layout.widths[0] + layout.widths[2] + layout.widths[3];
+    expect(fixed).toBe(32 + 160 + 48);
+    expect(layout.widths[1]).toBe(budget - fixed);
   });
 
   it("uses a tighter gap before it allows the grid to scroll", () => {
@@ -79,5 +90,36 @@ describe("resolveWorkGridLayout", () => {
     );
     expect(layout.overflows).toBe(false);
     expect(layout.density).toBe("compact");
+  });
+});
+
+describe("columnWidthsAfterResize", () => {
+  const sized = [
+    { id: "expand", preferred: 32, min: 32 },
+    { id: "name", preferred: 320, min: 128, flexible: true },
+    { id: "area", preferred: 148, min: 108 },
+    { id: "actions", preferred: 48, min: 48 },
+  ];
+  const widths: Record<"name" | "area", number> = { name: 320, area: 148 };
+
+  it("keeps the flexible width saved and stores the column that was resized", () => {
+    const next = columnWidthsAfterResize(sized, widths, "area", 180, 800, 8, 32, 720);
+    expect(next.name).toBe(320);
+    expect(next.area).toBe(180);
+  });
+
+  it("moves a flexible-column drag onto the columns to its right", () => {
+    const next = columnWidthsAfterResize(sized, widths, "name", 400, 800, 8, 32, 720);
+    expect(next.name).toBe(320);
+    expect(next.area).toBeGreaterThan(148);
+    const fitted = fitTracksToWidth(
+      sized.map((track) =>
+        track.id === "area" ? { ...track, preferred: next.area } : track
+      ),
+      800,
+      8,
+      32
+    );
+    expect(fitted.widths[1]).toBe(400);
   });
 });

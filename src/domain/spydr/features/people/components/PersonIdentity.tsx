@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import type { PersonNode } from "@/domain/spydr/utils/types";
 import { personDisplayName, personGivenName, personInitials } from "@/domain/spydr/utils/projectPersonas";
@@ -97,19 +98,39 @@ interface PersonNameFitProps {
   person: PersonNode;
   you?: boolean;
   className?: string;
+  /** What to show when the full name does not fit the slot. */
+  whenTight?: "given" | "initials";
 }
 
 /**
- * Spells the full name when the parent slot is wide enough; falls back to the
- * given name in a narrow slot. The slot must have a defined width (flex-1 / grid track).
+ * Spells the full name when the slot can hold it.
+ * `given` uses a container breakpoint. `initials` measures the name against
+ * the slot, so a short name stays whole in a narrower column.
+ * The slot must have a defined width (flex-1 / grid track).
  */
-export function PersonNameFit({ person, you = false, className }: PersonNameFitProps) {
+export function PersonNameFit({
+  person,
+  you = false,
+  className,
+  whenTight = "given",
+}: PersonNameFitProps) {
   const full = personDisplayName(person);
   const given = personGivenName(person) || full;
   const suffix = you ? " (You)" : "";
+  const title = `${full}${suffix}`;
+
+  if (whenTight === "initials") {
+    return (
+      <MeasuredPersonName
+        full={title}
+        initials={personInitials(person)}
+        className={className}
+      />
+    );
+  }
 
   return (
-    <span className={cn("person-name-fit", className)} title={`${full}${suffix}`}>
+    <span className={cn("person-name-fit", className)} title={title}>
       <span className="person-name-fit__full">
         {full}
         {suffix}
@@ -118,6 +139,58 @@ export function PersonNameFit({ person, you = false, className }: PersonNameFitP
         {given}
         {suffix}
       </span>
+    </span>
+  );
+}
+
+function MeasuredPersonName({
+  full,
+  initials,
+  className,
+}: {
+  full: string;
+  initials: string;
+  className?: string;
+}) {
+  const boxRef = useRef<HTMLSpanElement>(null);
+  const [tight, setTight] = useState(false);
+
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
+
+    const probe = document.createElement("span");
+    probe.textContent = full;
+    probe.setAttribute("aria-hidden", "true");
+    probe.style.position = "fixed";
+    probe.style.left = "0";
+    probe.style.top = "0";
+    probe.style.visibility = "hidden";
+    probe.style.pointerEvents = "none";
+    probe.style.whiteSpace = "nowrap";
+    probe.style.width = "max-content";
+    probe.style.font = getComputedStyle(box).font;
+    document.body.appendChild(probe);
+
+    const fit = () => {
+      setTight(probe.offsetWidth > box.clientWidth + 1);
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(box);
+    return () => {
+      observer.disconnect();
+      probe.remove();
+    };
+  }, [full]);
+
+  return (
+    <span
+      ref={boxRef}
+      className={cn("block min-w-0 truncate", className)}
+      title={full}
+    >
+      {tight ? initials : full}
     </span>
   );
 }

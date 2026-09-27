@@ -24,6 +24,8 @@ interface PersonSelectProps {
   fitContent?: boolean;
   /** Wrap the selected name instead of truncating. */
   wrapLabel?: boolean;
+  /** Narrow slots show initials instead of the given name. */
+  whenTight?: "given" | "initials";
 }
 
 export function PersonSelect({
@@ -37,6 +39,7 @@ export function PersonSelect({
   compact = false,
   fitContent = false,
   wrapLabel = false,
+  whenTight = "given",
 }: PersonSelectProps) {
   const { isMe } = useCurrentUserPerson();
   const selected = people.find((person) => person.id === value) ?? null;
@@ -64,7 +67,11 @@ export function PersonSelect({
         title={selected ? personSelectLabel(selected, isMe) : undefined}
         triggerLabel={
           compact && !fitContent && selected ? (
-            <PersonNameFit person={selected} you={isMe(selected)} />
+            <PersonNameFit
+              person={selected}
+              you={isMe(selected)}
+              whenTight={whenTight}
+            />
           ) : undefined
         }
         leading={
