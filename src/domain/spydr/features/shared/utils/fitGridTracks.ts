@@ -163,7 +163,7 @@ function sameWidths<T extends string>(left: Record<T, number>, right: Record<T, 
 export function columnWidthsAfterResize<T extends string>(
   tracks: Array<FittedTrack & { id: string }>,
   widths: Record<T, number>,
-  columnId: T,
+  columnId: NoInfer<T>,
   requestedWidth: number,
   availableWidth: number,
   gapPx: number,
