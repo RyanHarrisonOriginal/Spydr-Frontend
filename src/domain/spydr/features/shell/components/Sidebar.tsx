@@ -17,7 +17,7 @@ export function Sidebar() {
     <aside
       id="workspace-sidebar"
       className={cn(
-        "spydr-rail hidden h-full shrink-0 flex-col overflow-x-hidden border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out md:flex",
+        "spydr-rail hidden h-full shrink-0 flex-col overflow-x-hidden border-r border-white/10 transition-[width] duration-200 ease-out md:flex",
         collapsed ? "w-14" : "w-56"
       )}
     >

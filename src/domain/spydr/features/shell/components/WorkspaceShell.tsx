@@ -29,7 +29,7 @@ export function WorkspaceShell() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-background text-foreground pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+    <div className="spydr-atmosphere flex h-full w-full flex-col overflow-hidden text-foreground pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
       <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
         <Sidebar />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

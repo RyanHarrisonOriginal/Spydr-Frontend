@@ -15,7 +15,7 @@ export function MobileTabBar({ navOpen, onOpenNav }: MobileTabBarProps) {
   return (
     <nav
       aria-label="Primary"
-      className="z-30 grid shrink-0 grid-cols-4 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
+      className="spydr-glass z-30 grid shrink-0 grid-cols-4 border-t border-white/10 pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       {mobilePrimaryTabs.map((tab) => {
         const Icon = tab.icon;

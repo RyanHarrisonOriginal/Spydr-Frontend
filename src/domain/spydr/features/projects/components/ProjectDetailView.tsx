@@ -64,6 +64,7 @@ import {
   getDeletedItemCount,
 } from "./ProjectDeletedItems";
 import { ProjectItemActions } from "./ProjectItemActions";
+import { ProjectDescription } from "./ProjectDescription";
 import { ProjectPersonasPanel } from "./ProjectPersonasPanel";
 import { PersonSelect } from "./PersonSelect";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
@@ -478,7 +479,7 @@ export function ProjectDetailView({
           </div>
         )}
 
-        <div className="px-4 py-4">
+        <div className="project-brief px-4 py-4">
           {isPhone ? (
             <StatusMixChart
               quiet
@@ -489,89 +490,97 @@ export function ProjectDetailView({
               centerLabel="Tasks completed"
             />
           ) : null}
-          <textarea
-            value={detailForm.body}
-            onChange={(event) => onDetailFieldChange("body", event.target.value)}
-            placeholder="Brief — context, intent, and what done looks like."
-            rows={3}
-            className="spydr-strand-field min-h-[4.75rem] w-full resize-y border-0 bg-transparent px-1 py-2 text-[14px] leading-relaxed outline-none ring-0 placeholder:text-muted-foreground"
-          />
-
-          <div
-            className={cn(
-              "mt-6 flex flex-wrap items-end gap-x-6 gap-y-3",
-              isPhone && "grid grid-cols-2 gap-x-4 gap-y-3"
-            )}
-          >
-            <ProjectDetailField label="Start" className="w-auto space-y-1">
-              <DatePicker
-                value={detailForm.startDate || null}
-                onChange={(startDate) =>
-                  onDetailFieldChange("startDate", startDate ?? "")
-                }
-                panelLabel="Start date"
-                clearLabel="Clear start date"
-                placeholder="Select start date"
-                ariaLabel="Project start date"
-                fitContent
-                showIcon={false}
-                className={detailCanvasControlClassName}
-              />
-            </ProjectDetailField>
-            {isPhone ? null : (
-              <ProjectDetailField label="Target" className="w-auto space-y-1">
-                <DatePicker
-                  value={detailForm.targetDate || null}
-                  onChange={(targetDate) =>
-                    onDetailFieldChange("targetDate", targetDate ?? "")
-                  }
-                  panelLabel="Target date"
-                  clearLabel="Clear target date"
-                  placeholder="Select target date"
-                  ariaLabel="Project target date"
-                  fitContent
-                  showIcon={false}
-                  className={detailCanvasControlClassName}
-                />
-              </ProjectDetailField>
-            )}
-            <ProjectDetailField label="Risk" className="w-auto min-w-[7rem] space-y-1">
-              <ProjectPrioritySelect
-                value={detailForm.riskLevel}
-                onChange={(riskLevel) =>
-                  onDetailFieldChange("riskLevel", riskLevel as SpydrPriority)
-                }
-                ariaLabel="Project risk"
-                menuLabel="Risk"
-                className={cn(detailCanvasControlClassName, "w-auto")}
-              />
-            </ProjectDetailField>
-          </div>
-
-          <div className="mt-6">
-            <ProjectPersonasPanel
-              people={people}
-              personas={personas}
-              disabled={isUpdatingPersona}
-              onChange={onPersonaChange}
-              controlClassName={detailCanvasControlClassName}
+          <div className="project-brief__layout">
+            <ProjectDescription
+              value={detailForm.body}
+              onChange={(body) => onDetailFieldChange("body", body)}
             />
-            {personaError ? (
-              <p className="mt-2 text-[12px] text-destructive">{personaError}</p>
-            ) : null}
-          </div>
 
-          {project.details?.outcome ? (
-            <p className="mt-5 text-[13px] leading-relaxed text-foreground/80">
-              <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.16em] text-highlight">
-                Outcome
-              </span>
-              {project.details.outcome}
-            </p>
-          ) : null}
+            <div className="min-w-0 space-y-6">
+              <div>
+                <p className="mb-1.5 px-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Details
+                </p>
+                <div
+                  className={cn(
+                    "flex flex-wrap items-end gap-x-6 gap-y-3",
+                    isPhone && "grid grid-cols-2 gap-x-4 gap-y-3"
+                  )}
+                >
+                  <ProjectDetailField label="Start" className="w-auto space-y-1">
+                    <DatePicker
+                      value={detailForm.startDate || null}
+                      onChange={(startDate) =>
+                        onDetailFieldChange("startDate", startDate ?? "")
+                      }
+                      panelLabel="Start date"
+                      clearLabel="Clear start date"
+                      placeholder="Select start date"
+                      ariaLabel="Project start date"
+                      fitContent
+                      showIcon={false}
+                      className={detailCanvasControlClassName}
+                    />
+                  </ProjectDetailField>
+                  {isPhone ? null : (
+                    <ProjectDetailField label="Target" className="w-auto space-y-1">
+                      <DatePicker
+                        value={detailForm.targetDate || null}
+                        onChange={(targetDate) =>
+                          onDetailFieldChange("targetDate", targetDate ?? "")
+                        }
+                        panelLabel="Target date"
+                        clearLabel="Clear target date"
+                        placeholder="Select target date"
+                        ariaLabel="Project target date"
+                        fitContent
+                        showIcon={false}
+                        className={detailCanvasControlClassName}
+                      />
+                    </ProjectDetailField>
+                  )}
+                  <ProjectDetailField label="Risk" className="w-auto min-w-[7rem] space-y-1">
+                    <ProjectPrioritySelect
+                      value={detailForm.riskLevel}
+                      onChange={(riskLevel) =>
+                        onDetailFieldChange("riskLevel", riskLevel as SpydrPriority)
+                      }
+                      ariaLabel="Project risk"
+                      menuLabel="Risk"
+                      className={cn(detailCanvasControlClassName, "w-auto")}
+                    />
+                  </ProjectDetailField>
+                </div>
+              </div>
+
+              <div>
+                <ProjectPersonasPanel
+                  people={people}
+                  personas={personas}
+                  disabled={isUpdatingPersona}
+                  onChange={onPersonaChange}
+                  controlClassName={detailCanvasControlClassName}
+                />
+                {personaError ? (
+                  <p className="mt-2 text-[12px] text-destructive">{personaError}</p>
+                ) : null}
+              </div>
+
+              {project.details?.outcome ? (
+                <p className="text-[13px] leading-relaxed text-foreground/80">
+                  <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.16em] text-highlight">
+                    Outcome
+                  </span>
+                  {project.details.outcome}
+                </p>
+              ) : null}
+            </div>
+          </div>
 
           {detailError ? (
-            <ProjectDetailInlineError>{detailError}</ProjectDetailInlineError>
+            <div className="mt-4">
+              <ProjectDetailInlineError>{detailError}</ProjectDetailInlineError>
+            </div>
           ) : null}
         </div>
 
@@ -582,7 +591,7 @@ export function ProjectDetailView({
             </div>
           ) : null}
 
-            <div className="sticky top-0 z-20 flex min-w-0 items-center gap-2 border-b border-border bg-background px-4">
+            <div className="spydr-glass sticky top-0 z-20 flex min-w-0 items-center gap-2 border-b border-white/10 px-4">
               <ProjectDetailTabs<ProjectLogTab>
                 value={logTab}
                 onChange={setLogTab}

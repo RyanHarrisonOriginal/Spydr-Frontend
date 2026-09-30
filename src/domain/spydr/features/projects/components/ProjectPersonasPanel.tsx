@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useIsPhone } from "@/hooks/useIsPhone";
 import type { PersonNode, ProjectPersonas } from "@/domain/spydr/utils/types";
 import {
   projectPersonaHints,
@@ -28,9 +27,6 @@ export function ProjectPersonasPanel({
   controlClassName,
   onChange,
 }: ProjectPersonasPanelProps) {
-  const isPhone = useIsPhone();
-  const tight = compact || isPhone;
-
   if (people.length === 0) {
     return (
       <p className="text-[12px] text-muted-foreground">
@@ -43,32 +39,34 @@ export function ProjectPersonasPanel({
   }
 
   return (
-    <div
-          className={cn(
-            "grid min-w-0 gap-x-3 gap-y-2",
-            tight ? "grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-4"
-          )}
-    >
-      {projectPersonaRoles.map((role) => (
-        <ProjectDetailField
-          key={role}
-          label={projectPersonaLabels[role]}
-          className="min-w-0 space-y-1 [&_.detail-field-hint]:sr-only"
-          hint={projectPersonaHints[role]}
-        >
-          <PersonSelect
-            people={people}
-            value={personas[role]?.id ?? null}
-            disabled={disabled}
-            compact
-            whenTight="initials"
-            className="min-w-0"
-            triggerClassName={cn(controlClassName, "w-full min-w-0")}
-            ariaLabel={`${projectPersonaLabels[role]} — ${projectPersonaHints[role]}`}
-            onChange={(personNodeId) => onChange(role, personNodeId)}
-          />
-        </ProjectDetailField>
-      ))}
+    <div className="personas-fit min-w-0">
+      <div
+        className={cn(
+          "personas-fit__grid",
+          compact && "personas-fit__grid--two"
+        )}
+      >
+        {projectPersonaRoles.map((role) => (
+          <ProjectDetailField
+            key={role}
+            label={projectPersonaLabels[role]}
+            className="min-w-0 space-y-1 [&_.detail-field-hint]:sr-only"
+            hint={projectPersonaHints[role]}
+          >
+            <PersonSelect
+              people={people}
+              value={personas[role]?.id ?? null}
+              disabled={disabled}
+              compact
+              whenTight="initials"
+              className="min-w-0"
+              triggerClassName={cn(controlClassName, "w-full min-w-0")}
+              ariaLabel={`${projectPersonaLabels[role]} — ${projectPersonaHints[role]}`}
+              onChange={(personNodeId) => onChange(role, personNodeId)}
+            />
+          </ProjectDetailField>
+        ))}
+      </div>
     </div>
   );
 }

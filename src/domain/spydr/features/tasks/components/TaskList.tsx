@@ -585,7 +585,7 @@ export function TaskList({
       <div
         className={cn(
           ROW_LAYOUT,
-          "sticky top-0 z-20 border-b border-border bg-background px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+          "spydr-glass sticky top-0 z-20 border-b border-white/10 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
         )}
         style={gridStyle}
       >

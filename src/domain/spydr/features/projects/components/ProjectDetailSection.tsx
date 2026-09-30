@@ -74,7 +74,7 @@ export function ProjectDetailSection({
         className={cn(
           "flex min-h-0 flex-col",
           variant === "card" &&
-            "overflow-hidden rounded-md border border-border bg-card spydr-plate",
+            "overflow-hidden rounded-md border border-white/10 spydr-plate",
           className,
           collapsible && !expanded && "min-h-0 md:min-h-0"
         )}

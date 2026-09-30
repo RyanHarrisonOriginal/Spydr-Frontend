@@ -1000,7 +1000,7 @@ export function ProjectList({
       ) : null}
       {isPhone ? null : (
       <div
-        className="sticky top-0 z-20 grid items-center border-b border-border bg-background px-4 py-2 font-mono uppercase tracking-wider text-muted-foreground [&>*]:min-w-0"
+        className="spydr-glass sticky top-0 z-20 grid items-center border-b border-white/10 px-4 py-2 font-mono uppercase tracking-wider text-muted-foreground [&>*]:min-w-0"
         style={{
           ...gridStyle,
           fontSize: "var(--pl-header-size)",

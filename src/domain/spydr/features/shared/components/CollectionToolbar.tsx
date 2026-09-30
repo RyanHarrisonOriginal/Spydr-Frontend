@@ -49,7 +49,7 @@ export function CollectionToolbar<T>({
     <div
       className={cn(
         "border-b border-border",
-        sticky && "sticky top-0 z-20 bg-background/95 backdrop-blur-sm"
+        sticky && "spydr-glass sticky top-0 z-20"
       )}
     >
       <div

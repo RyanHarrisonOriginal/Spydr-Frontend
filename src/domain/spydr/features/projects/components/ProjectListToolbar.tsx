@@ -51,7 +51,7 @@ export function ProjectListToolbar({
     <div
       className={cn(
         "border-b border-border",
-        sticky && "sticky top-0 z-20 bg-background/95 backdrop-blur-sm"
+        sticky && "spydr-glass sticky top-0 z-20"
       )}
     >
       <div className="flex flex-col gap-2 bg-muted/10 px-4 py-2 md:flex-row md:flex-wrap md:items-center md:px-6">

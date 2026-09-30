@@ -13,7 +13,7 @@ export function TopBar() {
   const { currentUserPerson } = useCurrentUserPerson();
 
   return (
-    <header className="spydr-rule z-30 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background/85 px-3 backdrop-blur-sm md:gap-3 md:px-4">
+    <header className="spydr-rule spydr-glass z-30 flex h-12 shrink-0 items-center gap-2 border-b border-white/10 px-3 md:gap-3 md:px-4">
       <Link
         to="/today"
         className="flex shrink-0 items-center gap-1.5 md:hidden"

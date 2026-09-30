@@ -68,7 +68,7 @@ export function DashboardMetricStrip({
             key={metric.id}
             to={metricHrefs[metric.id]}
             className={cn(
-              "group min-w-0 rounded-sm border border-border/70 bg-muted/10 px-3 py-2 transition-colors hover:border-highlight/35 hover:bg-muted/20",
+              "spydr-glass group min-w-0 rounded-md border border-white/10 px-3 py-2 transition-colors hover:border-highlight/40",
               warn &&
                 "border-[hsl(var(--status-blocked)/0.4)] bg-[hsl(var(--status-blocked)/0.07)] hover:border-[hsl(var(--status-blocked)/0.55)]"
             )}

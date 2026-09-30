@@ -50,7 +50,7 @@ function MixPanel({
   const rows = sortedStatusEntries(counts);
 
   return (
-    <div className="min-w-0 rounded-sm border border-border/60 bg-muted/10 p-3">
+    <div className="spydr-glass min-w-0 rounded-md border border-white/10 p-3">
       <div className="flex items-center gap-4">
         <DashboardStatusDonut
           counts={counts}
