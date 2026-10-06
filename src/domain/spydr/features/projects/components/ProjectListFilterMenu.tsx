@@ -77,7 +77,7 @@ export function ProjectListFilterMenu({
       className="min-w-[16rem] w-max max-w-[min(24rem,calc(100vw-1.5rem))] overflow-x-hidden p-0"
     >
       {showSearch ? (
-        <div className="sticky top-0 z-10 border-b border-border/80 bg-popover p-2">
+        <div className="spydr-glass-sticky sticky top-0 z-10 border-b border-white/10 p-2">
           <div className="relative">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"

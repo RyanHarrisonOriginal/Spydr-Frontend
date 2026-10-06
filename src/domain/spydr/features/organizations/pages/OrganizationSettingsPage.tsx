@@ -14,6 +14,7 @@ import {
 import { useOrganizationContext } from "../context/OrganizationContext";
 import { useProjectAreasQuery } from "@/domain/spydr/features/shared/hooks/queries";
 import { ProjectAreasPanel } from "@/domain/spydr/features/projects/components/ProjectAreasPanel";
+import { ConnectClaudePanel } from "@/domain/spydr/features/mcp/components/ConnectClaudePanel";
 import {
   useAddOrganizationMemberMutation,
   useOrganizationMembersQuery,
@@ -103,6 +104,8 @@ export function OrganizationSettingsPage() {
         areas={areasQuery.data ?? []}
         isLoading={areasQuery.isLoading}
       />
+
+      <ConnectClaudePanel />
 
       {showInitialLoading ? <LoadingState title="Loading members" /> : null}
 

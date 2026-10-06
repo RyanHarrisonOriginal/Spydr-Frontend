@@ -42,7 +42,7 @@ export function ProjectTrashPanel({
   return (
     <section
       id={PROJECTS_TRASH_SECTION_ID}
-      className="mx-4 mb-4 overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+      className="spydr-plate mx-4 mb-4 overflow-hidden rounded-xl border border-white/10"
     >
       <button
         type="button"

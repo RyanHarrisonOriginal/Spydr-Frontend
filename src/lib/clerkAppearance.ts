@@ -28,7 +28,7 @@ const spydr = {
   success: "#3d9a6e",
   warning: "#c4923a",
   shadow: "#000000",
-  modalBackdrop: "rgba(8, 10, 14, 0.78)",
+  modalBackdrop: "rgba(8, 10, 14, 0.55)",
   radius: "0.375rem",
 } as const;
 
@@ -39,7 +39,7 @@ const outlineControl =
   "border-border bg-card text-foreground shadow-none hover:bg-muted/70";
 
 const popoverSurface =
-  "!bg-popover !text-popover-foreground border border-border shadow-md";
+  "spydr-glass-panel !bg-card/40 !text-popover-foreground border border-white/10";
 
 const profileSurface = {
   backgroundColor: spydr.background,
@@ -180,9 +180,9 @@ const clerkTheme = {
     userButtonAvatarImage: "rounded-sm",
     userButtonPopoverRootBox: "font-sans",
     userButtonPopoverCard: `${popoverSurface} rounded-md`,
-    userButtonPopoverMain: "!bg-popover",
+    userButtonPopoverMain: "!bg-transparent",
     userButtonPopoverFooter:
-      "!bg-muted/40 border-t border-border text-muted-foreground",
+      "!bg-card/30 border-t border-white/10 text-muted-foreground",
     userButtonPopoverFooterPagesLink:
       "text-muted-foreground hover:!text-foreground",
     userButtonPopoverActionButton: "text-foreground hover:!bg-muted rounded-sm",
@@ -197,9 +197,9 @@ const clerkTheme = {
       "border border-border bg-card text-foreground rounded-md",
     organizationSwitcherTriggerIcon: "text-muted-foreground",
     organizationSwitcherPopoverCard: `${popoverSurface} rounded-md`,
-    organizationSwitcherPopoverMain: "!bg-popover",
+    organizationSwitcherPopoverMain: "!bg-transparent",
     organizationSwitcherPopoverFooter:
-      "!bg-muted/40 border-t border-border",
+      "!bg-card/30 border-t border-white/10",
     organizationSwitcherPopoverActionButton:
       "text-foreground hover:!bg-muted rounded-sm",
     organizationSwitcherPreviewButton: "hover:!bg-muted rounded-sm",
@@ -297,7 +297,7 @@ const clerkTheme = {
     drawerContent: popoverSurface,
     drawerHeader: "border-b border-border",
     drawerTitle: "text-foreground font-semibold tracking-tight",
-    drawerBody: "!bg-popover text-foreground",
+    drawerBody: "!bg-transparent text-foreground",
     drawerFooter: "!bg-muted/40 border-t border-border",
     drawerClose: "text-muted-foreground hover:!text-foreground",
     drawerConfirmationRoot: popoverSurface,
@@ -305,7 +305,7 @@ const clerkTheme = {
     drawerConfirmationDescription: "text-muted-foreground",
 
     tooltip: popoverSurface,
-    tooltipContent: "!bg-popover text-foreground",
+    tooltipContent: "spydr-glass-panel !bg-card/40 text-foreground border-white/10",
     tooltipText: "text-foreground",
 
     disclosureTrigger: "text-foreground hover:!bg-muted",

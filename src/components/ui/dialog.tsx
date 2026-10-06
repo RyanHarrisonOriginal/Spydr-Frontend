@@ -14,7 +14,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-black/55 backdrop-blur-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props}
@@ -31,7 +31,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-50 grid w-full gap-4 overflow-y-auto border border-border bg-background p-5 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 left-0 top-0 h-full max-h-[100dvh] translate-x-0 translate-y-0 rounded-none md:left-[50%] md:top-[50%] md:h-auto md:max-h-[85dvh] md:max-w-lg md:translate-x-[-50%] md:translate-y-[-50%] md:rounded-xl md:p-6",
+        "spydr-glass-panel fixed z-50 grid w-full gap-4 overflow-y-auto border border-white/10 p-5 duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 left-0 top-0 h-full max-h-[100dvh] translate-x-0 translate-y-0 rounded-none md:left-[50%] md:top-[50%] md:h-auto md:max-h-[85dvh] md:max-w-lg md:translate-x-[-50%] md:translate-y-[-50%] md:rounded-xl md:p-6",
         className
       )}
       {...props}

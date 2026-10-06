@@ -26,6 +26,11 @@ import NoteDetailScreen from "@/screens/NoteDetailScreen";
 import ResourcesScreen from "@/screens/ResourcesScreen";
 import SignInScreen from "@/screens/SignInScreen";
 import SignUpScreen from "@/screens/SignUpScreen";
+import MarketingScreen from "@/screens/MarketingScreen";
+import PrivacyScreen from "@/screens/PrivacyScreen";
+import TermsScreen from "@/screens/TermsScreen";
+import McpDocsScreen from "@/screens/McpDocsScreen";
+import McpClaudeDocsScreen from "@/screens/McpClaudeDocsScreen";
 import OAuthConsentScreen from "@/screens/OAuthConsentScreen";
 import AcceptInviteScreen from "@/screens/AcceptInviteScreen";
 import OrganizationSettingsScreen from "@/screens/OrganizationSettingsScreen";
@@ -100,13 +105,18 @@ export default function App() {
           <div className="h-full">
             <ResumeClerkOAuth>
             <Routes>
+            <Route path="/" element={<MarketingScreen />} />
+            <Route path="/privacy" element={<PrivacyScreen />} />
+            <Route path="/terms" element={<TermsScreen />} />
+            <Route path="/docs/mcp" element={<McpDocsScreen />} />
+            <Route path="/docs/mcp/claude" element={<McpClaudeDocsScreen />} />
             <Route path="/sign-in" element={<SignInScreen />} />
             <Route path="/sign-up" element={<SignUpScreen />} />
             <Route path="/oauth-consent" element={<OAuthConsentScreen />} />
             <Route element={<AuthenticatedLayout />}>
               <Route path="/invites/:token" element={<AcceptInviteScreen />} />
               <Route element={<WorkspaceShellScreen />}>
-                <Route index element={<WorkspaceHomeRedirect />} />
+                <Route path="/home" element={<WorkspaceHomeRedirect />} />
                 <Route path="/dashboard" element={<DashboardScreen />} />
                 <Route path="/today" element={<TodayScreen />} />
                 <Route path="/work" element={<WorkScreen />} />

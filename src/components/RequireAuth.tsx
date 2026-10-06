@@ -1,13 +1,13 @@
-import { useAuth, RedirectToSignIn } from "@clerk/react";
+import { useAuth } from "@clerk/react";
 import type { ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { WebLoaderScreen } from "@/components/WebLoader";
 
 interface RequireAuthProps {
   children: ReactNode;
 }
 
-/** Renders children when signed in; redirects to sign-in when signed out. */
+/** Renders children when signed in; sends signed-out users to sign-in with return path. */
 export function RequireAuth({ children }: RequireAuthProps) {
   const { isLoaded, isSignedIn } = useAuth();
   const location = useLocation();
@@ -19,12 +19,10 @@ export function RequireAuth({ children }: RequireAuthProps) {
   if (!isSignedIn) {
     const redirectUrl = `${location.pathname}${location.search}`;
     return (
-      <div className="flex h-full items-center justify-center bg-background">
-        <div className="text-center text-muted-foreground text-sm">
-          Redirecting to sign in…
-        </div>
-        <RedirectToSignIn signInFallbackRedirectUrl={redirectUrl} />
-      </div>
+      <Navigate
+        to={`/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`}
+        replace
+      />
     );
   }
 

@@ -27,7 +27,7 @@ function ProfileBadge() {
     user?.firstName ?? user?.primaryEmailAddress?.emailAddress ?? "Account";
 
   return (
-    <div className="flex items-center gap-2 rounded-md border border-border/50 bg-card/60 pl-1 pr-2 py-1">
+    <div className="spydr-glass flex items-center gap-2 rounded-md border border-white/10 pl-1 pr-2 py-1">
       <UserButton
         {...clerkUserButtonProps({
           avatarBox: "h-8 w-8 rounded-sm border border-border",

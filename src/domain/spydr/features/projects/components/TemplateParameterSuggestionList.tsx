@@ -69,7 +69,7 @@ export const TemplateParameterSuggestionList = forwardRef<
 
   return (
     <div
-      className="z-50 w-[min(100vw-2rem,18rem)] overflow-hidden rounded-md border border-border bg-background shadow-lg"
+      className="spydr-glass-panel z-50 w-[min(100vw-2rem,18rem)] overflow-hidden rounded-md border border-white/10"
       role="listbox"
       aria-label="Insert template parameter"
     >

@@ -21,7 +21,7 @@ export function MobileNavSheet({ open, onOpenChange }: MobileNavSheetProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="left"
-        className="spydr-rail bg-sidebar p-0 md:hidden"
+        className="spydr-rail p-0 md:hidden"
         aria-describedby={undefined}
       >
         <SheetHeader className="h-[4.5rem] justify-center border-b border-sidebar-border p-0 px-3 pr-12">

@@ -27,7 +27,7 @@ export default function SignUpScreen() {
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
       </div>
 
-      <header className="spydr-rule relative z-10 sticky top-0 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm md:h-20 md:px-10">
+      <header className="spydr-rule spydr-glass relative z-10 sticky top-0 flex h-14 items-center justify-between border-b border-white/10 px-4 md:h-20 md:px-10">
         <Logo size="md" />
         <Link
           to="/sign-in"

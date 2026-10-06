@@ -24,7 +24,7 @@ export function OrganizationOnboarding() {
 
   return (
     <div className="flex h-full items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card/60 p-6 shadow-sm">
+      <div className="spydr-glass-panel w-full max-w-md rounded-xl border border-white/10 p-6">
         <div className="mb-5 flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/12 text-highlight ring-1 ring-highlight/20">
             <Building2 className="h-5 w-5" />

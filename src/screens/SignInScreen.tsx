@@ -15,10 +15,21 @@ function oauthReturnUrl(search: string, hash: string): string | undefined {
   return undefined;
 }
 
+function appReturnUrl(search: string): string | undefined {
+  const params = new URLSearchParams(search);
+  const redirect = params.get("redirect_url");
+  if (!redirect || !redirect.startsWith("/") || redirect.startsWith("//")) {
+    return undefined;
+  }
+  return redirect;
+}
+
 export default function SignInScreen() {
   const location = useLocation();
   const { isLoaded, isSignedIn } = useAuth();
   const oauthReturn = oauthReturnUrl(location.search, location.hash);
+  const appReturn = appReturnUrl(location.search);
+  const afterSignIn = oauthReturn ?? appReturn ?? "/";
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !oauthReturn) return;
@@ -37,7 +48,7 @@ export default function SignInScreen() {
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
       </div>
 
-      <header className="spydr-rule relative z-10 sticky top-0 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm md:h-20 md:px-10">
+      <header className="spydr-rule spydr-glass relative z-10 sticky top-0 flex h-14 items-center justify-between border-b border-white/10 px-4 md:h-20 md:px-10">
         <Logo size="md" />
         <Link
           to="/sign-up"
@@ -64,7 +75,7 @@ export default function SignInScreen() {
           data-clerk-sign-in-container
         >
           <SignIn
-            fallbackRedirectUrl={oauthReturn ?? "/"}
+            fallbackRedirectUrl={afterSignIn}
             forceRedirectUrl={oauthReturn}
             signUpUrl={authRoutes.signUpUrl}
             appearance={clerkAppearance}

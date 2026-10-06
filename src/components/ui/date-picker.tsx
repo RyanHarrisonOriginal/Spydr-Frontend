@@ -125,7 +125,7 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
       <DropdownMenuContent
         align="start"
         sideOffset={6}
-        className="z-[120] w-[16.5rem] overflow-x-hidden border-border/90 bg-popover p-2 shadow-lg"
+        className="z-[120] w-[16.5rem] overflow-x-hidden border-white/10 p-2"
         onClick={(event) => event.stopPropagation()}
         onPointerDown={(event) => event.stopPropagation()}
         onCloseAutoFocus={(event) => event.preventDefault()}

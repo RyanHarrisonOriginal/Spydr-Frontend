@@ -174,7 +174,7 @@ export function ProjectListFieldSelect({
         align="start"
         sideOffset={6}
         className={cn(
-          "z-[120] overflow-x-hidden border-border/90 bg-popover p-1 shadow-lg",
+          "z-[120] overflow-x-hidden border-white/10 p-1",
           "w-max min-w-[14rem] max-w-[min(24rem,calc(100vw-1.5rem))]",
           appearance === "field" &&
             "min-w-[max(14rem,var(--radix-dropdown-menu-trigger-width))]"
@@ -189,7 +189,7 @@ export function ProjectListFieldSelect({
         ) : null}
 
         {showSearch ? (
-          <div className="sticky top-0 z-10 border-b border-border/80 bg-popover px-1.5 pb-2 pt-1">
+          <div className="spydr-glass-sticky sticky top-0 z-10 border-b border-white/10 px-1.5 pb-2 pt-1">
             <div className="relative">
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"

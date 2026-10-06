@@ -67,7 +67,7 @@ export function EmojiPicker({
       <DropdownMenuContent
         align="start"
         sideOffset={6}
-        className="z-[120] w-[18rem] overflow-x-hidden border-border/90 bg-popover p-2 shadow-lg"
+        className="z-[120] w-[18rem] overflow-x-hidden border-white/10 p-2"
         onClick={(event) => event.stopPropagation()}
       >
         <p className="px-0.5 pb-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">

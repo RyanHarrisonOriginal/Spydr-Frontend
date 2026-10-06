@@ -5,7 +5,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
     <title>Spydr</title>
-    <meta name="description" content="A note-taking engine where you define your own hierarchical structure and create nodes that obey those structure rules." />
+    <meta name="description" content="Scattered tasks, ideas, decisions, and notes become one connected place." />
     <link rel="icon" type="image/png" href="/favicon.png?v=5" />
     <link rel="icon" type="image/png" sizes="128x128" href="/favicon-64.png?v=5" />
     <link rel="icon" type="image/png" sizes="64x64" href="/favicon-32.png?v=5" />
@@ -16,6 +16,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <!--
+      Pre-paint session gate for `/` (static SPA substitute for Clerk middleware).
+      Signed-in browsers never paint the marketing page; signed-out get first paint.
+    -->
+    <script>
+      (function () {
+        try {
+          if (location.pathname !== "/") return;
+          var match = document.cookie.match(/(?:^|;\s*)__client_uat=([^;]*)/);
+          var value = match ? decodeURIComponent(match[1]) : "";
+          if (value && value !== "0") {
+            location.replace("/today");
+          }
+        } catch (_) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

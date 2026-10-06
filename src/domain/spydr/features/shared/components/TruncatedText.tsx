@@ -224,7 +224,7 @@ export function TruncatedText({
               id={dialogId}
               role="dialog"
               aria-label={text}
-              className="z-[120] max-h-[50vh] max-w-[min(24rem,calc(100vw-1rem))] overflow-y-auto whitespace-pre-wrap break-all border border-border/90 bg-popover p-2 text-[13px] text-popover-foreground shadow-lg"
+              className="spydr-glass-panel z-[120] max-h-[50vh] max-w-[min(24rem,calc(100vw-1rem))] overflow-y-auto whitespace-pre-wrap break-all rounded-md border border-white/10 p-2 text-[13px] text-popover-foreground"
               style={{ position: "fixed", top: position.top, left: position.left }}
               onKeyDown={onKeyDown}
             >
