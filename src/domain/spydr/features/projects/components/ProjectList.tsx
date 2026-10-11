@@ -35,6 +35,13 @@ import {
   PROJECT_COLUMN_DROP_ORDER,
   type ProjectColumnId,
 } from "../hooks/useProjectListColumns";
+import {
+  PROJECT_LIST_COLUMN_DEFAULTS,
+  PROJECT_LIST_COLUMN_MIN,
+  PROJECT_LIST_PADDING_X,
+  buildProjectTracks,
+  type ProjectListWidthColumn,
+} from "../utils/projectListLayout";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
 import { ProjectPrioritySelect } from "./ProjectPrioritySelect";
 import { ProjectStatusSelect } from "./ProjectStatusSelect";
@@ -49,7 +56,6 @@ import {
   columnWidthsAfterResize,
   maxTrackWidth,
   resolveWorkGridLayout,
-  type FittedTrack,
 } from "@/domain/spydr/features/shared/utils/fitGridTracks";
 import {
   essentialTracksOverflow,
@@ -124,62 +130,6 @@ function addExpandedId(current: Set<string>, projectId: string): Set<string> {
   const next = new Set(current);
   next.add(projectId);
   return next;
-}
-
-type ProjectListWidthColumn = "name" | ProjectColumnId;
-
-const PROJECT_LIST_COLUMN_DEFAULTS: Record<ProjectListWidthColumn, number> = {
-  name: 320,
-  area: 148,
-  requester: 180,
-  assignee: 180,
-  priority: 132,
-  status: 160,
-  target: 112,
-  updated: 128,
-};
-
-const PROJECT_LIST_COLUMN_MIN: Partial<Record<ProjectListWidthColumn, number>> = {
-  name: 112,
-  area: 96,
-  requester: 96,
-  assignee: 96,
-  priority: 88,
-  status: 104,
-  target: 88,
-  updated: 88,
-};
-
-const actionsColumnWidth = 48;
-const actionsColumnWidthWithCreate = 76;
-const rankColumnWidth = 36;
-const expandColumnWidth = 32;
-const reorderColumnWidth = 52;
-const PROJECT_LIST_PADDING_X = 32;
-
-function buildProjectTracks(
-  visibleColumns: ProjectColumnId[],
-  widths: Record<ProjectListWidthColumn, number>,
-  reorderEnabled = false,
-  showCreateTask = false
-): Array<FittedTrack & { id: string }> {
-  const actionWidth = showCreateTask ? actionsColumnWidthWithCreate : actionsColumnWidth;
-  const minOf = (column: ProjectListWidthColumn) =>
-    PROJECT_LIST_COLUMN_MIN[column] ?? 80;
-  return [
-    ...(reorderEnabled
-      ? [{ id: "reorder", preferred: reorderColumnWidth, min: reorderColumnWidth }]
-      : []),
-    { id: "expand", preferred: expandColumnWidth, min: expandColumnWidth },
-    { id: "rank", preferred: rankColumnWidth, min: rankColumnWidth },
-    { id: "name", preferred: widths.name, min: minOf("name"), flexible: true },
-    ...visibleColumns.map((id) => ({
-      id,
-      preferred: widths[id],
-      min: minOf(id),
-    })),
-    { id: "actions", preferred: actionWidth, min: actionWidth },
-  ];
 }
 
 interface ProjectHeaderApi {

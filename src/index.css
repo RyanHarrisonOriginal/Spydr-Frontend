@@ -709,7 +709,8 @@
     overflow-y: auto;
   }
 
-  @media (min-width: 1024px) and (min-height: 700px) {
+  /* Prefer scrolling over clipping when zoom / short laptops shrink the fold. */
+  @media (min-width: 1024px) and (min-height: 760px) {
     .spydr-marketing-shell {
       overflow: hidden;
     }

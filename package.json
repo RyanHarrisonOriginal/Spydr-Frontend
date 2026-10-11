@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:layout": "vitest run src/domain/spydr/features/work/utils/workLayoutViewports.test.ts"
   },
   "dependencies": {
     "@clerk/react": "^6.17.2",
