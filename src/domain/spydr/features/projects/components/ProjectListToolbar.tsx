@@ -48,17 +48,12 @@ export function ProjectListToolbar({
   const filterContext = { areas, people };
 
   return (
-    <div
-      className={cn(
-        "border-b border-border",
-        sticky && "spydr-glass sticky top-0 z-20"
-      )}
-    >
-      <div className="flex flex-col gap-2 bg-muted/10 px-4 py-2 md:flex-row md:flex-wrap md:items-center md:px-6">
+    <div className={cn("border-b border-border", sticky && "spydr-glass")}>
+      <div className="flex flex-col gap-2 bg-muted/10 px-page-x py-chrome-toolbar-y md:flex-row md:flex-wrap md:items-center">
         {startActions ? (
           <div className="flex min-w-0 flex-wrap items-center gap-2">{startActions}</div>
         ) : null}
-        <div className="relative min-w-0 flex-1 md:min-w-[12rem] md:max-w-xs">
+        <div className="relative min-w-0 flex-1 md:min-w-[8rem] md:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={filters.search}

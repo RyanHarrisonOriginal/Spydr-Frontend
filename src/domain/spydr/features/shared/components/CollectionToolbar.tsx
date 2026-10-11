@@ -54,7 +54,7 @@ export function CollectionToolbar<T>({
     >
       <div
         className={cn(
-          "flex items-center gap-2 bg-muted/10 px-4 py-2 md:px-6",
+          "flex items-center gap-2 bg-muted/10 px-page-x py-chrome-toolbar-y",
           wrap
             ? "flex-col md:flex-row md:flex-wrap"
             : "flex-wrap"
@@ -70,7 +70,7 @@ export function CollectionToolbar<T>({
             {startActions}
           </div>
         ) : null}
-        <div className="relative min-w-0 flex-1 md:min-w-[12rem] md:max-w-xs">
+        <div className="relative min-w-0 flex-1 md:min-w-[8rem] md:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={state.search}

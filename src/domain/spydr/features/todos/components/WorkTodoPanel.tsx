@@ -36,8 +36,8 @@ export function WorkTodoPanel({
       }`;
 
   return (
-    <section className="mx-4 mt-3 overflow-hidden rounded-md border border-border/60 bg-muted/10 md:mx-6">
-      <div className="flex items-center gap-2 border-b border-border/50 px-2 py-1.5">
+    <section className="mx-page-x mt-3 min-w-0 rounded-md border border-border/60 bg-muted/10">
+      <div className="flex min-w-0 flex-wrap items-center gap-2 border-b border-border/50 px-2 py-1.5">
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
@@ -50,14 +50,14 @@ export function WorkTodoPanel({
             <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
           )}
           <Sun className="h-3.5 w-3.5 shrink-0 text-highlight" aria-hidden />
-          <h2 className="text-[12px] font-semibold tracking-tight">Today</h2>
-          <span className="truncate font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+          <h2 className="shrink-0 text-caption font-semibold tracking-tight">Today</h2>
+          <span className="min-w-0 truncate font-mono text-micro uppercase tracking-[0.1em] text-muted-foreground">
             {countLabel}
           </span>
         </button>
         <Link
           to="/today"
-          className="inline-flex shrink-0 items-center gap-1 rounded-sm px-2 py-1 text-[11px] text-highlight transition-colors hover:bg-muted/40 hover:underline"
+          className="inline-flex shrink-0 items-center gap-1 rounded-sm px-2 py-1 text-label text-highlight transition-colors hover:bg-muted/40 hover:underline"
         >
           Open Today
           <ListChecks className="h-3 w-3" aria-hidden />

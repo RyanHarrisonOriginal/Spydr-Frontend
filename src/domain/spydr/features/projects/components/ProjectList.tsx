@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, ArrowUpRight, Plus, Trash2, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { ProjectAreaNode, ProjectNode, PersonNode, TaskNode } from "@/domain/spydr/utils/types";
 import {
@@ -31,7 +31,10 @@ import {
   moveIdToRank,
   type RankMoveDirection,
 } from "@/domain/spydr/utils/collectionReorder";
-import type { ProjectColumnId } from "../hooks/useProjectListColumns";
+import {
+  PROJECT_COLUMN_DROP_ORDER,
+  type ProjectColumnId,
+} from "../hooks/useProjectListColumns";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
 import { ProjectPrioritySelect } from "./ProjectPrioritySelect";
 import { ProjectStatusSelect } from "./ProjectStatusSelect";
@@ -40,9 +43,18 @@ import { PersonSelect } from "./PersonSelect";
 import { CollectionSortableHeader } from "@/domain/spydr/features/shared/components/CollectionSortableHeader";
 import { ResizableHeaderCell } from "@/domain/spydr/features/shared/components/ColumnResizeHandle";
 import { CollectionSortMenu } from "@/domain/spydr/features/shared/components/CollectionSortMenu";
-import { useFittedColumns } from "@/domain/spydr/features/shared/hooks/useFittedColumns";
+import { useWorkGridLayout } from "@/domain/spydr/features/shared/hooks/useWorkGridLayout";
 import { useResizableColumns } from "@/domain/spydr/features/shared/hooks/useResizableColumns";
-import type { FittedTrack } from "@/domain/spydr/features/shared/utils/fitGridTracks";
+import {
+  columnWidthsAfterResize,
+  maxTrackWidth,
+  resolveWorkGridLayout,
+  type FittedTrack,
+} from "@/domain/spydr/features/shared/utils/fitGridTracks";
+import {
+  essentialTracksOverflow,
+  shedOptionalColumns,
+} from "@/domain/spydr/features/shared/utils/shedOptionalColumns";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -128,14 +140,14 @@ const PROJECT_LIST_COLUMN_DEFAULTS: Record<ProjectListWidthColumn, number> = {
 };
 
 const PROJECT_LIST_COLUMN_MIN: Partial<Record<ProjectListWidthColumn, number>> = {
-  name: 128,
-  area: 108,
-  requester: 112,
-  assignee: 112,
-  priority: 104,
-  status: 120,
-  target: 96,
-  updated: 96,
+  name: 112,
+  area: 96,
+  requester: 96,
+  assignee: 96,
+  priority: 88,
+  status: 104,
+  target: 88,
+  updated: 88,
 };
 
 const actionsColumnWidth = 48;
@@ -307,8 +319,9 @@ function ProjectListDeleteButton({
 function OpenTaskCount({ count }: { count: number }) {
   return (
     <span
+      title={`${count} open`}
       className={cn(
-        "shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums",
+        "min-w-0 shrink truncate font-mono text-micro uppercase tracking-[0.12em] tabular-nums",
         count > 0 ? "text-highlight" : "text-muted-foreground/70"
       )}
     >
@@ -856,26 +869,88 @@ export function ProjectList({
     PROJECT_LIST_COLUMN_DEFAULTS,
     { minWidths: PROJECT_LIST_COLUMN_MIN }
   );
-  const tracks = buildProjectTracks(
-    visibleColumns,
-    columnSizing.widths,
-    reorderEnabled,
-    Boolean(onCreateTask)
+  const buildTracks = useCallback(
+    (columns: ProjectColumnId[]) =>
+      buildProjectTracks(
+        columns,
+        columnSizing.widths,
+        reorderEnabled,
+        Boolean(onCreateTask)
+      ),
+    [columnSizing.widths, onCreateTask, reorderEnabled]
   );
-  const fitted = useFittedColumns(
-    tracks,
-    columnSizing.widths,
-    columnSizing.replaceWidths,
-    PROJECT_LIST_PADDING_X,
-    columnSizing.maxWidth
+  const measureTracks = useMemo(
+    () => buildTracks(visibleColumns),
+    [buildTracks, visibleColumns]
   );
-  const { layout, gridStyle } = fitted;
-  const headerApi: ProjectHeaderApi = {
-    visualWidth: fitted.visualWidth,
-    fitMax: fitted.fitMax,
-    resizeColumn: fitted.resizeColumn,
+  const measure = useWorkGridLayout(measureTracks, PROJECT_LIST_PADDING_X);
+  const effectiveColumns = useMemo(
+    () =>
+      shedOptionalColumns(
+        visibleColumns,
+        PROJECT_COLUMN_DROP_ORDER,
+        buildTracks,
+        measure.availableWidth,
+        PROJECT_LIST_PADDING_X
+      ),
+    [buildTracks, measure.availableWidth, visibleColumns]
+  );
+  const tracks = useMemo(
+    () => buildTracks(effectiveColumns),
+    [buildTracks, effectiveColumns]
+  );
+  const layout = useMemo(
+    () => resolveWorkGridLayout(tracks, measure.availableWidth, PROJECT_LIST_PADDING_X),
+    [measure.availableWidth, tracks]
+  );
+  const gridStyle = {
+    gridTemplateColumns: layout.template,
+    gap: layout.gapPx,
+    minWidth: layout.scrollMinWidth,
+    justifyContent: "start" as const,
   };
-  const hasColumn = (columnId: ProjectColumnId) => visibleColumns.includes(columnId);
+  const headerApi: ProjectHeaderApi = {
+    visualWidth: (column) => {
+      const index = tracks.findIndex((track) => track.id === column);
+      return layout.widths[index] ?? columnSizing.widths[column];
+    },
+    fitMax: (column) =>
+      maxTrackWidth(
+        tracks,
+        Math.max(
+          0,
+          tracks.findIndex((track) => track.id === column)
+        ),
+        measure.availableWidth,
+        layout.gapPx,
+        PROJECT_LIST_PADDING_X,
+        columnSizing.maxWidth
+      ),
+    resizeColumn: (column, width) => {
+      const next = columnWidthsAfterResize(
+        tracks,
+        columnSizing.widths,
+        column,
+        width,
+        measure.availableWidth,
+        layout.gapPx,
+        PROJECT_LIST_PADDING_X,
+        columnSizing.maxWidth
+      );
+      if (next !== columnSizing.widths) columnSizing.replaceWidths(next);
+    },
+  };
+  const useCards =
+    isPhone ||
+    essentialTracksOverflow(
+      buildTracks([]),
+      measure.availableWidth,
+      PROJECT_LIST_PADDING_X
+    );
+  const nestCompact =
+    useCards || (measure.availableWidth > 0 && measure.availableWidth < 900);
+  const hasColumn = (columnId: ProjectColumnId) =>
+    effectiveColumns.includes(columnId);
   const orderIds = useMemo(
     () => rankOrderIds ?? projects.map((project) => project.id),
     [rankOrderIds, projects]
@@ -906,7 +981,7 @@ export function ProjectList({
     return (
       <CollectionReorderControls
         dragHandleProps={dragHandleProps}
-        showDragHandle={!isPhone}
+        showDragHandle={!useCards}
         canMoveUp={rankIndex > 0}
         canMoveDown={rankIndex >= 0 && rankIndex < orderIds.length - 1}
         onMoveUp={() => moveRank(projectId, "up")}
@@ -964,13 +1039,16 @@ export function ProjectList({
   return (
     <div
       ref={(node) => {
-        layout.ref.current = node;
+        measure.ref.current = node;
         if (scrollRef) scrollRef.current = node;
       }}
-      className={cn("min-h-0 min-w-0 w-full", isPhone ? "" : "project-list h-full overflow-auto")}
-      data-list-density={isPhone ? undefined : layout.density}
+      className={cn(
+        "h-full min-h-0 min-w-0 w-full overflow-auto",
+        !useCards && "project-list"
+      )}
+      data-list-density={useCards ? undefined : layout.density}
     >
-      {isPhone ? (
+      {useCards ? (
         <div className="flex items-center justify-end border-b border-border/70 px-2 py-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -998,9 +1076,9 @@ export function ProjectList({
           />
         </div>
       ) : null}
-      {isPhone ? null : (
+      {useCards ? null : (
       <div
-        className="spydr-glass sticky top-0 z-20 grid items-center border-b border-white/10 px-4 py-2 font-mono uppercase tracking-wider text-muted-foreground [&>*]:min-w-0"
+        className="spydr-glass sticky top-0 z-20 grid items-center border-b border-white/10 px-4 py-chrome-toolbar-y font-mono uppercase tracking-wider text-muted-foreground [&>*]:min-w-0"
         style={{
           ...gridStyle,
           fontSize: "var(--pl-header-size)",
@@ -1105,8 +1183,8 @@ export function ProjectList({
       ) : (
         <CollectionSortableList
           items={projects}
-          enabled={reorderEnabled && !isPhone}
-          className={isPhone ? "space-y-1.5 px-2 py-2" : "space-y-1.5 py-1"}
+          enabled={reorderEnabled && !useCards}
+          className={useCards ? "space-y-1.5 px-2 py-2" : "space-y-1.5 py-1"}
           onReorder={(orderedIds) => onReorder?.(orderedIds)}
           renderItem={(project, sortable) => {
             const allProjectTasks = tasksByProjectId.get(project.id) ?? [];
@@ -1119,7 +1197,7 @@ export function ProjectList({
             const expanded = expandedIds.has(project.id) && visibleTasks.length > 0;
             const showChildren = expanded || composing;
 
-            if (isPhone) {
+            if (useCards) {
               return (
                 <div
                   className={cn(
@@ -1502,10 +1580,10 @@ export function ProjectList({
                 </div>
 
                 {showChildren ? (
-                  <div className="relative space-y-1.5 bg-canvas/80 py-1.5 pl-20 pr-3">
+                  <div className="work-nested-tasks relative space-y-1.5 bg-canvas/80 py-1.5 pr-3">
                     <span
                       aria-hidden
-                      className="pointer-events-none absolute bottom-2 left-9 top-2 w-px bg-[hsl(var(--connector-line))]"
+                      className="work-nested-tasks__rail pointer-events-none absolute bottom-2 top-2 w-px bg-[hsl(var(--connector-line))]"
                     />
                     {expanded ? (
                       <>
@@ -1513,6 +1591,7 @@ export function ProjectList({
                           <NestedTaskSortHeader
                             sort={nestedTaskSort.sort}
                             onSort={nestedTaskSort.toggleSort}
+                            compact={nestCompact}
                           />
                         ) : null}
                         {visibleTasks.map((task) => (
@@ -1525,6 +1604,7 @@ export function ProjectList({
                               updatingTaskId === task.id ||
                               deletingTaskIds.includes(task.id)
                             }
+                            compact={nestCompact}
                             isDeleting={deletingTaskIds.includes(task.id)}
                             deleteDisabled={
                               deletingTaskIds.length > 0 &&

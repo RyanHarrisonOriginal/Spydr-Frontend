@@ -1,5 +1,6 @@
 import {
   COARSE_POINTER_QUERY,
+  NARROW_DESKTOP_QUERY,
   NO_HOVER_QUERY,
   PHONE_LAYOUT_QUERY,
 } from "@/lib/mediaQuery";
@@ -8,6 +9,11 @@ import { useMediaQuery } from "./useMediaQuery";
 /** True when the viewport is below the phone layout breakpoint. */
 export function useIsPhone(): boolean {
   return useMediaQuery(PHONE_LAYOUT_QUERY);
+}
+
+/** True below 1280 CSS px — auto-collapse the workspace sidebar. */
+export function useNarrowDesktop(): boolean {
+  return useMediaQuery(NARROW_DESKTOP_QUERY);
 }
 
 /** True when the primary pointing device is coarse (typical phones / touch). */

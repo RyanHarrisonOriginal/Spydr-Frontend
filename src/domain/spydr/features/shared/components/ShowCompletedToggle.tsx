@@ -22,7 +22,7 @@ export function ShowCompletedToggle({
       variant={showCompleted ? "secondary" : "outline"}
       size="sm"
       className={cn(
-        "h-8 gap-1.5 px-2.5 font-mono text-[10px] uppercase tracking-wider",
+        "h-8 gap-1.5 px-2.5 font-mono text-micro uppercase tracking-wider",
         className
       )}
       aria-pressed={showCompleted}
@@ -33,14 +33,7 @@ export function ShowCompletedToggle({
       }
       onClick={() => onChange(!showCompleted)}
     >
-      <span className="grid justify-items-start">
-        <span className={cn("col-start-1 row-start-1", !showCompleted && "invisible")}>
-          Hide completed
-        </span>
-        <span className={cn("col-start-1 row-start-1", showCompleted && "invisible")}>
-          Show completed
-        </span>
-      </span>
+      <span>{showCompleted ? "Hide done" : "Show done"}</span>
       <span className="tabular-nums text-muted-foreground">{completedCount}</span>
     </Button>
   );

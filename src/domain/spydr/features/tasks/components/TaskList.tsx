@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useCallback, useMemo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import type { PersonNode, ProjectAreaNode, ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
@@ -39,9 +39,18 @@ import { SelectionCheckbox } from "@/domain/spydr/features/shared/components/Sel
 import { BulkDeleteBar } from "@/domain/spydr/features/shared/components/BulkDeleteBar";
 import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSelection";
 import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
-import { useFittedColumns } from "@/domain/spydr/features/shared/hooks/useFittedColumns";
+import { useWorkGridLayout } from "@/domain/spydr/features/shared/hooks/useWorkGridLayout";
 import { useResizableColumns } from "@/domain/spydr/features/shared/hooks/useResizableColumns";
-import type { FittedTrack } from "@/domain/spydr/features/shared/utils/fitGridTracks";
+import {
+  columnWidthsAfterResize,
+  maxTrackWidth,
+  resolveWorkGridLayout,
+  type FittedTrack,
+} from "@/domain/spydr/features/shared/utils/fitGridTracks";
+import {
+  essentialTracksOverflow,
+  shedOptionalColumns,
+} from "@/domain/spydr/features/shared/utils/shedOptionalColumns";
 
 type TaskListWidthColumn =
   | "status"
@@ -51,6 +60,25 @@ type TaskListWidthColumn =
   | "priority"
   | "due"
   | "updated";
+
+type TaskOptionalColumn = Exclude<TaskListWidthColumn, "status" | "title">;
+
+const TASK_OPTIONAL_COLUMNS: readonly TaskOptionalColumn[] = [
+  "project",
+  "assignee",
+  "priority",
+  "due",
+  "updated",
+];
+
+/** Least important first — shed under narrow panes before horizontal scroll. */
+const TASK_COLUMN_DROP_ORDER: readonly TaskOptionalColumn[] = [
+  "updated",
+  "priority",
+  "assignee",
+  "project",
+  "due",
+];
 
 const TASK_LIST_COLUMN_DEFAULTS: Record<TaskListWidthColumn, number> = {
   status: 148,
@@ -63,13 +91,13 @@ const TASK_LIST_COLUMN_DEFAULTS: Record<TaskListWidthColumn, number> = {
 };
 
 const TASK_LIST_COLUMN_MIN: Partial<Record<TaskListWidthColumn, number>> = {
-  status: 120,
-  title: 180,
-  project: 120,
-  assignee: 128,
-  priority: 96,
-  due: 104,
-  updated: 96,
+  status: 104,
+  title: 140,
+  project: 104,
+  assignee: 96,
+  priority: 88,
+  due: 88,
+  updated: 88,
 };
 
 const TASK_LIST_PADDING_X = 32;
@@ -83,9 +111,11 @@ const ROW_LAYOUT = "grid items-center [&>*]:min-w-0";
 
 function buildTaskTracks(
   widths: Record<TaskListWidthColumn, number>,
-  reorderEnabled: boolean
+  reorderEnabled: boolean,
+  optionalColumns: readonly TaskOptionalColumn[] = TASK_OPTIONAL_COLUMNS
 ): Array<FittedTrack & { id: string }> {
   const minOf = (column: TaskListWidthColumn) => TASK_LIST_COLUMN_MIN[column] ?? 80;
+  const optional = new Set(optionalColumns);
   return [
     ...(reorderEnabled
       ? [{ id: "reorder", preferred: TASK_REORDER_WIDTH, min: TASK_REORDER_WIDTH }]
@@ -94,11 +124,21 @@ function buildTaskTracks(
     { id: "rank", preferred: TASK_RANK_WIDTH, min: TASK_RANK_WIDTH },
     { id: "status", preferred: widths.status, min: minOf("status") },
     { id: "title", preferred: widths.title, min: minOf("title"), flexible: true },
-    { id: "project", preferred: widths.project, min: minOf("project") },
-    { id: "assignee", preferred: widths.assignee, min: minOf("assignee") },
-    { id: "priority", preferred: widths.priority, min: minOf("priority") },
-    { id: "due", preferred: widths.due, min: minOf("due") },
-    { id: "updated", preferred: widths.updated, min: minOf("updated") },
+    ...(optional.has("project")
+      ? [{ id: "project", preferred: widths.project, min: minOf("project") }]
+      : []),
+    ...(optional.has("assignee")
+      ? [{ id: "assignee", preferred: widths.assignee, min: minOf("assignee") }]
+      : []),
+    ...(optional.has("priority")
+      ? [{ id: "priority", preferred: widths.priority, min: minOf("priority") }]
+      : []),
+    ...(optional.has("due")
+      ? [{ id: "due", preferred: widths.due, min: minOf("due") }]
+      : []),
+    ...(optional.has("updated")
+      ? [{ id: "updated", preferred: widths.updated, min: minOf("updated") }]
+      : []),
     { id: "today", preferred: TASK_TODAY_WIDTH, min: TASK_TODAY_WIDTH },
     { id: "actions", preferred: TASK_ACTIONS_WIDTH, min: TASK_ACTIONS_WIDTH },
   ];
@@ -197,6 +237,7 @@ function TaskRow({
   onTodo = false,
   togglingTodo = false,
   onToggleTodo,
+  visibleOptional,
   gridTemplateColumns,
   minWidth,
   gapPx,
@@ -225,6 +266,7 @@ function TaskRow({
   onTodo?: boolean;
   togglingTodo?: boolean;
   onToggleTodo?(taskId: string, onTodo: boolean): void;
+  visibleOptional: ReadonlySet<TaskOptionalColumn>;
   gridTemplateColumns: string;
   minWidth?: number;
   gapPx: number;
@@ -237,6 +279,11 @@ function TaskRow({
   const timestamp = formatTaskListTimestamp(task);
   const project = projects.find((entry) => entry.id === (task.project?.id ?? "")) ?? null;
   const dueGuard = useEnsureTaskDueWithinProject();
+  const showProject = visibleOptional.has("project");
+  const showAssignee = visibleOptional.has("assignee");
+  const showPriority = visibleOptional.has("priority");
+  const showDue = visibleOptional.has("due");
+  const showUpdated = visibleOptional.has("updated");
 
   if (compact) {
     return (
@@ -366,10 +413,10 @@ function TaskRow({
             disabled={isUpdating}
             onTitleChange={onTitleChange}
           />
-          {task.project ? (
+          {!showProject && task.project ? (
             <Link
               to={`/projects/${task.project.id}`}
-              className="inline-flex min-w-0 max-w-[40%] shrink items-center overflow-hidden rounded border border-border/20 bg-muted/15 px-1.5 py-px text-[10px] text-muted-foreground transition-colors hover:border-highlight/25 hover:bg-highlight/8 hover:text-highlight"
+              className="inline-flex min-w-0 max-w-[40%] shrink items-center overflow-hidden rounded border border-border/20 bg-muted/15 px-1.5 py-px text-micro text-muted-foreground transition-colors hover:border-highlight/25 hover:bg-highlight/8 hover:text-highlight"
               title={task.project.title}
             >
               <span className="truncate">{task.project.title}</span>
@@ -377,61 +424,71 @@ function TaskRow({
           ) : null}
         </div>
       </div>
-      <ProjectSelect
-        projects={projects}
-        value={projectId}
-        allowUnassigned
-        compact
-        disabled={isUpdating}
-        className="w-full min-w-0"
-        onChange={(nextProjectId) => {
-          const currentProjectId = task.project?.id ?? null;
-          if (nextProjectId === currentProjectId) return;
-          const nextProject =
-            projects.find((entry) => entry.id === (nextProjectId ?? "")) ?? null;
-          dueGuard.ensure({
-            project: nextProject,
-            dueDate: task.details?.dueDate ?? null,
-            onAllowed: () => onProjectChange(task.id, nextProjectId),
-          });
-        }}
-      />
-      <div className="flex min-w-0 items-center gap-2">
-        <TaskCompletedAt
-          status={task.status}
-          completedAt={task.details?.completedAt}
-        />
-        <PersonSelect
-          people={people}
-          value={assigneeId}
+      {showProject ? (
+        <ProjectSelect
+          projects={projects}
+          value={projectId}
+          allowUnassigned
           compact
           disabled={isUpdating}
-          className="min-w-0 flex-1"
-          ariaLabel="Task assignee"
-          onChange={(nextAssigneeId) => {
-            if (nextAssigneeId !== assigneeId) {
-              onAssigneeChange(task.id, nextAssigneeId);
-            }
+          className="w-full min-w-0"
+          onChange={(nextProjectId) => {
+            const currentProjectId = task.project?.id ?? null;
+            if (nextProjectId === currentProjectId) return;
+            const nextProject =
+              projects.find((entry) => entry.id === (nextProjectId ?? "")) ?? null;
+            dueGuard.ensure({
+              project: nextProject,
+              dueDate: task.details?.dueDate ?? null,
+              onAllowed: () => onProjectChange(task.id, nextProjectId),
+            });
           }}
         />
-      </div>
-      <span className="min-w-0">
-        <PriorityBadge priority={task.priority} />
-      </span>
-      <span className="block min-w-0">
-        <TaskDueDateSelect
-          value={task.details?.dueDate}
-          disabled={isUpdating}
-          project={project}
-          onChange={(dueDate) => onDueDateChange(task.id, dueDate)}
-        />
-      </span>
-      <span
-        className="text-right font-mono text-[10px] text-muted-foreground"
-        title={timestamp.label}
-      >
-        {timestamp.value}
-      </span>
+      ) : null}
+      {showAssignee ? (
+        <div className="flex min-w-0 items-center gap-2">
+          <TaskCompletedAt
+            status={task.status}
+            completedAt={task.details?.completedAt}
+          />
+          <PersonSelect
+            people={people}
+            value={assigneeId}
+            compact
+            disabled={isUpdating}
+            className="min-w-0 flex-1"
+            ariaLabel="Task assignee"
+            onChange={(nextAssigneeId) => {
+              if (nextAssigneeId !== assigneeId) {
+                onAssigneeChange(task.id, nextAssigneeId);
+              }
+            }}
+          />
+        </div>
+      ) : null}
+      {showPriority ? (
+        <span className="min-w-0">
+          <PriorityBadge priority={task.priority} />
+        </span>
+      ) : null}
+      {showDue ? (
+        <span className="block min-w-0">
+          <TaskDueDateSelect
+            value={task.details?.dueDate}
+            disabled={isUpdating}
+            project={project}
+            onChange={(dueDate) => onDueDateChange(task.id, dueDate)}
+          />
+        </span>
+      ) : null}
+      {showUpdated ? (
+        <span
+          className="min-w-0 truncate text-right font-mono text-micro text-muted-foreground"
+          title={timestamp.label}
+        >
+          {timestamp.value}
+        </span>
+      ) : null}
       {onToggleTodo ? (
         <AddToTodoButton
           onTodo={onTodo}
@@ -496,20 +553,83 @@ export function TaskList({
     TASK_LIST_COLUMN_DEFAULTS,
     { minWidths: TASK_LIST_COLUMN_MIN }
   );
-  const tracks = buildTaskTracks(columnSizing.widths, reorderEnabled);
-  const fitted = useFittedColumns(
-    tracks,
-    columnSizing.widths,
-    columnSizing.replaceWidths,
-    TASK_LIST_PADDING_X,
-    columnSizing.maxWidth
+  const buildTracks = useCallback(
+    (optionalColumns: TaskOptionalColumn[]) =>
+      buildTaskTracks(columnSizing.widths, reorderEnabled, optionalColumns),
+    [columnSizing.widths, reorderEnabled]
   );
-  const { layout, gridStyle } = fitted;
-  const headerApi: TaskHeaderApi = {
-    visualWidth: fitted.visualWidth,
-    fitMax: fitted.fitMax,
-    resizeColumn: fitted.resizeColumn,
+  const measureTracks = useMemo(
+    () => buildTracks([...TASK_OPTIONAL_COLUMNS]),
+    [buildTracks]
+  );
+  const measure = useWorkGridLayout(measureTracks, TASK_LIST_PADDING_X);
+  const effectiveOptional = useMemo(
+    () =>
+      shedOptionalColumns(
+        TASK_OPTIONAL_COLUMNS,
+        TASK_COLUMN_DROP_ORDER,
+        buildTracks,
+        measure.availableWidth,
+        TASK_LIST_PADDING_X
+      ),
+    [buildTracks, measure.availableWidth]
+  );
+  const visibleOptional = useMemo(
+    () => new Set<TaskOptionalColumn>(effectiveOptional),
+    [effectiveOptional]
+  );
+  const tracks = useMemo(
+    () => buildTracks(effectiveOptional),
+    [buildTracks, effectiveOptional]
+  );
+  const layout = useMemo(
+    () => resolveWorkGridLayout(tracks, measure.availableWidth, TASK_LIST_PADDING_X),
+    [measure.availableWidth, tracks]
+  );
+  const gridStyle = {
+    gridTemplateColumns: layout.template,
+    gap: layout.gapPx,
+    minWidth: layout.scrollMinWidth,
+    justifyContent: "start" as const,
   };
+  const headerApi: TaskHeaderApi = {
+    visualWidth: (column) => {
+      const index = tracks.findIndex((track) => track.id === column);
+      return layout.widths[index] ?? columnSizing.widths[column];
+    },
+    fitMax: (column) =>
+      maxTrackWidth(
+        tracks,
+        Math.max(
+          0,
+          tracks.findIndex((track) => track.id === column)
+        ),
+        measure.availableWidth,
+        layout.gapPx,
+        TASK_LIST_PADDING_X,
+        columnSizing.maxWidth
+      ),
+    resizeColumn: (column, width) => {
+      const next = columnWidthsAfterResize(
+        tracks,
+        columnSizing.widths,
+        column,
+        width,
+        measure.availableWidth,
+        layout.gapPx,
+        TASK_LIST_PADDING_X,
+        columnSizing.maxWidth
+      );
+      if (next !== columnSizing.widths) columnSizing.replaceWidths(next);
+    },
+  };
+  const useCards =
+    isPhone ||
+    essentialTracksOverflow(
+      buildTracks([]),
+      measure.availableWidth,
+      TASK_LIST_PADDING_X
+    );
 
   const moveRank = (id: string, direction: RankMoveDirection) => {
     if (onMoveRank) {
@@ -539,7 +659,7 @@ export function TaskList({
     return (
       <CollectionReorderControls
         dragHandleProps={dragHandleProps}
-        showDragHandle={!isPhone}
+        showDragHandle={!useCards}
         canMoveUp={rankIndex > 0}
         canMoveDown={rankIndex >= 0 && rankIndex < orderIds.length - 1}
         onMoveUp={() => moveRank(taskId, "up")}
@@ -551,12 +671,12 @@ export function TaskList({
   return (
     <div
       ref={(node) => {
-        layout.ref.current = node;
+        measure.ref.current = node;
         if (scrollRef) scrollRef.current = node;
       }}
-      className={isPhone ? "min-w-0 w-full" : "h-full min-h-0 min-w-0 w-full overflow-auto"}
+      className="h-full min-h-0 min-w-0 w-full overflow-auto"
     >
-      {canSelect && !isPhone && selection.selectedCount > 0 ? (
+      {canSelect && !useCards && selection.selectedCount > 0 ? (
         <div
           className="flex min-w-0 flex-wrap items-center gap-3 border-b border-border bg-destructive/5 px-4 py-1.5"
           style={{ minWidth: layout.scrollMinWidth }}
@@ -581,11 +701,11 @@ export function TaskList({
           />
         </div>
       ) : null}
-      {isPhone ? null : (
+      {useCards ? null : (
       <div
         className={cn(
           ROW_LAYOUT,
-          "spydr-glass sticky top-0 z-20 border-b border-white/10 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+          "spydr-glass sticky top-0 z-20 border-b border-white/10 px-4 py-chrome-toolbar-y font-mono text-micro uppercase tracking-wider text-muted-foreground"
         )}
         style={gridStyle}
       >
@@ -623,48 +743,58 @@ export function TaskList({
             onSort={onSortColumn}
           />
         </TaskResizableHeader>
-        <TaskResizableHeader label="Project" column="project" sizing={columnSizing} api={headerApi}>
-          <CollectionSortableHeader
-            label="Project"
-            column="project"
-            sort={sort}
-            onSort={onSortColumn}
-          />
-        </TaskResizableHeader>
-        <TaskResizableHeader label="Assignee" column="assignee" sizing={columnSizing} api={headerApi}>
-          <CollectionSortableHeader
-            label="Assignee"
-            column="assignee"
-            sort={sort}
-            onSort={onSortColumn}
-          />
-        </TaskResizableHeader>
-        <TaskResizableHeader label="Priority" column="priority" sizing={columnSizing} api={headerApi}>
-          <CollectionSortableHeader
-            label="Priority"
-            column="priority"
-            sort={sort}
-            onSort={onSortColumn}
-          />
-        </TaskResizableHeader>
-        <TaskResizableHeader label="Due" column="due" sizing={columnSizing} api={headerApi}>
-          <CollectionSortableHeader
-            label="Due"
-            column="due"
-            sort={sort}
-            align="end"
-            onSort={onSortColumn}
-          />
-        </TaskResizableHeader>
-        <TaskResizableHeader label="Updated" column="updated" sizing={columnSizing} api={headerApi}>
-          <CollectionSortableHeader
-            label="Updated"
-            column="updated"
-            sort={sort}
-            align="end"
-            onSort={onSortColumn}
-          />
-        </TaskResizableHeader>
+        {visibleOptional.has("project") ? (
+          <TaskResizableHeader label="Project" column="project" sizing={columnSizing} api={headerApi}>
+            <CollectionSortableHeader
+              label="Project"
+              column="project"
+              sort={sort}
+              onSort={onSortColumn}
+            />
+          </TaskResizableHeader>
+        ) : null}
+        {visibleOptional.has("assignee") ? (
+          <TaskResizableHeader label="Assignee" column="assignee" sizing={columnSizing} api={headerApi}>
+            <CollectionSortableHeader
+              label="Assignee"
+              column="assignee"
+              sort={sort}
+              onSort={onSortColumn}
+            />
+          </TaskResizableHeader>
+        ) : null}
+        {visibleOptional.has("priority") ? (
+          <TaskResizableHeader label="Priority" column="priority" sizing={columnSizing} api={headerApi}>
+            <CollectionSortableHeader
+              label="Priority"
+              column="priority"
+              sort={sort}
+              onSort={onSortColumn}
+            />
+          </TaskResizableHeader>
+        ) : null}
+        {visibleOptional.has("due") ? (
+          <TaskResizableHeader label="Due" column="due" sizing={columnSizing} api={headerApi}>
+            <CollectionSortableHeader
+              label="Due"
+              column="due"
+              sort={sort}
+              align="end"
+              onSort={onSortColumn}
+            />
+          </TaskResizableHeader>
+        ) : null}
+        {visibleOptional.has("updated") ? (
+          <TaskResizableHeader label="Updated" column="updated" sizing={columnSizing} api={headerApi}>
+            <CollectionSortableHeader
+              label="Updated"
+              column="updated"
+              sort={sort}
+              align="end"
+              onSort={onSortColumn}
+            />
+          </TaskResizableHeader>
+        ) : null}
         <span className="text-center">Today</span>
         <span />
       </div>
@@ -672,8 +802,8 @@ export function TaskList({
 
       <CollectionSortableList
         items={tasks}
-        enabled={reorderEnabled && !isPhone}
-        className={isPhone ? "space-y-1.5 px-2 py-2" : "divide-y divide-border"}
+        enabled={reorderEnabled && !useCards}
+        className={useCards ? "space-y-1.5 px-2 py-2" : "divide-y divide-border"}
         onReorder={(orderedIds) => onReorder?.(orderedIds)}
         renderItem={(task, sortable) => (
           <TaskRow
@@ -695,12 +825,13 @@ export function TaskList({
             onDelete={onDelete}
             deletingTaskIds={deletingTaskIds}
             selected={selection.isSelected(task.id)}
-            onToggleSelected={!isPhone && canSelect ? selection.toggle : undefined}
-            compact={isPhone}
+            onToggleSelected={!useCards && canSelect ? selection.toggle : undefined}
+            compact={useCards}
             areas={areas}
             onTodo={todoTaskIds?.has(task.id) ?? false}
             togglingTodo={togglingTodoTaskId === task.id}
             onToggleTodo={onToggleTodo}
+            visibleOptional={visibleOptional}
             gridTemplateColumns={layout.template}
             minWidth={layout.scrollMinWidth}
             gapPx={layout.gapPx}

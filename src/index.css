@@ -454,6 +454,19 @@
   }
 
   /*
+   * Nested Work tasks: indent scales with the row container, not a fixed pl-20.
+   */
+  .work-nested-tasks {
+    container-type: inline-size;
+    container-name: work-nested;
+    padding-left: clamp(1.25rem, 0.75rem + 4cqi, 5rem);
+  }
+
+  .work-nested-tasks__rail {
+    left: clamp(0.65rem, 0.4rem + 1.5cqi, 2.25rem);
+  }
+
+  /*
    * Full name when the slot is wide enough; given name when it is not.
    * The container is the available column/field width, not the text itself.
    */

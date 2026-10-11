@@ -1,17 +1,35 @@
+import { useEffect, useState } from "react";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { SpydrMark } from "@/components/SpydrMark";
 import { useOrganizationContext } from "@/domain/spydr/features/organizations/context/OrganizationContext";
 import { usePersistentState } from "@/domain/spydr/features/shared/hooks/usePersistentState";
+import { useNarrowDesktop } from "@/hooks/useIsPhone";
 import { cn } from "@/lib/utils";
 import { WorkspaceNav } from "./WorkspaceNav";
 
 export function Sidebar() {
   const { activeOrg } = useOrganizationContext();
-  const [collapsed, setCollapsed] = usePersistentState(
+  const narrowDesktop = useNarrowDesktop();
+  const [userCollapsed, setUserCollapsed] = usePersistentState(
     "sidebar-collapsed",
     () => false,
     (raw, fallback) => (typeof raw === "boolean" ? raw : fallback)
   );
+  const [sessionExpanded, setSessionExpanded] = useState(false);
+
+  useEffect(() => {
+    setSessionExpanded(false);
+  }, [narrowDesktop]);
+
+  const collapsed = narrowDesktop ? !sessionExpanded : userCollapsed;
+
+  const toggleCollapsed = () => {
+    if (narrowDesktop) {
+      setSessionExpanded((current) => !current);
+      return;
+    }
+    setUserCollapsed((current) => !current);
+  };
 
   return (
     <aside
@@ -30,10 +48,10 @@ export function Sidebar() {
         <SpydrMark size={collapsed ? 36 : 52} className="shrink-0" />
         {collapsed ? null : (
           <>
-            <span className="min-w-0 flex-1 text-[16px] font-semibold leading-none tracking-[-0.03em]">
+            <span className="min-w-0 flex-1 text-heading-sm font-semibold leading-none tracking-[-0.03em]">
               Spydr<span className="text-highlight-secondary">.</span>
             </span>
-            <span className="max-w-[4.5rem] truncate font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground/80">
+            <span className="max-w-[4.5rem] truncate font-mono text-micro uppercase tracking-[0.14em] text-muted-foreground/80">
               {activeOrg?.name ?? "org"}
             </span>
           </>
@@ -43,7 +61,7 @@ export function Sidebar() {
       <div className={cn("flex px-2 pt-2", collapsed && "justify-center px-1")}>
         <button
           type="button"
-          onClick={() => setCollapsed((current) => !current)}
+          onClick={toggleCollapsed}
           aria-expanded={!collapsed}
           aria-controls="workspace-sidebar"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -57,7 +75,7 @@ export function Sidebar() {
           ) : (
             <PanelLeftClose className="h-4 w-4" />
           )}
-          {collapsed ? null : <span className="text-[12px]">Collapse</span>}
+          {collapsed ? null : <span className="text-caption">Collapse</span>}
         </button>
       </div>
 
@@ -71,7 +89,7 @@ export function Sidebar() {
       <div className={cn("border-t border-sidebar-border p-3", collapsed && "px-1")}>
         <div
           className={cn(
-            "flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground",
+            "flex items-center gap-2 font-mono text-micro uppercase tracking-[0.14em] text-muted-foreground",
             collapsed && "justify-center"
           )}
         >

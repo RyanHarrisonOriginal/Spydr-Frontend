@@ -14,6 +14,17 @@ export const optionalProjectColumns = [
 
 export type ProjectColumnId = (typeof optionalProjectColumns)[number]["id"];
 
+/** Least important first — shed under narrow panes before horizontal scroll. */
+export const PROJECT_COLUMN_DROP_ORDER: readonly ProjectColumnId[] = [
+  "updated",
+  "requester",
+  "priority",
+  "area",
+  "target",
+  "assignee",
+  "status",
+];
+
 const defaultVisibleColumns = optionalProjectColumns.map((column) => column.id);
 const validColumnIds = new Set<string>(defaultVisibleColumns);
 const legacyDefaultColumns: ProjectColumnId[] = [

@@ -11,7 +11,12 @@
  */
 export const PHONE_BREAKPOINT_PX = 768;
 
+/** Collapse the workspace rail so Work lists keep a usable content width. */
+export const NARROW_DESKTOP_BREAKPOINT_PX = 1280;
+
 export const PHONE_LAYOUT_QUERY = `(max-width: ${PHONE_BREAKPOINT_PX - 0.02}px)`;
+
+export const NARROW_DESKTOP_QUERY = `(max-width: ${NARROW_DESKTOP_BREAKPOINT_PX - 0.02}px)`;
 
 export const COARSE_POINTER_QUERY = "(pointer: coarse)";
 

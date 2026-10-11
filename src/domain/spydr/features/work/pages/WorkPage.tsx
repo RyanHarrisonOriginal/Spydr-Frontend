@@ -34,8 +34,6 @@ import { WorkPersonPicker } from "../components/WorkPersonPicker";
 import { WorkViewToggle } from "../components/WorkViewToggle";
 import { WorkCreateMenu } from "../components/WorkCreateMenu";
 import { WorkMoreMenu } from "../components/WorkMoreMenu";
-import { ExpandCollapseControls } from "@/domain/spydr/features/shared/components/ExpandCollapseControls";
-import { ShowCompletedToggle } from "@/domain/spydr/features/shared/components/ShowCompletedToggle";
 import {
   InfiniteScrollSentinel,
   useScrollListToStart,
@@ -155,26 +153,12 @@ export function WorkPage() {
     return count;
   }, [projectsPage.projects, projectsPage.tasksByProjectId]);
 
+  const hierarchyExpanded =
+    expandableProjectIds.length > 0 &&
+    expandableProjectIds.every((id) => expandedIds.has(id));
+
   const listTools = (
     <>
-      {isHierarchy ? (
-        <ShowCompletedToggle
-          showCompleted={showCompletedTasks}
-          completedCount={completedTaskCount}
-          onChange={setShowCompletedTasks}
-        />
-      ) : null}
-      {isHierarchy ? (
-        <ExpandCollapseControls
-          expanded={
-            expandableProjectIds.length > 0 &&
-            expandableProjectIds.every((id) => expandedIds.has(id))
-          }
-          disabled={expandableProjectIds.length === 0}
-          onExpandAll={() => setExpandedIds(new Set(expandableProjectIds))}
-          onCollapseAll={() => setExpandedIds(new Set())}
-        />
-      ) : null}
       <WorkCreateMenu
         onCreateProject={() => createProject.setIsOpen(true)}
         onCreateTask={() => createTask.setIsOpen(true)}
@@ -187,6 +171,19 @@ export function WorkPage() {
         onToggleColumn={projectColumns.toggleColumn}
         trashCount={projectsPage.deletedCount}
         onOpenTrash={projectsPage.openTrash}
+        showCompleted={isHierarchy ? showCompletedTasks : undefined}
+        completedCount={completedTaskCount}
+        onToggleCompleted={isHierarchy ? setShowCompletedTasks : undefined}
+        hierarchyExpanded={isHierarchy ? hierarchyExpanded : undefined}
+        expandDisabled={expandableProjectIds.length === 0}
+        onExpandAll={
+          isHierarchy
+            ? () => setExpandedIds(new Set(expandableProjectIds))
+            : undefined
+        }
+        onCollapseAll={
+          isHierarchy ? () => setExpandedIds(new Set()) : undefined
+        }
       />
     </>
   );
@@ -256,73 +253,76 @@ export function WorkPage() {
   );
 
   return (
-    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-y-auto">
-      <PageHeader
-        dense
-        title="Work"
-        meta={
-          <span className="font-mono text-[10px] uppercase tracking-[0.12em]">
-            {isHierarchy
-              ? `${projectsPage.totalCount} projects · ${projectsPage.activeCount} active`
-              : `${tasksPage.totalCount} tasks · ${tasksPage.openCount} open`}
-          </span>
-        }
-      />
-      {createDialogs}
-
-      <WorkTodoPanel
-        items={todosQuery.data ?? []}
-        isLoading={todosQuery.isLoading}
-        togglingTaskId={togglingTodoTaskId}
-        onToggleTask={toggleTodo}
-      />
-
-      {peoplePage.deleteError ? (
-        <p className="px-4 pt-3 text-sm text-destructive md:px-6">{peoplePage.deleteError}</p>
-      ) : null}
-
-      {isHierarchy && projectsPage.trashExpanded ? (
-        <ProjectTrashPanel
-          projects={projectsPage.deletedProjects}
-          isLoading={projectsPage.isTrashLoading}
-          expanded={projectsPage.trashExpanded}
-          onExpandedChange={projectsPage.setTrashExpanded}
-          onRestore={projectsPage.restoreProject}
-          isRestoring={projectsPage.restoringProjectId !== null}
-          restoringId={projectsPage.restoringProjectId}
-          error={projectsPage.restoreError}
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
+      <div className="shrink-0">
+        <PageHeader
+          dense
+          title="Work"
+          meta={
+            <span className="font-mono text-micro uppercase tracking-[0.12em]">
+              {isHierarchy
+                ? `${projectsPage.totalCount} projects · ${projectsPage.activeCount} active`
+                : `${tasksPage.totalCount} tasks · ${tasksPage.openCount} open`}
+            </span>
+          }
         />
-      ) : null}
+        {createDialogs}
 
-      {!isError && isHierarchy ? (
-        <ProjectListToolbar
-          filters={projectsPage.listView.filters}
-          areas={projectsPage.areas}
-          people={projectsPage.people}
-          filteredCount={projectsPage.filteredCount}
-          totalCount={projectsPage.totalCount}
-          activeFilterCount={projectsPage.listView.activeFilterCount}
-          onSearchChange={projectsPage.listView.setSearch}
-          onToggleFacet={projectsPage.listView.toggleFacetFilter}
-          onRemoveFacetValue={projectsPage.listView.removeFacetFilter}
-          onClearFilters={projectsPage.listView.clearFilters}
-          startActions={pageControls}
-          endActions={listTools}
-          sticky
+        <WorkTodoPanel
+          items={todosQuery.data ?? []}
+          isLoading={todosQuery.isLoading}
+          togglingTaskId={togglingTodoTaskId}
+          onToggleTask={toggleTodo}
         />
-      ) : null}
 
-      {!isError && !isHierarchy ? (
-        <CollectionToolbar
-          view={tasksPage.view}
-          startActions={pageControls}
-          endActions={listTools}
-          showSort={false}
-          wrap={false}
-          sticky
-        />
-      ) : null}
+        {peoplePage.deleteError ? (
+          <p className="px-page-x pt-3 text-sm text-destructive">
+            {peoplePage.deleteError}
+          </p>
+        ) : null}
 
+        {isHierarchy && projectsPage.trashExpanded ? (
+          <ProjectTrashPanel
+            projects={projectsPage.deletedProjects}
+            isLoading={projectsPage.isTrashLoading}
+            expanded={projectsPage.trashExpanded}
+            onExpandedChange={projectsPage.setTrashExpanded}
+            onRestore={projectsPage.restoreProject}
+            isRestoring={projectsPage.restoringProjectId !== null}
+            restoringId={projectsPage.restoringProjectId}
+            error={projectsPage.restoreError}
+          />
+        ) : null}
+
+        {!isError && isHierarchy ? (
+          <ProjectListToolbar
+            filters={projectsPage.listView.filters}
+            areas={projectsPage.areas}
+            people={projectsPage.people}
+            filteredCount={projectsPage.filteredCount}
+            totalCount={projectsPage.totalCount}
+            activeFilterCount={projectsPage.listView.activeFilterCount}
+            onSearchChange={projectsPage.listView.setSearch}
+            onToggleFacet={projectsPage.listView.toggleFacetFilter}
+            onRemoveFacetValue={projectsPage.listView.removeFacetFilter}
+            onClearFilters={projectsPage.listView.clearFilters}
+            startActions={pageControls}
+            endActions={listTools}
+          />
+        ) : null}
+
+        {!isError && !isHierarchy ? (
+          <CollectionToolbar
+            view={tasksPage.view}
+            startActions={pageControls}
+            endActions={listTools}
+            showSort={false}
+            wrap
+          />
+        ) : null}
+      </div>
+
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       {isLoading && (
         <LoadingState title={isHierarchy ? "Loading work" : "Loading tasks"} />
       )}
@@ -343,47 +343,47 @@ export function WorkPage() {
       {!isLoading && !isError && isHierarchy && projectsPage.orgProjectCount > 0 && (
         <>
           {projectsPage.statusError && (
-            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectsPage.statusError}
             </p>
           )}
           {projectsPage.titleError && (
-            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectsPage.titleError}
             </p>
           )}
           {projectsPage.areaError && (
-            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectsPage.areaError}
             </p>
           )}
           {projectsPage.targetError && (
-            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectsPage.targetError}
             </p>
           )}
           {projectsPage.priorityError && (
-            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectsPage.priorityError}
             </p>
           )}
           {projectsPage.deleteError && (
-            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectsPage.deleteError}
             </p>
           )}
           {projectsPage.assigneeError && (
-            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectsPage.assigneeError}
             </p>
           )}
           {projectsPage.requesterError && (
-            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectsPage.requesterError}
             </p>
           )}
           {projectsPage.taskError && (
-            <p className="mx-4 mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {projectsPage.taskError}
             </p>
           )}
@@ -401,7 +401,7 @@ export function WorkPage() {
               }
             />
           ) : (
-            <div className="min-h-48 min-w-0 flex-1">
+            <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
               <ProjectList
                 projects={projectsList.visibleItems}
                 areas={projectsPage.areas}
@@ -489,37 +489,37 @@ export function WorkPage() {
       {!isLoading && !isError && !isHierarchy && tasksPage.orgTaskCount > 0 && (
         <>
           {tasksPage.statusError ? (
-            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.statusError}
             </p>
           ) : null}
           {tasksPage.projectError ? (
-            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.projectError}
             </p>
           ) : null}
           {tasksPage.assigneeError ? (
-            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.assigneeError}
             </p>
           ) : null}
           {tasksPage.dueDateError ? (
-            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.dueDateError}
             </p>
           ) : null}
           {tasksPage.titleError ? (
-            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.titleError}
             </p>
           ) : null}
           {tasksPage.deleteError ? (
-            <p className="mx-4 mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {tasksPage.deleteError}
             </p>
           ) : null}
           {tasksPage.view.items.length > 0 ? (
-            <div className="min-h-48 min-w-0 flex-1">
+            <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
               <TaskList
                 tasks={tasksList.visibleItems}
                 projects={tasksPage.projects}
@@ -583,6 +583,7 @@ export function WorkPage() {
           )}
         </>
       )}
+      </div>
     </div>
   );
 }
