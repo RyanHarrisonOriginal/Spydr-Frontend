@@ -91,11 +91,11 @@ export function PersonSelect({
           triggerClassName
         )}
         labelClassName={cn(
-          "text-[length:var(--pl-control-size,0.75rem)] text-foreground/90",
+          "text-[length:var(--pl-control-size,0.8125rem)] text-foreground/90",
           selected && isMe(selected) && "text-highlight"
         )}
         getOptionLabelClassName={(option, _selected) =>
-          cn("text-[length:var(--pl-control-size,0.75rem)]", option.value && isMe(option.value) && "text-highlight")
+          cn("text-[length:var(--pl-control-size,0.8125rem)]", option.value && isMe(option.value) && "text-highlight")
         }
       />
       {!compact && selected ? (

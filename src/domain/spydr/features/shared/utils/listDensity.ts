@@ -1,7 +1,8 @@
 /**
  * Named table density. The work grid tries comfortable spacing first, then
  * cozy, then compact, and only then scrolls inside the list pane.
- * Body type takes one step at compact and does not shrink further.
+ * Gap/padding shrink; body/control type stay at the 0.8125rem floor
+ * (`--text-body-tight` in index.css).
  */
 export const listDensities = ["comfortable", "cozy", "compact"] as const;
 export type ListDensity = (typeof listDensities)[number];

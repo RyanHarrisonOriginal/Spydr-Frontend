@@ -471,7 +471,7 @@ function ProjectPersonaCell({
           ariaLabel={ariaLabel}
         />
       ) : (
-        <span className="truncate text-[length:var(--pl-control-size,0.75rem)] text-muted-foreground">
+        <span className="truncate text-[length:var(--pl-control-size,0.8125rem)] text-muted-foreground">
           {person?.details?.fullName ?? person?.title ?? "—"}
         </span>
       )}

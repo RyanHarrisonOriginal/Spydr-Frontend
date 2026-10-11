@@ -142,6 +142,35 @@
     --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
 
+    /*
+     * Fluid type + spacing foundation.
+     * html font-size stays at the browser default (do not set it in px).
+     * Body copy never goes below 0.8125rem. Micro chrome (caps labels, badges)
+     * may sit under that floor by design.
+     */
+    --text-body: clamp(0.875rem, 0.8rem + 0.25vw, 1rem);
+    --text-body-tight: 0.8125rem;
+    --text-caption: clamp(0.8125rem, 0.78rem + 0.12vw, 0.875rem);
+    --text-label: clamp(0.6875rem, 0.66rem + 0.08vw, 0.75rem);
+    --text-micro: 0.625rem;
+    --text-heading-sm: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+    --text-heading: clamp(1.125rem, 1.05rem + 0.3vw, 1.375rem);
+    --text-heading-lg: clamp(1.375rem, 1.2rem + 0.55vw, 1.75rem);
+    --text-display: clamp(1.75rem, 1.4rem + 1vw, 2.5rem);
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-page-x: clamp(1rem, 0.85rem + 0.4vw, 1.5rem);
+    --space-page-y: clamp(0.75rem, 0.6rem + 0.35vw, 1.25rem);
+    --space-section: clamp(1rem, 0.85rem + 0.4vw, 1.5rem);
+    --chrome-header-py: 0.75rem;
+    --chrome-toolbar-py: 0.5rem;
+
     /* Clerk — keep every auth surface on the Spydr charcoal void */
     --clerk-color-primary: #cd2d4d;
     --clerk-color-primary-foreground: #ffffff;
@@ -177,6 +206,7 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
+    font-size: var(--text-body);
     font-feature-settings: 'cv01' 1, 'cv02' 1, 'cv03' 1, 'cv04' 1, 'liga' 1, 'kern' 1;
     font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
@@ -214,22 +244,24 @@
   }
 
   h1 {
-    @apply text-4xl md:text-5xl font-semibold;
+    font-size: var(--text-display);
+    font-weight: 600;
     line-height: 1.1;
   }
 
   h2 {
-    @apply text-2xl md:text-3xl;
+    font-size: var(--text-heading-lg);
     line-height: 1.15;
   }
 
   h3 {
-    @apply text-xl md:text-2xl;
+    font-size: var(--text-heading);
     line-height: 1.2;
   }
 
   h4 {
-    @apply text-lg md:text-xl font-medium;
+    font-size: var(--text-heading-sm);
+    font-weight: 500;
     line-height: 1.25;
   }
 
@@ -261,11 +293,13 @@
   }
 
   .label-caps {
-    @apply text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground;
+    @apply font-medium uppercase tracking-[0.1em] text-muted-foreground;
+    font-size: var(--text-label);
   }
 
   .node-badge {
-    @apply inline-flex items-center rounded-sm border px-2 py-0.5 font-mono text-[9px] font-medium uppercase tracking-[0.14em];
+    @apply inline-flex items-center rounded-sm border px-2 py-0.5 font-mono font-medium uppercase tracking-[0.14em];
+    font-size: var(--text-micro);
   }
 
   .node-badge-thought {
@@ -311,7 +345,8 @@
   }
 
   .lifecycle-badge {
-    @apply inline-flex items-center px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] rounded-md;
+    @apply inline-flex items-center px-2.5 py-1 font-medium uppercase tracking-[0.12em] rounded-md;
+    font-size: var(--text-micro);
   }
 
   .tree-line {
@@ -371,7 +406,8 @@
   }
 
   .page-gutter {
-    @apply px-4 md:px-6;
+    padding-left: var(--space-page-x);
+    padding-right: var(--space-page-x);
   }
 
   .touch-scroll-x {
@@ -381,31 +417,40 @@
   }
 
   /*
-   * Project list density tokens. Steps, not a continuous font-size formula:
-   * comfortable → cozy (spacing) → compact (spacing + one type step).
+   * Project list density tokens. Spacing steps only for body/control type —
+   * body copy stays at --text-body-tight (0.8125rem). Header/meta remain micro
+   * chrome and may sit under the body floor.
    */
   .project-list {
-    --pl-header-size: 0.625rem;
-    --pl-body-size: 0.8125rem;
-    --pl-meta-size: 0.6875rem;
-    --pl-control-size: 0.75rem;
-    --pl-row-py: 0.625rem;
+    --pl-header-size: var(--text-micro);
+    --pl-body-size: var(--text-body-tight);
+    --pl-meta-size: var(--text-label);
+    --pl-control-size: var(--text-body-tight);
+    --pl-row-py: var(--space-2);
   }
 
   .project-list[data-list-density="cozy"] {
-    --pl-header-size: 0.625rem;
-    --pl-body-size: 0.75rem;
-    --pl-meta-size: 0.625rem;
-    --pl-control-size: 0.75rem;
+    --pl-header-size: var(--text-micro);
+    --pl-body-size: var(--text-body-tight);
+    --pl-meta-size: var(--text-micro);
+    --pl-control-size: var(--text-body-tight);
     --pl-row-py: 0.5rem;
   }
 
   .project-list[data-list-density="compact"] {
     --pl-header-size: 0.5625rem;
-    --pl-body-size: 0.75rem;
-    --pl-meta-size: 0.625rem;
-    --pl-control-size: 0.6875rem;
-    --pl-row-py: 0.375rem;
+    --pl-body-size: var(--text-body-tight);
+    --pl-meta-size: var(--text-micro);
+    --pl-control-size: var(--text-body-tight);
+    --pl-row-py: var(--space-1);
+  }
+
+  @media (max-height: 700px) {
+    :root {
+      --chrome-header-py: 0.5rem;
+      --chrome-toolbar-py: 0.375rem;
+      --space-page-y: 0.5rem;
+    }
   }
 
   /*
@@ -572,7 +617,8 @@
 
 @layer components {
   .kbd {
-    @apply inline-flex h-5 min-w-5 items-center justify-center rounded-sm border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground;
+    @apply inline-flex h-5 min-w-5 items-center justify-center rounded-sm border border-border bg-muted px-1.5 font-mono font-medium text-muted-foreground;
+    font-size: var(--text-micro);
   }
 
   .row-hover {
@@ -584,13 +630,18 @@
   }
 
   .spydr-input {
-    @apply flex h-10 w-full rounded-lg border border-white/10 bg-card/25 px-3 text-[13px] text-foreground shadow-none ring-focus transition-colors file:border-0 file:bg-transparent file:text-[13px] file:font-medium placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 w-full rounded-lg border border-white/10 bg-card/25 px-3 text-foreground shadow-none ring-focus transition-colors file:border-0 file:bg-transparent file:font-medium placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50;
+    font-size: var(--text-body-tight);
     -webkit-backdrop-filter: blur(12px) saturate(1.25);
     backdrop-filter: blur(12px) saturate(1.25);
   }
+  .spydr-input::file-selector-button {
+    font-size: var(--text-body-tight);
+  }
 
   .spydr-textarea {
-    @apply flex min-h-[6.5rem] w-full resize-y rounded-lg border border-white/10 bg-card/25 px-3 py-2.5 text-[13px] leading-snug text-foreground shadow-none ring-focus transition-colors placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex min-h-[6.5rem] w-full resize-y rounded-lg border border-white/10 bg-card/25 px-3 py-2.5 leading-snug text-foreground shadow-none ring-focus transition-colors placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50;
+    font-size: var(--text-body-tight);
     -webkit-backdrop-filter: blur(12px) saturate(1.25);
     backdrop-filter: blur(12px) saturate(1.25);
   }

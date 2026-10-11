@@ -49,15 +49,15 @@ export function PageHeader({
         className={cn(
           "relative flex flex-col items-stretch justify-between gap-3 md:flex-row md:items-end",
           dense
-            ? "min-h-0 px-4 py-3 md:px-6"
-            : "min-h-0 gap-4 px-4 py-5 md:min-h-[6.5rem] md:gap-8 md:px-8 md:py-7"
+            ? "min-h-0 px-page-x py-chrome-header-y"
+            : "min-h-0 gap-4 px-page-x py-page-y md:min-h-[6.5rem] md:gap-8 md:px-8 md:py-7"
         )}
       >
         <div className="min-w-0 flex-1">
           {(eyebrow ?? breadcrumb) ? (
             <div
               className={cn(
-                "font-mono text-[10px] tracking-[0.16em] text-muted-foreground",
+                "font-mono text-label tracking-[0.16em] text-muted-foreground",
                 eyebrow ? "uppercase tracking-[0.2em]" : "normal-case"
               )}
             >
@@ -67,7 +67,7 @@ export function PageHeader({
           <h1
             className={cn(
               "font-semibold leading-none tracking-[-0.03em]",
-              dense ? "mt-1 text-[18px]" : "mt-2 text-[20px] md:text-[22px]",
+              dense ? "mt-1 text-heading-sm" : "mt-2 text-heading",
               "truncate",
               titleClassName
             )}
@@ -78,7 +78,7 @@ export function PageHeader({
             <div
               className={cn(
                 "flex flex-wrap items-center gap-2 text-muted-foreground",
-                dense ? "mt-1.5 text-[11px]" : "mt-2.5 text-[12px]"
+                dense ? "mt-1.5 text-label" : "mt-2.5 text-caption"
               )}
             >
               {meta}
