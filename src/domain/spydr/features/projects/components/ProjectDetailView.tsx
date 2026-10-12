@@ -33,6 +33,8 @@ import {
   PriorityBadge,
 } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
+import { TaskStatusContextLine } from "@/domain/spydr/features/tasks/components/TaskStatusContextLine";
+import { toTaskStatusPatch } from "@/domain/spydr/utils/taskStatus";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
 import { useEnsureTaskDueWithinProject } from "@/domain/spydr/features/tasks/hooks/useEnsureTaskDueWithinProject";
 import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
@@ -703,9 +705,10 @@ export function ProjectDetailView({
                               disabled={isUpdatingChild}
                               appearance="icon"
                               className="h-9 w-9 border-transparent bg-transparent"
-                              onChange={(status) => {
-                                if (status !== task.status) {
-                                  onUpdateChild("task", task.id, { status });
+                              excludeTaskId={task.id}
+                              onChange={(change) => {
+                                if (change.status !== task.status) {
+                                  onUpdateChild("task", task.id, toTaskStatusPatch(change));
                                 }
                               }}
                             />
@@ -717,12 +720,15 @@ export function ProjectDetailView({
                                 onUpdateChild("task", task.id, { emoji })
                               }
                             />
-                            <Link
-                              to={`/tasks/${task.id}`}
-                              className="min-w-0 flex-1 truncate text-[13px] font-medium hover:text-primary"
-                            >
-                              {task.title}
-                            </Link>
+                            <div className="min-w-0 flex-1">
+                              <Link
+                                to={`/tasks/${task.id}`}
+                                className="block truncate text-[13px] font-medium hover:text-primary"
+                              >
+                                {task.title}
+                              </Link>
+                              <TaskStatusContextLine task={task} />
+                            </div>
                             <TaskCompletedAt
                               status={task.status}
                               completedAt={task.details?.completedAt}
@@ -771,9 +777,10 @@ export function ProjectDetailView({
                               disabled={isUpdatingChild}
                               fitContent
                               className={cn(detailQuietControlClassName, "w-[7.5rem] shrink-0")}
-                              onChange={(status) => {
-                                if (status !== task.status) {
-                                  onUpdateChild("task", task.id, { status });
+                              excludeTaskId={task.id}
+                              onChange={(change) => {
+                                if (change.status !== task.status) {
+                                  onUpdateChild("task", task.id, toTaskStatusPatch(change));
                                 }
                               }}
                             />
@@ -792,12 +799,15 @@ export function ProjectDetailView({
                                 onUpdateChild("task", task.id, { emoji })
                               }
                             />
-                            <Link
-                              to={`/tasks/${task.id}`}
-                              className="min-w-0 flex-1 truncate text-[13px] hover:text-primary"
-                            >
-                              {task.title}
-                            </Link>
+                            <div className="min-w-0 flex-1">
+                              <Link
+                                to={`/tasks/${task.id}`}
+                                className="block truncate text-[13px] hover:text-primary"
+                              >
+                                {task.title}
+                              </Link>
+                              <TaskStatusContextLine task={task} />
+                            </div>
                             <TaskCompletedAt
                               status={task.status}
                               completedAt={task.details?.completedAt}

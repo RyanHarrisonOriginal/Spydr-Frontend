@@ -27,6 +27,8 @@ import { ProjectSelect } from "@/domain/spydr/features/projects/components/Proje
 import { PersonSelect } from "@/domain/spydr/features/projects/components/PersonSelect";
 import { TaskDueDateSelect } from "./TaskDueDateSelect";
 import { TaskStatusSelect } from "./TaskStatusSelect";
+import { TaskStatusContextLine } from "./TaskStatusContextLine";
+import type { TaskStatusChange } from "@/domain/spydr/utils/taskStatus";
 import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinProject";
 import { TaskTitleInput } from "./TaskTitleInput";
 import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
@@ -111,7 +113,7 @@ interface TaskListProps {
   onReorder?(orderedIds: string[]): void;
   onMoveRank?(id: string, direction: RankMoveDirection): void;
   onSetRank?(id: string, rank: number): void;
-  onStatusChange(taskId: string, status: string): void;
+  onStatusChange(taskId: string, change: TaskStatusChange): void;
   onProjectChange(taskId: string, projectNodeId: string | null): void;
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
   onDueDateChange(taskId: string, dueDate: string | null): void;
@@ -170,7 +172,7 @@ function TaskRow({
   maxRank?: number;
   onRankChange?(rank: number): void;
   isUpdating: boolean;
-  onStatusChange(taskId: string, status: string): void;
+  onStatusChange(taskId: string, change: TaskStatusChange): void;
   onProjectChange(taskId: string, projectNodeId: string | null): void;
   onAssigneeChange(taskId: string, assigneePersonNodeId: string | null): void;
   onDueDateChange(taskId: string, dueDate: string | null): void;
@@ -229,9 +231,10 @@ function TaskRow({
             disabled={isUpdating}
             appearance="icon"
             className="h-7 w-7"
-            onChange={(status) => {
-              if (status !== task.status) {
-                onStatusChange(task.id, status);
+            excludeTaskId={task.id}
+            onChange={(change) => {
+              if (change.status !== task.status) {
+                onStatusChange(task.id, change);
               }
             }}
           />
@@ -254,6 +257,7 @@ function TaskRow({
             disabled={isUpdating}
             onTitleChange={onTitleChange}
           />
+          <TaskStatusContextLine task={task} />
           <TaskCompletedAt
             status={task.status}
             completedAt={task.details?.completedAt}
@@ -305,9 +309,10 @@ function TaskRow({
         value={task.status}
         disabled={isUpdating}
         className="w-full"
-        onChange={(status) => {
-          if (status !== task.status) {
-            onStatusChange(task.id, status);
+        excludeTaskId={task.id}
+        onChange={(change) => {
+          if (change.status !== task.status) {
+            onStatusChange(task.id, change);
           }
         }}
       />
@@ -332,6 +337,7 @@ function TaskRow({
             disabled={isUpdating}
             onTitleChange={onTitleChange}
           />
+          <TaskStatusContextLine task={task} />
           {!showProject && task.project ? (
             <Link
               to={`/projects/${task.project.id}`}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import type { SpydrPriority } from "@/domain/spydr/utils/types";
-import { isTaskStatus, type TaskStatus } from "@/domain/spydr/utils/taskStatus";
+import { followUpLocalToIso, type TaskStatus } from "@/domain/spydr/utils/taskStatus";
 import { useCreateTaskMutation } from "./useCreateTaskMutation";
 
 export interface CreateTaskFormValues {
@@ -12,6 +12,9 @@ export interface CreateTaskFormValues {
   status: TaskStatus;
   priority: SpydrPriority;
   emoji: string | null;
+  blockedByTaskId: string;
+  followUpAt: string;
+  waitingNote: string;
 }
 
 const emptyForm: CreateTaskFormValues = {
@@ -22,6 +25,9 @@ const emptyForm: CreateTaskFormValues = {
   status: "active",
   priority: "medium",
   emoji: null,
+  blockedByTaskId: "",
+  followUpAt: "",
+  waitingNote: "",
 };
 
 export interface UseCreateTaskFormOptions {
@@ -44,9 +50,17 @@ export function useCreateTaskForm(options?: UseCreateTaskFormOptions) {
 
   const reset = () => setValues(emptyForm);
 
+  const statusReady =
+    values.status === "blocked"
+      ? values.blockedByTaskId.length > 0
+      : values.status === "waiting"
+        ? values.followUpAt.length > 0
+        : true;
+
   const canSubmit =
     values.projectId.length > 0 &&
     values.title.trim().length > 0 &&
+    statusReady &&
     !createTask.isPending;
 
   const submit = () => {
@@ -62,6 +76,16 @@ export function useCreateTaskForm(options?: UseCreateTaskFormOptions) {
           status: values.status,
           priority: values.priority,
           emoji: values.emoji,
+          blockedByNodeId:
+            values.status === "blocked" ? values.blockedByTaskId : undefined,
+          followUpAt:
+            values.status === "waiting"
+              ? followUpLocalToIso(values.followUpAt) ?? undefined
+              : undefined,
+          waitingNote:
+            values.status === "waiting"
+              ? values.waitingNote.trim() || null
+              : undefined,
           assigneePersonNodeId:
             options?.assigneePersonNodeId ?? currentUserPersonId ?? null,
         },

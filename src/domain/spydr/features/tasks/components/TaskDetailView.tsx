@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,7 +28,7 @@ import {
   detailStrandControlClassName,
 } from "@/domain/spydr/features/projects/components/ProjectDetailSection";
 import type { PersonNode, ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
-import { isTaskStatus } from "@/domain/spydr/utils/taskStatus";
+import { isTaskStatus, type TaskStatusChange } from "@/domain/spydr/utils/taskStatus";
 import { parseTaskNoteEntries } from "@/domain/spydr/utils/taskNotes";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import type {
@@ -35,6 +36,8 @@ import type {
   TaskDetailSaveState,
 } from "../hooks/useTaskDetailPage";
 import { TaskStatusSelect } from "./TaskStatusSelect";
+import { TaskStatusContextDialog } from "./TaskStatusContextDialog";
+import { TaskStatusContextLine } from "./TaskStatusContextLine";
 import { TaskDueDateSelect } from "./TaskDueDateSelect";
 import { TaskCompletedAt } from "./TaskCompletedAt";
 import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinProject";
@@ -85,7 +88,21 @@ export function TaskDetailView({
   onEmojiChange,
 }: TaskDetailViewProps) {
   const isPhone = useIsPhone();
+  const [editingContext, setEditingContext] = useState(false);
   const hint = saveLabel(saveState);
+  const applyStatus = (change: TaskStatusChange) => {
+    if (!isTaskStatus(change.status)) return;
+    onFieldChange("status", change.status);
+    onFieldChange(
+      "blockedByTaskId",
+      change.status === "blocked" ? (change.blockedByTaskId ?? "") : ""
+    );
+    onFieldChange("followUpAt", change.status === "waiting" ? (change.followUpAt ?? "") : "");
+    onFieldChange(
+      "waitingNote",
+      change.status === "waiting" ? (change.waitingNote ?? "") : ""
+    );
+  };
   const { entries, preamble } = parseTaskNoteEntries(task.body);
   const noteCount = entries.length + (preamble ? 1 : 0);
   usePageBreadcrumb(formatBreadcrumbEntityId(task.id));
@@ -136,11 +153,8 @@ export function TaskDetailView({
                   <div className="flex min-w-0 items-center gap-1">
                     <TaskStatusSelect
                       value={form.status}
-                      onChange={(status) => {
-                        if (isTaskStatus(status)) {
-                          onFieldChange("status", status);
-                        }
-                      }}
+                      excludeTaskId={task.id}
+                      onChange={applyStatus}
                       fitContent
                       className={cn(detailQuietControlClassName, "w-[6.75rem] shrink-0")}
                     />
@@ -205,11 +219,8 @@ export function TaskDetailView({
                 <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
                   <TaskStatusSelect
                     value={form.status}
-                    onChange={(status) => {
-                      if (isTaskStatus(status)) {
-                        onFieldChange("status", status);
-                      }
-                    }}
+                    excludeTaskId={task.id}
+                    onChange={applyStatus}
                     fitContent
                     className={detailQuietControlClassName}
                   />
@@ -267,7 +278,55 @@ export function TaskDetailView({
               />
             }
           />
+          <div className="px-4 pb-3 md:px-8">
+            <TaskStatusContextLine
+              variant="detail"
+              task={{
+                status: form.status,
+                blockedBy: form.blockedByTaskId
+                  ? {
+                      id: form.blockedByTaskId,
+                      title:
+                        task.blockedBy?.id === form.blockedByTaskId
+                          ? task.blockedBy.title
+                          : "task",
+                    }
+                  : null,
+                details: task.details
+                  ? {
+                      ...task.details,
+                      blockedByNodeId: form.blockedByTaskId || null,
+                      followUpAt: form.followUpAt || null,
+                      waitingNote: form.waitingNote || null,
+                    }
+                  : null,
+              }}
+              onEdit={
+                form.status === "blocked" || form.status === "waiting"
+                  ? () => setEditingContext(true)
+                  : undefined
+              }
+            />
+          </div>
         </div>
+
+        {editingContext && (form.status === "blocked" || form.status === "waiting") ? (
+          <TaskStatusContextDialog
+            open
+            status={form.status}
+            excludeTaskId={task.id}
+            initialBlockedByTaskId={form.blockedByTaskId}
+            initialFollowUpAt={form.followUpAt}
+            initialWaitingNote={form.waitingNote}
+            onOpenChange={(open) => {
+              if (!open) setEditingContext(false);
+            }}
+            onConfirm={(change) => {
+              applyStatus(change);
+              setEditingContext(false);
+            }}
+          />
+        ) : null}
 
         <div className="px-4 pt-5 md:px-8 md:pt-7">
           <div

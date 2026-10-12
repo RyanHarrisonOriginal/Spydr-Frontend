@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
+import { TaskStatusContextLine } from "@/domain/spydr/features/tasks/components/TaskStatusContextLine";
 import { useUpdateTaskMutation } from "@/domain/spydr/features/tasks/hooks/useUpdateTaskMutation";
 import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
 import {
@@ -14,7 +15,7 @@ import {
   prependTaskNoteEntry,
   type TaskNoteEntry,
 } from "@/domain/spydr/utils/taskNotes";
-import { isTaskStatus } from "@/domain/spydr/utils/taskStatus";
+import { isTaskStatus, toTaskStatusPatch } from "@/domain/spydr/utils/taskStatus";
 import type { TodoItem } from "@/domain/spydr/utils/types";
 import { cn } from "@/lib/utils";
 
@@ -88,11 +89,12 @@ export function TodayTodoRow({
           appearance="icon"
           className="h-7 w-7 shrink-0"
           disabled={updateTask.isPending}
-          onChange={(status) => {
-            if (status !== item.task.status && isTaskStatus(status)) {
+          excludeTaskId={item.taskId}
+          onChange={(change) => {
+            if (change.status !== item.task.status && isTaskStatus(change.status)) {
               updateTask.mutate({
                 taskId: item.taskId,
-                input: { status },
+                input: toTaskStatusPatch(change),
               });
             }
           }}
@@ -117,6 +119,7 @@ export function TodayTodoRow({
               </Link>
             ) : null}
           </div>
+          <TaskStatusContextLine task={item.task} />
         </div>
         <span
           className={cn(

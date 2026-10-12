@@ -147,6 +147,9 @@ export interface TaskDetails {
   dueDate: string | null;
   completedAt: string | null;
   isBlocked: boolean;
+  blockedByNodeId: string | null;
+  followUpAt: string | null;
+  waitingNote: string | null;
   estimatedMinutes: number | null;
   assigneePersonNodeId: string | null;
   tags: string[];
@@ -184,6 +187,7 @@ export interface TaskProjectRef {
 export type TaskNode = SpydrNode<"task", TaskDetails> & {
   project?: TaskProjectRef | null;
   assignee?: PersonNode | null;
+  blockedBy?: TaskProjectRef | null;
 };
 
 export type TodoItemSource = "user" | "agent";
@@ -396,6 +400,9 @@ export interface UpdateProjectChildInput {
   estimatedMinutes?: number | null;
   assigneePersonNodeId?: string | null;
   emoji?: string | null;
+  blockedByNodeId?: string | null;
+  followUpAt?: string | null;
+  waitingNote?: string | null;
 }
 
 export type IdeaDetails = {
@@ -464,6 +471,9 @@ export interface CreateProjectTaskInput {
   estimatedMinutes?: number | null;
   assigneePersonNodeId?: string | null;
   emoji?: string | null;
+  blockedByNodeId?: string | null;
+  followUpAt?: string | null;
+  waitingNote?: string | null;
 }
 
 export interface UpdateTaskInput {
@@ -476,6 +486,9 @@ export interface UpdateTaskInput {
   projectNodeId?: string | null;
   assigneePersonNodeId?: string | null;
   emoji?: string | null;
+  blockedByNodeId?: string | null;
+  followUpAt?: string | null;
+  waitingNote?: string | null;
 }
 
 export interface UpdateNoteInput {

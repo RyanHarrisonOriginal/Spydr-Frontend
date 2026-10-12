@@ -10,6 +10,47 @@ export const taskStatusBuckets = ["open", "closed", "blocked"] as const;
 
 export type TaskStatusBucket = (typeof taskStatusBuckets)[number];
 
+export interface TaskStatusChange {
+  status: TaskStatus;
+  blockedByTaskId?: string;
+  followUpAt?: string;
+  waitingNote?: string | null;
+}
+
+export function toTaskStatusPatch(change: TaskStatusChange): {
+  status: TaskStatus;
+  blockedByNodeId?: string;
+  followUpAt?: string;
+  waitingNote?: string | null;
+} {
+  if (change.status === "blocked" && change.blockedByTaskId) {
+    return { status: change.status, blockedByNodeId: change.blockedByTaskId };
+  }
+  if (change.status === "waiting" && change.followUpAt) {
+    return {
+      status: change.status,
+      followUpAt: change.followUpAt,
+      waitingNote: change.waitingNote?.trim() ? change.waitingNote.trim() : null,
+    };
+  }
+  return { status: change.status };
+}
+
+export function followUpIsoToLocal(value: string | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export function followUpLocalToIso(value: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
 export const taskStatusLabels: Record<TaskStatus, string> = {
   active: "Active",
   waiting: "Waiting",

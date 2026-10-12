@@ -18,6 +18,8 @@ import { RowExpandToggle } from "@/domain/spydr/features/shared/components/RowEx
 import { CollectionSortableList } from "@/domain/spydr/features/shared/components/CollectionSortableList";
 import { ShowCompletedToggle } from "@/domain/spydr/features/shared/components/ShowCompletedToggle";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
+import { TaskStatusContextLine } from "@/domain/spydr/features/tasks/components/TaskStatusContextLine";
+import type { TaskStatusChange } from "@/domain/spydr/utils/taskStatus";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
 import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
 import { TaskTitleInput } from "@/domain/spydr/features/tasks/components/TaskTitleInput";
@@ -97,7 +99,7 @@ interface ProjectListProps {
   onTargetDateChange?(projectId: string, targetDate: string | null): void;
   onAssigneeChange?(projectId: string, assigneePersonNodeId: string | null): void;
   onRequesterChange?(projectId: string, requesterPersonNodeId: string | null): void;
-  onTaskStatusChange?(taskId: string, status: string): void;
+  onTaskStatusChange?(taskId: string, change: TaskStatusChange): void;
   onTaskDueDateChange?(taskId: string, dueDate: string | null): void;
   onTaskAssigneeChange?(taskId: string, assigneePersonNodeId: string | null): void;
   onTaskTitleChange?(taskId: string, title: string): void;
@@ -547,7 +549,7 @@ function NestedTaskRow({
   compact?: boolean;
   isDeleting?: boolean;
   deleteDisabled?: boolean;
-  onStatusChange?(taskId: string, status: string): void;
+  onStatusChange?(taskId: string, change: TaskStatusChange): void;
   onDueDateChange?(taskId: string, dueDate: string | null): void;
   onAssigneeChange?(taskId: string, assigneePersonNodeId: string | null): void;
   onTitleChange?(taskId: string, title: string): void;
@@ -608,6 +610,7 @@ function NestedTaskRow({
         disabled={busy}
         onTitleChange={onTitleChange}
       />
+      <TaskStatusContextLine task={task} />
     </div>
   );
   const openControl = (
@@ -637,7 +640,10 @@ function NestedTaskRow({
           disabled={!onStatusChange || busy}
           appearance="icon"
           className="h-7 w-7"
-          onChange={(status) => onStatusChange?.(task.id, status)}
+          excludeTaskId={task.id}
+          onChange={(change) => {
+            if (change.status !== task.status) onStatusChange?.(task.id, change);
+          }}
         />
         {openControl}
         {titleControl}
@@ -665,7 +671,10 @@ function NestedTaskRow({
         value={task.status}
         disabled={!onStatusChange || busy}
         className="w-full min-w-0"
-        onChange={(status) => onStatusChange?.(task.id, status)}
+        excludeTaskId={task.id}
+        onChange={(change) => {
+          if (change.status !== task.status) onStatusChange?.(task.id, change);
+        }}
       />
       {openControl}
       {titleControl}

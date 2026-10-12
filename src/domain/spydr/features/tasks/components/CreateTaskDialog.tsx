@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ProjectPrioritySelect } from "@/domain/spydr/features/projects/components/ProjectPrioritySelect";
 import { ProjectSelect } from "@/domain/spydr/features/projects/components/ProjectSelect";
 import type { ProjectNode, SpydrPriority } from "@/domain/spydr/utils/types";
+import { useTasksQuery } from "@/domain/spydr/features/shared/hooks/queries";
 import { isTaskStatus } from "@/domain/spydr/utils/taskStatus";
+import { cn } from "@/lib/utils";
 import type { CreateTaskFormValues } from "../hooks/useCreateTaskForm";
 import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinProject";
 import { TaskDueDateSelect } from "./TaskDueDateSelect";
@@ -58,6 +61,14 @@ export function CreateTaskDialog({
   const selectedProject =
     projects.find((project) => project.id === values.projectId) ?? null;
   const dueGuard = useEnsureTaskDueWithinProject();
+  const tasksQuery = useTasksQuery();
+  const [blockerQuery, setBlockerQuery] = useState("");
+  const blockerTasks = useMemo(() => {
+    const needle = blockerQuery.trim().toLowerCase();
+    return (tasksQuery.data ?? []).filter((task) =>
+      needle ? task.title.toLowerCase().includes(needle) : true
+    );
+  }, [blockerQuery, tasksQuery.data]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -169,9 +180,14 @@ export function CreateTaskDialog({
                 <Label>Status</Label>
                 <TaskStatusSelect
                   value={values.status}
-                  onChange={(status) => {
-                    if (isTaskStatus(status)) {
-                      onFieldChange("status", status);
+                  collectContext={false}
+                  onChange={(change) => {
+                    if (!isTaskStatus(change.status)) return;
+                    onFieldChange("status", change.status);
+                    if (change.status !== "blocked") onFieldChange("blockedByTaskId", "");
+                    if (change.status !== "waiting") {
+                      onFieldChange("followUpAt", "");
+                      onFieldChange("waitingNote", "");
                     }
                   }}
                   disabled={isSubmitting || noProjects}
@@ -190,6 +206,65 @@ export function CreateTaskDialog({
                 />
               </div>
             </div>
+
+            {values.status === "blocked" ? (
+              <div className="space-y-2">
+                <Label htmlFor="create-blocker-search">Blocking task</Label>
+                <Input
+                  id="create-blocker-search"
+                  value={blockerQuery}
+                  onChange={(event) => setBlockerQuery(event.target.value)}
+                  placeholder="Search tasks"
+                  disabled={isSubmitting || noProjects}
+                />
+                <div className="max-h-40 overflow-y-auto rounded-md border border-border">
+                  {blockerTasks.length === 0 ? (
+                    <p className="px-3 py-2 text-[12px] text-muted-foreground">No tasks found.</p>
+                  ) : (
+                    blockerTasks.map((task) => (
+                      <button
+                        key={task.id}
+                        type="button"
+                        className={cn(
+                          "block w-full truncate px-3 py-2 text-left text-[13px] hover:bg-muted/40",
+                          task.id === values.blockedByTaskId && "bg-muted/60"
+                        )}
+                        disabled={isSubmitting}
+                        onClick={() => onFieldChange("blockedByTaskId", task.id)}
+                      >
+                        {task.title}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : null}
+
+            {values.status === "waiting" ? (
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="create-follow-up">Follow-up time</Label>
+                  <Input
+                    id="create-follow-up"
+                    type="datetime-local"
+                    value={values.followUpAt}
+                    onChange={(event) => onFieldChange("followUpAt", event.target.value)}
+                    disabled={isSubmitting || noProjects}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-waiting-note">Note</Label>
+                  <Textarea
+                    id="create-waiting-note"
+                    value={values.waitingNote}
+                    onChange={(event) => onFieldChange("waitingNote", event.target.value)}
+                    placeholder="What are you waiting on?"
+                    rows={3}
+                    disabled={isSubmitting || noProjects}
+                  />
+                </div>
+              </div>
+            ) : null}
 
             {errorMessage ? (
               <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">

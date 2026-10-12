@@ -10,7 +10,7 @@ import {
 import { isProjectPriority } from "@/domain/spydr/utils/projectPriority";
 import { isProjectStatus } from "@/domain/spydr/utils/projectStatus";
 import { resolveProjectAreaId } from "@/domain/spydr/utils/projectAreas";
-import { isTaskStatus } from "@/domain/spydr/utils/taskStatus";
+import { isTaskStatus, toTaskStatusPatch, type TaskStatusChange } from "@/domain/spydr/utils/taskStatus";
 import type { TaskNode, UpdateProjectInput } from "@/domain/spydr/utils/types";
 import {
   filterProjectsForPerson,
@@ -166,12 +166,12 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     runUpdate(projectId, { requesterPersonNodeId }, setRequesterError);
   };
 
-  const updateTaskStatus = (taskId: string, status: string) => {
-    if (!isTaskStatus(status)) return;
+  const updateTaskStatus = (taskId: string, change: TaskStatusChange) => {
+    if (!isTaskStatus(change.status)) return;
     setTaskError(null);
     setUpdatingTaskId(taskId);
     updateTask.mutate(
-      { taskId, input: { status } },
+      { taskId, input: toTaskStatusPatch(change) },
       {
         onError: (error) => {
           setTaskError(

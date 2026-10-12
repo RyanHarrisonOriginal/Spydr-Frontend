@@ -11,6 +11,8 @@ import { filterTasksForPerson } from "@/domain/spydr/utils/personWork";
 import {
   getTaskStatusBucket,
   isTaskStatus,
+  toTaskStatusPatch,
+  type TaskStatusChange,
 } from "@/domain/spydr/utils/taskStatus";
 import { parseWorkTaskFilterSelections } from "@/domain/spydr/features/work/utils/workPaths";
 import { useUpdateTaskMutation } from "./useUpdateTaskMutation";
@@ -59,13 +61,13 @@ export function useTasksPage(options?: { personId?: string | null }) {
     [scopedTasks]
   );
 
-  const updateStatus = (taskId: string, status: string) => {
-    if (!isTaskStatus(status)) return;
+  const updateStatus = (taskId: string, change: TaskStatusChange) => {
+    if (!isTaskStatus(change.status)) return;
 
     setStatusError(null);
     setUpdatingTaskId(taskId);
     updateTask.mutate(
-      { taskId, input: { status } },
+      { taskId, input: toTaskStatusPatch(change) },
       {
         onError: (error) => {
           setStatusError(

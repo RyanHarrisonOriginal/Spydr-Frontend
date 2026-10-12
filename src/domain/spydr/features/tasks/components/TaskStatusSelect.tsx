@@ -1,7 +1,15 @@
+import { useState } from "react";
 import { StatusDot } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { ProjectListFieldSelect } from "@/domain/spydr/features/projects/components/ProjectListFieldSelect";
-import { taskStatuses, taskStatusLabels } from "@/domain/spydr/utils/taskStatus";
+import {
+  isTaskStatus,
+  taskStatuses,
+  taskStatusLabels,
+  type TaskStatus,
+  type TaskStatusChange,
+} from "@/domain/spydr/utils/taskStatus";
 import { cn } from "@/lib/utils";
+import { TaskStatusContextDialog } from "./TaskStatusContextDialog";
 
 const statusSurface: Record<string, string> = {
   active:
@@ -27,12 +35,15 @@ const statusOptionSurface: Record<string, string> = {
 
 interface TaskStatusSelectProps {
   value: string;
-  onChange(status: string): void;
+  onChange(change: TaskStatusChange): void;
   disabled?: boolean;
   className?: string;
   appearance?: "field" | "icon";
   fitContent?: boolean;
   wrapLabel?: boolean;
+  excludeTaskId?: string;
+  /** When false, blocked and waiting commit immediately so the parent can collect context inline. */
+  collectContext?: boolean;
 }
 
 export function TaskStatusSelect({
@@ -43,32 +54,62 @@ export function TaskStatusSelect({
   appearance = "field",
   fitContent = false,
   wrapLabel = false,
+  excludeTaskId,
+  collectContext = true,
 }: TaskStatusSelectProps) {
+  const [pendingStatus, setPendingStatus] = useState<Extract<TaskStatus, "blocked" | "waiting"> | null>(
+    null
+  );
   const options = taskStatuses.map((status) => ({
     value: status,
     label: taskStatusLabels[status],
   }));
 
+  const handleChange = (next: string) => {
+    if (!isTaskStatus(next) || next === value) return;
+    if (collectContext && (next === "blocked" || next === "waiting")) {
+      setPendingStatus(next);
+      return;
+    }
+    onChange({ status: next });
+  };
+
   return (
-    <ProjectListFieldSelect
-      value={value}
-      options={options}
-      onChange={onChange}
-      disabled={disabled}
-      ariaLabel="Task status"
-      menuLabel="Status"
-      appearance={appearance}
-      fitContent={fitContent}
-      wrapLabel={wrapLabel}
-      leading={<StatusDot status={value} className="shrink-0" />}
-      renderOptionLeading={(option) => (
-        <StatusDot status={option.value} className="shrink-0" />
-      )}
-      triggerClassName={cn(statusSurface[value], className)}
-      labelClassName="text-foreground/90"
-      getOptionClassName={(option, selected) =>
-        cn(statusOptionSurface[option.value], selected && statusSurface[option.value])
-      }
-    />
+    <>
+      <ProjectListFieldSelect
+        value={value}
+        options={options}
+        onChange={handleChange}
+        disabled={disabled}
+        ariaLabel="Task status"
+        menuLabel="Status"
+        appearance={appearance}
+        fitContent={fitContent}
+        wrapLabel={wrapLabel}
+        leading={<StatusDot status={value} className="shrink-0" />}
+        renderOptionLeading={(option) => (
+          <StatusDot status={option.value} className="shrink-0" />
+        )}
+        triggerClassName={cn(statusSurface[value], className)}
+        labelClassName="text-foreground/90"
+        getOptionClassName={(option, selected) =>
+          cn(statusOptionSurface[option.value], selected && statusSurface[option.value])
+        }
+      />
+      {pendingStatus ? (
+        <TaskStatusContextDialog
+          open
+          status={pendingStatus}
+          excludeTaskId={excludeTaskId}
+          onOpenChange={(open) => {
+            if (!open) setPendingStatus(null);
+          }}
+          onConfirm={(change) => {
+            setPendingStatus(null);
+            onChange(change);
+          }}
+        />
+      ) : null}
+    </>
   );
 }

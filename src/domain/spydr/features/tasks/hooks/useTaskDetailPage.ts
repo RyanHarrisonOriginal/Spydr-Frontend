@@ -19,6 +19,9 @@ export interface TaskDetailFormValues {
   dueDate: string;
   estimatedMinutes: string;
   assigneePersonNodeId: string;
+  blockedByTaskId: string;
+  followUpAt: string;
+  waitingNote: string;
 }
 
 export type TaskDetailSaveState = "idle" | "pending" | "saving" | "saved" | "error";
@@ -31,6 +34,9 @@ const emptyForm: TaskDetailFormValues = {
   dueDate: "",
   estimatedMinutes: "",
   assigneePersonNodeId: "",
+  blockedByTaskId: "",
+  followUpAt: "",
+  waitingNote: "",
 };
 
 const SAVE_DEBOUNCE_MS = 700;
@@ -48,6 +54,9 @@ function taskToForm(task: TaskNode): TaskDetailFormValues {
         : "",
     assigneePersonNodeId:
       task.assignee?.id ?? task.details?.assigneePersonNodeId ?? "",
+    blockedByTaskId: task.blockedBy?.id ?? task.details?.blockedByNodeId ?? "",
+    followUpAt: task.details?.followUpAt ?? "",
+    waitingNote: task.details?.waitingNote ?? "",
   };
 }
 
@@ -65,6 +74,15 @@ function formToInput(form: TaskDetailFormValues) {
     estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : null,
     projectNodeId: form.projectNodeId || null,
     assigneePersonNodeId: form.assigneePersonNodeId || null,
+    ...(form.status === "blocked" && form.blockedByTaskId
+      ? { blockedByNodeId: form.blockedByTaskId }
+      : {}),
+    ...(form.status === "waiting" && form.followUpAt
+      ? {
+          followUpAt: form.followUpAt,
+          waitingNote: form.waitingNote.trim() ? form.waitingNote.trim() : null,
+        }
+      : {}),
   };
 }
 
