@@ -279,6 +279,14 @@ function TaskRow({
               onToggle={() => onToggleTodo(task.id, onTodo)}
             />
           ) : null}
+          {onDelete ? (
+            <InlineDeleteButton
+              label={task.title}
+              isDeleting={deletingTaskIds.includes(task.id)}
+              disabled={deletingTaskIds.length > 0 && !deletingTaskIds.includes(task.id)}
+              onDelete={() => onDelete(task.id)}
+            />
+          ) : null}
         </div>
       </div>
     );

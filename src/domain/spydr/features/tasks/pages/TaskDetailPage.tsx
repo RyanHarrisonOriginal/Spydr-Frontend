@@ -32,6 +32,8 @@ export function TaskDetailPage() {
       onLogNote={detail.logNote}
       onEmojiChange={detail.updateEmoji}
       onRetrySave={detail.retrySave}
+      onDeleteTask={detail.deleteTask}
+      isDeletingTask={detail.isDeletingTask}
     />
   );
 }

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Check, ChevronRight, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
@@ -52,6 +53,8 @@ interface TaskDetailViewProps {
   onLogNote(): void;
   onEmojiChange(emoji: string | null): void;
   onRetrySave(): void;
+  onDeleteTask(onDeleted?: () => void): void;
+  isDeletingTask?: boolean;
 }
 
 type TaskLogNote = {
@@ -116,7 +119,10 @@ export function TaskDetailView({
   onLogNote,
   onEmojiChange,
   onRetrySave,
+  onDeleteTask,
+  isDeletingTask = false,
 }: TaskDetailViewProps) {
+  const navigate = useNavigate();
   const modKey = useModKeyLabel();
   const dueGuard = useEnsureTaskDueWithinProject();
   const captureRef = useRef<HTMLTextAreaElement>(null);
@@ -389,6 +395,14 @@ export function TaskDetailView({
                       onChange={onEmojiChange}
                     />
                   </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-[12px] text-destructive focus:text-destructive"
+                  disabled={isDeletingTask}
+                  onSelect={() => onDeleteTask(() => navigate("/work"))}
+                >
+                  Delete task
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

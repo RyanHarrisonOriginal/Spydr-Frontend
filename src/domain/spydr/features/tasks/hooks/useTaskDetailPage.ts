@@ -9,6 +9,7 @@ import { isProjectPriority } from "@/domain/spydr/utils/projectPriority";
 import { isTaskStatus } from "@/domain/spydr/utils/taskStatus";
 import { prependTaskNoteEntry } from "@/domain/spydr/utils/taskNotes";
 import type { SpydrPriority, TaskNode, TaskStatus } from "@/domain/spydr/utils/types";
+import { useDeleteTaskMutation } from "./useDeleteTaskMutation";
 import { useUpdateTaskMutation } from "./useUpdateTaskMutation";
 
 export interface TaskDetailFormValues {
@@ -95,6 +96,7 @@ export function useTaskDetailPage() {
   const projects = projectsQuery.data ?? [];
   const people = peopleQuery.data ?? [];
   const updateTask = useUpdateTaskMutation(taskId);
+  const deleteTask = useDeleteTaskMutation();
   const [form, setForm] = useState<TaskDetailFormValues>(emptyForm);
   const [saveState, setSaveState] = useState<TaskDetailSaveState>("idle");
   const [noteDraft, setNoteDraft] = useState("");
@@ -181,6 +183,13 @@ export function useTaskDetailPage() {
     );
   };
 
+  const removeTask = (onDeleted?: () => void) => {
+    if (!task) return;
+    deleteTask.mutate(task.id, {
+      onSuccess: () => onDeleted?.(),
+    });
+  };
+
   return {
     task,
     taskId,
@@ -195,6 +204,8 @@ export function useTaskDetailPage() {
     updateEmoji,
     logNote,
     retrySave,
+    deleteTask: removeTask,
+    isDeletingTask: deleteTask.isPending,
     isLoading: query.isLoading || projectsQuery.isLoading,
     isError: query.isError,
     errorMessage:
