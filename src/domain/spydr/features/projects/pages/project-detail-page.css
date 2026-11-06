@@ -130,6 +130,24 @@
   color: var(--muted-2);
 }
 
+.project-detail-meta-status {
+  height: auto !important;
+  min-height: 0 !important;
+  gap: 7px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: inherit !important;
+}
+
+.project-detail-meta-status:hover,
+.project-detail-meta-status[data-state="open"] {
+  background: transparent !important;
+}
+
 .project-detail-progress {
   display: inline-flex;
   align-items: center;
@@ -375,9 +393,28 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  min-width: 0;
   font-size: 13px;
   color: var(--fg);
   text-transform: capitalize;
+}
+
+.project-detail-task-status-select {
+  height: auto !important;
+  min-height: 0 !important;
+  gap: 7px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: var(--fg) !important;
+}
+
+.project-detail-task-status-select:hover,
+.project-detail-task-status-select[data-state="open"] {
+  background: transparent !important;
 }
 
 .project-detail-task-actions {

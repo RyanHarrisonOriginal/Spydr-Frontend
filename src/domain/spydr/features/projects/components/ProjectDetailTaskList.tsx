@@ -10,11 +10,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PersonAvatar } from "@/domain/spydr/features/people/components/PersonIdentity";
-import { StatusDot } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { WorkDueDisplay } from "@/domain/spydr/features/work/components/WorkDueDisplay";
 import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
 import { TaskStatusContextDialog } from "@/domain/spydr/features/tasks/components/TaskStatusContextDialog";
 import { TaskStatusContextLine } from "@/domain/spydr/features/tasks/components/TaskStatusContextLine";
+import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
 import { useEnsureTaskDueWithinProject } from "@/domain/spydr/features/tasks/hooks/useEnsureTaskDueWithinProject";
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
 import { isClosedCollectionStatus } from "@/domain/spydr/utils/collectionVisibility";
@@ -223,11 +223,15 @@ export function ProjectDetailTaskList({
                 </div>
 
                 <span className="project-detail-task-status">
-                  <StatusDot
-                    status={done ? "completed" : statusKey}
-                    className="shrink-0"
+                  <TaskStatusSelect
+                    value={statusKey}
+                    disabled={isUpdatingChild}
+                    quiet
+                    fitContent
+                    excludeTaskId={task.id}
+                    onChange={(change) => applyStatus(task, change)}
+                    className="project-detail-task-status-select"
                   />
-                  {taskStatusLabels[statusKey as TaskStatus] ?? statusKey}
                 </span>
 
                 <span

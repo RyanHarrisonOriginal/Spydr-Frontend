@@ -649,15 +649,27 @@ export function WorkGrid(props: WorkGridProps) {
       });
     }
 
-    cols.push(
-      {
-        id: "status",
-        header: "Status",
-        width: 124,
+    cols.push({
+      id: "status",
+      header: "Status",
+      width: 124,
+      resize: true,
+      sort: true,
+      cell: StatusCell,
+    });
+
+    if (hierarchy) {
+      cols.push({
+        id: "areaId",
+        header: "Area",
+        width: 140,
         resize: true,
         sort: true,
-        cell: StatusCell,
-      },
+        cell: AreaCell,
+      });
+    }
+
+    cols.push(
       {
         id: "assigneeId",
         header: { text: "Owner", css: "work-grid-align-center" },
@@ -693,32 +705,22 @@ export function WorkGrid(props: WorkGridProps) {
     );
 
     if (hierarchy) {
-      cols.push(
-        {
-          id: "requesterId",
-          header: "Requester",
-          width: 140,
-          resize: true,
-          sort: true,
-          hidden: true,
-          options: personOptions,
-          editor: (row) =>
-            asWorkRow(row).kind === "project" ? "richselect" : null,
-          template: (value, row) => {
-            if (asWorkRow(row).kind !== "project") return "";
-            const match = personOptions.find((option) => option.id === value);
-            return match?.id ? match.label : "";
-          },
+      cols.push({
+        id: "requesterId",
+        header: "Requester",
+        width: 140,
+        resize: true,
+        sort: true,
+        hidden: true,
+        options: personOptions,
+        editor: (row) =>
+          asWorkRow(row).kind === "project" ? "richselect" : null,
+        template: (value, row) => {
+          if (asWorkRow(row).kind !== "project") return "";
+          const match = personOptions.find((option) => option.id === value);
+          return match?.id ? match.label : "";
         },
-        {
-          id: "areaId",
-          header: "Area",
-          width: 140,
-          resize: true,
-          hidden: true,
-          cell: AreaCell,
-        }
-      );
+      });
     }
 
     cols.push({

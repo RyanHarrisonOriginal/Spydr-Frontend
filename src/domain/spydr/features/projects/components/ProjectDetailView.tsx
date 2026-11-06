@@ -8,7 +8,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { StatusDot } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { StatusTickBar } from "@/domain/spydr/features/shared/components/StatusTickBar";
 import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
 import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
@@ -47,9 +46,9 @@ import {
 import { ProjectDescription } from "./ProjectDescription";
 import { ProjectDetailProperties } from "./ProjectDetailProperties";
 import { ProjectDetailTaskList } from "./ProjectDetailTaskList";
+import { ProjectStatusSelect } from "./ProjectStatusSelect";
 import { AreaColorSwatch } from "./AreaColorSwatch";
 import { SaveAsTemplateDialog } from "./SaveAsTemplateDialog";
-import { cn } from "@/lib/utils";
 import "../pages/project-detail-page.css";
 
 type ProjectLogTab = "tasks" | "notes" | "decisions" | "ideas" | "resources";
@@ -159,10 +158,6 @@ function formatUpdatedAgo(value: string | null | undefined): string {
   const days = Math.floor(hours / 24);
   if (days < 14) return `updated ${days}d ago`;
   return `updated ${date.toLocaleDateString(undefined, { month: "short", day: "numeric" }).toLowerCase()}`;
-}
-
-function sentenceStatus(status: string) {
-  return status.replace(/_/g, " ");
 }
 
 export function ProjectDetailView({
@@ -294,7 +289,6 @@ export function ProjectDetailView({
 
   const doneCount = stats.connected.tasks.closed;
   const totalTasks = stats.connected.tasks.total;
-  const statusActive = project.status === "active";
 
   const tabs: Array<{ id: ProjectLogTab; label: string; count: number }> = [
     { id: "tasks", label: "Tasks", count: project.tasks.length },
@@ -398,15 +392,14 @@ export function ProjectDetailView({
 
         <div className="project-detail-meta">
           <span className="project-detail-meta-item">
-            <StatusDot status={project.status} />
-            <span
-              className={cn(
-                "capitalize",
-                statusActive ? "text-[var(--active)]" : "text-[var(--muted)]"
-              )}
-            >
-              {sentenceStatus(project.status)}
-            </span>
+            <ProjectStatusSelect
+              value={project.status}
+              onChange={onStatusChange}
+              disabled={isUpdatingStatus}
+              quiet
+              fitContent
+              className="project-detail-meta-status"
+            />
           </span>
 
           {selectedArea ? (

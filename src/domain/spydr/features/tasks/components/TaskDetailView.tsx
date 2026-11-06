@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
 import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
-import { StatusDot } from "@/domain/spydr/features/shared/components/StatusPrimitives";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import { LogList } from "@/domain/spydr/features/log/components/LogList";
 import type { LogConfig } from "@/domain/spydr/features/log/types";
@@ -20,7 +19,6 @@ import { cleanDisplayName } from "@/domain/spydr/utils/projectPersonas";
 import { parseTaskNoteEntries } from "@/domain/spydr/utils/taskNotes";
 import {
   isTaskStatus,
-  taskStatusLabels,
   type TaskStatus,
   type TaskStatusChange,
 } from "@/domain/spydr/utils/taskStatus";
@@ -33,6 +31,7 @@ import type {
 import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinProject";
 import { TaskDetailProperties } from "./TaskDetailProperties";
 import { TaskStatusContextDialog } from "./TaskStatusContextDialog";
+import { TaskStatusSelect } from "./TaskStatusSelect";
 import "@/domain/spydr/features/projects/pages/project-detail-page.css";
 import "../pages/task-detail-page.css";
 import "@/domain/spydr/features/log/log-page.css";
@@ -152,9 +151,7 @@ export function TaskDetailView({
   const projectEmoji = selectedProject?.details?.emoji ?? null;
   const due = dueFromValue(form.dueDate || null);
   const done = isClosedCollectionStatus(form.status);
-  const statusLabel = isTaskStatus(form.status)
-    ? taskStatusLabels[form.status]
-    : form.status;
+  const statusValue = isTaskStatus(form.status) ? form.status : "active";
   const hint = saveHint(saveState);
   const showBlocker =
     form.status === "blocked" || form.status === "waiting";
@@ -415,8 +412,14 @@ export function TaskDetailView({
           )}
         >
           <span className="project-detail-meta-item">
-            <StatusDot status={form.status} />
-            <span className="capitalize text-[var(--fg)]">{statusLabel}</span>
+            <TaskStatusSelect
+              value={statusValue}
+              excludeTaskId={task.id}
+              onChange={applyStatus}
+              quiet
+              fitContent
+              className="project-detail-meta-status"
+            />
           </span>
 
           {projectTitle && (selectedProject || task.project) ? (
