@@ -21,8 +21,10 @@ import { useCreateProjectNoteMutation } from "./useCreateProjectNoteMutation";
 import { useCreateProjectDecisionMutation } from "./useCreateProjectDecisionMutation";
 import { useCreateProjectIdeaMutation } from "./useCreateProjectIdeaMutation";
 import { useUpdateProjectMutation } from "./useUpdateProjectMutation";
+import { useDeleteProjectMutation } from "./useDeleteProjectMutation";
 import { useProjectChildMutations } from "./useProjectChildMutations";
 import type { ProjectChildKind, UpdateProjectChildInput } from "@/domain/spydr/utils/types";
+import { isProjectPriority } from "@/domain/spydr/utils/projectPriority";
 
 export interface ProjectDetailFormValues {
   title: string;
@@ -116,6 +118,7 @@ export function useProjectDetailPage() {
   const people = peopleQuery.data ?? [];
   const areas = areasQuery.data ?? [];
   const updateProject = useUpdateProjectMutation(projectId);
+  const deleteProject = useDeleteProjectMutation();
   const createTask = useCreateProjectTaskMutation(projectId);
   const createNote = useCreateProjectNoteMutation(projectId);
   const createDecision = useCreateProjectDecisionMutation(projectId);
@@ -257,7 +260,7 @@ export function useProjectDetailPage() {
   const addNote = () => {
     createNote.mutate(
       {
-        title: noteForm.title.trim() || undefined,
+        title: noteForm.title.trim() || null,
         body: noteForm.body || undefined,
         status: "active",
       },
@@ -341,6 +344,18 @@ export function useProjectDetailPage() {
     );
   };
 
+  const updatePriority = (priority: string) => {
+    if (!projectId || !isProjectPriority(priority)) return;
+    updateProject.mutate({ priority });
+  };
+
+  const removeProject = (onDeleted?: () => void) => {
+    if (!projectId) return;
+    deleteProject.mutate(projectId, {
+      onSuccess: () => onDeleted?.(),
+    });
+  };
+
   const updateArea = (areaNodeId: string | null) => {
     if (!projectId) return;
 
@@ -410,12 +425,15 @@ export function useProjectDetailPage() {
     addIdea,
     updateChild,
     updateStatus,
+    updatePriority,
     updateArea,
     updateEmoji,
     updatePersona,
     deleteChild,
     deleteSelectedChildren,
     restoreChild,
+    deleteProject: removeProject,
+    isDeletingProject: deleteProject.isPending,
     isUpdatingChild: childMutations.updateChild.isPending,
     isDeletingChild:
       childMutations.deleteChild.isPending ||

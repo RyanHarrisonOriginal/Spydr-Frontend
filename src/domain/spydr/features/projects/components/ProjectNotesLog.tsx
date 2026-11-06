@@ -17,6 +17,8 @@ import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/E
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import { getNotePreview } from "@/domain/spydr/features/notes/utils/notePreview";
 import { groupNotesForMobile } from "@/domain/spydr/features/notes/utils/notesMobileGroups";
+import { realTitle } from "@/domain/spydr/features/log/utils/titles";
+import { richTextToPlainText } from "@/domain/spydr/utils/richText";
 
 interface ProjectNotesLogProps {
   notes: NoteNode[];
@@ -94,7 +96,7 @@ export function ProjectNotesLog({
           />
           <Button
             type="submit"
-            className="h-8 shrink-0 gap-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-500 hover:shadow-none sm:px-3"
+            className="h-8 shrink-0 gap-1.5 rounded-md bg-[var(--fg)] px-3 text-[12px] font-semibold text-[var(--canvas)] hover:opacity-92 hover:shadow-none sm:px-3"
             disabled={!canAdd}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -114,7 +116,7 @@ export function ProjectNotesLog({
             <section key={group.id}>
               <h3
                 className={cn(
-                  "px-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground",
+                  "px-2 text-[11px] text-[var(--muted-2)]",
                   groupIndex === 0 ? "pb-1 pt-1" : "pb-1 pt-4"
                 )}
               >
@@ -174,8 +176,10 @@ function NoteEntry({
   const [editing, setEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(note.title);
   const [draftBody, setDraftBody] = useState(note.body);
-  const preview = getNotePreview(note.title, note.body);
-  const titleLabel = note.title.trim() || preview.title;
+  const named = realTitle(note.title);
+  const bodyPlain = richTextToPlainText(note.body);
+  const preview = getNotePreview(named ?? "", note.body);
+  const titleLabel = named || bodyPlain.slice(0, 80) || "note";
 
   const startEdit = () => {
     setDraftTitle(note.title);
@@ -273,13 +277,15 @@ function NoteEntry({
             <span className="flex items-baseline gap-2">
               <span
                 className={cn(
-                  "min-w-0 flex-1 truncate text-[13px] font-semibold leading-snug",
-                  preview.untitled && !preview.snippet && !note.title.trim()
-                    ? "italic text-muted-foreground"
-                    : "text-foreground"
+                  "min-w-0 flex-1 truncate text-[13px] leading-snug",
+                  named
+                    ? "font-semibold text-foreground"
+                    : bodyPlain
+                      ? "text-foreground"
+                      : "italic text-muted-foreground"
                 )}
               >
-                {preview.title}
+                {named || bodyPlain || "Empty note"}
               </span>
               <time
                 className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground"
@@ -289,7 +295,7 @@ function NoteEntry({
                 {formatNoteListDate(note.updatedAt)}
               </time>
             </span>
-            {preview.snippet ? (
+            {named && preview.snippet ? (
               <span className="mt-0.5 line-clamp-2 block text-[12px] leading-relaxed text-muted-foreground">
                 {preview.snippet}
               </span>

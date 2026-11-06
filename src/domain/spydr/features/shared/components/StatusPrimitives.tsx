@@ -1,13 +1,14 @@
 import { cn } from "@/lib/utils";
 
+/** Final status palette: active teal, blocked danger, waiting warn, done gray, else neutral. */
 const statusColors: Record<string, string> = {
-  active: "bg-[hsl(var(--status-active))]",
-  inactive: "bg-[hsl(var(--status-todo))]",
-  waiting: "bg-[hsl(var(--status-doing))]",
-  snoozed: "bg-[hsl(var(--status-doing))]",
-  completed: "bg-[hsl(var(--status-done))]",
-  archived: "bg-[hsl(var(--status-todo))]",
-  blocked: "bg-[hsl(var(--status-blocked))]",
+  active: "bg-[var(--active)]",
+  waiting: "bg-[var(--warn)]",
+  blocked: "bg-[var(--danger)]",
+  completed: "bg-[#4A5058]",
+  inactive: "bg-[#5C626B]",
+  snoozed: "bg-[#5C626B]",
+  archived: "bg-[#5C626B]",
 };
 
 const priorityColors: Record<string, string> = {
@@ -30,14 +31,15 @@ export function StatusDot({
 }) {
   return (
     <span
-      className={cn("dot", statusColors[status] ?? "bg-muted-foreground", className)}
+      data-status={status}
+      className={cn("dot", statusColors[status] ?? "bg-[#5C626B]", className)}
     />
   );
 }
 
 export function StatusPill({ status }: { status: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded border border-border/20 bg-muted/20 px-1.5 py-px text-[11px] capitalize text-foreground/80">
+    <span className="inline-flex items-center gap-1.5 rounded border border-border/20 bg-muted/20 px-1.5 py-px text-[11px] capitalize text-muted-foreground">
       <StatusDot status={status} />
       {status.replace(/_/g, " ")}
     </span>

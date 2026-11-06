@@ -18,6 +18,7 @@ interface CollectionToolbarProps<T> {
   startActions?: ReactNode;
   endActions?: ReactNode;
   sticky?: boolean;
+  showCount?: boolean;
 }
 
 export function CollectionToolbar<T>({
@@ -27,6 +28,7 @@ export function CollectionToolbar<T>({
   startActions,
   endActions,
   sticky = false,
+  showCount = true,
 }: CollectionToolbarProps<T>) {
   const {
     state,
@@ -76,7 +78,7 @@ export function CollectionToolbar<T>({
             value={state.search}
             onChange={(event) => view.setSearch(event.target.value)}
             placeholder={searchPlaceholder}
-            className="pl-9 shadow-none"
+            className="h-8 rounded-md pl-9 shadow-none"
             aria-label={searchPlaceholder}
           />
         </div>
@@ -90,7 +92,7 @@ export function CollectionToolbar<T>({
         {hasFacets ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]">
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-md text-[12px]">
                 <Filter className="h-3.5 w-3.5" />
                 Filter
                 {activeFilterCount > 0 ? (
@@ -107,7 +109,7 @@ export function CollectionToolbar<T>({
         {showSort ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]">
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-md text-[12px]">
                 <ArrowUpDown className="h-3.5 w-3.5" />
                 {activeSortLabel}
               </Button>
@@ -126,27 +128,31 @@ export function CollectionToolbar<T>({
             variant="ghost"
             size="sm"
             onClick={view.clearFilters}
-            className="h-8 gap-1 px-2 text-[11px] text-muted-foreground"
+            className="h-8 gap-1 rounded-md px-2 text-[12px] text-muted-foreground"
           >
             <X className="h-3 w-3" />
             Clear all
           </Button>
-        ) : (
-          <span className="hidden font-mono text-[10px] text-muted-foreground/80 sm:inline">
+        ) : showCount ? (
+          <span className="hidden text-[12px] text-muted-foreground/80 sm:inline">
             Drag rows to set priority
           </span>
-        )}
+        ) : null}
 
-        <span
-          className={cn(
-            "ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground",
-            hasActiveFilters && "text-foreground/70"
-          )}
-        >
-          {filteredCount === totalCount
-            ? `${totalCount} ${noun}`
-            : `${filteredCount} of ${totalCount}`}
-        </span>
+        {showCount ? (
+          <span
+            className={cn(
+              "ml-auto text-[12px] text-muted-foreground",
+              hasActiveFilters && "text-foreground/70"
+            )}
+          >
+            {filteredCount === totalCount
+              ? `${totalCount} ${noun}`
+              : `${filteredCount} of ${totalCount}`}
+          </span>
+        ) : (
+          <span className="ml-auto" />
+        )}
         {endActions}
         </div>
       </div>

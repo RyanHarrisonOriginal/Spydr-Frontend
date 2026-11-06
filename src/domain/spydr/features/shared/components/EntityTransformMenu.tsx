@@ -37,6 +37,8 @@ interface EntityTransformMenuProps {
   defaultProjectId?: string | null;
   excludeProjectId?: string;
   compact?: boolean;
+  /** Override the trigger label (default "Transform to…" / compact "Transform"). */
+  triggerLabel?: string;
   className?: string;
 }
 
@@ -63,6 +65,7 @@ export function EntityTransformMenu({
   defaultProjectId = null,
   excludeProjectId,
   compact = false,
+  triggerLabel,
   className,
 }: EntityTransformMenuProps) {
   const navigate = useNavigate();
@@ -140,7 +143,7 @@ export function EntityTransformMenu({
 
   if (options.length === 0) return null;
 
-  const triggerLabel = compact ? "Transform" : "Transform to…";
+  const label = triggerLabel ?? (compact ? "Transform" : "Transform to…");
 
   return (
     <>
@@ -159,7 +162,7 @@ export function EntityTransformMenu({
             disabled={transform.isPending}
           >
             <ArrowRightLeft className={cn(compact ? "h-3 w-3" : "h-3.5 w-3.5")} />
-            {triggerLabel}
+            {label}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">

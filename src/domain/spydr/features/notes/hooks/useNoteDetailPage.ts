@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useNoteQuery, useProjectsQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import { realTitle } from "@/domain/spydr/features/log/utils/titles";
 import type { NoteNode } from "@/domain/spydr/utils/types";
 import { useUpdateNoteMutation } from "./useUpdateNoteMutation";
 
@@ -20,7 +21,7 @@ const SAVE_DEBOUNCE_MS = 700;
 
 function noteToForm(note: NoteNode): NoteDetailFormValues {
   return {
-    title: note.title,
+    title: realTitle(note.title) ?? "",
     body: note.body,
   };
 }

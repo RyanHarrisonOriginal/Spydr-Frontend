@@ -42,6 +42,83 @@ export function filterParameterOptions(
   return filtered.slice(0, 8);
 }
 
+export interface CreateFormParameter {
+  id: string;
+  key: string;
+  label: string;
+  required: boolean;
+  defaultValue: string | null;
+  sortOrder: number;
+}
+
+/**
+ * Inputs for creating a project from a template.
+ * Declared parameters come first. `{{KEY}}` tokens used in template text
+ * are included even when they were never saved on the parameter list.
+ */
+export function collectCreateFormParameters(template: {
+  parameters: Array<{
+    id: string;
+    key: string;
+    label: string;
+    required: boolean;
+    defaultValue: string | null;
+    sortOrder: number;
+  }>;
+  titleTemplate: string;
+  bodyTemplate: string;
+  outcomeTemplate?: string | null;
+  tags?: string[];
+  tasks?: Array<{
+    titleTemplate: string;
+    bodyTemplate: string;
+    tags?: string[];
+  }>;
+}): CreateFormParameter[] {
+  const declared = [...template.parameters].sort(
+    (a, b) => a.sortOrder - b.sortOrder
+  );
+  const declaredByKey = new Map(declared.map((param) => [param.key, param]));
+  const used = extractKeysFromTexts(
+    template.titleTemplate,
+    template.bodyTemplate,
+    template.outcomeTemplate,
+    ...(template.tags ?? []),
+    ...(template.tasks ?? []).flatMap((task) => [
+      task.titleTemplate,
+      task.bodyTemplate,
+      ...(task.tags ?? []),
+    ])
+  );
+
+  const keys = [...declared.map((param) => param.key)];
+  for (const key of used) {
+    if (!declaredByKey.has(key)) keys.push(key);
+  }
+
+  return keys.map((key, index) => {
+    const param = declaredByKey.get(key);
+    if (param) {
+      return {
+        id: param.id,
+        key: param.key,
+        label: param.label,
+        required: param.required,
+        defaultValue: param.defaultValue,
+        sortOrder: param.sortOrder,
+      };
+    }
+    return {
+      id: `used:${key}`,
+      key,
+      label: humanizeParameterKey(key),
+      required: true,
+      defaultValue: null,
+      sortOrder: index,
+    };
+  });
+}
+
 export function extractKeysFromTexts(
   ...texts: Array<string | null | undefined>
 ): string[] {

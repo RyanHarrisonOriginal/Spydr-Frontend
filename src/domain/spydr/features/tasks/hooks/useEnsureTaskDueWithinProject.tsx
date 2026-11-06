@@ -13,6 +13,7 @@ interface EnsureTaskDueArgs {
   project?: TaskDueProjectRef | null;
   dueDate: string | null;
   onAllowed(): void | Promise<void>;
+  onDismiss?(): void;
 }
 
 export function useEnsureTaskDueWithinProject() {
@@ -21,10 +22,11 @@ export function useEnsureTaskDueWithinProject() {
     project: TaskDueProjectRef;
     dueDate: string;
     onAllowed(): void | Promise<void>;
+    onDismiss?(): void;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const ensure = ({ project, dueDate, onAllowed }: EnsureTaskDueArgs) => {
+  const ensure = ({ project, dueDate, onAllowed, onDismiss }: EnsureTaskDueArgs) => {
     if (!isDueAfterProjectTarget(dueDate, project?.details?.targetDate)) {
       void onAllowed();
       return;
@@ -36,7 +38,7 @@ export function useEnsureTaskDueWithinProject() {
 
     const normalizedDue = toDateOnlyKey(dueDate) ?? dueDate;
     setError(null);
-    setPrompt({ project, dueDate: normalizedDue, onAllowed });
+    setPrompt({ project, dueDate: normalizedDue, onAllowed, onDismiss });
   };
 
   const confirm = async () => {
@@ -69,8 +71,10 @@ export function useEnsureTaskDueWithinProject() {
       }}
       onCancel={() => {
         if (updateProject.isPending) return;
+        const dismiss = prompt?.onDismiss;
         setPrompt(null);
         setError(null);
+        dismiss?.();
       }}
     />
   );

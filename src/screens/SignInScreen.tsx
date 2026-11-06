@@ -1,11 +1,12 @@
 import { SignIn, useAuth } from "@clerk/react";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Logo } from "@/components/Logo";
-import { WebField } from "@/components/WebField";
-import { clerkAppearance } from "@/lib/clerkAppearance";
+import { SignalField } from "@/shared/brand/SignalField";
+import { SpydrMark } from "@/shared/brand/SpydrMark";
+import { signInAppearance } from "@/lib/clerkAppearance";
 import { authRoutes } from "@/config/auth";
 import { oauthNavigationTarget } from "@/lib/oauthConsent";
+import "./sign-in-splash.css";
 
 function oauthReturnUrl(search: string, hash: string): string | undefined {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -24,12 +25,20 @@ function appReturnUrl(search: string): string | undefined {
   return redirect;
 }
 
+function prefersReducedMotion() {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+}
+
 export default function SignInScreen() {
   const location = useLocation();
   const { isLoaded, isSignedIn } = useAuth();
   const oauthReturn = oauthReturnUrl(location.search, location.hash);
   const appReturn = appReturnUrl(location.search);
   const afterSignIn = oauthReturn ?? appReturn ?? "/";
+  const formRef = useRef<HTMLElement>(null);
+  const [clerkMounted, setClerkMounted] = useState(false);
+  const [showTip, setShowTip] = useState(false);
+  const [reducedMotion] = useState(prefersReducedMotion);
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !oauthReturn) return;
@@ -38,53 +47,84 @@ export default function SignInScreen() {
     }
   }, [isLoaded, isSignedIn, oauthReturn]);
 
-  return (
-    <div className="spydr-surface relative flex h-full flex-col overflow-y-auto bg-background">
-      <div
-        className="pointer-events-none absolute inset-y-0 right-0 w-[min(100%,42rem)] opacity-80"
-        aria-hidden
-      >
-        <WebField className="h-full w-full" intensity="focus" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
-      </div>
+  useEffect(() => {
+    const root = formRef.current;
+    if (!root) return;
 
-      <header className="spydr-rule spydr-glass relative z-10 sticky top-0 flex h-14 items-center justify-between border-b border-white/10 px-4 md:h-20 md:px-10">
-        <Logo size="md" />
-        <Link
-          to="/sign-up"
-          className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-foreground"
-        >
+    const check = () => {
+      if (
+        root.querySelector(
+          ".cl-rootBox, .cl-card, [data-clerk-component], iframe",
+        )
+      ) {
+        setClerkMounted(true);
+      }
+    };
+
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (clerkMounted) {
+      setShowTip(false);
+      return;
+    }
+    const id = window.setTimeout(() => {
+      setShowTip(true);
+    }, 4000);
+    return () => window.clearTimeout(id);
+  }, [clerkMounted]);
+
+  return (
+    <div className="sign-in-splash">
+      <SignalField static={reducedMotion} />
+
+      <header className="sign-in-splash__header">
+        <Link to="/" className="sign-in-splash__brand">
+          <SpydrMark size={22} variant="compact" static decorative />
+          <span className="sign-in-splash__brand-name">Spydr</span>
+        </Link>
+        <Link to="/sign-up" className="sign-in-splash__header-link">
           Create account
         </Link>
       </header>
 
-      <main className="relative z-10 flex min-h-[calc(100dvh-3.5rem)] flex-1 flex-col items-center justify-center gap-10 p-5 md:flex-row md:gap-20 md:p-12">
-        <section className="order-2 w-full max-w-sm text-center md:order-1 md:text-left">
-          <Logo size="xl" className="mb-8 justify-center md:justify-start" />
-          <h1 className="mb-3 text-2xl font-semibold tracking-[-0.03em] text-foreground md:text-[2rem]">
-            Back to the web
-          </h1>
-          <p className="max-w-sm text-[14px] leading-relaxed text-muted-foreground">
-            Every thread is exactly where you left it. Sign in to take the
-            controls.
+      <main className="sign-in-splash__main">
+        <section className="sign-in-splash__copy">
+          <SpydrMark
+            className="sign-in-splash__mark"
+            size={104}
+            intro={!reducedMotion}
+            static={reducedMotion}
+          />
+          <h1 className="sign-in-splash__title">Back to the web</h1>
+          <p className="sign-in-splash__lede">
+            Every thread is exactly where you left it.
           </p>
         </section>
 
         <section
-          className="order-1 flex w-full max-w-md flex-col items-center md:order-2"
+          ref={formRef}
+          className="sign-in-splash__form"
           data-clerk-sign-in-container
         >
           <SignIn
             fallbackRedirectUrl={afterSignIn}
             forceRedirectUrl={oauthReturn}
             signUpUrl={authRoutes.signUpUrl}
-            appearance={clerkAppearance}
+            appearance={signInAppearance}
           />
-          <p className="mt-5 max-w-sm text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70">
-            Form not loading? Disable strict tracking protection.
-          </p>
         </section>
       </main>
+
+      {showTip && !clerkMounted ? (
+        <footer className="sign-in-splash__footer">
+          Form not loading? Turn off strict tracking protection for this site.
+        </footer>
+      ) : null}
     </div>
   );
 }

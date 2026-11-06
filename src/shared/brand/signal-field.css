@@ -1,0 +1,105 @@
+/* SignalField — honeycomb lattice with CSS signal sweeps. */
+
+.spydr-signal-field {
+  position: absolute;
+  left: 50%;
+  bottom: -260px;
+  width: 1800px;
+  height: 1100px;
+  margin-left: -620px;
+  pointer-events: none;
+  transform: perspective(1100px) rotateX(58deg) rotateZ(-10deg);
+  transform-origin: 50% 70%;
+  -webkit-mask-image: radial-gradient(
+    ellipse 55% 60% at 50% 62%,
+    #000 30%,
+    transparent 75%
+  );
+  mask-image: radial-gradient(
+    ellipse 55% 60% at 50% 62%,
+    #000 30%,
+    transparent 75%
+  );
+}
+
+.spydr-signal-field__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.spydr-signal-field__lattice {
+  stroke: none;
+}
+
+.spydr-signal-field__signal {
+  fill: none;
+  stroke: var(--active, #3fb5a3);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 0.4 0.5 0.8 0.5 2.6 200;
+  stroke-dashoffset: 5;
+  animation: spydr-signal-sweep var(--sf-dur, 8s) linear infinite;
+  animation-delay: var(--sf-delay, 0s);
+  animation-direction: var(--sf-dir, normal);
+}
+
+.spydr-signal-field__signal--dim {
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+
+.spydr-signal-field__dot {
+  fill: var(--fg, #e8eaed);
+  fill-opacity: 0.18;
+}
+
+.spydr-signal-field__pulse {
+  fill: var(--active, #3fb5a3);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spydr-signal-pulse 5s ease-out infinite;
+  animation-delay: var(--sf-pulse-delay, 0s);
+}
+
+@keyframes spydr-signal-sweep {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes spydr-signal-pulse {
+  0% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  18% {
+    opacity: 0.95;
+    transform: scale(1.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+.spydr-signal-field--static .spydr-signal-field__signal,
+.spydr-signal-field--static .spydr-signal-field__pulse {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spydr-signal-field__signal,
+  .spydr-signal-field__pulse {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .spydr-signal-field {
+    opacity: 0.6;
+  }
+}

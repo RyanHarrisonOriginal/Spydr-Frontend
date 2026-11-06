@@ -16,13 +16,12 @@ export interface WorkspaceNavItem {
   to?: string;
   icon: ComponentType<{ className?: string }>;
   label: string;
-  badge?: string;
   disabled?: boolean;
 }
 
 export const outlookNavItems: WorkspaceNavItem[] = [
   { to: "/today", icon: Sun, label: "Today" },
-  { icon: Inbox, label: "Inbox", badge: "later", disabled: true },
+  { icon: Inbox, label: "Inbox", disabled: true },
 ];
 
 export const workspaceNavItems: WorkspaceNavItem[] = [
@@ -36,7 +35,7 @@ export const workspaceNavItems: WorkspaceNavItem[] = [
 
 export const metaNavItems: WorkspaceNavItem[] = [
   { to: "/settings", icon: Settings, label: "Settings" },
-  { icon: Archive, label: "Archived", badge: "later", disabled: true },
+  { icon: Archive, label: "Archived", disabled: true },
 ];
 
 export const workspaceNavSections: { label: string; items: WorkspaceNavItem[] }[] =

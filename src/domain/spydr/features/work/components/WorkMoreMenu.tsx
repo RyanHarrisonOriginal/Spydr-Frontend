@@ -61,7 +61,7 @@ export function WorkMoreMenu({
           variant="ghost"
           size="sm"
           aria-label="More list options"
-          className="h-8 w-8 px-0 text-muted-foreground"
+          className="h-[30px] w-[30px] rounded-lg border border-[#1A1D23] bg-[var(--control)] px-0 text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--fg)]"
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>

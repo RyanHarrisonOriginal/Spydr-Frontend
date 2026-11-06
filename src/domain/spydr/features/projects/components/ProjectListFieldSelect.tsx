@@ -28,6 +28,7 @@ interface ProjectListFieldSelectProps {
   triggerClassName?: string;
   triggerStyle?: CSSProperties;
   labelClassName?: string;
+  contentClassName?: string;
   emptyValue?: string;
   menuLabel?: string;
   searchable?: boolean;
@@ -45,6 +46,8 @@ interface ProjectListFieldSelectProps {
   fitContent?: boolean;
   /** Wrap the selected label instead of truncating with ellipsis. */
   wrapLabel?: boolean;
+  /** Hide the trigger chevron (plain text trigger). */
+  hideChevron?: boolean;
 }
 
 export function ProjectListFieldSelect({
@@ -58,6 +61,7 @@ export function ProjectListFieldSelect({
   triggerClassName,
   triggerStyle,
   labelClassName,
+  contentClassName,
   emptyValue = "",
   menuLabel,
   searchable,
@@ -70,6 +74,7 @@ export function ProjectListFieldSelect({
   triggerLabel,
   fitContent = false,
   wrapLabel = false,
+  hideChevron = false,
   title,
 }: ProjectListFieldSelectProps) {
   const [open, setOpen] = useState(false);
@@ -158,13 +163,15 @@ export function ProjectListFieldSelect({
               >
                 {displayLabel}
               </span>
-              <ChevronDown
-                className={cn(
-                  "h-3 w-3 shrink-0 text-muted-foreground/70 transition-transform",
-                  open && "rotate-180 text-foreground"
-                )}
-                aria-hidden
-              />
+              {hideChevron ? null : (
+                <ChevronDown
+                  className={cn(
+                    "h-3 w-3 shrink-0 text-muted-foreground/70 transition-transform",
+                    open && "rotate-180 text-foreground"
+                  )}
+                  aria-hidden
+                />
+              )}
             </>
           ) : null}
         </button>
@@ -174,16 +181,17 @@ export function ProjectListFieldSelect({
         align="start"
         sideOffset={6}
         className={cn(
-          "z-[120] overflow-x-hidden border-white/10 p-1",
+          "z-[120] overflow-x-hidden border-white/10 p-1.5",
           "w-max min-w-[14rem] max-w-[min(24rem,calc(100vw-1.5rem))]",
           appearance === "field" &&
-            "min-w-[max(14rem,var(--radix-dropdown-menu-trigger-width))]"
+            "min-w-[max(14rem,var(--radix-dropdown-menu-trigger-width))]",
+          contentClassName
         )}
         onClick={(event) => event.stopPropagation()}
         onPointerDown={(event) => event.stopPropagation()}
       >
         {menuLabel ? (
-          <div className="px-2 pb-1 pt-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+          <div className="px-2.5 pb-1.5 pt-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
             {menuLabel}
           </div>
         ) : null}
@@ -212,7 +220,7 @@ export function ProjectListFieldSelect({
 
         <div className="max-h-56 overflow-y-auto overflow-x-hidden">
           {visibleOptions.length === 0 ? (
-            <p className="px-2 py-3 text-center text-[11px] text-muted-foreground">
+            <p className="px-2.5 py-3 text-center text-[12px] text-muted-foreground">
               No matches
             </p>
           ) : (
@@ -229,7 +237,7 @@ export function ProjectListFieldSelect({
                   onSelect={() => onChange(option.value)}
                   style={optionStyle}
                   className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[11px]",
+                    "flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px]",
                     "text-popover-foreground focus:bg-accent focus:text-accent-foreground",
                     isSelected && !optionStyle && "bg-accent/80 font-medium",
                     isSelected && optionStyle && "font-medium",
@@ -237,12 +245,14 @@ export function ProjectListFieldSelect({
                     getOptionClassName?.(option, isSelected)
                   )}
                 >
-                  <span className="flex w-3 shrink-0 items-center justify-center">
-                    {renderOptionLeading?.(option) ?? null}
-                  </span>
+                  {renderOptionLeading ? (
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                      {renderOptionLeading(option)}
+                    </span>
+                  ) : null}
                   <span
                     className={cn(
-                      "min-w-0 flex-1 whitespace-nowrap text-left",
+                      "min-w-0 flex-1 whitespace-nowrap text-left leading-none",
                       isEmptyOption && "italic",
                       getOptionLabelClassName?.(option, isSelected)
                     )}
@@ -250,12 +260,12 @@ export function ProjectListFieldSelect({
                     {option.label}
                   </span>
                   {isSelected ? (
-                    <Check className="h-3 w-3 shrink-0 text-primary" aria-hidden />
+                    <Check className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
                   ) : (
-                    <span className="h-3 w-3 shrink-0" aria-hidden />
+                    <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
                   )}
                 </DropdownMenuItem>
-                {showSeparator ? <DropdownMenuSeparator className="my-1 bg-border/80" /> : null}
+                {showSeparator ? <DropdownMenuSeparator className="my-1.5 bg-border/80" /> : null}
               </Fragment>
             );
           })

@@ -33,6 +33,13 @@ const statusOptionSurface: Record<string, string> = {
     "focus:bg-[hsl(var(--status-done)/0.14)] data-[highlighted]:bg-[hsl(var(--status-done)/0.14)]",
 };
 
+const quietLabelClass: Record<string, string> = {
+  active: "text-[var(--muted)] work-grid-status-label",
+  waiting: "text-[var(--muted)] work-grid-status-label",
+  blocked: "text-[var(--muted)] work-grid-status-label",
+  completed: "text-[var(--muted)] work-grid-status-label",
+};
+
 interface TaskStatusSelectProps {
   value: string;
   onChange(change: TaskStatusChange): void;
@@ -41,6 +48,7 @@ interface TaskStatusSelectProps {
   appearance?: "field" | "icon";
   fitContent?: boolean;
   wrapLabel?: boolean;
+  quiet?: boolean;
   excludeTaskId?: string;
   /** When false, blocked and waiting commit immediately so the parent can collect context inline. */
   collectContext?: boolean;
@@ -54,6 +62,7 @@ export function TaskStatusSelect({
   appearance = "field",
   fitContent = false,
   wrapLabel = false,
+  quiet = false,
   excludeTaskId,
   collectContext = true,
 }: TaskStatusSelectProps) {
@@ -82,16 +91,21 @@ export function TaskStatusSelect({
         onChange={handleChange}
         disabled={disabled}
         ariaLabel="Task status"
-        menuLabel="Status"
+        menuLabel={quiet ? undefined : "Status"}
         appearance={appearance}
         fitContent={fitContent}
         wrapLabel={wrapLabel}
+        hideChevron={quiet}
         leading={<StatusDot status={value} className="shrink-0" />}
         renderOptionLeading={(option) => (
           <StatusDot status={option.value} className="shrink-0" />
         )}
-        triggerClassName={cn(statusSurface[value], className)}
-        labelClassName="text-foreground/90"
+        triggerClassName={cn(quiet ? undefined : statusSurface[value], className)}
+        labelClassName={
+          quiet
+            ? quietLabelClass[value] ?? "text-muted-foreground"
+            : "text-foreground/90"
+        }
         getOptionClassName={(option, selected) =>
           cn(statusOptionSurface[option.value], selected && statusSurface[option.value])
         }

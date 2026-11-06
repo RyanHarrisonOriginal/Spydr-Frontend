@@ -1,34 +1,20 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
 import type { PersonNode } from "@/domain/spydr/utils/types";
-import { personDisplayName, personGivenName, personInitials } from "@/domain/spydr/utils/projectPersonas";
+import {
+  formatPerson,
+  personDisplayName,
+  personGivenName,
+  personInitials,
+} from "@/domain/spydr/utils/projectPersonas";
 import { useCurrentUserPerson } from "../context/CurrentUserPersonContext";
 import { cn } from "@/lib/utils";
-
-interface PersonMeBadgeProps {
-  className?: string;
-  compact?: boolean;
-}
-
-export function PersonMeBadge({ className, compact = false }: PersonMeBadgeProps) {
-  return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 items-center gap-1 rounded-full border border-highlight/40 bg-highlight/12 font-mono uppercase tracking-[0.14em] text-highlight shadow-[0_0_16px_hsl(var(--highlight)/0.12)]",
-        compact ? "px-1.5 py-px text-[8px]" : "px-2 py-0.5 text-[9px]",
-        className
-      )}
-    >
-      <Sparkles className={compact ? "h-2 w-2" : "h-2.5 w-2.5"} aria-hidden />
-      You
-    </span>
-  );
-}
 
 interface PersonAvatarProps {
   person: PersonNode | null | undefined;
   className?: string;
   size?: "sm" | "md" | "lg";
+  /** Empty unassigned ring when person is null. */
+  unassigned?: boolean;
 }
 
 const avatarSizeClass: Record<NonNullable<PersonAvatarProps["size"]>, string> = {
@@ -37,25 +23,52 @@ const avatarSizeClass: Record<NonNullable<PersonAvatarProps["size"]>, string> = 
   lg: "h-10 w-10 text-[11px] tracking-tight",
 };
 
+/** Transparent fill with inset ring — used for Unassigned. */
+export function UnassignedAvatar({
+  className,
+  size = "md",
+}: {
+  className?: string;
+  size?: "sm" | "md" | "lg";
+}) {
+  return (
+    <span
+      className={cn(
+        "grid shrink-0 place-items-center rounded-full bg-transparent shadow-[inset_0_0_0_1px_#2A2F37]",
+        avatarSizeClass[size],
+        className
+      )}
+      aria-hidden
+    />
+  );
+}
+
 export function PersonAvatar({
   person,
   className,
   size = "md",
+  unassigned = false,
 }: PersonAvatarProps) {
-  const { isMe } = useCurrentUserPerson();
-  const isCurrentUser = isMe(person);
+  const { currentUserPersonId } = useCurrentUserPerson();
+
+  if (!person || unassigned) {
+    return <UnassignedAvatar className={className} size={size} />;
+  }
+
+  const { initials } = formatPerson(person, currentUserPersonId);
 
   return (
     <span
       className={cn(
-        "grid shrink-0 place-items-center rounded-full border border-border bg-muted/40 font-mono font-medium text-foreground/80",
+        "grid shrink-0 place-items-center rounded-full border-0 bg-[#1A1E25] font-mono font-medium text-[var(--fg-soft)] shadow-[inset_0_0_0_1px_#262B33]",
         avatarSizeClass[size],
-        isCurrentUser && "person-me-avatar border-highlight/50 bg-highlight/10 text-highlight",
         className
       )}
-      aria-label={isCurrentUser ? "Your profile avatar" : undefined}
+      aria-label={
+        person.id === currentUserPersonId ? "Your profile avatar" : undefined
+      }
     >
-      {personInitials(person)}
+      {initials}
     </span>
   );
 }
@@ -63,35 +76,36 @@ export function PersonAvatar({
 interface PersonIdentityLabelProps {
   person: PersonNode | null | undefined;
   className?: string;
+  /** @deprecated Badges removed; kept for call-site compatibility. */
   showBadge?: boolean;
 }
 
 export function PersonIdentityLabel({
   person,
   className,
-  showBadge = true,
 }: PersonIdentityLabelProps) {
-  const { isMe } = useCurrentUserPerson();
-  const isCurrentUser = isMe(person);
+  const { currentUserPersonId } = useCurrentUserPerson();
 
-  if (!person) return null;
+  if (!person) {
+    return (
+      <span className={cn("text-[var(--muted)]", className)}>Unassigned</span>
+    );
+  }
+
+  const { label } = formatPerson(person, currentUserPersonId);
 
   return (
-    <span className={cn("inline-flex min-w-0 items-center gap-1.5", className)}>
-      <span className={cn("truncate", isCurrentUser && "text-highlight")}>
-        {personDisplayName(person)}
-      </span>
-      {showBadge && isCurrentUser ? <PersonMeBadge compact /> : null}
+    <span className={cn("inline-flex min-w-0 items-center truncate", className)}>
+      {label}
     </span>
   );
 }
 
 export function personSelectLabel(
   person: PersonNode,
-  isMe: (personOrId: PersonNode | string | null | undefined) => boolean
+  currentUserId: string | null | undefined
 ): string {
-  const name = personDisplayName(person);
-  return isMe(person) ? `${name} (You)` : name;
+  return formatPerson(person, currentUserId).label;
 }
 
 interface PersonNameFitProps {
@@ -114,31 +128,26 @@ export function PersonNameFit({
   className,
   whenTight = "given",
 }: PersonNameFitProps) {
-  const full = personDisplayName(person);
-  const given = personGivenName(person) || full;
-  const suffix = you ? " (You)" : "";
-  const title = `${full}${suffix}`;
+  const { currentUserPersonId } = useCurrentUserPerson();
+  const formatted = formatPerson(person, currentUserPersonId);
+  const full = you || person.id === currentUserPersonId ? "You" : formatted.label;
+  const given =
+    full === "You" ? "You" : personGivenName(person) || formatted.label;
 
   if (whenTight === "initials") {
     return (
       <MeasuredPersonName
-        full={title}
-        initials={personInitials(person)}
+        full={full}
+        initials={formatted.initials || personInitials(person)}
         className={className}
       />
     );
   }
 
   return (
-    <span className={cn("person-name-fit", className)} title={title}>
-      <span className="person-name-fit__full">
-        {full}
-        {suffix}
-      </span>
-      <span className="person-name-fit__given">
-        {given}
-        {suffix}
-      </span>
+    <span className={cn("person-name-fit", className)} title={full}>
+      <span className="person-name-fit__full">{full}</span>
+      <span className="person-name-fit__given">{given}</span>
     </span>
   );
 }
@@ -194,3 +203,11 @@ function MeasuredPersonName({
     </span>
   );
 }
+
+/** @deprecated Use formatPerson label "You" instead of a badge. */
+export function PersonMeBadge(_props?: { className?: string; compact?: boolean }) {
+  return null;
+}
+
+// Keep personDisplayName available for search/haystacks that want the raw name.
+export { personDisplayName };

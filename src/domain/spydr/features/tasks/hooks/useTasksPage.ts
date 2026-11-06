@@ -18,6 +18,7 @@ import { parseWorkTaskFilterSelections } from "@/domain/spydr/features/work/util
 import { useUpdateTaskMutation } from "./useUpdateTaskMutation";
 import { useDeleteTaskMutation } from "./useDeleteTaskMutation";
 import { useCollectionReorder } from "@/domain/spydr/features/shared/hooks/useCollectionReorder";
+import { isProjectPriority } from "@/domain/spydr/utils/projectPriority";
 
 export function useTasksPage(options?: { personId?: string | null }) {
   const personId = options?.personId ?? null;
@@ -145,6 +146,23 @@ export function useTasksPage(options?: { personId?: string | null }) {
     );
   };
 
+  const updatePriority = (taskId: string, priority: string) => {
+    if (!isProjectPriority(priority)) return;
+    setTitleError(null);
+    setUpdatingTaskId(taskId);
+    updateTask.mutate(
+      { taskId, input: { priority } },
+      {
+        onError: (error) => {
+          setTitleError(
+            error instanceof Error ? error.message : "Failed to update task priority"
+          );
+        },
+        onSettled: () => setUpdatingTaskId(null),
+      }
+    );
+  };
+
   const updateEmoji = (taskId: string, emoji: string | null) => {
     setTitleError(null);
     setUpdatingTaskId(taskId);
@@ -218,6 +236,7 @@ export function useTasksPage(options?: { personId?: string | null }) {
     updateAssignee,
     updateDueDate,
     updateTitle,
+    updatePriority,
     updateEmoji,
     updatingTaskId,
     statusError,

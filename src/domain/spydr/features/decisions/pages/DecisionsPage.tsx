@@ -1,81 +1,71 @@
-import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import { Button } from "@/components/ui/button";
 import {
-  EmptyState,
   ErrorState,
   LoadingState,
 } from "@/domain/spydr/features/shared/components/ListState";
-import { CollectionToolbar } from "@/domain/spydr/features/shared/components/CollectionToolbar";
-import { CollectionNoResults } from "@/domain/spydr/features/shared/components/CollectionNoResults";
-import { DecisionList } from "../components/DecisionList";
+import { LogList } from "@/domain/spydr/features/log/components/LogList";
+import { LogChildEditDialog } from "@/domain/spydr/features/log/components/LogChildEditDialog";
 import { useDecisionsPage } from "../hooks/useDecisionsPage";
 
 export function DecisionsPage() {
-  const {
-    view,
-    reorder,
-    getPriorityRank,
-    deleteDecision,
-    deletingDecisionId,
-    deleteError,
-    totalCount,
-    isLoading,
-    isFetching,
-    isError,
-    errorMessage,
-    refetch,
-  } = useDecisionsPage();
-  const showInitialLoading = isLoading && totalCount === 0;
-  const showEmpty = !showInitialLoading && !isError && totalCount === 0;
+  const page = useDecisionsPage();
   usePageBreadcrumb("Decisions");
 
+  if (page.isLoading && page.totalCount === 0) {
+    return <LoadingState title="Loading decisions" />;
+  }
+
+  if (page.isError) {
+    return (
+      <ErrorState title="Decisions unavailable" description={page.errorMessage}>
+        <Button type="button" size="sm" variant="outline" onClick={() => page.refetch()}>
+          Retry
+        </Button>
+      </ErrorState>
+    );
+  }
+
   return (
-    <div>
-      <PageHeader
+    <>
+      <LogList
         title="Decisions"
-        meta={
-          <span>
-            {totalCount} captured
-            {isFetching && totalCount > 0 ? " · refreshing…" : ""}
-            {" · add decisions from a project’s Thinking panel"}
-          </span>
-        }
+        items={page.items}
+        config={page.config}
+        projects={page.projects}
+        mode={page.mode}
+        onModeChange={page.setMode}
+        search={page.search}
+        onSearchChange={page.setSearch}
+        projectFilter={page.projectFilter}
+        onProjectFilterChange={page.setProjectFilter}
+        reorderEnabled={page.reorderEnabled}
+        onReorder={page.onReorder}
+        isCapturing={page.isCapturing}
       />
-      {showInitialLoading && <LoadingState title="Loading decisions" />}
-      {isError && (
-        <ErrorState title="Decisions unavailable" description={errorMessage}>
-          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
-            Retry
-          </Button>
-        </ErrorState>
-      )}
-      {showEmpty && (
-        <EmptyState
-          title="No decisions yet"
-          description="Record decisions on a project page. They'll show up here across your workspace."
-        />
-      )}
-      {totalCount > 0 && (
-        <>
-          <CollectionToolbar view={view} />
-          {deleteError ? (
-            <p className="px-4 pb-2 text-sm text-destructive md:px-6">{deleteError}</p>
-          ) : null}
-          {view.items.length > 0 ? (
-            <DecisionList
-              decisions={view.items}
-              getPriorityRank={getPriorityRank}
-              reorderEnabled={reorder.canReorder}
-              onReorder={reorder.onReorder}
-              onDelete={deleteDecision}
-              deletingDecisionId={deletingDecisionId}
-            />
-          ) : (
-            <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />
-          )}
-        </>
-      )}
-    </div>
+      {page.deleteError ? (
+        <p className="px-4 pb-2 text-sm text-destructive">{page.deleteError}</p>
+      ) : null}
+      <LogChildEditDialog
+        open={Boolean(page.editDecision)}
+        heading="Edit decision"
+        titleLabel="Decision"
+        bodyLabel="Rationale"
+        values={{
+          title: page.editDecision?.title ?? "",
+          body:
+            page.editDecision?.details?.rationale ||
+            page.editDecision?.body ||
+            "",
+        }}
+        isSaving={page.isSavingEdit}
+        onOpenChange={(open) => {
+          if (!open) page.setEditDecision(null);
+        }}
+        onSave={(values) => {
+          void page.saveEdit(values.title, values.body);
+        }}
+      />
+    </>
   );
 }

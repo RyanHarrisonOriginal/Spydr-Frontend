@@ -4,7 +4,7 @@ import { ClerkProvider } from "@clerk/react";
 import { ui } from "@clerk/ui";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import App from "./App";
-import { clerkAppearance } from "@/lib/clerkAppearance";
+import { clerkAppearance, signInLocalization } from "@/lib/clerkAppearance";
 import { authRoutes } from "@/config/auth";
 import "./index.css";
 
@@ -18,6 +18,7 @@ createRoot(document.getElementById("root")!).render(
         }
         ui={ui}
         appearance={clerkAppearance}
+        localization={signInLocalization}
         afterSignOutUrl={authRoutes.afterSignOutUrl}
         signInUrl={authRoutes.signInUrl}
         signUpUrl={authRoutes.signUpUrl}

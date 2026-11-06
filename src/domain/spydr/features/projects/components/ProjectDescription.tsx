@@ -3,7 +3,7 @@ import { Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const DESCRIPTION_PLACEHOLDER =
-  "Brief — context, intent, and what done looks like.";
+  "Add context, intent, and what done looks like.";
 
 interface ProjectDescriptionProps {
   value: string;
@@ -34,18 +34,13 @@ export function ProjectDescription({ value, onChange }: ProjectDescriptionProps)
   };
 
   return (
-    <div className="min-w-0" ref={editorRef}>
-      <div className="mb-1.5 flex items-center gap-2 px-1">
-        <span
-          id={labelId}
-          className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
-        >
-          Description
-        </span>
+    <div className="project-detail-brief project-detail-panel" ref={editorRef}>
+      <div className="project-detail-panel-heading">
+        <span id={labelId}>Brief</span>
         {editing ? (
           <button
             type="button"
-            className="ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+            className="project-detail-panel-heading-action"
             onClick={() => leaveEdit(true)}
           >
             Done
@@ -53,11 +48,11 @@ export function ProjectDescription({ value, onChange }: ProjectDescriptionProps)
         ) : (
           <button
             type="button"
-            className="ml-auto rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Edit description"
+            className="project-detail-panel-heading-action"
+            aria-label="Edit brief"
             onClick={() => setEditing(true)}
           >
-            <Pencil className="h-3 w-3" />
+            <Pencil className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
@@ -68,8 +63,8 @@ export function ProjectDescription({ value, onChange }: ProjectDescriptionProps)
           value={value}
           aria-labelledby={labelId}
           placeholder={DESCRIPTION_PLACEHOLDER}
-          rows={8}
-          className="spydr-strand-field min-h-[10rem] w-full resize-y border-0 bg-transparent px-1 py-2 text-[14px] leading-relaxed outline-none ring-0 placeholder:text-muted-foreground"
+          rows={6}
+          className="min-h-[6rem] w-full resize-y border-0 bg-transparent text-[14px] leading-[1.6] text-[var(--fg)] outline-none ring-0 placeholder:text-[var(--muted-2)]"
           onChange={(event) => onChange(event.target.value)}
           onBlur={(event) => {
             const next = event.relatedTarget;
@@ -88,11 +83,11 @@ export function ProjectDescription({ value, onChange }: ProjectDescriptionProps)
           ref={displayRef}
           type="button"
           className={cn(
-            "flex min-h-[4.75rem] w-full flex-col items-start rounded-sm px-1 py-2 text-left text-[14px] leading-relaxed transition-colors",
-            "hover:bg-muted/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
+            "flex w-full flex-col items-start text-left text-[14px] leading-[1.6] transition-colors",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring)/0.3)]",
             value.trim()
-              ? "whitespace-pre-wrap break-words text-foreground/90"
-              : "text-muted-foreground"
+              ? "whitespace-pre-wrap break-words text-[var(--fg)]"
+              : "text-[var(--muted-2)]"
           )}
           onClick={() => setEditing(true)}
         >

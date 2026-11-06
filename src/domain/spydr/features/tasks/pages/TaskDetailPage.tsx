@@ -31,6 +31,7 @@ export function TaskDetailPage() {
       onNoteDraftChange={detail.setNoteDraft}
       onLogNote={detail.logNote}
       onEmojiChange={detail.updateEmoji}
+      onRetrySave={detail.retrySave}
     />
   );
 }

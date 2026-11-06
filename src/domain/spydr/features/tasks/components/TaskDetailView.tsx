@@ -1,61 +1,40 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
+import { Check, ChevronRight, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
-import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
-import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/navigationBreadcrumbs";
-import {
-  formatNoteListDate,
-  formatRelativeTime,
-} from "@/domain/spydr/features/shared/components/time";
-import { EntityTag } from "@/domain/spydr/features/shared/components/StatusPrimitives";
-import { ProjectPrioritySelect } from "@/domain/spydr/features/projects/components/ProjectPrioritySelect";
-import { ProjectSelect } from "@/domain/spydr/features/projects/components/ProjectSelect";
 import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
-import { PersonSelect } from "@/domain/spydr/features/projects/components/PersonSelect";
-import {
-  ProjectDetailEmpty,
-  ProjectDetailEntry,
-  ProjectDetailField,
-  ProjectDetailSection,
-  ProjectDetailSectionBody,
-  ProjectDetailTabs,
-  detailQuietControlClassName,
-  detailQuietInputClassName,
-  detailStrandControlClassName,
-} from "@/domain/spydr/features/projects/components/ProjectDetailSection";
-import type { PersonNode, ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
-import { isTaskStatus, type TaskStatusChange } from "@/domain/spydr/utils/taskStatus";
+import { StatusDot } from "@/domain/spydr/features/shared/components/StatusPrimitives";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
+import { LogList } from "@/domain/spydr/features/log/components/LogList";
+import type { LogConfig } from "@/domain/spydr/features/log/types";
+import { dueFromValue } from "@/domain/spydr/features/work/components/WorkDueDisplay";
+import { isClosedCollectionStatus } from "@/domain/spydr/utils/collectionVisibility";
+import { cleanDisplayName } from "@/domain/spydr/utils/projectPersonas";
 import { parseTaskNoteEntries } from "@/domain/spydr/utils/taskNotes";
-import { useIsPhone } from "@/hooks/useIsPhone";
+import {
+  isTaskStatus,
+  taskStatusLabels,
+  type TaskStatus,
+  type TaskStatusChange,
+} from "@/domain/spydr/utils/taskStatus";
+import type { PersonNode, ProjectNode, TaskNode } from "@/domain/spydr/utils/types";
+import { cn } from "@/lib/utils";
 import type {
   TaskDetailFormValues,
   TaskDetailSaveState,
 } from "../hooks/useTaskDetailPage";
-import { TaskStatusSelect } from "./TaskStatusSelect";
-import { TaskStatusContextDialog } from "./TaskStatusContextDialog";
-import { TaskStatusContextLine } from "./TaskStatusContextLine";
-import { TaskDueDateSelect } from "./TaskDueDateSelect";
-import { TaskCompletedAt } from "./TaskCompletedAt";
 import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinProject";
-
-function saveLabel(state: TaskDetailSaveState) {
-  switch (state) {
-    case "pending":
-      return "Unsaved";
-    case "saving":
-      return "Saving…";
-    case "saved":
-      return "Saved";
-    case "error":
-      return "Save failed";
-    default:
-      return null;
-  }
-}
+import { TaskDetailProperties } from "./TaskDetailProperties";
+import { TaskStatusContextDialog } from "./TaskStatusContextDialog";
+import "@/domain/spydr/features/projects/pages/project-detail-page.css";
+import "../pages/task-detail-page.css";
+import "@/domain/spydr/features/log/log-page.css";
 
 interface TaskDetailViewProps {
   task: TaskNode;
@@ -72,6 +51,56 @@ interface TaskDetailViewProps {
   onNoteDraftChange(value: string): void;
   onLogNote(): void;
   onEmojiChange(emoji: string | null): void;
+  onRetrySave(): void;
+}
+
+type TaskLogNote = {
+  id: string;
+  text: string;
+  loggedAt: string;
+};
+
+type UndoCompleteState = {
+  status: TaskStatus;
+  blockedByTaskId: string;
+  followUpAt: string;
+  waitingNote: string;
+};
+
+type ContextDialogMode = "change" | "reschedule";
+
+function formatUpdatedAgo(value: string | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60_000));
+  if (minutes < 60) return `updated ${Math.max(1, minutes)}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 48) return `updated ${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 14) return `updated ${days}d ago`;
+  return `updated ${date.toLocaleDateString(undefined, { month: "short", day: "numeric" }).toLowerCase()}`;
+}
+
+function useModKeyLabel() {
+  return useMemo(() => {
+    if (typeof navigator === "undefined") return "Ctrl";
+    const platform = navigator.platform ?? "";
+    const ua = navigator.userAgent ?? "";
+    return /Mac|iPhone|iPad|iPod/i.test(platform) || /Mac OS X/i.test(ua)
+      ? "⌘"
+      : "Ctrl";
+  }, []);
+}
+
+function saveHint(
+  state: TaskDetailSaveState
+): { label: string; tone: "muted" | "danger"; retry?: boolean } | null {
+  if (state === "saving") return { label: "Saving…", tone: "muted" };
+  if (state === "error") {
+    return { label: "Couldn't save · Retry", tone: "danger", retry: true };
+  }
+  return null;
 }
 
 export function TaskDetailView({
@@ -86,10 +115,115 @@ export function TaskDetailView({
   onNoteDraftChange,
   onLogNote,
   onEmojiChange,
+  onRetrySave,
 }: TaskDetailViewProps) {
-  const isPhone = useIsPhone();
-  const [editingContext, setEditingContext] = useState(false);
-  const hint = saveLabel(saveState);
+  const modKey = useModKeyLabel();
+  const dueGuard = useEnsureTaskDueWithinProject();
+  const captureRef = useRef<HTMLTextAreaElement>(null);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const [contextMode, setContextMode] = useState<ContextDialogMode | null>(null);
+  const [undoComplete, setUndoComplete] = useState<UndoCompleteState | null>(
+    null
+  );
+  const [logMode, setLogMode] = useState<"recent" | "ranked">("recent");
+  const [logSearch, setLogSearch] = useState("");
+  const [logProjectFilter, setLogProjectFilter] = useState<string | null>(null);
+
+  const displayName =
+    cleanDisplayName(form.title) ||
+    cleanDisplayName(task.title) ||
+    "Untitled task";
+  const selectedProject =
+    projects.find((project) => project.id === form.projectNodeId) ??
+    (task.project
+      ? projects.find((project) => project.id === task.project?.id) ?? null
+      : null);
+  const projectTitle = selectedProject
+    ? cleanDisplayName(selectedProject.title) || selectedProject.title
+    : task.project
+      ? cleanDisplayName(task.project.title) || task.project.title
+      : null;
+  const projectEmoji = selectedProject?.details?.emoji ?? null;
+  const due = dueFromValue(form.dueDate || null);
+  const done = isClosedCollectionStatus(form.status);
+  const statusLabel = isTaskStatus(form.status)
+    ? taskStatusLabels[form.status]
+    : form.status;
+  const hint = saveHint(saveState);
+  const showBlocker =
+    form.status === "blocked" || form.status === "waiting";
+  const blockedById = form.blockedByTaskId || null;
+  const blockedByTitle =
+    task.blockedBy?.id === blockedById && task.blockedBy?.title
+      ? cleanDisplayName(task.blockedBy.title) || task.blockedBy.title
+      : "task";
+  const waitingNote = form.waitingNote.trim();
+  const followUpAt = form.followUpAt || null;
+
+  usePageBreadcrumb(displayName);
+
+  useEffect(() => {
+    const el = captureRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  }, [noteDraft]);
+
+  useEffect(() => {
+    return () => clearTimeout(undoTimerRef.current);
+  }, []);
+
+  const { entries, preamble } = parseTaskNoteEntries(task.body);
+  const noteItems = useMemo<TaskLogNote[]>(() => {
+    const items: TaskLogNote[] = [];
+    if (preamble) {
+      items.push({
+        id: "preamble",
+        text: preamble,
+        loggedAt: task.createdAt,
+      });
+    }
+    for (const [index, entry] of entries.entries()) {
+      items.push({
+        id: `${entry.loggedAt}-${index}`,
+        text: entry.text,
+        loggedAt: entry.loggedAt,
+      });
+    }
+    return items;
+  }, [entries, preamble, task.createdAt]);
+  const noteCount = noteItems.length;
+
+  const logConfig = useMemo<LogConfig<TaskLogNote>>(
+    () => ({
+      primary: (item) => item.text,
+      meta: () => [],
+      primaryAction: {
+        label: "Edit",
+        icon: MoreHorizontal,
+        onRun: () => undefined,
+      },
+      captureTargets: {
+        projects,
+        projectId: form.projectNodeId || projects[0]?.id || "",
+        onProjectChange: () => undefined,
+      },
+      rankable: false,
+      capturePlaceholder: "Log a note, blocker, or status update…",
+      emptyMessage: "No notes yet",
+      noun: "notes",
+      nounSingular: "note",
+      getTimestamp: (item) => item.loggedAt,
+      getCreatedAt: (item) => item.loggedAt,
+      getUpdatedAt: (item) => item.loggedAt,
+      getProjectId: () => form.projectNodeId || null,
+      onCapture: async () => undefined,
+      onEdit: () => undefined,
+      onDelete: () => undefined,
+    }),
+    [form.projectNodeId, projects]
+  );
+
   const applyStatus = (change: TaskStatusChange) => {
     if (!isTaskStatus(change.status)) return;
     onFieldChange("status", change.status);
@@ -97,18 +231,15 @@ export function TaskDetailView({
       "blockedByTaskId",
       change.status === "blocked" ? (change.blockedByTaskId ?? "") : ""
     );
-    onFieldChange("followUpAt", change.status === "waiting" ? (change.followUpAt ?? "") : "");
+    onFieldChange(
+      "followUpAt",
+      change.status === "waiting" ? (change.followUpAt ?? "") : ""
+    );
     onFieldChange(
       "waitingNote",
       change.status === "waiting" ? (change.waitingNote ?? "") : ""
     );
   };
-  const { entries, preamble } = parseTaskNoteEntries(task.body);
-  const noteCount = entries.length + (preamble ? 1 : 0);
-  usePageBreadcrumb(formatBreadcrumbEntityId(task.id));
-  const selectedProject =
-    projects.find((project) => project.id === form.projectNodeId) ?? null;
-  const dueGuard = useEnsureTaskDueWithinProject();
 
   const setProject = (projectId: string | null) => {
     const nextProject =
@@ -120,300 +251,304 @@ export function TaskDetailView({
     });
   };
 
+  const clearUndo = () => {
+    clearTimeout(undoTimerRef.current);
+    setUndoComplete(null);
+  };
+
+  const completeTask = () => {
+    if (done) {
+      applyStatus({ status: "active" });
+      clearUndo();
+      return;
+    }
+    const previous: UndoCompleteState = {
+      status: isTaskStatus(form.status) ? form.status : "active",
+      blockedByTaskId: form.blockedByTaskId,
+      followUpAt: form.followUpAt,
+      waitingNote: form.waitingNote,
+    };
+    applyStatus({ status: "completed" });
+    setUndoComplete(previous);
+    clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = setTimeout(() => setUndoComplete(null), 6000);
+  };
+
+  const undoCompleteAction = () => {
+    if (!undoComplete) return;
+    applyStatus({
+      status: undoComplete.status,
+      blockedByTaskId: undoComplete.blockedByTaskId || undefined,
+      followUpAt: undoComplete.followUpAt || undefined,
+      waitingNote: undoComplete.waitingNote || null,
+    });
+    clearUndo();
+  };
+
+  const markResolved = () => {
+    applyStatus({ status: "active" });
+  };
+
+  const followUpPast = (() => {
+    if (!followUpAt) return false;
+    const date = new Date(followUpAt);
+    if (Number.isNaN(date.getTime())) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    return day.getTime() < today.getTime();
+  })();
+
+  const followUpLabel = (() => {
+    if (!followUpAt) return null;
+    const date = new Date(followUpAt);
+    if (Number.isNaN(date.getTime())) return followUpAt;
+    return date
+      .toLocaleDateString(undefined, { month: "short", day: "numeric" })
+      .toLowerCase();
+  })();
+
+  const emoji = task.details?.emoji?.trim() || null;
+
   return (
-    <div className="flex min-w-0">
-      <div className="min-w-0 flex-1">
-        <div className="border-b border-border spydr-rule">
-          <PageHeader
-            dense={isPhone}
-            className="border-b-0 shadow-none after:hidden"
-            titleClassName="w-full max-w-none"
-            title={
-              <div className="flex min-w-0 items-center gap-2">
-                <EmojiPicker
-                  value={task.details?.emoji}
-                  size="md"
-                  ariaLabel={`Emoji for ${task.title}`}
-                  onChange={onEmojiChange}
-                />
-                <input
-                  value={form.title}
-                  onChange={(event) => onFieldChange("title", event.target.value)}
-                  className={cn(
-                    "w-full min-w-0 bg-transparent font-semibold tracking-tight outline-none ring-0 placeholder:text-muted-foreground",
-                    isPhone ? "text-[16px] leading-snug" : "text-[1.5rem]"
-                  )}
-                  placeholder="Task title"
-                />
-              </div>
-            }
-            meta={
-              isPhone ? (
-                <div className="flex w-full min-w-0 flex-col gap-1">
-                  <div className="flex min-w-0 items-center gap-1">
-                    <TaskStatusSelect
-                      value={form.status}
-                      excludeTaskId={task.id}
-                      onChange={applyStatus}
-                      fitContent
-                      className={cn(detailQuietControlClassName, "w-[6.75rem] shrink-0")}
-                    />
-                    <ProjectSelect
-                      projects={projects}
-                      value={form.projectNodeId}
-                      allowUnassigned
-                      compact
-                      onChange={setProject}
-                      className={cn(detailQuietControlClassName, "min-w-0 flex-1")}
-                    />
-                    {selectedProject ? (
-                      <Link
-                        to={`/projects/${selectedProject.id}`}
-                        aria-label={`Open ${selectedProject.title}`}
-                        className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted/40 hover:text-highlight"
-                      >
-                        <ArrowUpRight className="h-3.5 w-3.5" />
-                      </Link>
-                    ) : null}
-                  </div>
-                  <div className="flex min-w-0 items-center gap-1">
-                    <TaskDueDateSelect
-                      value={form.dueDate || null}
-                      onChange={(dueDate) => onFieldChange("dueDate", dueDate ?? "")}
-                      variant="compact"
-                      showChevron={false}
-                      showIcon={false}
-                      placeholder="Due"
-                      project={selectedProject}
-                      className={cn(
-                        detailQuietControlClassName,
-                        "w-[5.5rem] shrink-0 justify-center"
-                      )}
-                    />
-                    <ProjectPrioritySelect
-                      value={form.priority}
-                      onChange={(priority) =>
-                        onFieldChange(
-                          "priority",
-                          priority as TaskDetailFormValues["priority"]
-                        )
-                      }
-                      ariaLabel="Task priority"
-                      fitContent
-                      className={detailQuietControlClassName}
-                    />
-                    {hint ? (
-                      <span className="ml-auto truncate font-mono text-[10px] tabular-nums text-muted-foreground">
-                        {hint}
-                      </span>
-                    ) : (
-                      <TaskCompletedAt
-                        status={task.status}
-                        completedAt={task.details?.completedAt}
-                        className="ml-auto"
-                      />
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
-                  <TaskStatusSelect
-                    value={form.status}
-                    excludeTaskId={task.id}
-                    onChange={applyStatus}
-                    fitContent
-                    className={detailQuietControlClassName}
-                  />
-                  <ProjectPrioritySelect
-                    value={form.priority}
-                    onChange={(priority) =>
-                      onFieldChange(
-                        "priority",
-                        priority as TaskDetailFormValues["priority"]
-                      )
-                    }
-                    ariaLabel="Task priority"
-                    fitContent
-                    className={detailQuietControlClassName}
-                  />
-                  <ProjectSelect
-                    projects={projects}
-                    value={form.projectNodeId}
-                    allowUnassigned
-                    fitContent
-                    onChange={setProject}
-                    className={detailQuietControlClassName}
-                  />
-                  {selectedProject ? (
-                    <Link
-                      to={`/projects/${selectedProject.id}`}
-                      aria-label={`Open ${selectedProject.title}`}
-                      className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted/40 hover:text-highlight"
-                    >
-                      <ArrowUpRight className="h-3.5 w-3.5" />
-                    </Link>
-                  ) : null}
-                  {task.tags.map((tag) => (
-                    <EntityTag key={tag} tag={tag} />
-                  ))}
-                  <TaskCompletedAt
-                    status={task.status}
-                    completedAt={task.details?.completedAt}
-                  />
-                  <span className="font-mono text-[11px] text-muted-foreground/80">
-                    updated {formatRelativeTime(task.updatedAt)}
-                    {hint ? ` · ${hint}` : null}
-                  </span>
-                </div>
-              )
-            }
-            actions={
-              <EntityTransformMenu
-                nodeId={task.id}
-                sourceType="task"
-                sourceTitle={task.title}
-                projects={projects}
-                compact={isPhone}
-                className="border-0 bg-transparent shadow-none"
-              />
-            }
-          />
-          <div className="px-4 pb-3 md:px-8">
-            <TaskStatusContextLine
-              variant="detail"
-              task={{
-                status: form.status,
-                blockedBy: form.blockedByTaskId
-                  ? {
-                      id: form.blockedByTaskId,
-                      title:
-                        task.blockedBy?.id === form.blockedByTaskId
-                          ? task.blockedBy.title
-                          : "task",
-                    }
-                  : null,
-                details: task.details
-                  ? {
-                      ...task.details,
-                      blockedByNodeId: form.blockedByTaskId || null,
-                      followUpAt: form.followUpAt || null,
-                      waitingNote: form.waitingNote || null,
-                    }
-                  : null,
-              }}
-              onEdit={
-                form.status === "blocked" || form.status === "waiting"
-                  ? () => setEditingContext(true)
-                  : undefined
-              }
-            />
-          </div>
-        </div>
+    <div className="task-detail-page project-detail-page flex h-full min-h-0 w-full min-w-0 flex-col overflow-y-auto">
+      <header className="project-detail-header">
+        <nav className="project-detail-crumb" aria-label="Breadcrumb">
+          <Link to="/work">Work</Link>
+          {selectedProject || task.project ? (
+            <>
+              <ChevronRight className="project-detail-crumb-sep" aria-hidden />
+              <Link
+                to={`/projects/${selectedProject?.id ?? task.project?.id}`}
+                className="truncate"
+              >
+                {projectTitle}
+              </Link>
+            </>
+          ) : null}
+          <ChevronRight className="project-detail-crumb-sep" aria-hidden />
+          <span className="truncate">{displayName}</span>
+        </nav>
 
-        {editingContext && (form.status === "blocked" || form.status === "waiting") ? (
-          <TaskStatusContextDialog
-            open
-            status={form.status}
-            excludeTaskId={task.id}
-            initialBlockedByTaskId={form.blockedByTaskId}
-            initialFollowUpAt={form.followUpAt}
-            initialWaitingNote={form.waitingNote}
-            onOpenChange={(open) => {
-              if (!open) setEditingContext(false);
-            }}
-            onConfirm={(change) => {
-              applyStatus(change);
-              setEditingContext(false);
-            }}
-          />
-        ) : null}
-
-        <div className="px-4 pt-5 md:px-8 md:pt-7">
-          <div
-            className={cn(
-              "flex flex-wrap items-end gap-x-6 gap-y-3",
-              isPhone && "grid grid-cols-2 gap-x-4 gap-y-3"
-            )}
+        <div className="project-detail-title-row">
+          <button
+            type="button"
+            className="task-detail-title-check"
+            data-checked={done ? "true" : "false"}
+            aria-label={done ? "Reopen task" : "Complete task"}
+            onClick={completeTask}
           >
-            <ProjectDetailField label="Assignee" className="w-auto min-w-[10rem] space-y-1">
-              <PersonSelect
-                people={people}
-                value={form.assigneePersonNodeId || null}
-                compact
-                onChange={(personNodeId) =>
-                  onFieldChange("assigneePersonNodeId", personNodeId ?? "")
-                }
-                ariaLabel="Task assignee"
-                triggerClassName={detailStrandControlClassName}
-              />
-            </ProjectDetailField>
-            {isPhone ? null : (
-              <ProjectDetailField label="Due" className="w-auto space-y-1">
-                <TaskDueDateSelect
-                  value={form.dueDate || null}
-                  onChange={(dueDate) => onFieldChange("dueDate", dueDate ?? "")}
-                  variant="field"
-                  placeholder="Select due date"
-                  showIcon={false}
-                  fitContent
-                  project={selectedProject}
-                  className={detailStrandControlClassName}
-                />
-              </ProjectDetailField>
-            )}
-            <ProjectDetailField
-              label="Estimate"
-              hint="minutes"
-              className="w-auto min-w-[7rem] space-y-1"
-            >
-              <input
-                type="number"
-                min={0}
-                value={form.estimatedMinutes}
-                onChange={(event) =>
-                  onFieldChange("estimatedMinutes", event.target.value)
-                }
-                placeholder="—"
-                className={cn(detailQuietInputClassName, "h-8 w-[7rem]")}
-              />
-            </ProjectDetailField>
+            {done ? <Check className="h-3 w-3" strokeWidth={2.5} /> : null}
+          </button>
+          <h1>
+            <input
+              value={form.title}
+              onChange={(event) => onFieldChange("title", event.target.value)}
+              className="w-full min-w-0 bg-transparent text-[inherit] font-[inherit] tracking-[inherit] text-[var(--fg)] outline-none placeholder:text-[var(--muted-2)]"
+              placeholder="Task title"
+              aria-label="Task title"
+            />
+          </h1>
+          {emoji ? (
+            <span className="project-detail-title-emoji" aria-hidden>
+              {emoji}
+            </span>
+          ) : null}
+          <div className="project-detail-title-actions">
+            <EntityTransformMenu
+              nodeId={task.id}
+              sourceType="task"
+              sourceTitle={displayName}
+              projects={projects}
+              defaultProjectId={form.projectNodeId || null}
+              compact
+              triggerLabel="Convert"
+              className="project-detail-control border-[#1a1d23] bg-[var(--control)] shadow-none"
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="project-detail-control project-detail-control-icon"
+                  aria-label="Task actions"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  className="text-[12px]"
+                  onSelect={(event) => event.preventDefault()}
+                >
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <span>Emoji</span>
+                    <EmojiPicker
+                      value={task.details?.emoji}
+                      size="sm"
+                      ariaLabel={`Emoji for ${displayName}`}
+                      onChange={onEmojiChange}
+                    />
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
         <div
           className={cn(
-            "flex flex-col pb-16 pt-8",
-            isPhone ? "px-3" : "px-4 md:px-8"
+            "project-detail-meta task-detail-meta-indent"
           )}
         >
-          <ProjectDetailSection variant="plain">
+          <span className="project-detail-meta-item">
+            <StatusDot status={form.status} />
+            <span className="capitalize text-[var(--fg)]">{statusLabel}</span>
+          </span>
+
+          {projectTitle && (selectedProject || task.project) ? (
+            <Link
+              to={`/projects/${selectedProject?.id ?? task.project?.id}`}
+              className="project-detail-meta-item text-[var(--muted)] hover:text-[var(--fg)]"
+            >
+              {projectEmoji ? <span aria-hidden>{projectEmoji}</span> : null}
+              <span className="truncate">{projectTitle}</span>
+            </Link>
+          ) : null}
+
+          {form.dueDate && !due.empty ? (
+            <span className="project-detail-meta-item project-detail-meta-mono">
+              {due.overdue ? (
+                <>
+                  <span className="project-detail-meta-late">{due.label}</span>
+                  <span className="text-[var(--muted-2)]">
+                    {" "}
+                    · due {due.dateLabel.toLowerCase()}
+                  </span>
+                </>
+              ) : (
+                <span className="text-[var(--muted-2)]">
+                  {due.label
+                    ? `${due.label} · due ${due.dateLabel.toLowerCase()}`
+                    : `due ${due.dateLabel.toLowerCase()}`}
+                </span>
+              )}
+            </span>
+          ) : null}
+
+          <span className="project-detail-meta-updated">
+            {formatUpdatedAgo(task.updatedAt)}
+          </span>
+
+          {hint ? (
+            <span
+              className="task-detail-save"
+              data-tone={hint.tone === "danger" ? "danger" : undefined}
+            >
+              {hint.retry ? (
+                <button
+                  type="button"
+                  className="task-detail-save-retry"
+                  onClick={onRetrySave}
+                >
+                  {hint.label}
+                </button>
+              ) : (
+                hint.label
+              )}
+            </span>
+          ) : null}
+        </div>
+      </header>
+
+      <div className="project-detail-body">
+        <div className="project-detail-main">
+          {showBlocker ? (
+            <section className="project-detail-panel task-detail-blocker">
+              <div className="task-detail-blocker-main">
+                <div className="task-detail-blocker-line">
+                  <span
+                    className="task-detail-blocker-dot"
+                    data-tone={form.status === "blocked" ? "danger" : "warn"}
+                    aria-hidden
+                  />
+                  {form.status === "blocked" ? (
+                    <span>
+                      Blocked by{" "}
+                      {blockedById ? (
+                        <Link to={`/tasks/${blockedById}`}>{blockedByTitle}</Link>
+                      ) : (
+                        <span>not set</span>
+                      )}
+                    </span>
+                  ) : (
+                    <span>
+                      {waitingNote ? (
+                        <>Waiting on {waitingNote}</>
+                      ) : (
+                        <>Waiting</>
+                      )}
+                    </span>
+                  )}
+                </div>
+                {/* blocked-at is not stored on task details — omit "since …" line */}
+                {form.status === "waiting" && followUpLabel ? (
+                  <p className="task-detail-blocker-sub">
+                    {followUpPast
+                      ? `follow-up was ${followUpLabel}`
+                      : `follow-up ${followUpLabel}`}
+                    {" · "}
+                    <button type="button" onClick={() => setContextMode("reschedule")}>
+                      Reschedule
+                    </button>
+                  </p>
+                ) : null}
+              </div>
+              <div className="task-detail-blocker-actions">
+                <button
+                  type="button"
+                  className="project-detail-control"
+                  onClick={() => setContextMode("change")}
+                >
+                  Change
+                </button>
+                <button
+                  type="button"
+                  className="project-detail-control"
+                  onClick={markResolved}
+                >
+                  {form.status === "blocked" ? "Mark unblocked" : "Mark resolved"}
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          <section className="project-detail-panel task-detail-activity">
             <div
-              className={cn(
-                "flex min-w-0 items-center gap-2 pb-1",
-                isPhone ? "px-1" : "px-0"
-              )}
+              role="tablist"
+              aria-label="Task activity"
+              className="project-detail-tabs"
             >
-              <ProjectDetailTabs<"notes">
-                value="notes"
-                onChange={() => undefined}
-                ariaLabel="Task work"
-                items={[{ id: "notes", label: "Notes", count: noteCount }]}
-              />
+              <button
+                type="button"
+                role="tab"
+                aria-selected="true"
+                className="project-detail-tab"
+              >
+                Notes
+                <span className="project-detail-tab-count">{noteCount}</span>
+              </button>
             </div>
-            <ProjectDetailSectionBody
-              className={cn(
-                "min-h-0 gap-3 px-0 py-4",
-                isPhone ? "px-1" : "px-0"
-              )}
-            >
+
+            <div className="task-detail-activity-body">
               <form
-                className="rounded-md bg-muted/25 px-3 py-2.5"
+                className="task-detail-capture"
                 onSubmit={(event) => {
                   event.preventDefault();
                   onLogNote();
                 }}
               >
                 <textarea
+                  ref={captureRef}
                   value={noteDraft}
                   onChange={(event) => onNoteDraftChange(event.target.value)}
                   onKeyDown={(event) => {
@@ -422,66 +557,93 @@ export function TaskDetailView({
                       onLogNote();
                     }
                   }}
-                  rows={3}
+                  rows={2}
                   placeholder="Log a note, blocker, or status update…"
                   disabled={isLoggingNote}
-                  className="spydr-strand-field min-h-[4.5rem] w-full resize-y rounded-sm border-0 bg-transparent px-0 py-1 text-[14px] leading-relaxed outline-none ring-0 placeholder:text-muted-foreground"
+                  className="task-detail-capture-textarea"
                 />
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className="font-mono text-[10px] text-muted-foreground">
-                    Ctrl+Enter to log
+                <div className="task-detail-capture-row">
+                  <span className="task-detail-capture-hint">
+                    {modKey} + Enter to log
                   </span>
-                  <Button
+                  <button
                     type="submit"
-                    className="h-8 rounded-md px-3 text-[12px]"
+                    className="task-detail-capture-submit"
                     disabled={!noteDraft.trim() || isLoggingNote}
                   >
                     {isLoggingNote ? "Logging…" : "Log note"}
-                  </Button>
+                  </button>
                 </div>
               </form>
 
-              {noteCount > 0 ? (
-                <ul className="min-h-0">
-                  {preamble ? (
-                    <ProjectDetailEntry>
-                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                        Earlier notes
-                      </p>
-                      <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed">
-                        {preamble}
-                      </p>
-                    </ProjectDetailEntry>
-                  ) : null}
-                  {entries.map((entry) => (
-                    <ProjectDetailEntry
-                      key={`${entry.loggedAt}-${entry.text.slice(0, 24)}`}
-                    >
-                      <div className="flex items-baseline gap-2">
-                        <p className="min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed">
-                          {entry.text}
-                        </p>
-                        <time
-                          className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground"
-                          dateTime={entry.loggedAt}
-                          title={new Date(entry.loggedAt).toLocaleString()}
-                        >
-                          {formatNoteListDate(entry.loggedAt)}
-                        </time>
-                      </div>
-                    </ProjectDetailEntry>
-                  ))}
-                </ul>
+              {noteCount === 0 ? (
+                <div className="task-detail-empty">
+                  <p className="task-detail-empty-title">No notes yet</p>
+                  <p className="task-detail-empty-copy">
+                    Log updates as you work. Decisions, blockers and handoff
+                    context stay with the task.
+                  </p>
+                </div>
               ) : (
-                <ProjectDetailEmpty
-                  title="No notes yet."
-                  description="Log updates as you work — decisions, blockers, and handoff context stay with the task."
+                <LogList
+                  title="Notes"
+                  items={noteItems}
+                  config={logConfig}
+                  projects={projects}
+                  mode={logMode}
+                  onModeChange={setLogMode}
+                  search={logSearch}
+                  onSearchChange={setLogSearch}
+                  projectFilter={logProjectFilter}
+                  onProjectFilterChange={setLogProjectFilter}
+                  className="task-detail-log"
                 />
               )}
-            </ProjectDetailSectionBody>
-          </ProjectDetailSection>
+            </div>
+          </section>
         </div>
+
+        <TaskDetailProperties
+          form={form}
+          projects={projects}
+          people={people}
+          createdAt={task.details?.createdAt ?? task.createdAt}
+          updatedAt={task.updatedAt}
+          excludeTaskId={task.id}
+          onFieldChange={onFieldChange}
+          onStatusChange={applyStatus}
+          onProjectChange={setProject}
+        />
       </div>
+
+      {contextMode &&
+      (form.status === "blocked" || form.status === "waiting") ? (
+        <TaskStatusContextDialog
+          open
+          status={form.status}
+          excludeTaskId={task.id}
+          initialBlockedByTaskId={form.blockedByTaskId}
+          initialFollowUpAt={form.followUpAt}
+          initialWaitingNote={form.waitingNote}
+          onOpenChange={(open) => {
+            if (!open) setContextMode(null);
+          }}
+          onConfirm={(change) => {
+            applyStatus(change);
+            setContextMode(null);
+          }}
+        />
+      ) : null}
+
+      {undoComplete ? (
+        <div className="task-detail-undo" role="status">
+          <span>Task completed</span>
+          <button type="button" onClick={undoCompleteAction}>
+            Undo
+          </button>
+        </div>
+      ) : null}
+
       {dueGuard.dialog}
     </div>
   );

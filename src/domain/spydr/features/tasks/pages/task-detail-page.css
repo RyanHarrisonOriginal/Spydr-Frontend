@@ -1,0 +1,314 @@
+/*
+ * Task detail — reuses project-detail panel / header / props tokens.
+ * Import project-detail-page.css alongside this file.
+ */
+
+.task-detail-page {
+  --canvas: #08090b;
+  --muted: #8a9099;
+  background: var(--canvas);
+  color: var(--fg);
+  font-family: var(--font-sans);
+}
+
+.task-detail-title-check {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  border: 1.5px solid #3a3f47;
+  background: transparent;
+  color: transparent;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.task-detail-title-check[data-checked="true"] {
+  background: #2a2f37;
+  border-color: #2a2f37;
+  color: var(--fg-soft);
+}
+
+.task-detail-meta-indent {
+  /* Align with title text: 20px checkbox + 12px gap */
+  padding-left: 32px;
+}
+
+.task-detail-save {
+  font-size: 12px;
+  color: var(--muted-2);
+}
+
+.task-detail-save[data-tone="danger"] {
+  color: var(--danger);
+}
+
+.task-detail-save-retry {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.task-detail-blocker {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+}
+
+.task-detail-blocker-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.task-detail-blocker-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13.5px;
+  color: var(--fg);
+}
+
+.task-detail-blocker-line a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.task-detail-blocker-line a:hover {
+  color: var(--fg-soft);
+}
+
+.task-detail-blocker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.task-detail-blocker-dot[data-tone="danger"] {
+  background: var(--danger);
+}
+
+.task-detail-blocker-dot[data-tone="warn"] {
+  background: var(--warn);
+}
+
+.task-detail-blocker-sub {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: var(--muted-2);
+}
+
+.task-detail-blocker-sub a,
+.task-detail-blocker-sub button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--fg-soft);
+  font: inherit;
+  cursor: pointer;
+}
+
+.task-detail-blocker-sub a:hover,
+.task-detail-blocker-sub button:hover {
+  color: var(--fg);
+}
+
+.task-detail-blocker-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.task-detail-blocker-actions .project-detail-control {
+  height: 28px;
+  min-height: 28px;
+  border-radius: 8px;
+}
+
+.task-detail-activity {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+}
+
+.task-detail-activity-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.task-detail-capture {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.task-detail-capture-textarea {
+  display: block;
+  width: 100%;
+  resize: none;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font-size: 13.5px;
+  line-height: 1.55;
+  outline: none;
+  padding: 0;
+  min-height: calc(13.5px * 1.55 * 2);
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.task-detail-capture-textarea::placeholder {
+  color: var(--muted-2);
+}
+
+.task-detail-capture-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.task-detail-capture-hint {
+  font-size: 12px;
+  color: var(--muted-2);
+}
+
+.task-detail-capture-submit {
+  height: 28px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 8px;
+  background: var(--fg);
+  color: var(--canvas);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.task-detail-capture-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.task-detail-empty {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.task-detail-empty-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.task-detail-empty-copy {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.task-detail-props {
+  position: relative;
+}
+
+.task-detail-props-footer {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted-2);
+}
+
+.task-detail-activity .log-page {
+  position: relative;
+  inset: auto;
+  overflow: visible;
+  flex: 1 1 auto;
+  background: transparent;
+}
+
+.task-detail-activity .log-page-header,
+.task-detail-activity .log-page-toolbar,
+.task-detail-activity .log-capture {
+  display: none;
+}
+
+.task-detail-activity .log-page-body {
+  padding: 0;
+}
+
+.task-detail-activity .log-panel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.task-detail-activity .log-item-actions {
+  display: none;
+}
+
+.task-detail-undo {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 40;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 13px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.task-detail-undo button {
+  border: 0;
+  background: transparent;
+  color: var(--active);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.task-detail-undo button:hover {
+  color: var(--fg);
+}

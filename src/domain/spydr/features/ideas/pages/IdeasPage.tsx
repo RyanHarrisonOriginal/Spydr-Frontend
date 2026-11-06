@@ -1,69 +1,79 @@
-import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import { Button } from "@/components/ui/button";
 import {
-  EmptyState,
   ErrorState,
   LoadingState,
 } from "@/domain/spydr/features/shared/components/ListState";
-import { CollectionToolbar } from "@/domain/spydr/features/shared/components/CollectionToolbar";
-import { CollectionNoResults } from "@/domain/spydr/features/shared/components/CollectionNoResults";
-import { IdeaList } from "../components/IdeaList";
+import { LogList } from "@/domain/spydr/features/log/components/LogList";
+import { LogChildEditDialog } from "@/domain/spydr/features/log/components/LogChildEditDialog";
+import { LogPromoteDialog } from "@/domain/spydr/features/log/components/LogPromoteDialog";
 import { useIdeasPage } from "../hooks/useIdeasPage";
 
 export function IdeasPage() {
-  const { view, reorder, getPriorityRank, deleteIdea, deletingIdeaId, deleteError, totalCount, isLoading, isFetching, isError, errorMessage, refetch } =
-    useIdeasPage();
-  const showInitialLoading = isLoading && totalCount === 0;
-  const showEmpty = !showInitialLoading && !isError && totalCount === 0;
+  const page = useIdeasPage();
   usePageBreadcrumb("Ideas");
 
+  if (page.isLoading && page.totalCount === 0) {
+    return <LoadingState title="Loading ideas" />;
+  }
+
+  if (page.isError) {
+    return (
+      <ErrorState title="Ideas unavailable" description={page.errorMessage}>
+        <Button type="button" size="sm" variant="outline" onClick={() => page.refetch()}>
+          Retry
+        </Button>
+      </ErrorState>
+    );
+  }
+
   return (
-    <div>
-      <PageHeader
+    <>
+      <LogList
         title="Ideas"
-        meta={
-          <span>
-            {totalCount} captured
-            {isFetching && totalCount > 0 ? " · refreshing…" : ""}
-            {" · add ideas from a project&apos;s Thinking panel"}
-          </span>
-        }
+        items={page.items}
+        config={page.config}
+        projects={page.projects}
+        mode={page.mode}
+        onModeChange={page.setMode}
+        search={page.search}
+        onSearchChange={page.setSearch}
+        projectFilter={page.projectFilter}
+        onProjectFilterChange={page.setProjectFilter}
+        reorderEnabled={page.reorderEnabled}
+        onReorder={page.onReorder}
+        isCapturing={page.isCapturing}
       />
-      {showInitialLoading && <LoadingState title="Loading ideas" />}
-      {isError && (
-        <ErrorState title="Ideas unavailable" description={errorMessage}>
-          <Button type="button" size="sm" variant="outline" onClick={() => refetch()}>
-            Retry
-          </Button>
-        </ErrorState>
-      )}
-      {showEmpty && (
-        <EmptyState
-          title="No ideas yet"
-          description="Capture ideas on a project page. They'll show up here across your workspace."
-        />
-      )}
-      {totalCount > 0 && (
-        <>
-          <CollectionToolbar view={view} />
-          {deleteError ? (
-            <p className="px-4 pb-2 text-sm text-destructive md:px-6">{deleteError}</p>
-          ) : null}
-          {view.items.length > 0 ? (
-            <IdeaList
-              ideas={view.items}
-              getPriorityRank={getPriorityRank}
-              reorderEnabled={reorder.canReorder}
-              onReorder={reorder.onReorder}
-              onDelete={deleteIdea}
-              deletingIdeaId={deletingIdeaId}
-            />
-          ) : (
-            <CollectionNoResults noun={view.noun} onClearFilters={view.clearFilters} />
-          )}
-        </>
-      )}
-    </div>
+      {page.deleteError ? (
+        <p className="px-4 pb-2 text-sm text-destructive">{page.deleteError}</p>
+      ) : null}
+      <LogPromoteDialog
+        open={Boolean(page.promoteIdea)}
+        nodeId={page.promoteIdea?.id ?? null}
+        sourceTitle={page.promoteIdea?.title ?? ""}
+        projects={page.projects}
+        defaultProjectId={page.promoteIdea?.project?.id ?? null}
+        onOpenChange={(open) => {
+          if (!open) page.setPromoteIdea(null);
+        }}
+      />
+      <LogChildEditDialog
+        open={Boolean(page.editIdea)}
+        heading="Edit idea"
+        titleLabel="Idea"
+        bodyLabel="Details"
+        values={{
+          title: page.editIdea?.title ?? "",
+          body: page.editIdea?.body ?? "",
+        }}
+        isSaving={page.isSavingEdit}
+        onOpenChange={(open) => {
+          if (!open) page.setEditIdea(null);
+        }}
+        onSave={(values) => {
+          void page.saveEdit(values.title, values.body);
+        }}
+      />
+    </>
   );
 }

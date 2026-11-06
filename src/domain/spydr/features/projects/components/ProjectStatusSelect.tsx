@@ -33,6 +33,16 @@ const statusOptionSurface: Record<string, string> = {
     "focus:bg-[hsl(var(--status-blocked)/0.14)] data-[highlighted]:bg-[hsl(var(--status-blocked)/0.14)]",
 };
 
+const quietLabelClass: Record<string, string> = {
+  active: "capitalize text-[var(--muted)] work-grid-status-label",
+  inactive: "capitalize text-[var(--muted)] work-grid-status-label",
+  waiting: "capitalize text-[var(--muted)] work-grid-status-label",
+  snoozed: "capitalize text-[var(--muted)] work-grid-status-label",
+  completed: "capitalize text-[var(--muted)] work-grid-status-label",
+  archived: "capitalize text-[var(--muted)] work-grid-status-label",
+  blocked: "capitalize text-[var(--muted)] work-grid-status-label",
+};
+
 function formatStatusLabel(status: string) {
   return status.replace(/_/g, " ");
 }
@@ -44,6 +54,7 @@ interface ProjectStatusSelectProps {
   className?: string;
   fitContent?: boolean;
   wrapLabel?: boolean;
+  quiet?: boolean;
 }
 
 export function ProjectStatusSelect({
@@ -53,6 +64,7 @@ export function ProjectStatusSelect({
   className,
   fitContent = false,
   wrapLabel = false,
+  quiet = false,
 }: ProjectStatusSelectProps) {
   const options = projectStatuses.map((status) => ({
     value: status,
@@ -66,13 +78,20 @@ export function ProjectStatusSelect({
       onChange={onChange}
       disabled={disabled}
       ariaLabel="Project status"
-      menuLabel="Status"
+      menuLabel={quiet ? undefined : "Status"}
       fitContent={fitContent}
       wrapLabel={wrapLabel}
+      hideChevron={quiet}
       leading={<StatusDot status={value} className="shrink-0" />}
-      renderOptionLeading={(option) => <StatusDot status={option.value} className="shrink-0" />}
-      triggerClassName={cn(statusSurface[value], className)}
-      labelClassName="capitalize text-foreground/90"
+      renderOptionLeading={(option) => (
+        <StatusDot status={option.value} className="shrink-0" />
+      )}
+      triggerClassName={cn(quiet ? undefined : statusSurface[value], className)}
+      labelClassName={
+        quiet
+          ? quietLabelClass[value] ?? "capitalize text-muted-foreground"
+          : "capitalize text-foreground/90"
+      }
       getOptionClassName={(option, selected) =>
         cn(
           statusOptionSurface[option.value],

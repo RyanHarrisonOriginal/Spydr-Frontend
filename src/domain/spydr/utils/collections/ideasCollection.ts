@@ -21,7 +21,8 @@ export const ideasCollection: CollectionConfig<IdeaNode> = {
   storageKey: "ideas",
   noun: "ideas",
   searchPlaceholder: "Search ideas…",
-  searchText: (idea) => joinSearchText(idea.title, idea.body, idea.area, idea.tags),
+  searchText: (idea) =>
+    joinSearchText(idea.title, idea.body, idea.area, idea.project?.title, idea.tags),
   facets: [
     {
       id: "status",

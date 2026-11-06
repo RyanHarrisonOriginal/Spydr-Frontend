@@ -1,0 +1,458 @@
+/* Marketing splash — mockup tokens scoped to the landing page. */
+
+.marketing-splash {
+  --canvas: #08090b;
+  --surface: #0c0e12;
+  --line: #16191e;
+  --line-strong: #181b21;
+  --control: #0f1115;
+  --control-border: #1e2229;
+  --fg: #e8eaed;
+  --muted: #8a9099;
+  --muted-2: #6e747d;
+  --faint: #3a3f47;
+  --active: #3fb5a3;
+  --ring: 214 95% 58%;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--canvas);
+  color: var(--fg);
+  font-family: var(--font-sans), "Geist", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Landing-specific SignalField framing (component defaults stay for sign-in). */
+.marketing-splash .spydr-signal-field {
+  margin-left: -900px;
+  transform: perspective(1100px) rotateX(60deg);
+  -webkit-mask-image: radial-gradient(
+    ellipse 60% 55% at 50% 66%,
+    #000 25%,
+    transparent 72%
+  );
+  mask-image: radial-gradient(
+    ellipse 60% 55% at 50% 66%,
+    #000 25%,
+    transparent 72%
+  );
+}
+
+.marketing-splash .spydr-signal-field__lattice {
+  /* Pattern strokeOpacity is 0.11; scale to effective ~0.10. */
+  opacity: calc(0.1 / 0.11);
+}
+
+.marketing-splash__header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 32px;
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.marketing-splash__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.marketing-splash__brand-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.marketing-splash__nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.marketing-splash__nav-link {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: color 0.15s ease;
+}
+
+.marketing-splash__nav-link:hover {
+  color: var(--fg);
+}
+
+.marketing-splash__nav-cta,
+.marketing-splash__btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--fg);
+  color: #0a0c0f;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  transition: background 0.15s ease;
+}
+
+.marketing-splash__nav-cta:hover,
+.marketing-splash__btn-primary:hover {
+  background: #f2f4f7;
+}
+
+.marketing-splash__main {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 56px 96px;
+  padding: 40px 32px 72px;
+  min-height: 0;
+}
+
+.marketing-splash__copy {
+  max-width: 500px;
+}
+
+.marketing-splash__mark {
+  display: block;
+  margin: 0 0 28px -6px;
+}
+
+.marketing-splash__title {
+  margin: 0;
+  font-size: clamp(40px, 5vw, 56px);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+  color: var(--fg);
+}
+
+.marketing-splash__lede {
+  margin: 20px 0 0;
+  max-width: 440px;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.marketing-splash__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 32px;
+}
+
+.marketing-splash__btn-primary {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 9px;
+  font-size: 14px;
+}
+
+.marketing-splash__btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 9px;
+  background: var(--control);
+  border: 1px solid var(--control-border);
+  color: var(--fg);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.marketing-splash__btn-secondary:hover {
+  background: #12151a;
+}
+
+.marketing-splash__panels {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 460px;
+  width: 100%;
+}
+
+.marketing-splash__panel {
+  background: rgba(12, 14, 18, 0.92);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.marketing-splash__strands {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.marketing-splash__strand {
+  display: grid;
+  grid-template-columns: 20px 104px 1fr;
+  align-items: center;
+  gap: 12px;
+  height: 46px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.15s ease;
+}
+
+.marketing-splash__strand:last-child {
+  border-bottom: none;
+}
+
+.marketing-splash__strand:hover {
+  background: #0f1216;
+}
+
+.marketing-splash__strand-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+}
+
+.marketing-splash__strand-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--fg);
+}
+
+.marketing-splash__strand-body {
+  font-size: 13.5px;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+.marketing-splash__ai {
+  padding: 20px;
+}
+
+.marketing-splash__ai-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.marketing-splash__ai-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  color: var(--fg);
+}
+
+.marketing-splash__ai-via {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted-2);
+}
+
+.marketing-splash__ai-lede {
+  margin: 6px 0 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.marketing-splash__exchange {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0a0c0f;
+}
+
+.marketing-splash__exchange-user {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.marketing-splash__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--control);
+  border: 1px solid var(--control-border);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.marketing-splash__exchange-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--fg);
+}
+
+.marketing-splash__exchange-tool {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 30px;
+  font-family: var(--font-mono), "Geist Mono", ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.marketing-splash__exchange-tool--visible {
+  opacity: 1;
+}
+
+.marketing-splash__exchange-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--active);
+}
+
+.marketing-splash__sep {
+  color: var(--faint);
+}
+
+.marketing-splash__connect {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+  text-decoration: none;
+  border-bottom: 1px solid #2a2f37;
+  transition: border-color 0.15s ease;
+}
+
+.marketing-splash__connect:hover {
+  border-bottom-color: var(--fg);
+}
+
+.marketing-splash__footer {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  padding: 18px 32px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted-2);
+}
+
+.marketing-splash__legal {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.marketing-splash__legal a {
+  color: var(--muted-2);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.marketing-splash__legal a:hover {
+  color: var(--fg);
+}
+
+.marketing-splash__nav-link:focus-visible,
+.marketing-splash__nav-cta:focus-visible,
+.marketing-splash__btn-primary:focus-visible,
+.marketing-splash__btn-secondary:focus-visible,
+.marketing-splash__brand:focus-visible,
+.marketing-splash__connect:focus-visible,
+.marketing-splash__legal a:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px hsl(var(--ring));
+  border-radius: 6px;
+}
+
+@media (max-width: 960px) {
+  .marketing-splash__main {
+    flex-direction: column;
+    gap: 40px;
+    padding: 32px 24px 56px;
+  }
+
+  .marketing-splash__copy {
+    text-align: center;
+    max-width: 500px;
+  }
+
+  .marketing-splash__mark {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .marketing-splash__lede {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .marketing-splash__ctas {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 900px) {
+  .marketing-splash .spydr-signal-field {
+    opacity: 0.6;
+  }
+
+  .marketing-splash__header,
+  .marketing-splash__footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-splash__exchange-tool {
+    opacity: 1;
+    transition: none;
+  }
+}

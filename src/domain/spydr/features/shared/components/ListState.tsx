@@ -11,10 +11,7 @@ interface ListStateProps {
 export function LoadingState({ title = "Loading" }: Partial<ListStateProps>) {
   return (
     <div className="grid min-h-[240px] place-items-center px-4 py-12 text-center md:px-6">
-      <div>
-        <WebLoader size="sm" />
-        <p className="mt-3 text-[13px] text-muted-foreground">{title}…</p>
-      </div>
+      <WebLoader size="md" label={title} />
     </div>
   );
 }

@@ -11,7 +11,7 @@ export function workPersonPath(personId: string): string {
 
 export function workTasksPath(options?: {
   status?: string | string[];
-  due?: "overdue";
+  due?: "overdue" | "this_week";
   person?: "all" | string;
 }): string {
   const params = new URLSearchParams();
@@ -32,7 +32,9 @@ export function parseWorkTaskFilterSelections(
   const selections: Record<string, string[]> = {};
   const statuses = normalizeCsv(statusParam).filter(isTaskStatus);
   if (statuses.length > 0) selections.status = statuses;
-  if (dueParam === "overdue") selections.due = ["overdue"];
+  if (dueParam === "overdue" || dueParam === "this_week") {
+    selections.due = [dueParam];
+  }
   return Object.keys(selections).length > 0 ? selections : null;
 }
 

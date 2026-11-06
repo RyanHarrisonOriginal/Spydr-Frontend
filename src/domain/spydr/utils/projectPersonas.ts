@@ -35,8 +35,64 @@ export function personDisplayName(person: PersonNode | null | undefined): string
   return person.details?.fullName ?? person.title;
 }
 
+/** Strip bracketed/parenthetical segments and collapse whitespace. */
+export function cleanPersonName(raw: string): string {
+  return raw
+    .replace(/\[[^\]]*\]/g, " ")
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Same clean-name rule for any displayed title / label. */
+export function cleanDisplayName(raw: string | null | undefined): string {
+  if (!raw) return "";
+  return cleanPersonName(raw);
+}
+
+export interface FormattedPerson {
+  label: string;
+  initials: string;
+}
+
+/**
+ * App-wide person display: "You" for the current user, otherwise a clean name.
+ * Unassigned (null person) → label "Unassigned", empty initials.
+ */
+export function formatPerson(
+  person: PersonNode | null | undefined,
+  currentUserId: string | null | undefined
+): FormattedPerson {
+  if (!person) {
+    return { label: "Unassigned", initials: "" };
+  }
+  const cleaned = cleanPersonName(personDisplayName(person));
+  const initials = initialsFromCleanName(cleaned);
+  if (currentUserId && person.id === currentUserId) {
+    return { label: "You", initials };
+  }
+  return { label: cleaned || personDisplayName(person).trim(), initials };
+}
+
+function initialsFromCleanName(cleaned: string): string {
+  if (!cleaned) return "";
+  const letterParts = cleaned
+    .replace(/[^\p{L}\s'-]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean);
+  if (letterParts.length === 0) return "";
+  if (letterParts.length === 1) {
+    return (letterParts[0].match(/\p{L}/u)?.[0] ?? "").toUpperCase();
+  }
+  const first = letterParts[0].match(/\p{L}/u)?.[0] ?? "";
+  const last = letterParts[letterParts.length - 1].match(/\p{L}/u)?.[0] ?? "";
+  return `${first}${last}`.toUpperCase();
+}
+
 export function personGivenName(person: PersonNode | null | undefined): string {
-  const name = personDisplayName(person).trim();
+  const name = cleanPersonName(personDisplayName(person));
   if (!name) return "";
   return name.split(/\s+/)[0] ?? "";
 }
@@ -45,17 +101,12 @@ export function personInitial(person: PersonNode | null | undefined): string {
   return personInitials(person).slice(0, 1) || "?";
 }
 
-/** First + last initials, or the first two letters of a single name. */
+/**
+ * First + last letter initials after stripping bracketed/parenthetical noise.
+ * "Ryan Harrison [TEST]" -> "RH". Single word -> first letter. Empty -> "".
+ */
 export function personInitials(person: PersonNode | null | undefined): string {
-  const name = personDisplayName(person).trim();
-  if (!name) return "?";
-  const parts = name.split(/\s+/).filter(Boolean);
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
-  }
-  const first = parts[0][0] ?? "";
-  const last = parts[parts.length - 1][0] ?? "";
-  return `${first}${last}`.toUpperCase();
+  return initialsFromCleanName(cleanPersonName(personDisplayName(person)));
 }
 
 export function personSubtitle(person: PersonNode | null | undefined): string | null {

@@ -1,0 +1,183 @@
+/*
+ * App chrome (sidebar + top bar). Hex tokens match the Work page pass;
+ * --canvas / --muted are shadowed here so hsl(var(--…)) consumers stay intact.
+ */
+.shell-sidebar,
+.shell-topbar {
+  --canvas: #08090b;
+  --muted: #8a9099;
+  color: var(--fg);
+  font-family: var(--font-sans);
+}
+
+.shell-sidebar {
+  width: 232px;
+  padding: 12px;
+  background: var(--canvas);
+  border-right: 1px solid var(--line);
+}
+
+.shell-sidebar[data-collapsed="true"] {
+  width: 56px;
+  padding: 12px 8px;
+}
+
+.shell-sidebar-brand {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.shell-sidebar-brand-name {
+  min-width: 0;
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--fg);
+}
+
+.shell-sidebar-collapse {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 8px;
+  color: var(--muted);
+  transition: background-color 80ms ease, color 80ms ease;
+}
+
+.shell-sidebar-collapse:hover {
+  background: var(--surface-hover);
+  color: var(--fg);
+}
+
+.shell-sidebar-section {
+  padding-top: 18px;
+}
+
+.shell-sidebar-section:first-child {
+  padding-top: 0;
+}
+
+.shell-sidebar-section-label {
+  padding: 0 10px;
+  margin-bottom: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted-2);
+}
+
+.shell-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: background-color 80ms ease, color 80ms ease;
+}
+
+.shell-sidebar-item svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  stroke-width: 1.75;
+  color: inherit;
+}
+
+.shell-sidebar-item:hover {
+  background: var(--surface-hover);
+  color: var(--fg);
+}
+
+.shell-sidebar-item.is-active {
+  background: #13161b;
+  color: var(--fg);
+}
+
+.shell-sidebar-item[aria-disabled="true"] {
+  color: var(--faint);
+  cursor: default;
+}
+
+.shell-sidebar-item[aria-disabled="true"]:hover {
+  background: transparent;
+  color: var(--faint);
+}
+
+.shell-sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted-2);
+}
+
+.shell-sidebar-footer-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.shell-sidebar-footer-dot[data-tone="warn"] {
+  background: var(--warn);
+}
+
+.shell-sidebar-footer-dot[data-tone="danger"] {
+  background: var(--danger);
+}
+
+.shell-topbar {
+  background: var(--canvas);
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+}
+
+.shell-topbar-avatar {
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #1a1e25;
+  box-shadow: inset 0 0 0 1px #262b33;
+  color: #aeb4bd;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.shell-spaces-trigger {
+  height: 30px !important;
+  min-height: 30px !important;
+  border-radius: 8px !important;
+  background: var(--control) !important;
+  border: 1px solid #1a1d23 !important;
+  box-shadow: none !important;
+}
+
+.shell-spaces-trigger:hover {
+  background: var(--surface-hover) !important;
+  border-color: #1a1d23 !important;
+}
+
+.shell-sidebar-item.is-active:hover {
+  background: #13161b;
+  color: var(--fg);
+}

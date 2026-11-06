@@ -168,6 +168,19 @@ export function useTaskDetailPage() {
     );
   };
 
+  const retrySave = () => {
+    if (!task || !hydratedRef.current) return;
+    clearTimeout(saveTimerRef.current);
+    setSaveState("saving");
+    updateTask.mutate(
+      { taskId: task.id, input: formToInput(form) },
+      {
+        onSuccess: () => setSaveState("saved"),
+        onError: () => setSaveState("error"),
+      }
+    );
+  };
+
   return {
     task,
     taskId,
@@ -181,6 +194,7 @@ export function useTaskDetailPage() {
     updateField,
     updateEmoji,
     logNote,
+    retrySave,
     isLoading: query.isLoading || projectsQuery.isLoading,
     isError: query.isError,
     errorMessage:

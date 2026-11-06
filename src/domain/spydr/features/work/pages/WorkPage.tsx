@@ -12,14 +12,11 @@ import { CollectionNoResults } from "@/domain/spydr/features/shared/components/C
 import { isClosedCollectionStatus } from "@/domain/spydr/utils/collectionVisibility";
 import { personDisplayName } from "@/domain/spydr/utils/projectPersonas";
 import { CreateProjectDialog } from "@/domain/spydr/features/projects/components/CreateProjectDialog";
-import { ProjectList } from "@/domain/spydr/features/projects/components/ProjectList";
 import { ProjectListToolbar } from "@/domain/spydr/features/projects/components/ProjectListToolbar";
 import { ProjectTrashPanel } from "@/domain/spydr/features/projects/components/ProjectTrashPanel";
 import { useCreateProjectForm } from "@/domain/spydr/features/projects/hooks/useCreateProjectForm";
-import { useProjectListColumns } from "@/domain/spydr/features/projects/hooks/useProjectListColumns";
 import { useProjectsPage } from "@/domain/spydr/features/projects/hooks/useProjectsPage";
 import { CreateTaskDialog } from "@/domain/spydr/features/tasks/components/CreateTaskDialog";
-import { TaskList } from "@/domain/spydr/features/tasks/components/TaskList";
 import { useCreateTaskForm } from "@/domain/spydr/features/tasks/hooks/useCreateTaskForm";
 import { useTasksPage } from "@/domain/spydr/features/tasks/hooks/useTasksPage";
 import { CreatePersonDialog } from "@/domain/spydr/features/people/components/CreatePersonDialog";
@@ -33,14 +30,14 @@ import { WorkTodoPanel } from "@/domain/spydr/features/todos/components/WorkTodo
 import { WorkPersonPicker } from "../components/WorkPersonPicker";
 import { WorkViewToggle } from "../components/WorkViewToggle";
 import { WorkCreateMenu } from "../components/WorkCreateMenu";
+import { WorkGrid } from "../components/WorkGrid";
 import { WorkMoreMenu } from "../components/WorkMoreMenu";
-import {
-  InfiniteScrollSentinel,
-  useScrollListToStart,
-} from "@/domain/spydr/features/shared/components/InfiniteScrollSentinel";
-import { useInfiniteList } from "@/domain/spydr/features/shared/hooks/useInfiniteList";
-import { moveIdInOrder, moveIdToRank } from "@/domain/spydr/utils/collectionReorder";
+import { WorkPulse, type WorkPulseKind } from "../components/WorkPulse";
+import { moveIdInOrder } from "@/domain/spydr/utils/collectionReorder";
+import type { WorkGridKind } from "../utils/workGridRows";
+import { countVisiblePulse } from "../utils/workPulse";
 import { useWorkScope } from "../hooks/useWorkScope";
+import "./work-page.css";
 
 export function WorkPage() {
   const {
@@ -69,26 +66,7 @@ export function WorkPage() {
   const createTask = useCreateTaskForm({
     assigneePersonNodeId: personId ?? undefined,
   });
-  const projectColumns = useProjectListColumns();
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
-  const projectsResetKey = [
-    personId ?? "all",
-    JSON.stringify(projectsPage.listView.filters),
-    projectsPage.listView.sort.column,
-    projectsPage.listView.sort.direction,
-  ].join("|");
-  const tasksResetKey = [personId ?? "all", JSON.stringify(tasksPage.view.state)].join(
-    "|"
-  );
-  const projectsList = useInfiniteList(projectsPage.projects, {
-    resetKey: projectsResetKey,
-  });
-  const tasksList = useInfiniteList(tasksPage.view.items, {
-    resetKey: tasksResetKey,
-  });
-  const listAnchorRef = useScrollListToStart(
-    view === "hierarchy" ? `projects:${projectsResetKey}` : `tasks:${tasksResetKey}`
-  );
 
   usePageBreadcrumb("Work");
 
@@ -166,9 +144,6 @@ export function WorkPage() {
         onCreatePerson={() => peoplePage.setIsCreateOpen(true)}
       />
       <WorkMoreMenu
-        columns={isHierarchy ? projectColumns.columns : []}
-        visibleColumnSet={projectColumns.visibleColumnSet}
-        onToggleColumn={projectColumns.toggleColumn}
         trashCount={projectsPage.deletedCount}
         onOpenTrash={projectsPage.openTrash}
         showCompleted={isHierarchy ? showCompletedTasks : undefined}
@@ -252,19 +227,155 @@ export function WorkPage() {
     </>
   );
 
+  const resetSignal = [
+    projectsPage.statusError,
+    projectsPage.titleError,
+    projectsPage.areaError,
+    projectsPage.targetError,
+    projectsPage.priorityError,
+    projectsPage.assigneeError,
+    projectsPage.requesterError,
+    projectsPage.taskError,
+    projectsPage.deleteError,
+    tasksPage.statusError,
+    tasksPage.projectError,
+    tasksPage.assigneeError,
+    tasksPage.dueDateError,
+    tasksPage.titleError,
+    tasksPage.deleteError,
+  ]
+    .filter(Boolean)
+    .join("|");
+
+  const editTitle = (id: string, kind: WorkGridKind, title: string) => {
+    if (kind === "project") projectsPage.updateTitle(id, title);
+    else if (isHierarchy) projectsPage.updateTaskTitle(id, title);
+    else tasksPage.updateTitle(id, title);
+  };
+
+  const editEmoji = (id: string, kind: WorkGridKind, emoji: string | null) => {
+    if (kind === "project") projectsPage.updateEmoji(id, emoji);
+    else if (isHierarchy) projectsPage.updateTaskEmoji(id, emoji);
+    else tasksPage.updateEmoji(id, emoji);
+  };
+
+  const editPriority = (id: string, kind: WorkGridKind, priority: string) => {
+    if (kind === "project") projectsPage.updatePriority(id, priority);
+    else if (isHierarchy) projectsPage.updateTaskPriority(id, priority);
+    else tasksPage.updatePriority(id, priority);
+  };
+
+  const editAssignee = (id: string, kind: WorkGridKind, personId: string | null) => {
+    if (kind === "project") projectsPage.updateAssignee(id, personId);
+    else if (isHierarchy) projectsPage.updateTaskAssignee(id, personId);
+    else tasksPage.updateAssignee(id, personId);
+  };
+
+  const editDate = (id: string, kind: WorkGridKind, date: string | null) => {
+    if (kind === "project") projectsPage.updateTargetDate(id, date);
+    else if (isHierarchy) projectsPage.updateTaskDueDate(id, date);
+    else tasksPage.updateDueDate(id, date);
+  };
+
+  const editDelete = (id: string, kind: WorkGridKind) => {
+    if (kind === "project") projectsPage.deleteProject(id);
+    else if (isHierarchy) projectsPage.deleteTask(id);
+    else tasksPage.deleteTask(id);
+  };
+
+  const moveProject = (id: string, direction: "up" | "down") => {
+    const next = moveIdInOrder(
+      projectsPage.projects.map((project) => project.id),
+      id,
+      direction
+    );
+    if (next) projectsPage.reorder.onReorder(next);
+  };
+
+  const gridErrors = (isHierarchy
+    ? [
+        projectsPage.statusError,
+        projectsPage.titleError,
+        projectsPage.areaError,
+        projectsPage.targetError,
+        projectsPage.priorityError,
+        projectsPage.deleteError,
+        projectsPage.assigneeError,
+        projectsPage.requesterError,
+        projectsPage.taskError,
+      ]
+    : [
+        tasksPage.statusError,
+        tasksPage.projectError,
+        tasksPage.assigneeError,
+        tasksPage.dueDateError,
+        tasksPage.titleError,
+        tasksPage.deleteError,
+      ]
+  ).filter((message): message is string => Boolean(message));
+
+  const showHierarchyGrid =
+    !isLoading && !isError && isHierarchy && projectsPage.projects.length > 0;
+  const showTaskGrid =
+    !isLoading && !isError && !isHierarchy && tasksPage.view.items.length > 0;
+
+  const pulseCounts = useMemo(() => {
+    if (isHierarchy) {
+      const projects = projectsPage.projects;
+      const tasks: typeof tasksPage.view.items = [];
+      for (const project of projects) {
+        const nested = projectsPage.tasksByProjectId.get(project.id) ?? [];
+        for (const task of nested) {
+          if (showCompletedTasks || !isClosedCollectionStatus(task.status)) {
+            tasks.push(task);
+          }
+        }
+      }
+      return countVisiblePulse(projects, tasks);
+    }
+    return countVisiblePulse([], tasksPage.view.items);
+  }, [
+    isHierarchy,
+    projectsPage.projects,
+    projectsPage.tasksByProjectId,
+    showCompletedTasks,
+    tasksPage.view.items,
+  ]);
+
+  const applyPulseFilter = (kind: WorkPulseKind) => {
+    if (isHierarchy) {
+      projectsPage.listView.clearFilters();
+      if (kind === "overdue") {
+        projectsPage.listView.toggleFacetFilter("target", "overdue");
+      } else if (kind === "blocked") {
+        projectsPage.listView.toggleFacetFilter("status", "blocked");
+      } else {
+        projectsPage.listView.toggleFacetFilter("target", "this_week");
+      }
+      return;
+    }
+
+    if (kind === "overdue") {
+      tasksPage.view.replaceFilters({ due: ["overdue"] });
+    } else if (kind === "blocked") {
+      tasksPage.view.replaceFilters({ status: ["blocked"] });
+    } else {
+      tasksPage.view.replaceFilters({ due: ["this_week"] });
+    }
+  };
+
   return (
-    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
+    <div className="work-page flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
       <div className="shrink-0">
         <PageHeader
           dense
+          atmosphere={false}
+          showBreadcrumbs={false}
+          inlineMeta
+          className="work-page-header"
+          titleClassName="text-[24px] font-semibold tracking-[-0.03em] text-[var(--fg)]"
           title="Work"
-          meta={
-            <span className="font-mono text-micro uppercase tracking-[0.12em]">
-              {isHierarchy
-                ? `${projectsPage.totalCount} projects · ${projectsPage.activeCount} active`
-                : `${tasksPage.totalCount} tasks · ${tasksPage.openCount} open`}
-            </span>
-          }
+          meta={<WorkPulse counts={pulseCounts} onSelect={applyPulseFilter} />}
         />
         {createDialogs}
 
@@ -276,7 +387,7 @@ export function WorkPage() {
         />
 
         {peoplePage.deleteError ? (
-          <p className="px-page-x pt-3 text-sm text-destructive">
+          <p className="border-b border-destructive/30 bg-destructive/5 px-page-x py-2 text-sm text-destructive">
             {peoplePage.deleteError}
           </p>
         ) : null}
@@ -295,99 +406,74 @@ export function WorkPage() {
         ) : null}
 
         {!isError && isHierarchy ? (
-          <ProjectListToolbar
-            filters={projectsPage.listView.filters}
-            areas={projectsPage.areas}
-            people={projectsPage.people}
-            filteredCount={projectsPage.filteredCount}
-            totalCount={projectsPage.totalCount}
-            activeFilterCount={projectsPage.listView.activeFilterCount}
-            onSearchChange={projectsPage.listView.setSearch}
-            onToggleFacet={projectsPage.listView.toggleFacetFilter}
-            onRemoveFacetValue={projectsPage.listView.removeFacetFilter}
-            onClearFilters={projectsPage.listView.clearFilters}
-            startActions={pageControls}
-            endActions={listTools}
-          />
+          <div className="work-page-toolbar">
+            <ProjectListToolbar
+              filters={projectsPage.listView.filters}
+              areas={projectsPage.areas}
+              people={projectsPage.people}
+              filteredCount={projectsPage.filteredCount}
+              totalCount={projectsPage.totalCount}
+              activeFilterCount={projectsPage.listView.activeFilterCount}
+              onSearchChange={projectsPage.listView.setSearch}
+              onToggleFacet={projectsPage.listView.toggleFacetFilter}
+              onRemoveFacetValue={projectsPage.listView.removeFacetFilter}
+              onClearFilters={projectsPage.listView.clearFilters}
+              startActions={pageControls}
+              endActions={listTools}
+              showCount={false}
+            />
+          </div>
         ) : null}
 
         {!isError && !isHierarchy ? (
-          <CollectionToolbar
-            view={tasksPage.view}
-            startActions={pageControls}
-            endActions={listTools}
-            showSort={false}
-            wrap
-          />
+          <div className="work-page-toolbar">
+            <CollectionToolbar
+              view={tasksPage.view}
+              startActions={pageControls}
+              endActions={listTools}
+              showSort={false}
+              showCount={false}
+              wrap
+            />
+          </div>
         ) : null}
       </div>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      {isLoading && (
-        <LoadingState title={isHierarchy ? "Loading work" : "Loading tasks"} />
-      )}
-      {isError && (
-        <ErrorState
-          title={isHierarchy ? "Work unavailable" : "Tasks unavailable"}
-          description={errorMessage}
-        />
-      )}
+        {isLoading && (
+          <LoadingState title={isHierarchy ? "Loading work" : "Loading tasks"} />
+        )}
+        {isError && (
+          <ErrorState
+            title={isHierarchy ? "Work unavailable" : "Tasks unavailable"}
+            description={errorMessage}
+          />
+        )}
 
-      {!isLoading && !isError && isHierarchy && projectsPage.orgProjectCount === 0 && (
-        <EmptyState
-          title="No projects yet"
-          description="Create a project to start a hierarchy, or switch to Tasks for a flat list."
-        />
-      )}
+        {!isLoading &&
+          !isError &&
+          isHierarchy &&
+          projectsPage.orgProjectCount === 0 && (
+            <EmptyState
+              title="No projects yet"
+              description="Create a project to start a hierarchy, or switch to Tasks for a flat list."
+            />
+          )}
 
-      {!isLoading && !isError && isHierarchy && projectsPage.orgProjectCount > 0 && (
-        <>
-          {projectsPage.statusError && (
-            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {projectsPage.statusError}
-            </p>
+        {!isLoading &&
+          !isError &&
+          isHierarchy &&
+          projectsPage.orgProjectCount > 0 &&
+          projectsPage.allProjects.length > 0 &&
+          projectsPage.projects.length === 0 && (
+            <EmptyState title="No projects match your filters" />
           )}
-          {projectsPage.titleError && (
-            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {projectsPage.titleError}
-            </p>
-          )}
-          {projectsPage.areaError && (
-            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {projectsPage.areaError}
-            </p>
-          )}
-          {projectsPage.targetError && (
-            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {projectsPage.targetError}
-            </p>
-          )}
-          {projectsPage.priorityError && (
-            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {projectsPage.priorityError}
-            </p>
-          )}
-          {projectsPage.deleteError && (
-            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {projectsPage.deleteError}
-            </p>
-          )}
-          {projectsPage.assigneeError && (
-            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {projectsPage.assigneeError}
-            </p>
-          )}
-          {projectsPage.requesterError && (
-            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {projectsPage.requesterError}
-            </p>
-          )}
-          {projectsPage.taskError && (
-            <p className="mx-page-x mb-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {projectsPage.taskError}
-            </p>
-          )}
-          {projectsPage.allProjects.length === 0 ? (
+
+        {!isLoading &&
+          !isError &&
+          isHierarchy &&
+          projectsPage.orgProjectCount > 0 &&
+          projectsPage.allProjects.length === 0 && (
             <EmptyState
               title={
                 selectedPerson
@@ -400,189 +486,97 @@ export function WorkPage() {
                   : undefined
               }
             />
-          ) : (
-            <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-              <ProjectList
-                projects={projectsList.visibleItems}
-                areas={projectsPage.areas}
-                people={projectsPage.people}
-                tasksByProjectId={projectsPage.tasksByProjectId}
-                visibleColumns={projectColumns.visibleColumns}
-                sort={projectsPage.listView.sort}
-                reorderEnabled={projectsPage.reorder.canReorder}
-                rankOrderIds={projectsPage.projects.map((project) => project.id)}
-                getPriorityRank={projectsPage.getPriorityRank}
-                onReorder={(orderedIds) =>
-                  projectsPage.reorder.onReorder(
-                    projectsList.mergeVisibleReorder(orderedIds)
-                  )
-                }
-                onMoveRank={(id, direction) => {
-                  const next = moveIdInOrder(
-                    projectsPage.projects.map((project) => project.id),
-                    id,
-                    direction
-                  );
-                  if (next) projectsPage.reorder.onReorder(next);
-                }}
-                onSetRank={(id, rank) => {
-                  const next = moveIdToRank(
-                    projectsPage.projects.map((project) => project.id),
-                    id,
-                    rank
-                  );
-                  if (next) projectsPage.reorder.onReorder(next);
-                }}
-                hasActiveFilters={projectsPage.listView.hasActiveFilters}
-                updatingProjectId={projectsPage.updatingProjectId}
-                updatingTaskId={projectsPage.updatingTaskId}
-                creatingTaskProjectId={projectsPage.creatingTaskProjectId}
-                onSortColumn={projectsPage.listView.toggleSortColumn}
-                onClearFilters={projectsPage.listView.clearFilters}
-                onTitleChange={projectsPage.updateTitle}
-                onEmojiChange={projectsPage.updateEmoji}
-                onStatusChange={projectsPage.updateStatus}
-                onAreaChange={projectsPage.updateArea}
-                onPriorityChange={projectsPage.updatePriority}
-                onTargetDateChange={projectsPage.updateTargetDate}
-                onAssigneeChange={projectsPage.updateAssignee}
-                onRequesterChange={projectsPage.updateRequester}
-                onTaskStatusChange={projectsPage.updateTaskStatus}
-                onTaskDueDateChange={projectsPage.updateTaskDueDate}
-                onTaskAssigneeChange={projectsPage.updateTaskAssignee}
-                onTaskTitleChange={projectsPage.updateTaskTitle}
-                onTaskEmojiChange={projectsPage.updateTaskEmoji}
-                onCreateTask={projectsPage.createProjectTask}
-                onDeleteTask={projectsPage.deleteTask}
-                deletingTaskIds={projectsPage.deletingTaskIds}
-                onDelete={projectsPage.deleteProject}
-                deletingProjectId={projectsPage.deletingProjectId}
-                expandedIds={expandedIds}
-                onExpandedIdsChange={setExpandedIds}
-                showCompletedTasks={showCompletedTasks}
-                onShowCompletedTasksChange={setShowCompletedTasks}
-                todoTaskIds={todoTaskIds}
-                togglingTodoTaskId={togglingTodoTaskId}
-                onToggleTodo={toggleTodo}
-                scrollRef={listAnchorRef}
-                footer={
-                  <InfiniteScrollSentinel
-                    hasMore={projectsList.hasMore}
-                    onLoadMore={projectsList.loadMore}
-                    loadedCount={projectsList.visibleItems.length}
-                    noun="projects"
-                  />
-                }
-              />
-            </div>
           )}
-        </>
-      )}
 
-      {!isLoading && !isError && !isHierarchy && tasksPage.orgTaskCount === 0 && (
-        <EmptyState
-          title="No tasks yet"
-          description="Create a task and assign it to a project to get started."
-        />
-      )}
-
-      {!isLoading && !isError && !isHierarchy && tasksPage.orgTaskCount > 0 && (
-        <>
-          {tasksPage.statusError ? (
-            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {tasksPage.statusError}
-            </p>
-          ) : null}
-          {tasksPage.projectError ? (
-            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {tasksPage.projectError}
-            </p>
-          ) : null}
-          {tasksPage.assigneeError ? (
-            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {tasksPage.assigneeError}
-            </p>
-          ) : null}
-          {tasksPage.dueDateError ? (
-            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {tasksPage.dueDateError}
-            </p>
-          ) : null}
-          {tasksPage.titleError ? (
-            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {tasksPage.titleError}
-            </p>
-          ) : null}
-          {tasksPage.deleteError ? (
-            <p className="mx-page-x mb-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {tasksPage.deleteError}
-            </p>
-          ) : null}
-          {tasksPage.view.items.length > 0 ? (
-            <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-              <TaskList
-                tasks={tasksList.visibleItems}
-                projects={tasksPage.projects}
-                people={tasksPage.people}
-                areas={projectsPage.areas}
-                sort={tasksPage.view.state.sort}
-                reorderEnabled={tasksPage.reorder.canReorder}
-                rankOrderIds={tasksPage.view.items.map((task) => task.id)}
-                getPriorityRank={tasksPage.getPriorityRank}
-                updatingTaskId={tasksPage.updatingTaskId}
-                onSortColumn={tasksPage.view.toggleSort}
-                onReorder={(orderedIds) =>
-                  tasksPage.reorder.onReorder(
-                    tasksList.mergeVisibleReorder(orderedIds)
-                  )
+        {(showHierarchyGrid || showTaskGrid) && (
+          <>
+            {gridErrors.map((message) => (
+              <p
+                key={message}
+                className="border-b border-destructive/30 bg-destructive/5 px-page-x py-2 text-sm text-destructive"
+              >
+                {message}
+              </p>
+            ))}
+            <div className="work-page-panel">
+              <WorkGrid
+                mode={isHierarchy ? "hierarchy" : "tasks"}
+                projects={
+                  isHierarchy ? projectsPage.projects : tasksPage.projects
                 }
-                onMoveRank={(id, direction) => {
-                  const next = moveIdInOrder(
-                    tasksPage.view.items.map((task) => task.id),
-                    id,
-                    direction
-                  );
-                  if (next) tasksPage.reorder.onReorder(next);
-                }}
-                onSetRank={(id, rank) => {
-                  const next = moveIdToRank(
-                    tasksPage.view.items.map((task) => task.id),
-                    id,
-                    rank
-                  );
-                  if (next) tasksPage.reorder.onReorder(next);
-                }}
-                onStatusChange={tasksPage.updateStatus}
-                onProjectChange={tasksPage.updateProject}
-                onAssigneeChange={tasksPage.updateAssignee}
-                onDueDateChange={tasksPage.updateDueDate}
-                onTitleChange={tasksPage.updateTitle}
-                onEmojiChange={tasksPage.updateEmoji}
-                onDelete={tasksPage.deleteTask}
-                onDeleteSelected={tasksPage.deleteSelectedTasks}
-                deletingTaskIds={tasksPage.deletingTaskIds}
+                tasks={tasksPage.view.items}
+                tasksByProjectId={projectsPage.tasksByProjectId}
+                areas={projectsPage.areas}
+                people={isHierarchy ? projectsPage.people : tasksPage.people}
+                expandedIds={expandedIds}
+                showCompletedTasks={showCompletedTasks}
+                reorderEnabled={
+                  isHierarchy
+                    ? projectsPage.reorder.canReorder
+                    : tasksPage.reorder.canReorder
+                }
+                resetSignal={resetSignal}
                 todoTaskIds={todoTaskIds}
                 togglingTodoTaskId={togglingTodoTaskId}
-                onToggleTodo={toggleTodo}
-                scrollRef={listAnchorRef}
-                footer={
-                  <InfiniteScrollSentinel
-                    hasMore={tasksList.hasMore}
-                    onLoadMore={tasksList.loadMore}
-                    loadedCount={tasksList.visibleItems.length}
-                    noun="tasks"
-                  />
+                busyId={
+                  projectsPage.updatingProjectId ??
+                  projectsPage.updatingTaskId ??
+                  tasksPage.updatingTaskId
                 }
+                deletingIds={
+                  new Set(
+                    [
+                      projectsPage.deletingProjectId,
+                      ...projectsPage.deletingTaskIds,
+                      ...tasksPage.deletingTaskIds,
+                    ].filter((id): id is string => Boolean(id))
+                  )
+                }
+                onExpandedIdsChange={setExpandedIds}
+                onTitle={editTitle}
+                onEmoji={editEmoji}
+                onProjectStatus={projectsPage.updateStatus}
+                onTaskStatus={
+                  isHierarchy
+                    ? projectsPage.updateTaskStatus
+                    : tasksPage.updateStatus
+                }
+                onPriority={editPriority}
+                onAssignee={editAssignee}
+                onRequester={projectsPage.updateRequester}
+                onArea={projectsPage.updateArea}
+                onDate={editDate}
+                onProject={tasksPage.updateProject}
+                onDelete={editDelete}
+                onToggleTodo={toggleTodo}
+                onAddTask={(projectId) => {
+                  createTask.updateField("projectId", projectId);
+                  createTask.setIsOpen(true);
+                }}
+                onMoveProject={moveProject}
+                onReorder={tasksPage.reorder.onReorder}
               />
             </div>
-          ) : (
+          </>
+        )}
+
+        {!isLoading && !isError && !isHierarchy && tasksPage.orgTaskCount === 0 && (
+          <EmptyState
+            title="No tasks yet"
+            description="Create a task and assign it to a project to get started."
+          />
+        )}
+
+        {!isLoading &&
+          !isError &&
+          !isHierarchy &&
+          tasksPage.orgTaskCount > 0 &&
+          tasksPage.view.items.length === 0 && (
             <CollectionNoResults
               noun={tasksPage.view.noun}
               onClearFilters={tasksPage.view.clearFilters}
             />
           )}
-        </>
-      )}
       </div>
     </div>
   );

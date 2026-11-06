@@ -1,4 +1,6 @@
+import { endOfWeek, isBefore, startOfDay } from "date-fns";
 import type { TaskNode } from "@/domain/spydr/utils/types";
+import { parseCalendarDate } from "@/domain/spydr/utils/dateOnly";
 import { projectPriorities } from "@/domain/spydr/utils/projectPriority";
 import { personDisplayName } from "@/domain/spydr/utils/projectPersonas";
 import {
@@ -23,6 +25,18 @@ import {
 
 function taskStatusLabel(status: string): string {
   return isTaskStatus(status) ? taskStatusLabels[status] : formatStatusLabel(status);
+}
+
+function isDueThisWeekTask(task: TaskNode, now = new Date()): boolean {
+  const dueDate = task.details?.dueDate;
+  if (!dueDate) return false;
+  if (task.status === "completed" || task.status === "archived") return false;
+  const due = parseCalendarDate(dueDate) ?? new Date(dueDate);
+  if (Number.isNaN(due.getTime())) return false;
+  const today = startOfDay(now);
+  if (isBefore(startOfDay(due), today)) return false;
+  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+  return !isBefore(weekEnd, startOfDay(due));
 }
 
 // Order used when sorting by the Status column (open work first).
@@ -97,10 +111,12 @@ export const tasksCollection: CollectionConfig<TaskNode> = {
       label: "Due",
       options: () => [
         { value: "overdue", label: "Overdue" },
+        { value: "this_week", label: "This week" },
         { value: "upcoming", label: "Has due date" },
       ],
       valueOf: (task) => {
         if (isOverdueTask(task.status, task.details?.dueDate)) return "overdue";
+        if (isDueThisWeekTask(task)) return ["this_week", "upcoming"];
         if (task.details?.dueDate) return "upcoming";
         return null;
       },

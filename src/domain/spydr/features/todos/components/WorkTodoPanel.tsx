@@ -35,39 +35,43 @@ export function WorkTodoPanel({
         staleCount > 0 ? ` · ${staleCount} stale` : ""
       }`;
 
+  if (!isLoading && items.length === 0) {
+    return null;
+  }
+
   return (
-    <section className="mx-page-x mt-3 min-w-0 rounded-md border border-border/60 bg-muted/10">
-      <div className="flex min-w-0 flex-wrap items-center gap-2 border-b border-border/50 px-2 py-1.5">
+    <section className="min-w-0 border-b border-border/60">
+      <div className="flex h-12 min-w-0 items-center gap-2 px-page-x">
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
           aria-expanded={expanded}
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-sm px-1 py-1 text-left transition-colors hover:bg-muted/40"
+          className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md px-1 text-left transition-colors hover:bg-accent"
         >
           {expanded ? (
-            <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           ) : (
-            <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           )}
-          <Sun className="h-3.5 w-3.5 shrink-0 text-highlight" aria-hidden />
-          <h2 className="shrink-0 text-caption font-semibold tracking-tight">Today</h2>
-          <span className="min-w-0 truncate font-mono text-micro uppercase tracking-[0.1em] text-muted-foreground">
+          <Sun className="h-4 w-4 shrink-0 text-highlight" aria-hidden />
+          <h2 className="shrink-0 text-sm font-medium tracking-tight">Today</h2>
+          <span className="min-w-0 truncate text-xs text-muted-foreground">
             {countLabel}
           </span>
         </button>
         <Link
           to="/today"
-          className="inline-flex shrink-0 items-center gap-1 rounded-sm px-2 py-1 text-label text-highlight transition-colors hover:bg-muted/40 hover:underline"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md px-2 text-sm text-highlight transition-colors hover:bg-accent"
         >
           Open Today
-          <ListChecks className="h-3 w-3" aria-hidden />
+          <ListChecks className="h-4 w-4" aria-hidden />
         </Link>
       </div>
 
       {expanded ? (
-        <>
+        <div className="border-t border-border/60">
           {items.length === 0 && !isLoading ? (
-            <p className="px-3 py-3 text-[12px] text-muted-foreground">
+            <p className="px-page-x py-3 text-sm text-muted-foreground">
               Pin tasks with the list button — they show up here as today&apos;s
               action items.
             </p>
@@ -77,7 +81,7 @@ export function WorkTodoPanel({
                 <li
                   key={item.id}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-1.5",
+                    "flex min-h-12 items-center gap-3 px-page-x",
                     item.isStale && "bg-destructive/[0.04]"
                   )}
                 >
@@ -91,7 +95,7 @@ export function WorkTodoPanel({
                   </Link>
                   <span
                     className={cn(
-                      "shrink-0 font-mono text-[10px] text-muted-foreground",
+                      "shrink-0 font-mono text-xs text-muted-foreground",
                       item.isStale && "text-destructive/80"
                     )}
                   >
@@ -99,6 +103,7 @@ export function WorkTodoPanel({
                     {formatTodoAgeHours(item.ageHours)}
                   </span>
                   <AddToTodoButton
+                    className="h-8 w-8"
                     onTodo
                     busy={togglingTaskId === item.taskId}
                     onToggle={() => onToggleTask(item.taskId, true)}
@@ -108,14 +113,14 @@ export function WorkTodoPanel({
             </ul>
           )}
           {items.length > 6 ? (
-            <p className="border-t border-border/40 px-3 py-1.5 text-[11px] text-muted-foreground">
+            <p className="border-t border-border/40 px-page-x py-2 text-xs text-muted-foreground">
               +{items.length - 6} more on{" "}
               <Link to="/today" className="text-highlight hover:underline">
                 Today
               </Link>
             </p>
           ) : null}
-        </>
+        </div>
       ) : null}
     </section>
   );

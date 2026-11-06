@@ -1,19 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import {
-  ArchiveRestore,
-  ArrowUpRight,
-  MoreHorizontal,
-} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ChevronRight, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Button } from "@/components/ui/button";
+import { StatusDot } from "@/domain/spydr/features/shared/components/StatusPrimitives";
+import { StatusTickBar } from "@/domain/spydr/features/shared/components/StatusTickBar";
+import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
+import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
+import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
+import { dueFromValue } from "@/domain/spydr/features/work/components/WorkDueDisplay";
+import { resolveAreaColor } from "@/domain/spydr/utils/projectAreaColors";
+import { cleanDisplayName } from "@/domain/spydr/utils/projectPersonas";
+import type { ProjectPersonaRole } from "@/domain/spydr/utils/projectPersonas";
 import type {
   PersonNode,
   ProjectAreaNode,
@@ -23,23 +26,7 @@ import type {
   SpydrPriority,
   UpdateProjectChildInput,
 } from "@/domain/spydr/utils/types";
-import type { ProjectPersonaRole } from "@/domain/spydr/utils/projectPersonas";
 import type { ProjectDetailSaveState } from "../hooks/useProjectDetailPage";
-import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
-import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
-import { formatBreadcrumbEntityId } from "@/domain/spydr/features/shell/utils/navigationBreadcrumbs";
-import {
-  EntityTag,
-  PriorityBadge,
-} from "@/domain/spydr/features/shared/components/StatusPrimitives";
-import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
-import { TaskStatusContextLine } from "@/domain/spydr/features/tasks/components/TaskStatusContextLine";
-import { toTaskStatusPatch } from "@/domain/spydr/utils/taskStatus";
-import { TaskDueDateSelect } from "@/domain/spydr/features/tasks/components/TaskDueDateSelect";
-import { useEnsureTaskDueWithinProject } from "@/domain/spydr/features/tasks/hooks/useEnsureTaskDueWithinProject";
-import { TaskCompletedAt } from "@/domain/spydr/features/tasks/components/TaskCompletedAt";
-import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
-import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
 import type {
   ProjectDecisionFormValues,
   ProjectDetailFormValues,
@@ -51,35 +38,19 @@ import { ProjectDecisionLog } from "./ProjectDecisionLog";
 import { ProjectIdeasLog } from "./ProjectIdeasLog";
 import { ProjectNotesLog } from "./ProjectNotesLog";
 import { ProjectResourcesList } from "./ProjectResourcesList";
-import {
-  ProjectDetailEmpty,
-  ProjectDetailField,
-  ProjectDetailInlineError,
-  ProjectDetailTabs,
-  detailCanvasControlClassName,
-  detailCanvasInputClassName,
-  detailQuietControlClassName,
-} from "./ProjectDetailSection";
+import { ProjectDetailInlineError } from "./ProjectDetailSection";
 import {
   ProjectDeletedItems,
   PROJECT_TRASH_SECTION_ID,
   getDeletedItemCount,
 } from "./ProjectDeletedItems";
-import { ProjectItemActions } from "./ProjectItemActions";
 import { ProjectDescription } from "./ProjectDescription";
-import { ProjectPersonasPanel } from "./ProjectPersonasPanel";
-import { PersonSelect } from "./PersonSelect";
-import { ProjectAreaSelect } from "./ProjectAreaSelect";
-import { ProjectPrioritySelect } from "./ProjectPrioritySelect";
-import { ProjectStatusSelect } from "./ProjectStatusSelect";
-import { StatusMixChart } from "@/domain/spydr/features/shared/components/StatusMixChart";
-import { EntityTransformMenu } from "@/domain/spydr/features/shared/components/EntityTransformMenu";
-import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
-import { SelectionCheckbox } from "@/domain/spydr/features/shared/components/SelectionCheckbox";
-import { BulkDeleteBar } from "@/domain/spydr/features/shared/components/BulkDeleteBar";
-import { useIsPhone } from "@/hooks/useIsPhone";
-import { useItemSelection } from "@/domain/spydr/features/shared/hooks/useItemSelection";
+import { ProjectDetailProperties } from "./ProjectDetailProperties";
+import { ProjectDetailTaskList } from "./ProjectDetailTaskList";
+import { AreaColorSwatch } from "./AreaColorSwatch";
 import { SaveAsTemplateDialog } from "./SaveAsTemplateDialog";
+import { cn } from "@/lib/utils";
+import "../pages/project-detail-page.css";
 
 type ProjectLogTab = "tasks" | "notes" | "decisions" | "ideas" | "resources";
 
@@ -159,20 +130,39 @@ interface ProjectDetailViewProps {
   ): void;
   onStatusChange(status: string): void;
   isUpdatingStatus?: boolean;
+  onPriorityChange(priority: string): void;
   onAreaChange(areaNodeId: string | null): void;
   isUpdatingArea?: boolean;
   onEmojiChange(emoji: string | null): void;
   onPersonaChange(role: ProjectPersonaRole, personNodeId: string | null): void;
   isUpdatingPersona?: boolean;
   onDeleteChild(kind: ProjectChildKind, childId: string): void;
-  onDeleteSelectedChildren(kind: ProjectChildKind, childIds: string[]): void;
   onRestoreChild(kind: ProjectChildKind, childId: string): void;
+  onDeleteProject(onDeleted?: () => void): void;
+  isDeletingProject?: boolean;
   isUpdatingChild: boolean;
   isDeletingChild: boolean;
   isRestoringChild: boolean;
   restoringId: string | null;
   deletingChildIds: string[];
   childMutationError: string | null;
+}
+
+function formatUpdatedAgo(value: string | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60_000));
+  if (minutes < 60) return `updated ${Math.max(1, minutes)}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 48) return `updated ${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 14) return `updated ${days}d ago`;
+  return `updated ${date.toLocaleDateString(undefined, { month: "short", day: "numeric" }).toLowerCase()}`;
+}
+
+function sentenceStatus(status: string) {
+  return status.replace(/_/g, " ");
 }
 
 export function ProjectDetailView({
@@ -216,14 +206,16 @@ export function ProjectDetailView({
   onUpdateChild,
   onStatusChange,
   isUpdatingStatus = false,
+  onPriorityChange,
   onAreaChange,
   isUpdatingArea = false,
   onEmojiChange,
   onPersonaChange,
   isUpdatingPersona = false,
   onDeleteChild,
-  onDeleteSelectedChildren,
   onRestoreChild,
+  onDeleteProject,
+  isDeletingProject = false,
   isUpdatingChild,
   isDeletingChild,
   isRestoringChild,
@@ -231,8 +223,7 @@ export function ProjectDetailView({
   deletingChildIds,
   childMutationError,
 }: ProjectDetailViewProps) {
-  const isPhone = useIsPhone();
-  const dueGuard = useEnsureTaskDueWithinProject();
+  const navigate = useNavigate();
   const deletedCount = getDeletedItemCount(deleted);
   const personas = project.personas ?? {
     requester: null,
@@ -243,16 +234,14 @@ export function ProjectDetailView({
   const [trashExpanded, setTrashExpanded] = useState(false);
   const [saveAsTemplateOpen, setSaveAsTemplateOpen] = useState(false);
   const [logTab, setLogTab] = useState<ProjectLogTab>("tasks");
-  const taskIds = useMemo(
-    () => project.tasks.map((task) => task.id),
-    [project.tasks]
-  );
-  const taskSelection = useItemSelection(taskIds);
-  const isDeletingTasks =
-    deletingChildIds.length > 0 &&
-    taskSelection.selectedIds.some((id) => deletingChildIds.includes(id));
   const prevDeletedCountRef = useRef(deletedCount);
-  const saveLabel = detailSaveLabel(detailSaveState);
+
+  const displayName =
+    cleanDisplayName(detailForm.title) ||
+    cleanDisplayName(project.title) ||
+    "Untitled project";
+
+  usePageBreadcrumb(displayName);
 
   useEffect(() => {
     if (deletedCount > prevDeletedCountRef.current) {
@@ -266,760 +255,411 @@ export function ProjectDetailView({
     prevDeletedCountRef.current = deletedCount;
   }, [deletedCount]);
 
-  const openTrash = () => {
-    setTrashExpanded(true);
-    requestAnimationFrame(() => {
-      document
-        .getElementById(PROJECT_TRASH_SECTION_ID)
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  };
+  const selectedArea = areas.find((area) => area.id === areaNodeId);
+  const areaColor = selectedArea ? resolveAreaColor(selectedArea) : null;
+  const targetDue = dueFromValue(detailForm.targetDate || null);
 
-  usePageBreadcrumb(formatBreadcrumbEntityId(project.id));
+  const tickSegments = useMemo(() => {
+    const counts = stats.taskStatusCounts;
+    return [
+      {
+        key: "active",
+        label: "Active",
+        tone: "active" as const,
+        count: counts.active ?? 0,
+      },
+      {
+        key: "blocked",
+        label: "Blocked",
+        tone: "blocked" as const,
+        count: counts.blocked ?? 0,
+      },
+      {
+        key: "waiting",
+        label: "Waiting",
+        tone: "waiting" as const,
+        count: counts.waiting ?? 0,
+      },
+      {
+        key: "done",
+        label: "Done",
+        tone: "done" as const,
+        count:
+          (counts.completed ?? 0) +
+          (counts.archived ?? 0) +
+          (counts.inactive ?? 0),
+      },
+    ];
+  }, [stats.taskStatusCounts]);
+
+  const doneCount = stats.connected.tasks.closed;
+  const totalTasks = stats.connected.tasks.total;
+  const statusActive = project.status === "active";
+
+  const tabs: Array<{ id: ProjectLogTab; label: string; count: number }> = [
+    { id: "tasks", label: "Tasks", count: project.tasks.length },
+    { id: "notes", label: "Notes", count: project.notes.length },
+    { id: "decisions", label: "Decisions", count: project.decisions.length },
+    { id: "ideas", label: "Ideas", count: project.ideas.length },
+    { id: "resources", label: "Resources", count: project.resources.length },
+  ];
+
+  const saveHint =
+    detailSaveState === "pending"
+      ? "Unsaved"
+      : detailSaveState === "saving"
+        ? "Saving…"
+        : detailSaveState === "error"
+          ? "Save failed"
+          : null;
 
   return (
-    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-y-auto">
-              <PageHeader
-                dense
-                titleClassName="w-full max-w-none"
-                title={
-                  <div className="flex min-w-0 items-center gap-2">
-                    <EmojiPicker
-                      value={project.details?.emoji}
-                      size="md"
-                      ariaLabel={`Emoji for ${project.title}`}
-                      onChange={onEmojiChange}
-                    />
-                    <input
-                    value={detailForm.title}
-                    onChange={(event) => onDetailFieldChange("title", event.target.value)}
-                    className={cn(
-                      "w-full min-w-0 bg-transparent font-semibold tracking-tight outline-none ring-0 placeholder:text-muted-foreground",
-                      isPhone ? "text-[16px] leading-snug" : "text-[18px]"
-                    )}
-                    placeholder="Project name"
-                    />
-                  </div>
-                }
-                meta={
-                  isPhone ? (
-                    <div className="flex w-full min-w-0 flex-col gap-1">
-                      <div className="flex min-w-0 items-center gap-1">
-                        <ProjectStatusSelect
-                          value={project.status}
-                          onChange={onStatusChange}
-                          disabled={isUpdatingStatus}
-                          fitContent
-                          className={cn(detailQuietControlClassName, "w-[6.75rem] shrink-0")}
-                        />
-                        <ProjectAreaSelect
-                          areas={areas}
-                          value={areaNodeId}
-                          onChange={onAreaChange}
-                          disabled={isUpdatingArea}
-                          quiet
-                          className={cn(detailQuietControlClassName, "min-w-0 flex-1")}
-                        />
-                      </div>
-                      <div className="flex min-w-0 items-center gap-1">
-                        <DatePicker
-                          value={detailForm.targetDate || null}
-                          onChange={(targetDate) =>
-                            onDetailFieldChange("targetDate", targetDate ?? "")
-                          }
-                          variant="compact"
-                          showChevron={false}
-                          showIcon={false}
-                          placeholder="Target"
-                          panelLabel="Target date"
-                          clearLabel="Clear target date"
-                          ariaLabel="Project target date"
-                          className={cn(
-                            detailQuietControlClassName,
-                            "w-[5.5rem] shrink-0 justify-center"
-                          )}
-                        />
-                        <PriorityBadge
-                          priority={project.priority}
-                          className="border-transparent bg-transparent px-1"
-                        />
-                        {saveLabel ? (
-                          <span className="ml-auto truncate font-mono text-[10px] tabular-nums text-muted-foreground">
-                            {saveLabel}
-                          </span>
-                        ) : (
-                          <ProgressMeta
-                            className="ml-auto"
-                            openCount={stats.openTaskCount}
-                            progressPercent={stats.progressPercent}
-                            compact
-                          />
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
-                      <ProjectStatusSelect
-                        value={project.status}
-                        onChange={onStatusChange}
-                        disabled={isUpdatingStatus}
-                        fitContent
-                        className={detailQuietControlClassName}
-                      />
-                      <PriorityBadge
-                        priority={project.priority}
-                        className="border-transparent bg-transparent px-1"
-                      />
-                      <ProjectAreaSelect
-                        areas={areas}
-                        value={areaNodeId}
-                        onChange={onAreaChange}
-                        disabled={isUpdatingArea}
-                        quiet
-                        fitContent
-                        className={detailQuietControlClassName}
-                      />
-                      {project.tags.map((tag) => (
-                        <EntityTag key={tag} tag={tag} />
-                      ))}
-                      <ProgressMeta
-                        openCount={stats.openTaskCount}
-                        progressPercent={stats.progressPercent}
-                        showBar={stats.connected.tasks.total > 0}
-                      />
-                      <span className="font-mono text-[11px] text-muted-foreground/80">
-                        updated {formatRelativeTime(project.updatedAt)}
-                        {saveLabel ? ` · ${saveLabel}` : null}
-                      </span>
-                    </div>
-                  )
-                }
-                actions={
-                  <div className="flex items-center gap-3">
-                    {isPhone ? null : (
-                      <StatusMixChart
-                        quiet
-                        className="w-56"
-                        title="Status mix"
-                        counts={stats.taskStatusCounts}
-                        centerPercent={stats.progressPercent}
-                        centerLabel="Tasks completed"
-                      />
-                    )}
-                    {isPhone && deletedCount === 0 ? null : (
-                    <div className="flex items-center gap-1">
-                      {isPhone ? null : (
-                        <>
-                          <EntityTransformMenu
-                            nodeId={project.id}
-                            sourceType="project"
-                            sourceTitle={project.title}
-                            projects={projects}
-                            excludeProjectId={project.id}
-                            className="border-0 bg-transparent shadow-none"
-                          />
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-muted-foreground"
-                                aria-label="Project actions"
-                              >
-                                <MoreHorizontal className="h-3.5 w-3.5" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem
-                                className="text-[12px]"
-                                onSelect={() => setSaveAsTemplateOpen(true)}
-                              >
-                                Save as template…
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </>
-                      )}
-                      {deletedCount > 0 ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                          onClick={openTrash}
-                        >
-                          <ArchiveRestore className="h-3 w-3" />
-                          {isPhone ? null : "Trash"}
-                          <span className="font-mono text-[9px] font-semibold tabular-nums leading-none">
-                            {deletedCount}
-                          </span>
-                        </Button>
-                      ) : null}
-                    </div>
-                    )}
-                  </div>
-                }
-              />
+    <div className="project-detail-page flex h-full min-h-0 w-full min-w-0 flex-col overflow-y-auto">
+      <header className="project-detail-header">
+        <nav className="project-detail-crumb" aria-label="Breadcrumb">
+          <Link to="/work">Work</Link>
+          <ChevronRight className="project-detail-crumb-sep" aria-hidden />
+          <span className="truncate">{displayName}</span>
+        </nav>
 
-        <SaveAsTemplateDialog
-          project={project}
-          open={saveAsTemplateOpen}
-          onOpenChange={setSaveAsTemplateOpen}
-        />
-
-        {deletedCount > 0 && (
-          <div className="px-4 pt-3">
-            <ProjectDeletedItems
-              deleted={deleted}
-              expanded={trashExpanded}
-              onExpandedChange={setTrashExpanded}
-              onRestore={onRestoreChild}
-              isRestoring={isRestoringChild}
-              restoringId={restoringId}
+        <div className="project-detail-title-row">
+          <span className="project-detail-title-emoji">
+            <EmojiPicker
+              value={project.details?.emoji}
+              size="md"
+              ariaLabel={`Emoji for ${displayName}`}
+              onChange={onEmojiChange}
             />
-          </div>
-        )}
-
-        <div className="project-brief px-4 py-4">
-          {isPhone ? (
-            <StatusMixChart
-              quiet
-              className="mb-5"
-              title="Status mix"
-              counts={stats.taskStatusCounts}
-              centerPercent={stats.progressPercent}
-              centerLabel="Tasks completed"
+          </span>
+          <h1>
+            <input
+              value={detailForm.title}
+              onChange={(event) => onDetailFieldChange("title", event.target.value)}
+              className="w-full min-w-0 bg-transparent text-[inherit] font-[inherit] tracking-[inherit] text-[var(--fg)] outline-none placeholder:text-[var(--muted-2)]"
+              placeholder="Project name"
+              aria-label="Project name"
             />
-          ) : null}
-          <div className="project-brief__layout">
-            <ProjectDescription
-              value={detailForm.body}
-              onChange={(body) => onDetailFieldChange("body", body)}
+          </h1>
+          <div className="project-detail-title-actions">
+            <EntityTransformMenu
+              nodeId={project.id}
+              sourceType="project"
+              sourceTitle={displayName}
+              projects={projects}
+              excludeProjectId={project.id}
+              compact
+              triggerLabel="Convert"
+              className="project-detail-control border-[#1a1d23] bg-[var(--control)] shadow-none"
             />
-
-            <div className="min-w-0 space-y-6">
-              <div>
-                <p className="mb-1.5 px-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Details
-                </p>
-                <div
-                  className={cn(
-                    "flex flex-wrap items-end gap-x-6 gap-y-3",
-                    isPhone && "grid grid-cols-2 gap-x-4 gap-y-3"
-                  )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="project-detail-control project-detail-control-icon"
+                  aria-label="Project actions"
                 >
-                  <ProjectDetailField label="Start" className="w-auto space-y-1">
-                    <DatePicker
-                      value={detailForm.startDate || null}
-                      onChange={(startDate) =>
-                        onDetailFieldChange("startDate", startDate ?? "")
-                      }
-                      panelLabel="Start date"
-                      clearLabel="Clear start date"
-                      placeholder="Select start date"
-                      ariaLabel="Project start date"
-                      fitContent
-                      showIcon={false}
-                      className={detailCanvasControlClassName}
-                    />
-                  </ProjectDetailField>
-                  {isPhone ? null : (
-                    <ProjectDetailField label="Target" className="w-auto space-y-1">
-                      <DatePicker
-                        value={detailForm.targetDate || null}
-                        onChange={(targetDate) =>
-                          onDetailFieldChange("targetDate", targetDate ?? "")
-                        }
-                        panelLabel="Target date"
-                        clearLabel="Clear target date"
-                        placeholder="Select target date"
-                        ariaLabel="Project target date"
-                        fitContent
-                        showIcon={false}
-                        className={detailCanvasControlClassName}
-                      />
-                    </ProjectDetailField>
-                  )}
-                  <ProjectDetailField label="Risk" className="w-auto min-w-[7rem] space-y-1">
-                    <ProjectPrioritySelect
-                      value={detailForm.riskLevel}
-                      onChange={(riskLevel) =>
-                        onDetailFieldChange("riskLevel", riskLevel as SpydrPriority)
-                      }
-                      ariaLabel="Project risk"
-                      menuLabel="Risk"
-                      className={cn(detailCanvasControlClassName, "w-auto")}
-                    />
-                  </ProjectDetailField>
-                </div>
-              </div>
-
-              <div>
-                <ProjectPersonasPanel
-                  people={people}
-                  personas={personas}
-                  disabled={isUpdatingPersona}
-                  onChange={onPersonaChange}
-                  controlClassName={detailCanvasControlClassName}
-                />
-                {personaError ? (
-                  <p className="mt-2 text-[12px] text-destructive">{personaError}</p>
-                ) : null}
-              </div>
-
-              {project.details?.outcome ? (
-                <p className="text-[13px] leading-relaxed text-foreground/80">
-                  <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.16em] text-highlight">
-                    Outcome
-                  </span>
-                  {project.details.outcome}
-                </p>
-              ) : null}
-            </div>
-          </div>
-
-          {detailError ? (
-            <div className="mt-4">
-              <ProjectDetailInlineError>{detailError}</ProjectDetailInlineError>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col border-t border-border pb-16">
-          {childMutationError ? (
-            <div className="px-4 pt-3">
-              <ProjectDetailInlineError>{childMutationError}</ProjectDetailInlineError>
-            </div>
-          ) : null}
-
-            <div className="spydr-glass sticky top-0 z-20 flex min-w-0 items-center gap-2 border-b border-white/10 px-4">
-              <ProjectDetailTabs<ProjectLogTab>
-                value={logTab}
-                onChange={setLogTab}
-                ariaLabel="Project work"
-                items={[
-                  { id: "tasks", label: "Tasks", count: project.tasks.length },
-                  { id: "notes", label: "Notes", count: project.notes.length },
-                  {
-                    id: "decisions",
-                    label: "Decisions",
-                    count: project.decisions.length,
-                  },
-                  { id: "ideas", label: "Ideas", count: project.ideas.length },
-                  {
-                    id: "resources",
-                    label: "Resources",
-                    count: project.resources.length,
-                  },
-                ]}
-              />
-              {logTab === "tasks" &&
-              project.tasks.length > 0 &&
-              !isPhone ? (
-                <div className="ml-auto flex shrink-0 items-center gap-2">
-                  <SelectionCheckbox
-                    checked={taskSelection.allSelected}
-                    indeterminate={taskSelection.someSelected}
-                    disabled={deletingChildIds.length > 0}
-                    label="Select all tasks"
-                    onChange={taskSelection.setAll}
-                  />
-                  {taskSelection.selectedCount > 0 ? (
-                    <BulkDeleteBar
-                      count={taskSelection.selectedCount}
-                      noun="task"
-                      isDeleting={isDeletingTasks}
-                      disabled={deletingChildIds.length > 0}
-                      onDelete={() =>
-                        onDeleteSelectedChildren("task", taskSelection.selectedIds)
-                      }
-                      onClear={taskSelection.clear}
-                    />
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-            <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-3">
-              {logTab === "tasks" ? (
-                <div className="flex min-h-0 flex-1 flex-col gap-3">
-                  <form
-                    className={cn(
-                      "grid items-center gap-2",
-                      isPhone
-                        ? "grid-cols-[auto_1fr_auto]"
-                        : "md:grid-cols-[auto_1fr_140px_auto]"
-                    )}
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      dueGuard.ensure({
-                        project,
-                        dueDate: taskForm.dueDate || null,
-                        onAllowed: onAddTask,
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  className="text-[12px]"
+                  onSelect={() => setSaveAsTemplateOpen(true)}
+                >
+                  Save as template…
+                </DropdownMenuItem>
+                {deletedCount > 0 ? (
+                  <DropdownMenuItem
+                    className="text-[12px]"
+                    onSelect={() => {
+                      setTrashExpanded(true);
+                      requestAnimationFrame(() => {
+                        document
+                          .getElementById(PROJECT_TRASH_SECTION_ID)
+                          ?.scrollIntoView({ behavior: "smooth", block: "start" });
                       });
                     }}
                   >
-                    <EmojiPicker
-                      value={taskForm.emoji}
-                      ariaLabel="New task emoji"
-                      onChange={(emoji) => onTaskFieldChange("emoji", emoji)}
-                    />
-                    <input
-                      value={taskForm.title}
-                      onChange={(event) =>
-                        onTaskFieldChange("title", event.target.value)
-                      }
-                      placeholder="Add a task..."
-                      className={detailCanvasInputClassName}
-                    />
-                    {isPhone ? null : (
-                      <TaskDueDateSelect
-                        value={taskForm.dueDate || null}
-                        onChange={(dueDate) =>
-                          onTaskFieldChange("dueDate", dueDate ?? "")
-                        }
-                        variant="field"
-                        placeholder="Due date"
-                        showIcon={false}
-                        project={project}
-                        className={detailCanvasControlClassName}
-                      />
-                    )}
-                    <Button type="submit" className="h-8 rounded-md bg-emerald-600 px-3 text-[12px] text-white hover:bg-emerald-500 hover:shadow-none" disabled={!canAddTask}>
-                      {isAddingTask ? "Adding..." : "Add"}
-                    </Button>
-                  </form>
-                  {taskError ? (
-                    <ProjectDetailInlineError>{taskError}</ProjectDetailInlineError>
-                  ) : null}
-                  {project.tasks.length > 0 ? (
-                    <ul className="min-h-0">
-                      {project.tasks.map((task) =>
-                        isPhone ? (
-                          <li
-                            key={task.id}
-                            className="flex min-w-0 items-center gap-1 border-b border-border/60 px-0.5 py-1.5 last:border-b-0 hover:bg-muted/20"
-                          >
-                            <TaskStatusSelect
-                              value={task.status}
-                              disabled={isUpdatingChild}
-                              appearance="icon"
-                              className="h-9 w-9 border-transparent bg-transparent"
-                              excludeTaskId={task.id}
-                              onChange={(change) => {
-                                if (change.status !== task.status) {
-                                  onUpdateChild("task", task.id, toTaskStatusPatch(change));
-                                }
-                              }}
-                            />
-                            <EmojiPicker
-                              value={task.details?.emoji}
-                              disabled={isUpdatingChild}
-                              ariaLabel={`Emoji for ${task.title}`}
-                              onChange={(emoji) =>
-                                onUpdateChild("task", task.id, { emoji })
-                              }
-                            />
-                            <div className="min-w-0 flex-1">
-                              <Link
-                                to={`/tasks/${task.id}`}
-                                className="block truncate text-[13px] font-medium hover:text-primary"
-                              >
-                                {task.title}
-                              </Link>
-                              <TaskStatusContextLine task={task} />
-                            </div>
-                            <TaskCompletedAt
-                              status={task.status}
-                              completedAt={task.details?.completedAt}
-                            />
-                            <TaskDueDateSelect
-                              value={task.details?.dueDate}
-                              disabled={isUpdatingChild}
-                              placeholder="Due"
-                              showChevron={false}
-                              showIcon={false}
-                              className={cn(
-                                detailQuietControlClassName,
-                                "w-[4.25rem] shrink-0 justify-center"
-                              )}
-                              project={project}
-                              onChange={(dueDate) => {
-                                const current =
-                                  task.details?.dueDate?.slice(0, 10) ?? null;
-                                const next = dueDate?.slice(0, 10) ?? null;
-                                if (next !== current) {
-                                  onUpdateChild("task", task.id, { dueDate });
-                                }
-                              }}
-                            />
-                            <Link
-                              to={`/tasks/${task.id}`}
-                              aria-label={`Open ${task.title}`}
-                              className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted/40 hover:text-highlight"
-                            >
-                              <ArrowUpRight className="h-3.5 w-3.5" />
-                            </Link>
-                          </li>
-                        ) : (
-                          <li
-                            key={task.id}
-                            className="flex min-w-0 items-center gap-2 border-b border-border/60 px-1 py-2 last:border-b-0 hover:bg-muted/20"
-                          >
-                            <SelectionCheckbox
-                              checked={taskSelection.isSelected(task.id)}
-                              disabled={deletingChildIds.length > 0}
-                              label={`Select ${task.title}`}
-                              onChange={() => taskSelection.toggle(task.id)}
-                            />
-                            <TaskStatusSelect
-                              value={task.status}
-                              disabled={isUpdatingChild}
-                              fitContent
-                              className={cn(detailQuietControlClassName, "w-[7.5rem] shrink-0")}
-                              excludeTaskId={task.id}
-                              onChange={(change) => {
-                                if (change.status !== task.status) {
-                                  onUpdateChild("task", task.id, toTaskStatusPatch(change));
-                                }
-                              }}
-                            />
-                            <Link
-                              to={`/tasks/${task.id}`}
-                              aria-label={`Open ${task.title}`}
-                              className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted/40 hover:text-highlight"
-                            >
-                              <ArrowUpRight className="h-3.5 w-3.5" />
-                            </Link>
-                            <EmojiPicker
-                              value={task.details?.emoji}
-                              disabled={isUpdatingChild}
-                              ariaLabel={`Emoji for ${task.title}`}
-                              onChange={(emoji) =>
-                                onUpdateChild("task", task.id, { emoji })
-                              }
-                            />
-                            <div className="min-w-0 flex-1">
-                              <Link
-                                to={`/tasks/${task.id}`}
-                                className="block truncate text-[13px] hover:text-primary"
-                              >
-                                {task.title}
-                              </Link>
-                              <TaskStatusContextLine task={task} />
-                            </div>
-                            <TaskCompletedAt
-                              status={task.status}
-                              completedAt={task.details?.completedAt}
-                            />
-                            <PersonSelect
-                              people={people}
-                              value={
-                                task.assignee?.id ??
-                                task.details?.assigneePersonNodeId ??
-                                null
-                              }
-                              compact
-                              disabled={isUpdatingChild}
-                              className="w-[132px] shrink-0"
-                              triggerClassName={detailQuietControlClassName}
-                              ariaLabel="Task assignee"
-                              onChange={(assigneePersonNodeId) => {
-                                const current =
-                                  task.assignee?.id ??
-                                  task.details?.assigneePersonNodeId ??
-                                  null;
-                                if (assigneePersonNodeId !== current) {
-                                  onUpdateChild("task", task.id, {
-                                    assigneePersonNodeId,
-                                  });
-                                }
-                              }}
-                            />
-                            <span className="w-[132px] shrink-0">
-                              <TaskDueDateSelect
-                                value={task.details?.dueDate}
-                                disabled={isUpdatingChild}
-                                showIcon={false}
-                                className={detailQuietControlClassName}
-                                project={project}
-                                onChange={(dueDate) => {
-                                  const current =
-                                    task.details?.dueDate?.slice(0, 10) ?? null;
-                                  const next = dueDate?.slice(0, 10) ?? null;
-                                  if (next !== current) {
-                                    onUpdateChild("task", task.id, { dueDate });
-                                  }
-                                }}
-                              />
-                            </span>
-                            <div className="ml-auto flex shrink-0 items-center gap-0.5">
-                              <ProjectItemActions
-                                fieldSet="task"
-                                project={project}
-                                values={{
-                                  title: task.title,
-                                  body: task.body,
-                                  dueDate: task.details?.dueDate?.slice(0, 10) ?? "",
-                                  priority: task.priority as SpydrPriority,
-                                  status: task.status,
-                                }}
-                                onSave={(input) =>
-                                  onUpdateChild("task", task.id, input)
-                                }
-                                onDelete={() => onDeleteChild("task", task.id)}
-                                isSaving={isUpdatingChild}
-                                isDeleting={deletingChildIds.includes(task.id)}
-                                showDelete={false}
-                              />
-                              <InlineDeleteButton
-                                label={task.title}
-                                isDeleting={deletingChildIds.includes(task.id)}
-                                disabled={
-                                  deletingChildIds.length > 0 &&
-                                  !deletingChildIds.includes(task.id)
-                                }
-                                onDelete={() => onDeleteChild("task", task.id)}
-                              />
-                            </div>
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  ) : (
-                    <ProjectDetailEmpty title="No tasks linked yet." />
-                  )}
+                    Open trash ({deletedCount})
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-[12px] text-destructive focus:text-destructive"
+                  disabled={isDeletingProject}
+                  onSelect={() => onDeleteProject(() => navigate("/work"))}
+                >
+                  Delete project
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        <div className="project-detail-meta">
+          <span className="project-detail-meta-item">
+            <StatusDot status={project.status} />
+            <span
+              className={cn(
+                "capitalize",
+                statusActive ? "text-[var(--active)]" : "text-[var(--muted)]"
+              )}
+            >
+              {sentenceStatus(project.status)}
+            </span>
+          </span>
+
+          {selectedArea ? (
+            <span className="project-detail-meta-item">
+              {areaColor ? (
+                <AreaColorSwatch
+                  color={areaColor}
+                  className="h-1.5 w-1.5 border-0 shadow-none"
+                />
+              ) : (
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--faint)]" />
+              )}
+              <span className="truncate text-[var(--muted)]">
+                {cleanDisplayName(selectedArea.title) || selectedArea.title}
+              </span>
+            </span>
+          ) : null}
+
+          {detailForm.targetDate && !targetDue.empty ? (
+            <span className="project-detail-meta-item project-detail-meta-mono">
+              {targetDue.overdue ? (
+                <>
+                  <span className="project-detail-meta-late">{targetDue.label}</span>
+                  <span>
+                    {" "}
+                    · target {targetDue.dateLabel.toLowerCase()}
+                  </span>
+                </>
+              ) : (
+                <span>
+                  {targetDue.label
+                    ? `${targetDue.label} · target ${targetDue.dateLabel.toLowerCase()}`
+                    : `target ${targetDue.dateLabel.toLowerCase()}`}
+                </span>
+              )}
+            </span>
+          ) : null}
+
+          {totalTasks > 0 ? (
+            <span className="project-detail-progress">
+              <StatusTickBar segments={tickSegments} />
+              <span className="project-detail-meta-mono">
+                {doneCount}/{totalTasks} done
+              </span>
+            </span>
+          ) : null}
+
+          <span className="project-detail-meta-updated">
+            {formatUpdatedAgo(project.updatedAt)}
+            {saveHint ? ` · ${saveHint}` : null}
+          </span>
+        </div>
+      </header>
+
+      <SaveAsTemplateDialog
+        project={project}
+        open={saveAsTemplateOpen}
+        onOpenChange={setSaveAsTemplateOpen}
+      />
+
+      {deletedCount > 0 ? (
+        <div className="px-4 pb-3">
+          <ProjectDeletedItems
+            deleted={deleted}
+            expanded={trashExpanded}
+            onExpandedChange={setTrashExpanded}
+            onRestore={onRestoreChild}
+            isRestoring={isRestoringChild}
+            restoringId={restoringId}
+          />
+        </div>
+      ) : null}
+
+      <div className="project-detail-body">
+        <div className="project-detail-main">
+          <ProjectDescription
+            value={detailForm.body}
+            onChange={(body) => onDetailFieldChange("body", body)}
+          />
+
+          {detailError ? (
+            <ProjectDetailInlineError>{detailError}</ProjectDetailInlineError>
+          ) : null}
+          {personaError ? (
+            <ProjectDetailInlineError>{personaError}</ProjectDetailInlineError>
+          ) : null}
+          {childMutationError ? (
+            <ProjectDetailInlineError>{childMutationError}</ProjectDetailInlineError>
+          ) : null}
+
+          <section className="project-detail-panel">
+            <div
+              role="tablist"
+              aria-label="Project contents"
+              className="project-detail-tabs"
+            >
+              {tabs.map((tab) => {
+                const selected = logTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    id={`project-tab-${tab.id}`}
+                    aria-selected={selected}
+                    aria-controls={`project-panel-${tab.id}`}
+                    tabIndex={selected ? 0 : -1}
+                    className="project-detail-tab"
+                    onClick={() => setLogTab(tab.id)}
+                  >
+                    {tab.label}
+                    <span className="project-detail-tab-count">{tab.count}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div
+              role="tabpanel"
+              id={`project-panel-${logTab}`}
+              aria-labelledby={`project-tab-${logTab}`}
+              className="project-detail-tab-panel"
+            >
+              {logTab === "tasks" ? (
+                <ProjectDetailTaskList
+                  project={project}
+                  people={people}
+                  taskForm={taskForm}
+                  canAddTask={canAddTask}
+                  isAddingTask={isAddingTask}
+                  taskError={taskError}
+                  isUpdatingChild={isUpdatingChild}
+                  deletingChildIds={deletingChildIds}
+                  onTaskFieldChange={onTaskFieldChange}
+                  onAddTask={onAddTask}
+                  onUpdateChild={(childId, input) =>
+                    onUpdateChild("task", childId, input)
+                  }
+                  onDeleteChild={(childId) => onDeleteChild("task", childId)}
+                />
+              ) : null}
+
+              {logTab === "notes" ? (
+                <div className="p-3">
+                  <ProjectNotesLog
+                    notes={project.notes}
+                    projects={projects}
+                    projectId={project.id}
+                    form={noteForm}
+                    formResetKey={noteFormResetKey}
+                    canAdd={canAddNote}
+                    isAdding={isAddingNote}
+                    error={noteError}
+                    onFieldChange={onNoteFieldChange}
+                    onAdd={onAddNote}
+                    onUpdate={(childId, input) =>
+                      onUpdateChild("note", childId, input)
+                    }
+                    onDelete={(childId) => onDeleteChild("note", childId)}
+                    isUpdating={isUpdatingChild}
+                    isDeleting={isDeletingChild}
+                    deletingChildIds={deletingChildIds}
+                  />
                 </div>
               ) : null}
-              {logTab === "notes" ? (
-                <ProjectNotesLog
-                  notes={project.notes}
-                  projects={projects}
-                  projectId={project.id}
-                  form={noteForm}
-                  formResetKey={noteFormResetKey}
-                  canAdd={canAddNote}
-                  isAdding={isAddingNote}
-                  error={noteError}
-                  onFieldChange={onNoteFieldChange}
-                  onAdd={onAddNote}
-                  onUpdate={(childId, input) => onUpdateChild("note", childId, input)}
-                  onDelete={(childId) => onDeleteChild("note", childId)}
-                  isUpdating={isUpdatingChild}
-                  isDeleting={isDeletingChild}
-                  deletingChildIds={deletingChildIds}
-                />
-              ) : null}
+
               {logTab === "decisions" ? (
-                <ProjectDecisionLog
-                  decisions={project.decisions}
-                  form={decisionForm}
-                  canAdd={canAddDecision}
-                  isAdding={isAddingDecision}
-                  error={decisionError}
-                  onFieldChange={onDecisionFieldChange}
-                  onAdd={onAddDecision}
-                  onUpdate={(childId, input) =>
-                    onUpdateChild("decision", childId, input)
-                  }
-                  onDelete={(childId) => onDeleteChild("decision", childId)}
-                  isUpdating={isUpdatingChild}
-                  isDeleting={isDeletingChild}
-                />
+                <div className="p-3">
+                  <ProjectDecisionLog
+                    decisions={project.decisions}
+                    form={decisionForm}
+                    canAdd={canAddDecision}
+                    isAdding={isAddingDecision}
+                    error={decisionError}
+                    onFieldChange={onDecisionFieldChange}
+                    onAdd={onAddDecision}
+                    onUpdate={(childId, input) =>
+                      onUpdateChild("decision", childId, input)
+                    }
+                    onDelete={(childId) => onDeleteChild("decision", childId)}
+                    isUpdating={isUpdatingChild}
+                    isDeleting={isDeletingChild}
+                  />
+                </div>
               ) : null}
+
               {logTab === "ideas" ? (
-                <ProjectIdeasLog
-                  ideas={project.ideas}
-                  projects={projects}
-                  projectId={project.id}
-                  form={ideaForm}
-                  canAdd={canAddIdea}
-                  isAdding={isAddingIdea}
-                  error={ideaError}
-                  onFieldChange={onIdeaFieldChange}
-                  onAdd={onAddIdea}
-                  onUpdate={(childId, input) => onUpdateChild("idea", childId, input)}
-                  onDelete={(childId) => onDeleteChild("idea", childId)}
-                  isUpdating={isUpdatingChild}
-                  isDeleting={isDeletingChild}
-                />
+                <div className="p-3">
+                  <ProjectIdeasLog
+                    ideas={project.ideas}
+                    projects={projects}
+                    projectId={project.id}
+                    form={ideaForm}
+                    canAdd={canAddIdea}
+                    isAdding={isAddingIdea}
+                    error={ideaError}
+                    onFieldChange={onIdeaFieldChange}
+                    onAdd={onAddIdea}
+                    onUpdate={(childId, input) =>
+                      onUpdateChild("idea", childId, input)
+                    }
+                    onDelete={(childId) => onDeleteChild("idea", childId)}
+                    isUpdating={isUpdatingChild}
+                    isDeleting={isDeletingChild}
+                  />
+                </div>
               ) : null}
+
               {logTab === "resources" ? (
-                <ProjectResourcesList
-                  resources={project.resources}
-                  onUpdate={(childId, input) =>
-                    onUpdateChild("resource", childId, input)
-                  }
-                  onDelete={(childId) => onDeleteChild("resource", childId)}
-                  isUpdating={isUpdatingChild}
-                  isDeleting={isDeletingChild}
-                />
+                <div className="p-3">
+                  <ProjectResourcesList
+                    resources={project.resources}
+                    onUpdate={(childId, input) =>
+                      onUpdateChild("resource", childId, input)
+                    }
+                    onDelete={(childId) => onDeleteChild("resource", childId)}
+                    isUpdating={isUpdatingChild}
+                    isDeleting={isDeletingChild}
+                  />
+                </div>
               ) : null}
             </div>
+          </section>
         </div>
-      {dueGuard.dialog}
+
+        <ProjectDetailProperties
+          status={project.status}
+          priority={project.priority}
+          riskLevel={detailForm.riskLevel}
+          areas={areas}
+          areaNodeId={areaNodeId}
+          people={people}
+          personas={personas}
+          startDate={detailForm.startDate}
+          targetDate={detailForm.targetDate}
+          isUpdatingStatus={isUpdatingStatus}
+          isUpdatingArea={isUpdatingArea}
+          isUpdatingPersona={isUpdatingPersona}
+          onStatusChange={onStatusChange}
+          onPriorityChange={onPriorityChange}
+          onRiskChange={(riskLevel) =>
+            onDetailFieldChange("riskLevel", riskLevel)
+          }
+          onAreaChange={onAreaChange}
+          onStartDateChange={(startDate) =>
+            onDetailFieldChange("startDate", startDate)
+          }
+          onTargetDateChange={(targetDate) =>
+            onDetailFieldChange("targetDate", targetDate)
+          }
+          onPersonaChange={onPersonaChange}
+        />
+      </div>
     </div>
-  );
-}
-
-function detailSaveLabel(state: ProjectDetailSaveState) {
-  switch (state) {
-    case "pending":
-      return "Unsaved";
-    case "saving":
-      return "Saving…";
-    case "saved":
-      return "Saved";
-    case "error":
-      return "Save failed";
-    default:
-      return null;
-  }
-}
-
-function ProgressMeta({
-  openCount,
-  progressPercent,
-  showBar = true,
-  compact = false,
-  className,
-}: {
-  openCount: number;
-  progressPercent: number;
-  showBar?: boolean;
-  compact?: boolean;
-  className?: string;
-}) {
-  return (
-    <span
-      className={cn(
-        "inline-flex min-w-0 items-center gap-2 font-mono tabular-nums",
-        compact ? "text-[10px]" : "text-[11px]",
-        className
-      )}
-    >
-      <span
-        className={cn(
-          "uppercase tracking-[0.12em]",
-          openCount > 0 ? "text-highlight" : "text-muted-foreground/70"
-        )}
-      >
-        {openCount} open
-      </span>
-      {showBar ? (
-        <>
-          <span
-            className="h-1 w-14 overflow-hidden rounded-full bg-muted"
-            aria-hidden
-          >
-            <span
-              className="block h-full rounded-full bg-highlight-secondary"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </span>
-          <span className="text-muted-foreground">{progressPercent}%</span>
-        </>
-      ) : null}
-    </span>
   );
 }

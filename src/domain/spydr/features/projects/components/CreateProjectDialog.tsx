@@ -21,6 +21,7 @@ import type {
 } from "@/domain/spydr/utils/types";
 import type { ProjectFormValues } from "../hooks/useCreateProjectForm";
 import { renderTemplatePreview } from "../utils/renderTemplatePreview";
+import { collectCreateFormParameters } from "../utils/templateParameters";
 import { ProjectAreaSelect } from "./ProjectAreaSelect";
 import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
 
@@ -77,6 +78,9 @@ export function CreateProjectDialog({
 }: CreateProjectDialogProps) {
   const usingTemplate = Boolean(templateId);
   const showTemplateSelect = templates.length > 0 || hasAnyTemplates || Boolean(templateId);
+  const formParameters = selectedTemplate
+    ? collectCreateFormParameters(selectedTemplate)
+    : [];
 
   const previewTitle = selectedTemplate
     ? renderTemplatePreview(selectedTemplate.titleTemplate, paramValues)
@@ -164,8 +168,8 @@ export function CreateProjectDialog({
                     ) : null}
                   </div>
 
-                  {(selectedTemplate?.parameters ?? []).map((param) => (
-                    <div key={param.id} className="space-y-2">
+                  {formParameters.map((param, index) => (
+                    <div key={param.key} className="space-y-2">
                       <Label htmlFor={`template-param-${param.key}`}>
                         {param.label}
                         {param.required ? "" : " (optional)"}
@@ -177,14 +181,7 @@ export function CreateProjectDialog({
                           onParamChange?.(param.key, event.target.value)
                         }
                         placeholder={param.key}
-                        autoFocus={
-                          param.sortOrder ===
-                          Math.min(
-                            ...(selectedTemplate?.parameters.map(
-                              (p) => p.sortOrder
-                            ) ?? [0])
-                          )
-                        }
+                        autoFocus={index === 0}
                       />
                     </div>
                   ))}

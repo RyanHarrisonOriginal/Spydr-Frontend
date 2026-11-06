@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useTasksQuery } from "@/domain/spydr/features/shared/hooks/queries";
+import { TruncatedText } from "@/domain/spydr/features/shared/components/TruncatedText";
 import {
   followUpIsoToLocal,
   followUpLocalToIso,
@@ -114,12 +115,12 @@ export function TaskStatusContextDialog({
                     key={task.id}
                     type="button"
                     className={cn(
-                      "block w-full truncate px-3 py-2 text-left text-[13px] hover:bg-muted/40",
+                      "block w-full px-3 py-2 text-left text-[13px] hover:bg-muted/40",
                       task.id === blockedByTaskId && "bg-muted/60"
                     )}
                     onClick={() => setBlockedByTaskId(task.id)}
                   >
-                    {task.title}
+                    <TruncatedText text={task.title} />
                   </button>
                 ))
               )}

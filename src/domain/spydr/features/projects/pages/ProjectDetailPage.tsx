@@ -76,14 +76,16 @@ export function ProjectDetailPage() {
       onUpdateChild={detailPage.updateChild}
       onStatusChange={detailPage.updateStatus}
       isUpdatingStatus={detailPage.isUpdatingStatus}
+      onPriorityChange={detailPage.updatePriority}
       onAreaChange={detailPage.updateArea}
       isUpdatingArea={detailPage.isUpdatingArea}
       onEmojiChange={detailPage.updateEmoji}
       onPersonaChange={detailPage.updatePersona}
       isUpdatingPersona={detailPage.isUpdatingPersona}
       onDeleteChild={detailPage.deleteChild}
-      onDeleteSelectedChildren={detailPage.deleteSelectedChildren}
       onRestoreChild={detailPage.restoreChild}
+      onDeleteProject={detailPage.deleteProject}
+      isDeletingProject={detailPage.isDeletingProject}
       isUpdatingChild={detailPage.isUpdatingChild}
       isDeletingChild={detailPage.isDeletingChild}
       isRestoringChild={detailPage.isRestoringChild}

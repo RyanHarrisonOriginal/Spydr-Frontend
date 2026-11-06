@@ -360,9 +360,127 @@ const authCardTheme = {
   },
 };
 
+/**
+ * Sign-in splash appearance — near-white primary, no crimson, sentence-case labels.
+ * Passed to `<SignIn />` (and nested under `signIn` on the provider theme).
+ */
+export const signInAppearance = {
+  theme: dark,
+  captcha: { theme: "dark" as const, size: "flexible" as const },
+  options: {
+    logoPlacement: "none" as const,
+    socialButtonsVariant: "blockButton" as const,
+    socialButtonsPlacement: "top" as const,
+    shimmer: false,
+  },
+  variables: {
+    colorBackground: "#0C0E12",
+    colorForeground: "#E8EAED",
+    colorMutedForeground: "#8A9099",
+    colorInput: "#0F1115",
+    colorInputForeground: "#E8EAED",
+    colorPrimary: "#E8EAED",
+    colorPrimaryForeground: "#0A0C0F",
+    colorDanger: "#F0575C",
+    colorNeutral: "#E8EAED",
+    colorBorder: "#1E2229",
+    colorRing: "hsl(214 95% 58%)",
+    colorShadow: "transparent",
+    borderRadius: "8px",
+    fontFamily: "Geist, var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+    fontFamilyButtons:
+      "Geist, var(--font-sans), ui-sans-serif, system-ui, sans-serif",
+    fontSize: "0.8125rem",
+    fontWeight: {
+      normal: "400",
+      medium: "500",
+      semibold: "600",
+      bold: "600",
+    },
+  },
+  elements: {
+    rootBox: "font-sans w-full",
+    logoBox: "hidden",
+    logoImage: "hidden",
+
+    card:
+      "!bg-transparent !shadow-none !border-0 !rounded-none !p-[32px_28px_16px] w-full",
+    cardBox:
+      "!bg-[var(--surface,#0C0E12)] !shadow-none border border-[var(--line-strong,#181B21)] !rounded-[14px] overflow-hidden w-full",
+
+    headerTitle:
+      "!text-[18px] !font-semibold !tracking-[-0.02em] !text-[var(--fg,#E8EAED)] !normal-case",
+    headerSubtitle:
+      "!text-[13.5px] !text-[var(--muted,#8A9099)] !normal-case !tracking-normal",
+
+    main: "!bg-transparent",
+
+    socialButtonsBlockButton:
+      "!h-[38px] !bg-[#0F1115] !border !border-[#1E2229] !shadow-none !text-[13.5px] !font-medium !text-[var(--fg,#E8EAED)] hover:!bg-[#12151A]",
+    socialButtonsBlockButtonText:
+      "!text-[13.5px] !font-medium !text-[var(--fg,#E8EAED)] !normal-case !tracking-normal",
+
+    dividerLine: "!bg-[#1A1D23]",
+    dividerText:
+      "!text-[12px] !text-[var(--muted-2,#6E747D)] !normal-case !tracking-normal !lowercase",
+
+    formFieldLabel:
+      "!text-[12.5px] !font-medium !text-[#C9CDD4] !normal-case !tracking-normal",
+    formFieldInput:
+      "!h-[38px] !bg-[#0F1115] !border !border-[#1E2229] !text-[var(--fg,#E8EAED)] !shadow-none placeholder:!text-[var(--muted-2,#6E747D)] focus:!border-[hsl(var(--ring))] focus:!shadow-[0_0_0_3px_hsl(var(--ring)/0.18)]",
+
+    formButtonPrimary:
+      "!h-[38px] !bg-[var(--fg,#E8EAED)] !text-[#0A0C0F] !font-semibold !shadow-none !normal-case hover:!bg-[#F2F4F7] [&_svg]:hidden",
+    buttonArrowIcon: "hidden",
+
+    footer:
+      "!bg-transparent !border-t !border-[#16191E] !mt-2 !pt-3 !flex !flex-row !items-center !justify-between !gap-3",
+    footerAction: "!bg-transparent !m-0 !p-0 !text-[12px] !text-[var(--muted-2,#6E747D)]",
+    footerActionText:
+      "!text-[12px] !text-[var(--muted-2,#6E747D)] !normal-case !tracking-normal",
+    footerActionLink:
+      "!text-[12px] !font-medium !text-[var(--fg,#E8EAED)] !normal-case hover:!opacity-90",
+    footerPages:
+      "!bg-transparent !m-0 !p-0 !text-[12px] !text-[var(--muted-2,#6E747D)]",
+    footerPagesLink:
+      "!text-[12px] !text-[var(--muted-2,#6E747D)] hover:!text-[var(--fg,#E8EAED)]",
+
+    identityPreviewEditButton:
+      "!text-[var(--fg,#E8EAED)] hover:!opacity-90",
+    formFieldAction:
+      "!text-[var(--muted,#8A9099)] hover:!text-[var(--fg,#E8EAED)]",
+    formResendCodeLink:
+      "!text-[var(--fg,#E8EAED)] hover:!opacity-90",
+    headerBackLink:
+      "!text-[var(--muted,#8A9099)] hover:!text-[var(--fg,#E8EAED)]",
+  },
+} satisfies Appearance;
+
+/** Localization overrides for the sign-in splash copy. */
+export const signInLocalization = {
+  signIn: {
+    start: {
+      title: "Sign in",
+      subtitle: "Use your Google account or email.",
+      actionText: "No account?",
+      actionLink: "Create one",
+    },
+  },
+  formFieldLabel__emailAddress: "Email",
+  formFieldInputPlaceholder__emailAddress: "you@company.com",
+  dividerText: "or",
+};
+
 export const clerkAppearance = {
   ...clerkTheme,
-  signIn: authCardTheme,
+  signIn: {
+    ...signInAppearance,
+    elements: {
+      ...clerkTheme.elements,
+      ...signInAppearance.elements,
+      rootBox: "font-sans mx-auto w-full",
+    },
+  },
   signUp: authCardTheme,
   userButton: clerkTheme,
   userProfile: clerkTheme,

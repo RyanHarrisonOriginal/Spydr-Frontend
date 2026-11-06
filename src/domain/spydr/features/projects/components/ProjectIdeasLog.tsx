@@ -65,7 +65,7 @@ export function ProjectIdeasLog({
           placeholder="Capture an idea..."
           className={detailCanvasInputClassName}
         />
-        <Button type="submit" className="h-8 rounded-md bg-emerald-600 px-3 text-[12px] text-white hover:bg-emerald-500 hover:shadow-none" disabled={!canAdd}>
+        <Button type="submit" className="h-8 rounded-md bg-[var(--fg)] px-3 text-[12px] font-semibold text-[var(--canvas)] hover:opacity-92 hover:shadow-none" disabled={!canAdd}>
           <Plus className="h-3.5 w-3.5" />
           {isAdding ? "Adding..." : "Add"}
         </Button>

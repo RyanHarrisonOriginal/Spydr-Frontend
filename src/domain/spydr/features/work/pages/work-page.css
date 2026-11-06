@@ -1,0 +1,107 @@
+/*
+ * Work page chrome. Hex tokens from the theme; --canvas / --muted shadowed
+ * here so hsl(var(--…)) consumers outside this page stay intact.
+ */
+.work-page {
+  --canvas: #08090b;
+  --muted: #8a9099;
+  background: var(--canvas);
+  color: var(--fg);
+  font-family: var(--font-sans);
+}
+
+.work-page-header {
+  padding: 32px 16px 20px !important;
+  border: none !important;
+  border-bottom: none !important;
+  background: transparent;
+}
+
+.work-page-header > div {
+  padding: 0 !important;
+  min-height: 0 !important;
+}
+
+.work-page-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+}
+
+.work-page-toolbar {
+  padding: 0 16px 16px;
+  border: none;
+  background: transparent;
+}
+
+.work-page-toolbar > div:first-child {
+  background: transparent;
+  padding: 0;
+  gap: 8px;
+}
+
+.work-page-toolbar .border-b {
+  border-bottom: none;
+}
+
+.work-page-toolbar input,
+.work-page-toolbar > div > div button:not(.work-page-new):not([role="tab"]),
+.work-page-toolbar [role="tablist"] {
+  height: 30px;
+  min-height: 30px;
+  border-radius: 8px;
+  background: var(--control);
+  border: 1px solid #1a1d23;
+  box-shadow: none;
+}
+
+.work-page-toolbar [role="tablist"] {
+  padding: 2px;
+  gap: 0;
+}
+
+.work-page-toolbar [role="tablist"] button {
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.work-page-toolbar [role="tablist"] button[aria-selected="true"] {
+  background: #1a1e25;
+  color: var(--fg);
+  box-shadow: none;
+}
+
+.work-page-toolbar .work-page-new {
+  height: 30px;
+  min-height: 30px;
+  border-radius: 8px;
+  border: 0;
+  background: var(--fg);
+  color: var(--canvas);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.work-page-toolbar .work-page-new:hover {
+  background: var(--fg);
+  color: var(--canvas);
+  opacity: 0.92;
+}
+
+.work-page-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  flex: 1;
+  margin: 0 16px 24px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+}

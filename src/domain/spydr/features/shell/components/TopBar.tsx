@@ -5,46 +5,51 @@ import { clerkUserButtonProps } from "@/lib/clerkAppearance";
 import { SpydrMark } from "@/components/SpydrMark";
 import { OrganizationSwitcher } from "@/domain/spydr/features/organizations/components/OrganizationSwitcher";
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
-import { PersonMeBadge } from "@/domain/spydr/features/people/components/PersonIdentity";
-import { personDisplayName } from "@/domain/spydr/utils/projectPersonas";
+import { formatPerson } from "@/domain/spydr/utils/projectPersonas";
 import { workPersonPath } from "@/domain/spydr/features/work/utils/workPaths";
+import "../shell-chrome.css";
 
 export function TopBar() {
-  const { currentUserPerson } = useCurrentUserPerson();
+  const { currentUserPerson, currentUserPersonId } = useCurrentUserPerson();
+  const me = currentUserPerson
+    ? formatPerson(currentUserPerson, currentUserPersonId)
+    : null;
 
   return (
-    <header className="spydr-rule spydr-glass z-30 flex h-12 shrink-0 items-center gap-2 border-b border-white/10 px-3 md:gap-3 md:px-4">
+    <header className="shell-topbar z-30 flex h-12 shrink-0 items-center gap-2 px-3 md:gap-3 md:px-4">
       <Link
         to="/today"
         className="flex shrink-0 items-center gap-1.5 md:hidden"
         aria-label="Spydr home"
       >
-        <SpydrMark size={32} className="shrink-0" />
+        <SpydrMark size={22} className="shrink-0" />
       </Link>
       <OrganizationSwitcher />
 
       <div className="ml-auto flex items-center gap-1.5 md:gap-2">
-        {currentUserPerson ? (
+        {currentUserPerson && me ? (
           <Link
             to={workPersonPath(currentUserPerson.id)}
-            className="hidden items-center gap-1.5 rounded-sm border border-highlight/25 bg-highlight/6 px-2 py-1 text-[11px] text-highlight transition-colors hover:border-highlight/40 hover:bg-highlight/10 sm:inline-flex"
+            className="hidden items-center gap-2 rounded-lg px-1.5 py-1 text-[13px] font-medium text-[var(--fg)] transition-colors hover:bg-[var(--surface-hover)] ring-focus sm:inline-flex"
           >
-            <PersonMeBadge compact />
-            <span className="max-w-[120px] truncate">
-              {personDisplayName(currentUserPerson)}
+            <span className="shell-topbar-avatar" aria-hidden>
+              {me.initials}
+            </span>
+            <span className="max-w-[120px] truncate text-[var(--muted)]">
+              {me.label}
             </span>
           </Link>
         ) : null}
         <button
           type="button"
-          className="grid h-10 w-10 place-items-center rounded-sm border border-border bg-muted/20 text-muted-foreground transition-colors hover:border-highlight/30 hover:text-foreground ring-focus md:h-8 md:w-8"
+          className="grid h-8 w-8 place-items-center rounded-lg text-[var(--muted)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--fg)] ring-focus"
         >
-          <Bell className="h-3.5 w-3.5" />
+          <Bell className="h-3.5 w-3.5" strokeWidth={1.75} />
         </button>
         <UserButton
           {...clerkUserButtonProps({
-            avatarBox: "h-7 w-7 rounded-sm border border-border",
-            userButtonAvatarBox: "h-7 w-7 rounded-sm border border-border",
+            avatarBox: "h-5 w-5 rounded-full border-0 shadow-[inset_0_0_0_1px_#262B33] bg-[#1A1E25]",
+            userButtonAvatarBox: "h-5 w-5 rounded-full border-0",
           })}
         />
       </div>

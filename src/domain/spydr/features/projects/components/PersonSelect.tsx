@@ -26,6 +26,7 @@ interface PersonSelectProps {
   wrapLabel?: boolean;
   /** Narrow slots show initials instead of the given name. */
   whenTight?: "given" | "initials";
+  hideChevron?: boolean;
 }
 
 export function PersonSelect({
@@ -40,14 +41,15 @@ export function PersonSelect({
   fitContent = false,
   wrapLabel = false,
   whenTight = "given",
+  hideChevron = false,
 }: PersonSelectProps) {
-  const { isMe } = useCurrentUserPerson();
+  const { currentUserPersonId, isMe } = useCurrentUserPerson();
   const selected = people.find((person) => person.id === value) ?? null;
   const options = [
     { value: "", label: "Unassigned" },
     ...people.map((person) => ({
       value: person.id,
-      label: personSelectLabel(person, isMe),
+      label: personSelectLabel(person, currentUserPersonId),
     })),
   ];
 
@@ -64,38 +66,33 @@ export function PersonSelect({
         searchable
         fitContent={fitContent}
         wrapLabel={wrapLabel}
-        title={selected ? personSelectLabel(selected, isMe) : undefined}
+        hideChevron={hideChevron}
+        title={
+          selected
+            ? personSelectLabel(selected, currentUserPersonId)
+            : undefined
+        }
         triggerLabel={
           compact && !fitContent && selected ? (
-            <PersonNameFit
-              person={selected}
-              you={isMe(selected)}
-              whenTight={whenTight}
-            />
+            <PersonNameFit person={selected} whenTight={whenTight} />
           ) : undefined
         }
         leading={
           selected ? (
             <PersonAvatar person={selected} size="sm" />
           ) : (
-            <span className="h-6 w-6 shrink-0 rounded-full border border-dashed border-border/25 bg-muted/15" />
+            <PersonAvatar person={null} size="sm" />
           )
         }
         renderOptionLeading={(option) => {
           const person = people.find((item) => item.id === option.value);
-          if (!person) return <span className="h-6 w-6 shrink-0" />;
+          if (!person) return <PersonAvatar person={null} size="sm" />;
           return <PersonAvatar person={person} size="sm" />;
         }}
-        triggerClassName={cn(
-          selected && isMe(selected) && "border-highlight/12 bg-highlight/5",
-          triggerClassName
-        )}
-        labelClassName={cn(
-          "text-[length:var(--pl-control-size,0.8125rem)] text-foreground/90",
-          selected && isMe(selected) && "text-highlight"
-        )}
-        getOptionLabelClassName={(option, _selected) =>
-          cn("text-[length:var(--pl-control-size,0.8125rem)]", option.value && isMe(option.value) && "text-highlight")
+        triggerClassName={triggerClassName}
+        labelClassName="text-[length:var(--pl-control-size,0.8125rem)] text-foreground/90"
+        getOptionLabelClassName={() =>
+          "text-[length:var(--pl-control-size,0.8125rem)]"
         }
       />
       {!compact && selected ? (

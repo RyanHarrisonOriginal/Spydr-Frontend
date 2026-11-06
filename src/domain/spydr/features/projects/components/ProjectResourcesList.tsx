@@ -34,7 +34,7 @@ export function ProjectResourcesList({
       {resources.map((resource) => (
         <ProjectDetailEntry key={resource.id}>
           <div className="flex items-center gap-2">
-            <span className="shrink-0 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+            <span className="shrink-0 text-[11px] capitalize text-[var(--muted-2)]">
               {resource.details?.resourceType ?? "resource"}
             </span>
             <span className="min-w-0 flex-1 truncate text-[13px]">

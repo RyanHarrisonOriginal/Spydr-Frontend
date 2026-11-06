@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  collectCreateFormParameters,
   defaultSpawnedParamValues,
   newKeysFromTemplateDraft,
   newParameterEntries,
@@ -8,6 +9,39 @@ import {
 } from "./templateParameters";
 
 describe("template parameter save helpers", () => {
+  it("includes tokens used in template text that are not declared parameters", () => {
+    expect(
+      collectCreateFormParameters({
+        titleTemplate: "{{NEW_COMPANY_NAME}} Go Live",
+        bodyTemplate: "",
+        parameters: [
+          {
+            id: "p1",
+            key: "NEW_COMPANY_NAME",
+            label: "New company name",
+            required: true,
+            defaultValue: null,
+            sortOrder: 0,
+          },
+        ],
+        tasks: [
+          {
+            titleTemplate:
+              "determine whether {{NEW_COMPANY_NAME}}'s {{ERP}} data needs modeling",
+            bodyTemplate: "",
+          },
+        ],
+      }).map((param) => ({
+        key: param.key,
+        label: param.label,
+        required: param.required,
+      }))
+    ).toEqual([
+      { key: "NEW_COMPANY_NAME", label: "New company name", required: true },
+      { key: "ERP", label: "Erp", required: true },
+    ]);
+  });
+
   it("detects newly introduced parameter keys", () => {
     expect(
       newParameterEntries(

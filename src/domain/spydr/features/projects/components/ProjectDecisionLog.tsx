@@ -86,7 +86,7 @@ export function ProjectDecisionLog({
           />
           <Button
             type="submit"
-            className="h-8 shrink-0 gap-1.5 rounded-md sm:px-3"
+            className="h-8 shrink-0 gap-1.5 rounded-md bg-[var(--fg)] px-3 text-[12px] font-semibold text-[var(--canvas)] hover:opacity-92 hover:shadow-none sm:px-3"
             disabled={!canAdd}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -145,7 +145,7 @@ function DecisionEntry({
         <div className="flex shrink-0 items-center gap-1.5">
           <span
             className={cn(
-              "px-1 py-px font-mono text-[9px] uppercase tracking-wider",
+              "px-1 py-px text-[11px] capitalize",
               impactStyles[impact] ?? "text-muted-foreground"
             )}
           >

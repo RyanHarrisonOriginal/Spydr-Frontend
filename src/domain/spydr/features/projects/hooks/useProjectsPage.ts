@@ -220,6 +220,23 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     );
   };
 
+  const updateTaskPriority = (taskId: string, priority: string) => {
+    if (!isProjectPriority(priority)) return;
+    setTaskError(null);
+    setUpdatingTaskId(taskId);
+    updateTask.mutate(
+      { taskId, input: { priority } },
+      {
+        onError: (error) => {
+          setTaskError(
+            error instanceof Error ? error.message : "Failed to update task priority"
+          );
+        },
+        onSettled: () => setUpdatingTaskId(null),
+      }
+    );
+  };
+
   const updateTaskTitle = (taskId: string, title: string) => {
     const trimmed = title.trim();
     if (!trimmed) return;
@@ -360,6 +377,7 @@ export function useProjectsPage(options?: { personId?: string | null }) {
     updateTaskDueDate,
     updateTaskAssignee,
     updateTaskTitle,
+    updateTaskPriority,
     updateTaskEmoji,
     createProjectTask,
     deleteTask: deleteTaskById,

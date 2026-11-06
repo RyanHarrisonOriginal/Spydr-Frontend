@@ -28,6 +28,8 @@ interface ProjectPrioritySelectProps {
   ariaLabel?: string;
   menuLabel?: string;
   fitContent?: boolean;
+  /** Plain sentence-case trigger — no chip surface or caps. */
+  quiet?: boolean;
 }
 
 export function ProjectPrioritySelect({
@@ -38,10 +40,13 @@ export function ProjectPrioritySelect({
   ariaLabel = "Project priority",
   menuLabel = "Priority",
   fitContent = false,
+  quiet = false,
 }: ProjectPrioritySelectProps) {
   const options = projectPriorities.map((priority) => ({
     value: priority,
-    label: priority,
+    label: quiet
+      ? priority.charAt(0).toUpperCase() + priority.slice(1)
+      : priority,
   }));
 
   return (
@@ -51,20 +56,27 @@ export function ProjectPrioritySelect({
       onChange={onChange}
       disabled={disabled}
       ariaLabel={ariaLabel}
-      menuLabel={menuLabel}
+      menuLabel={quiet ? undefined : menuLabel}
       fitContent={fitContent}
-      leading={<PriorityMarker priority={value} />}
+      hideChevron={quiet}
+      leading={quiet ? null : <PriorityMarker priority={value} />}
       renderOptionLeading={(option) => <PriorityMarker priority={option.value} />}
       triggerClassName={cn(
-        prioritySurface[value],
-        "font-mono uppercase tracking-wider",
+        !quiet && prioritySurface[value],
+        !quiet && "font-mono uppercase tracking-wider",
         className
       )}
-      labelClassName="font-mono uppercase tracking-wider"
+      labelClassName={
+        quiet
+          ? "normal-case tracking-normal"
+          : "font-mono uppercase tracking-wider"
+      }
       getOptionClassName={(option, selected) =>
         cn(priorityOptionSurface[option.value], selected && prioritySurface[option.value])
       }
-      getOptionLabelClassName={() => "font-mono uppercase tracking-wider"}
+      getOptionLabelClassName={() =>
+        quiet ? "normal-case tracking-normal" : "font-mono uppercase tracking-wider"
+      }
     />
   );
 }

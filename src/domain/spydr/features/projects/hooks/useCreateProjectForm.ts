@@ -7,6 +7,7 @@ import {
 } from "@/domain/spydr/features/shared/hooks/queries";
 import type { CreateProjectInput, SpydrNodeStatus, SpydrPriority } from "@/domain/spydr/utils/types";
 import { findAreaIdByTitle } from "@/domain/spydr/utils/projectAreas";
+import { collectCreateFormParameters } from "../utils/templateParameters";
 import { useCreateProjectMutation } from "./useCreateProjectMutation";
 import { useInvokeProjectTemplateMutation } from "./useInvokeProjectTemplateMutation";
 import { useUpdateProjectMutation } from "./useUpdateProjectMutation";
@@ -64,6 +65,17 @@ export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
   const templates = allTemplates.filter((template) => !template.isArchived);
   const hasAnyTemplates = allTemplates.length > 0;
   const selectedTemplate = templateQuery.data ?? null;
+  const formParameters = useMemo(
+    () =>
+      selectedTemplate ? collectCreateFormParameters(selectedTemplate) : [],
+    [selectedTemplate]
+  );
+  const formParameterSignature = formParameters
+    .map(
+      (param) =>
+        `${param.key}\0${param.required ? "1" : "0"}\0${param.defaultValue ?? ""}`
+    )
+    .join("\n");
 
   useEffect(() => {
     if (!selectedTemplate) {
@@ -71,7 +83,7 @@ export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
       return;
     }
     const next: Record<string, string> = {};
-    for (const param of selectedTemplate.parameters) {
+    for (const param of collectCreateFormParameters(selectedTemplate)) {
       next[param.key] = param.defaultValue ?? "";
     }
     setParamValues(next);
@@ -81,7 +93,7 @@ export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
     }));
     // Prefill area when the template changes; areas may still be empty here.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- areas handled below
-  }, [selectedTemplate?.id]);
+  }, [selectedTemplate?.id, formParameterSignature]);
 
   // If areas load after the template, resolve the template area once while still empty.
   useEffect(() => {
@@ -129,12 +141,12 @@ export function useCreateProjectForm(options?: UseCreateProjectFormOptions) {
 
   const requiredParamsFilled = useMemo(() => {
     if (!selectedTemplate) return true;
-    return selectedTemplate.parameters.every((param) => {
+    return formParameters.every((param) => {
       if (!param.required) return true;
       const value = paramValues[param.key]?.trim();
       return Boolean(value);
     });
-  }, [selectedTemplate, paramValues]);
+  }, [selectedTemplate, formParameters, paramValues]);
 
   const finishWithAssignee = (projectId: string) => {
     const personId =

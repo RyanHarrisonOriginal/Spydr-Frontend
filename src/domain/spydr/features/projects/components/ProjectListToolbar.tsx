@@ -27,6 +27,7 @@ interface ProjectListToolbarProps {
   startActions?: ReactNode;
   endActions?: ReactNode;
   sticky?: boolean;
+  showCount?: boolean;
 }
 
 export function ProjectListToolbar({
@@ -43,6 +44,7 @@ export function ProjectListToolbar({
   startActions,
   endActions,
   sticky = false,
+  showCount = true,
 }: ProjectListToolbarProps) {
   const hasActiveFilters = hasActiveProjectListFilters(filters);
   const filterContext = { areas, people };
@@ -59,7 +61,7 @@ export function ProjectListToolbar({
             value={filters.search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search by name…"
-            className="pl-9 shadow-none"
+            className="h-8 rounded-md pl-9 shadow-none"
             aria-label="Search projects by name"
           />
         </div>
@@ -67,7 +69,7 @@ export function ProjectListToolbar({
         <div className="flex min-w-0 flex-wrap items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]">
+            <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-md text-[12px]">
               <Filter className="h-3.5 w-3.5" />
               Filter
               {activeFilterCount > 0 ? (
@@ -90,23 +92,27 @@ export function ProjectListToolbar({
             variant="ghost"
             size="sm"
             onClick={onClearFilters}
-            className="h-8 gap-1 px-2 text-[11px] text-muted-foreground"
+            className="h-8 gap-1 rounded-md px-2 text-[12px] text-muted-foreground"
           >
             <X className="h-3 w-3" />
             Clear all
           </Button>
         ) : null}
 
-        <span
-          className={cn(
-            "ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground",
-            hasActiveFilters && "text-foreground/70"
-          )}
-        >
-          {filteredCount === totalCount
-            ? `${totalCount} projects`
-            : `${filteredCount} of ${totalCount}`}
-        </span>
+        {showCount ? (
+          <span
+            className={cn(
+              "ml-auto text-[12px] text-muted-foreground",
+              hasActiveFilters && "text-foreground/70"
+            )}
+          >
+            {filteredCount === totalCount
+              ? `${totalCount} projects`
+              : `${filteredCount} of ${totalCount}`}
+          </span>
+        ) : (
+          <span className="ml-auto" />
+        )}
         {endActions}
         </div>
       </div>

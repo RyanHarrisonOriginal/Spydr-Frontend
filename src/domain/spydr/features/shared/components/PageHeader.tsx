@@ -13,6 +13,10 @@ interface PageHeaderProps {
   titleClassName?: string;
   /** Tighter chrome for operator detail pages. */
   dense?: boolean;
+  /** Ambient web graphic behind the header. Off for quiet operator surfaces. */
+  atmosphere?: boolean;
+  /** Put title and meta on one baseline row. */
+  inlineMeta?: boolean;
 }
 
 export function PageHeader({
@@ -24,6 +28,8 @@ export function PageHeader({
   className,
   titleClassName,
   dense = false,
+  atmosphere = true,
+  inlineMeta = false,
 }: PageHeaderProps) {
   const breadcrumb = showBreadcrumbs && !eyebrow ? <BreadcrumbTrail /> : null;
 
@@ -34,16 +40,18 @@ export function PageHeader({
         className
       )}
     >
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-y-0 right-0 opacity-90",
-          dense ? "w-[min(100%,28rem)]" : "w-[min(100%,36rem)]"
-        )}
-        aria-hidden
-      >
-        <WebField className="h-full w-full" intensity="ambient" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-background/20" />
-      </div>
+      {atmosphere ? (
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-y-0 right-0 opacity-90",
+            dense ? "w-[min(100%,28rem)]" : "w-[min(100%,36rem)]"
+          )}
+          aria-hidden
+        >
+          <WebField className="h-full w-full" intensity="ambient" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-background/20" />
+        </div>
+      ) : null}
 
       <div
         className={cn(
@@ -64,25 +72,50 @@ export function PageHeader({
               {eyebrow ?? breadcrumb}
             </div>
           ) : null}
-          <h1
-            className={cn(
-              "font-semibold leading-none tracking-[-0.03em]",
-              dense ? "mt-1 text-heading-sm" : "mt-2 text-heading",
-              "truncate",
-              titleClassName
-            )}
-          >
-            {title}
-          </h1>
-          {meta && (
+          {inlineMeta ? (
             <div
               className={cn(
-                "flex flex-wrap items-center gap-2 text-muted-foreground",
-                dense ? "mt-1.5 text-label" : "mt-2.5 text-caption"
+                "flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1",
+                (eyebrow ?? breadcrumb) && (dense ? "mt-1" : "mt-2")
               )}
             >
-              {meta}
+              <h1
+                className={cn(
+                  "font-semibold leading-none tracking-[-0.03em]",
+                  dense ? "text-[20px]" : "text-heading",
+                  "truncate",
+                  titleClassName
+                )}
+              >
+                {title}
+              </h1>
+              {meta ? (
+                <div className="min-w-0 text-[13px] text-muted-foreground">{meta}</div>
+              ) : null}
             </div>
+          ) : (
+            <>
+              <h1
+                className={cn(
+                  "font-semibold leading-none tracking-[-0.03em]",
+                  dense ? "mt-1 text-heading-sm" : "mt-2 text-heading",
+                  "truncate",
+                  titleClassName
+                )}
+              >
+                {title}
+              </h1>
+              {meta && (
+                <div
+                  className={cn(
+                    "flex flex-wrap items-center gap-2 text-muted-foreground",
+                    dense ? "mt-1.5 text-label" : "mt-2.5 text-caption"
+                  )}
+                >
+                  {meta}
+                </div>
+              )}
+            </>
           )}
         </div>
         {actions && (

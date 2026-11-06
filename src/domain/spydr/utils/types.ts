@@ -413,7 +413,9 @@ export type IdeaDetails = {
   updatedAt: string;
 };
 
-export type IdeaNode = SpydrNode<"idea", IdeaDetails>;
+export type IdeaNode = SpydrNode<"idea", IdeaDetails> & {
+  project?: TaskProjectRef | null;
+};
 
 export interface UpdateProjectInput {
   title?: string;
@@ -492,12 +494,12 @@ export interface UpdateTaskInput {
 }
 
 export interface UpdateNoteInput {
-  title?: string;
+  title?: string | null;
   body?: string;
 }
 
 export interface CreateProjectNoteInput {
-  title?: string;
+  title?: string | null;
   body?: string;
   status?: SpydrNodeStatus;
   priority?: SpydrPriority;

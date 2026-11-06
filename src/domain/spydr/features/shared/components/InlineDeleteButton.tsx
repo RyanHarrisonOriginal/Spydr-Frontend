@@ -1,10 +1,12 @@
 import { Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface InlineDeleteButtonProps {
   label: string;
   isDeleting?: boolean;
   disabled?: boolean;
+  className?: string;
   onDelete(): void;
 }
 
@@ -12,6 +14,7 @@ export function InlineDeleteButton({
   label,
   isDeleting = false,
   disabled = false,
+  className,
   onDelete,
 }: InlineDeleteButtonProps) {
   const [isConfirming, setIsConfirming] = useState(false);
@@ -64,7 +67,10 @@ export function InlineDeleteButton({
         setIsConfirming(true);
       }}
       aria-label={`Delete ${label}`}
-      className="ml-auto rounded p-1 text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+      className={cn(
+        "ml-auto rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50",
+        className
+      )}
     >
       <Trash2 className="h-3.5 w-3.5" />
     </button>

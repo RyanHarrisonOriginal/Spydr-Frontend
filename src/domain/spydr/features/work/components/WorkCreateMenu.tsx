@@ -27,7 +27,7 @@ export function WorkCreateMenu({
         <Button
           variant="secondary"
           size="sm"
-          className="h-8 gap-1.5 border border-foreground/15 bg-foreground px-3 text-[12px] text-background shadow-sm hover:bg-foreground/88 hover:text-background"
+          className="work-page-new h-[30px] gap-1.5 rounded-lg border-0 bg-[var(--fg)] px-3 text-[12px] font-semibold text-[var(--canvas)] shadow-none hover:bg-[var(--fg)] hover:text-[var(--canvas)] hover:opacity-90"
         >
           <Plus className="h-3.5 w-3.5" />
           New

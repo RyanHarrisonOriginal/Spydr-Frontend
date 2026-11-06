@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "./styles/geist-fonts.css";
 
 @tailwind base;
 @tailwind components;
@@ -23,6 +23,25 @@
     --card-foreground: 220 14% 90%;
 
     --canvas: 222 20% 4%;
+
+    /*
+     * Work page surface tokens (hex). Scoped under .work-page so they do not
+     * break hsl(var(--…)) consumers elsewhere. --canvas / --muted names are
+     * redefined only inside .work-page.
+     */
+    --surface: #0c0e12;
+    --surface-hover: #0f1216;
+    --line: #16191e;
+    --line-strong: #181b21;
+    --control: #0f1115;
+    --fg: #e8eaed;
+    --fg-task: #b4bac2;
+    --fg-soft: #c9cdd4;
+    --muted-2: #6e747d;
+    --faint: #3a3f47;
+    --danger: #f0575c;
+    --warn: #e2a336;
+    --active: #3fb5a3;
 
     --popover: 222 16% 8%;
     --popover-foreground: 220 14% 90%;
@@ -101,10 +120,11 @@
     --tree-line: 214 16% 26%;
 
     --status-todo: 220 8% 52%;
-    --status-active: 214 95% 60%;
+    /* Status hues — prefer hex tokens (--active / --danger / --warn) for dots. */
+    --status-active: 168 49% 48%;
     --status-doing: 38 40% 55%;
-    --status-done: 152 35% 44%;
-    --status-blocked: 351 64% 54%;
+    --status-done: 220 6% 32%;
+    --status-blocked: 358 84% 64%;
 
     --priority-critical: 351 64% 54%;
     --priority-high: 24 55% 52%;
@@ -138,9 +158,9 @@
     --chart-4: 351 55% 54%;
     --chart-5: 152 35% 44%;
 
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+    --font-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-display: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
 
     /*
      * Fluid type + spacing foundation.
@@ -703,110 +723,66 @@
     }
   }
 
-  /* Single-viewport on desktop; scroll when the page cannot fit. */
-  .spydr-marketing-shell {
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-
-  /* Prefer scrolling over clipping when zoom / short laptops shrink the fold. */
-  @media (min-width: 1024px) and (min-height: 760px) {
-    .spydr-marketing-shell {
-      overflow: hidden;
-    }
-  }
-
-  @keyframes spydr-marketing-enter {
+  /* Quiet line-drawn web loader (SVG fallback) */
+  @keyframes spydr-web-loader-signal {
     from {
-      opacity: 0;
-      transform: translateY(8px);
+      stroke-dashoffset: 100;
     }
     to {
-      opacity: 1;
-      transform: translateY(0);
+      stroke-dashoffset: 0;
     }
   }
 
-  .spydr-marketing-enter {
-    animation: spydr-marketing-enter 300ms var(--ease-out-expo) both;
-  }
-
-  .spydr-marketing-enter-panel {
-    animation: spydr-marketing-enter 300ms var(--ease-out-expo) 100ms both;
-  }
-
-  /* Opaque enough over the web field for WCAG AA body text. */
-  .spydr-marketing-panel {
-    background-color: hsl(var(--card) / 0.88);
-    background-image: linear-gradient(
-      165deg,
-      hsl(220 40% 100% / 0.07),
-      transparent 40%
-    );
-    -webkit-backdrop-filter: blur(24px) saturate(1.4);
-    backdrop-filter: blur(24px) saturate(1.4);
-    box-shadow:
-      inset 0 1px 0 hsl(220 40% 100% / 0.1),
-      0 16px 40px -24px hsl(0 0% 0% / 0.55);
-  }
-
-  @media (prefers-reduced-transparency: reduce) {
-    .spydr-marketing-panel {
-      background-color: hsl(var(--card) / 0.98);
-      background-image: none;
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .spydr-marketing-enter,
-    .spydr-marketing-enter-panel {
-      animation: none;
-    }
-  }
-
-  @keyframes spydr-web-spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  @keyframes spydr-web-pulse {
+  @keyframes spydr-web-loader-hub {
     0%,
     100% {
-      opacity: 0.7;
-      transform: scale(1);
+      opacity: 0.75;
     }
     50% {
       opacity: 1;
-      transform: scale(1.12);
     }
   }
 
   .spydr-web-loader-mark {
-    transform-origin: 50% 50%;
-    transform-box: view-box;
-    animation: spydr-web-spin 18s linear infinite;
+    display: block;
   }
 
-  .spydr-web-loader-pulse {
-    transform-origin: 64px 64px;
-    transform-box: view-box;
-    animation: spydr-web-pulse 1.8s ease-in-out infinite;
+  .spydr-web-loader-hub {
+    animation: spydr-web-loader-hub 2.4s ease-in-out infinite;
   }
 
-  .spydr-web-loader-signal {
-    transform-origin: 64px 64px;
-    transform-box: view-box;
-    animation: spydr-web-spin 4.8s linear infinite;
+  .spydr-web-loader-signal-path {
+    /* ~18% of one edge across a ~14-segment path ≈ 1–2% of pathLength 100 */
+    stroke-dasharray: 2 98;
+    stroke-dashoffset: 100;
+    animation: spydr-web-loader-signal 3.2s linear infinite;
+  }
+
+  .spydr-web-loader-label {
+    margin-top: 12px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 1.2;
+    color: var(--muted-2, #6e747d);
+  }
+
+  .spydr-web-loader-mark--static .spydr-web-loader-hub,
+  .spydr-web-loader-mark--static .spydr-web-loader-signal-path {
+    animation: none;
+  }
+
+  .spydr-web-loader-mark--static .spydr-web-loader-hub {
+    opacity: 1;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .spydr-web-loader-mark,
-    .spydr-web-loader-pulse,
-    .spydr-web-loader-signal {
+    .spydr-web-loader-hub,
+    .spydr-web-loader-signal-path {
       animation: none;
+    }
+
+    .spydr-web-loader-hub {
+      opacity: 1;
     }
   }
 }

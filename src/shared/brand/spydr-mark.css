@@ -1,0 +1,341 @@
+/* SpydrMark — CSS-only draw-in + signal loop. Pauses in background tabs via CSS. */
+
+.spydr-mark {
+  display: block;
+  overflow: visible;
+  color: var(--fg, #e8eaed);
+}
+
+.spydr-mark__spin {
+  transform-origin: 0 0;
+  transform-box: fill-box;
+}
+
+.spydr-mark__stroke {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.spydr-mark__outer {
+  opacity: 0.4;
+}
+
+.spydr-mark__mid {
+  opacity: 0.6;
+}
+
+.spydr-mark__inner {
+  opacity: 0.6;
+}
+
+.spydr-mark__spokes {
+  opacity: 0.35;
+}
+
+.spydr-mark__links {
+  opacity: 0.35;
+}
+
+.spydr-mark__node {
+  fill: var(--muted, #8a9099);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.spydr-mark__hub {
+  fill: var(--fg, #e8eaed);
+}
+
+.spydr-mark__signal,
+.spydr-mark__trail {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.spydr-mark__signal {
+  stroke: var(--active, #3fb5a3);
+  stroke-width: 2.25;
+}
+
+.spydr-mark__trail {
+  stroke: var(--active, #3fb5a3);
+  stroke-width: 1.25;
+  opacity: 0.35;
+}
+
+/* ── Intro draw ─────────────────────────────────────────── */
+
+.spydr-mark--intro .spydr-mark__draw {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: spydr-mark-draw 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+.spydr-mark--intro .spydr-mark__outer {
+  animation-delay: 0s;
+}
+
+.spydr-mark--intro .spydr-mark__mid {
+  animation-delay: 0.25s;
+}
+
+.spydr-mark--intro .spydr-mark__inner,
+.spydr-mark--intro .spydr-mark__spokes {
+  animation-delay: 0.5s;
+}
+
+.spydr-mark--intro .spydr-mark__links {
+  animation-delay: 0.7s;
+}
+
+.spydr-mark--intro .spydr-mark__node {
+  opacity: 0;
+  animation: spydr-mark-node-in 0.35s ease forwards;
+}
+
+.spydr-mark--intro .spydr-mark__node:nth-child(1) {
+  animation-delay: 1s;
+}
+.spydr-mark--intro .spydr-mark__node:nth-child(2) {
+  animation-delay: 1.05s;
+}
+.spydr-mark--intro .spydr-mark__node:nth-child(3) {
+  animation-delay: 1.1s;
+}
+.spydr-mark--intro .spydr-mark__node:nth-child(4) {
+  animation-delay: 1.15s;
+}
+.spydr-mark--intro .spydr-mark__node:nth-child(5) {
+  animation-delay: 1.2s;
+}
+.spydr-mark--intro .spydr-mark__node:nth-child(6) {
+  animation-delay: 1.25s;
+}
+
+.spydr-mark--intro .spydr-mark__hub {
+  opacity: 0;
+  animation: spydr-mark-hub-in 0.35s ease 0.9s forwards;
+}
+
+@keyframes spydr-mark-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes spydr-mark-node-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spydr-mark-hub-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Loop (starts after intro, or immediately) ──────────── */
+
+.spydr-mark--animate .spydr-mark__spin {
+  animation: spydr-mark-spin 60s linear infinite;
+}
+
+.spydr-mark--animate .spydr-mark__signal {
+  stroke-dasharray: 6 200;
+  stroke-dashoffset: 0;
+  animation: spydr-mark-signal 3.2s linear infinite;
+}
+
+.spydr-mark--animate .spydr-mark__trail {
+  stroke-dasharray: 18 200;
+  stroke-dashoffset: 12;
+  animation: spydr-mark-trail 3.2s linear infinite;
+}
+
+.spydr-mark--animate .spydr-mark__hub {
+  animation: spydr-mark-hub-pulse 2.4s ease-in-out infinite;
+}
+
+.spydr-mark--animate.spydr-mark--intro .spydr-mark__hub {
+  animation:
+    spydr-mark-hub-in 0.35s ease 0.9s forwards,
+    spydr-mark-hub-pulse 2.4s ease-in-out 1.6s infinite;
+}
+
+.spydr-mark--animate .spydr-mark__node {
+  animation: spydr-mark-node-flash 3.2s linear infinite;
+}
+
+.spydr-mark--animate.spydr-mark--intro .spydr-mark__signal {
+  opacity: 0;
+  animation:
+    spydr-mark-signal-show 0s linear 1.6s forwards,
+    spydr-mark-signal 3.2s linear 1.6s infinite;
+}
+
+.spydr-mark--animate.spydr-mark--intro .spydr-mark__trail {
+  opacity: 0;
+  animation:
+    spydr-mark-trail-show 0s linear 1.6s forwards,
+    spydr-mark-trail 3.2s linear 1.6s infinite;
+}
+
+.spydr-mark--animate .spydr-mark__node:nth-child(1) {
+  animation-delay: 0.42s;
+}
+.spydr-mark--animate .spydr-mark__node:nth-child(2) {
+  animation-delay: 0.84s;
+}
+.spydr-mark--animate .spydr-mark__node:nth-child(3) {
+  animation-delay: 1.26s;
+}
+.spydr-mark--animate .spydr-mark__node:nth-child(4) {
+  animation-delay: 1.68s;
+}
+.spydr-mark--animate .spydr-mark__node:nth-child(5) {
+  animation-delay: 2.1s;
+}
+.spydr-mark--animate .spydr-mark__node:nth-child(6) {
+  animation-delay: 2.52s;
+}
+
+.spydr-mark--animate.spydr-mark--intro .spydr-mark__node:nth-child(1) {
+  animation:
+    spydr-mark-node-in 0.35s ease 1s forwards,
+    spydr-mark-node-flash 3.2s linear 2.02s infinite;
+}
+.spydr-mark--animate.spydr-mark--intro .spydr-mark__node:nth-child(2) {
+  animation:
+    spydr-mark-node-in 0.35s ease 1.05s forwards,
+    spydr-mark-node-flash 3.2s linear 2.44s infinite;
+}
+.spydr-mark--animate.spydr-mark--intro .spydr-mark__node:nth-child(3) {
+  animation:
+    spydr-mark-node-in 0.35s ease 1.1s forwards,
+    spydr-mark-node-flash 3.2s linear 2.86s infinite;
+}
+.spydr-mark--animate.spydr-mark--intro .spydr-mark__node:nth-child(4) {
+  animation:
+    spydr-mark-node-in 0.35s ease 1.15s forwards,
+    spydr-mark-node-flash 3.2s linear 3.28s infinite;
+}
+.spydr-mark--animate.spydr-mark--intro .spydr-mark__node:nth-child(5) {
+  animation:
+    spydr-mark-node-in 0.35s ease 1.2s forwards,
+    spydr-mark-node-flash 3.2s linear 3.7s infinite;
+}
+.spydr-mark--animate.spydr-mark--intro .spydr-mark__node:nth-child(6) {
+  animation:
+    spydr-mark-node-in 0.35s ease 1.25s forwards,
+    spydr-mark-node-flash 3.2s linear 4.12s infinite;
+}
+
+@keyframes spydr-mark-signal-show {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spydr-mark-trail-show {
+  to {
+    opacity: 0.35;
+  }
+}
+
+@keyframes spydr-mark-signal {
+  to {
+    stroke-dashoffset: -106;
+  }
+}
+
+@keyframes spydr-mark-trail {
+  from {
+    stroke-dashoffset: 12;
+  }
+  to {
+    stroke-dashoffset: -94;
+  }
+}
+
+@keyframes spydr-mark-hub-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes spydr-mark-node-flash {
+  0% {
+    fill: var(--active, #3fb5a3);
+    transform: scale(1.7);
+  }
+  14% {
+    fill: var(--muted, #8a9099);
+    transform: scale(1);
+  }
+  100% {
+    fill: var(--muted, #8a9099);
+    transform: scale(1);
+  }
+}
+
+@keyframes spydr-mark-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Static / reduced motion ────────────────────────────── */
+
+.spydr-mark--static .spydr-mark__draw {
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+  animation: none;
+}
+
+.spydr-mark--static .spydr-mark__node,
+.spydr-mark--static .spydr-mark__hub {
+  opacity: 1;
+  animation: none;
+}
+
+.spydr-mark--static .spydr-mark__signal,
+.spydr-mark--static .spydr-mark__trail {
+  display: none;
+}
+
+.spydr-mark--static .spydr-mark__spin {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spydr-mark .spydr-mark__draw {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+
+  .spydr-mark .spydr-mark__node,
+  .spydr-mark .spydr-mark__hub {
+    opacity: 1;
+    animation: none !important;
+  }
+
+  .spydr-mark .spydr-mark__signal,
+  .spydr-mark .spydr-mark__trail {
+    display: none;
+  }
+
+  .spydr-mark .spydr-mark__spin {
+    animation: none !important;
+  }
+}

@@ -24,6 +24,7 @@ import { useEnsureTaskDueWithinProject } from "../hooks/useEnsureTaskDueWithinPr
 import { TaskDueDateSelect } from "./TaskDueDateSelect";
 import { TaskStatusSelect } from "./TaskStatusSelect";
 import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPicker";
+import { TruncatedText } from "@/domain/spydr/features/shared/components/TruncatedText";
 
 interface CreateTaskDialogProps {
   projects: ProjectNode[];
@@ -226,13 +227,13 @@ export function CreateTaskDialog({
                         key={task.id}
                         type="button"
                         className={cn(
-                          "block w-full truncate px-3 py-2 text-left text-[13px] hover:bg-muted/40",
+                          "block w-full px-3 py-2 text-left text-[13px] hover:bg-muted/40",
                           task.id === values.blockedByTaskId && "bg-muted/60"
                         )}
                         disabled={isSubmitting}
                         onClick={() => onFieldChange("blockedByTaskId", task.id)}
                       >
-                        {task.title}
+                        <TruncatedText text={task.title} />
                       </button>
                     ))
                   )}

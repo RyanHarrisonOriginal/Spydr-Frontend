@@ -42,12 +42,12 @@ export function ProjectTrashPanel({
   return (
     <section
       id={PROJECTS_TRASH_SECTION_ID}
-      className="spydr-plate mx-4 mb-4 overflow-hidden rounded-xl border border-white/10"
+      className="overflow-hidden border-b border-border/60"
     >
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-1.5 border-b border-border/60 bg-muted/20 px-4 py-2.5 text-left transition-colors hover:bg-muted/30"
+        className="flex h-12 w-full items-center gap-2 px-page-x text-left transition-colors hover:bg-accent"
       >
         {expanded ? (
           <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -71,24 +71,24 @@ export function ProjectTrashPanel({
 
       {expanded && (
         <>
-          <p className="border-b border-border/40 px-4 py-2 text-[10px] text-muted-foreground">
+          <p className="border-t border-border/60 px-page-x py-2 text-xs text-muted-foreground">
             Deleted projects can be restored here
           </p>
           {error ? (
-            <p className="border-b border-destructive/20 bg-destructive/5 px-4 py-2 text-[11px] text-destructive">
+            <p className="border-b border-destructive/30 bg-destructive/5 px-page-x py-2 text-sm text-destructive">
               {error}
             </p>
           ) : null}
           <ul className="max-h-44 divide-y divide-border/50 overflow-y-auto">
             {isLoading ? (
-              <li className="px-4 py-3 text-[12px] text-muted-foreground">Loading trash…</li>
+              <li className="px-page-x py-3 text-sm text-muted-foreground">Loading trash…</li>
             ) : (
               projects.map((project) => {
                 const restoring = isRestoring && restoringId === project.id;
                 return (
                   <li
                     key={project.id}
-                    className="flex items-center gap-2 px-4 py-2"
+                    className="flex min-h-12 items-center gap-3 px-page-x"
                   >
                     <p className="min-w-0 flex-1 truncate text-[12px] font-medium">
                       {project.title}

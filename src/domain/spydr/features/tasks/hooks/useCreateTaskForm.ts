@@ -105,6 +105,11 @@ export function useCreateTaskForm(options?: UseCreateTaskFormOptions) {
     if (!open) reset();
   };
 
+  const openPrefilled = (partial: Partial<CreateTaskFormValues>) => {
+    setValues({ ...emptyForm, ...partial });
+    setIsOpen(true);
+  };
+
   return {
     isOpen,
     values,
@@ -113,6 +118,7 @@ export function useCreateTaskForm(options?: UseCreateTaskFormOptions) {
     errorMessage:
       createTask.error instanceof Error ? createTask.error.message : null,
     setIsOpen: handleOpenChange,
+    openPrefilled,
     updateField,
     submit,
   };

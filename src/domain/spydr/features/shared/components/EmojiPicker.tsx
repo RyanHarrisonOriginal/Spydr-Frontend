@@ -14,6 +14,8 @@ interface EmojiPickerProps {
   disabled?: boolean;
   ariaLabel: string;
   size?: "sm" | "md";
+  /** When "none", empty value shows a blank hit target instead of a smile icon. */
+  placeholder?: "icon" | "none";
   onChange(emoji: string | null): void;
 }
 
@@ -22,6 +24,7 @@ export function EmojiPicker({
   disabled = false,
   ariaLabel,
   size = "sm",
+  placeholder = "icon",
   onChange,
 }: EmojiPickerProps) {
   const [custom, setCustom] = useState("");
@@ -53,14 +56,14 @@ export function EmojiPicker({
             <span aria-hidden className="leading-none">
               {emoji}
             </span>
-          ) : (
+          ) : placeholder === "icon" ? (
             <Smile
               className={cn(
                 "h-3.5 w-3.5 text-muted-foreground/70",
                 size === "md" && "h-4 w-4"
               )}
             />
-          )}
+          ) : null}
         </button>
       </DropdownMenuTrigger>
 

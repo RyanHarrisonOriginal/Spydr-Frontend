@@ -1,23 +1,21 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FolderKanban,
   GitBranch,
   Lightbulb,
   FileText,
   Sun,
-  Bot,
 } from "lucide-react";
-import { Logo } from "@/components/Logo";
-import { SpydrMark } from "@/components/SpydrMark";
-import { WebField } from "@/components/WebField";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { SignalField } from "@/shared/brand/SignalField";
+import { SpydrMark } from "@/shared/brand/SpydrMark";
+import "./marketing-splash.css";
 
 /**
  * Signed-in redirect for `/` runs pre-paint in `index.html` via Clerk's
  * `__client_uat` cookie (static SPA stand-in for clerkMiddleware). This screen
- * never loads Clerk auth state and never shows a loader.
+ * never loads Clerk auth state and never shows a loader. The nav still checks
+ * the same cookie so a rare paint still shows "Open Spydr".
  */
 
 const strands = [
@@ -29,7 +27,7 @@ const strands = [
   {
     icon: FolderKanban,
     title: "Work",
-    body: "Move projects and tasks together",
+    body: "Projects and tasks, with blockers in plain sight",
   },
   {
     icon: Lightbulb,
@@ -48,220 +46,216 @@ const strands = [
   },
 ] as const;
 
-/*
- * Subhead options (max 20 words; problem → outcome):
- * 1. Scattered tasks, ideas, decisions, and notes become one connected place.
- * 2. Pull tasks, ideas, decisions, and notes out of the scatter into one place.
- * 3. Stop hunting across tools—keep tasks, ideas, decisions, and notes together.
- */
-const SUBHEAD =
-  "Scattered tasks, ideas, decisions, and notes become one connected place.";
+const USER_LINE =
+  "Add a task to Website relaunch: send the client the written summary, due Friday.";
 
-/*
- * MCP title options (max 8 words):
- * 1. Your AI assistant, inside your web.
- * 2. Let your assistant work the web.
- * 3. AI that acts in your workspace.
- *
- * MCP sentence options (max 20 words; verified tools: create_project*, create_task(s),
- * create_idea, add_note_to_*; Claude allowed MCP client origin; no decisions tools):
- * 1. Claude and other MCP clients can plan projects, create tasks, and capture notes and ideas for you.
- * 2. Connect Claude or another MCP client to create projects, tasks, notes, and ideas in Spydr.
- * 3. MCP clients like Claude can create and update projects, tasks, notes, and ideas.
- *
- * Chips from live tools only: create_task(s), create_project*, create_idea, add_note_to_*.
- */
-const MCP_TITLE = "Your AI assistant, inside your web.";
-const MCP_SENTENCE =
-  "Claude and other MCP clients can plan projects, create tasks, and capture notes and ideas for you.";
-const MCP_CHIPS = [
-  "Create tasks",
-  "Plan projects",
-  "Capture ideas",
-  "Add notes",
-] as const;
+function prefersReducedMotion() {
+  return (
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
+  );
+}
 
-function DeferredWebField() {
-  const [ready, setReady] = useState(false);
+/** Same cookie the pre-paint gate uses — no Clerk hook on this route. */
+function hasActiveClerkSession() {
+  try {
+    const match = document.cookie.match(/(?:^|;\s*)__client_uat=([^;]*)/);
+    const value = match ? decodeURIComponent(match[1]) : "";
+    return Boolean(value && value !== "0");
+  } catch {
+    return false;
+  }
+}
+
+function ExampleExchange({ reducedMotion }: { reducedMotion: boolean }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [typed, setTyped] = useState(reducedMotion ? USER_LINE.length : 0);
+  const [toolVisible, setToolVisible] = useState(reducedMotion);
 
   useEffect(() => {
-    let cancelled = false;
-    const enable = () => {
-      if (!cancelled) setReady(true);
-    };
+    if (reducedMotion) return;
 
-    if (typeof window.requestIdleCallback === "function") {
-      const id = window.requestIdleCallback(enable, { timeout: 400 });
-      return () => {
-        cancelled = true;
-        window.cancelIdleCallback(id);
-      };
-    }
+    const root = rootRef.current;
+    if (!root) return;
 
-    const timeout = window.setTimeout(enable, 0);
+    let intervalId = 0;
+    let toolTimeout = 0;
+    let started = false;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting || started) return;
+        started = true;
+        observer.disconnect();
+
+        let i = 0;
+        intervalId = window.setInterval(() => {
+          i += 1;
+          setTyped(i);
+          if (i >= USER_LINE.length) {
+            window.clearInterval(intervalId);
+            toolTimeout = window.setTimeout(() => setToolVisible(true), 300);
+          }
+        }, 30);
+      },
+      { threshold: 0.35 },
+    );
+
+    observer.observe(root);
+
     return () => {
-      cancelled = true;
-      window.clearTimeout(timeout);
+      observer.disconnect();
+      window.clearInterval(intervalId);
+      window.clearTimeout(toolTimeout);
     };
-  }, []);
-
-  if (!ready) return null;
+  }, [reducedMotion]);
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      <WebField
-        className="absolute -inset-[4%] h-[108%] w-[108%]"
-        intensity="focus"
-        fit="slice"
-      />
-      {/* Keep copy readable on the left; let the spun web breathe on the right. */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--canvas))] via-[hsl(var(--canvas)/0.78)] to-[hsl(var(--canvas)/0.28)] md:via-[hsl(var(--canvas)/0.72)] md:to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[hsl(var(--canvas))] to-transparent" />
-      <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[hsl(var(--canvas)/0.55)] to-transparent" />
+    <div ref={rootRef} className="marketing-splash__exchange">
+      <div className="marketing-splash__exchange-user">
+        <span className="marketing-splash__avatar" aria-hidden>
+          Y
+        </span>
+        <p className="marketing-splash__exchange-text" aria-label={USER_LINE}>
+          <span aria-hidden>{USER_LINE.slice(0, typed)}</span>
+        </p>
+      </div>
+      <div
+        className={
+          toolVisible
+            ? "marketing-splash__exchange-tool marketing-splash__exchange-tool--visible"
+            : "marketing-splash__exchange-tool"
+        }
+        aria-hidden={!toolVisible}
+      >
+        <span className="marketing-splash__exchange-dot" />
+        <span>
+          create_task <span className="marketing-splash__sep">·</span> Website
+          relaunch <span className="marketing-splash__sep">·</span> due fri
+        </span>
+      </div>
     </div>
   );
 }
 
 export default function MarketingScreen() {
-  const year = new Date().getFullYear();
+  const [reducedMotion] = useState(prefersReducedMotion);
+  const [signedIn] = useState(hasActiveClerkSession);
 
   return (
-    <div className="spydr-atmosphere spydr-marketing-shell relative flex h-full flex-col text-foreground">
-      <header className="spydr-rule spydr-glass relative z-30 flex h-14 shrink-0 items-center justify-between border-b border-white/10 px-4 md:px-8">
-        <Logo size="sm" />
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/sign-in">Sign in</Link>
-        </Button>
+    <div className="marketing-splash">
+      <SignalField static={reducedMotion} />
+
+      <header className="marketing-splash__header">
+        <Link to="/" className="marketing-splash__brand">
+          <SpydrMark size={22} variant="compact" static decorative />
+          <span className="marketing-splash__brand-name">Spydr</span>
+        </Link>
+
+        <div className="marketing-splash__nav-actions">
+          {signedIn ? (
+            <Link to="/today" className="marketing-splash__nav-cta">
+              Open Spydr
+            </Link>
+          ) : (
+            <>
+              <Link to="/sign-in" className="marketing-splash__nav-link">
+                Sign in
+              </Link>
+              <Link to="/sign-up" className="marketing-splash__nav-cta">
+                Get started
+              </Link>
+            </>
+          )}
+        </div>
       </header>
 
-      <main className="relative isolate flex min-h-0 flex-1 flex-col px-4 py-6 md:px-8 md:py-8 lg:px-10">
-        <DeferredWebField />
+      <main className="marketing-splash__main">
+        <section className="marketing-splash__copy">
+          <SpydrMark
+            className="marketing-splash__mark"
+            size={96}
+            intro={!reducedMotion}
+            static={reducedMotion}
+          />
+          <h1 className="marketing-splash__title">
+            One web for the work that matters.
+          </h1>
+          <p className="marketing-splash__lede">
+            Tasks, ideas, decisions and notes in one connected place, so nothing
+            you&apos;re carrying gets dropped.
+          </p>
+          <div className="marketing-splash__ctas">
+            {signedIn ? (
+              <Link to="/today" className="marketing-splash__btn-primary">
+                Open Spydr
+              </Link>
+            ) : (
+              <>
+                <Link to="/sign-up" className="marketing-splash__btn-primary">
+                  Get started
+                </Link>
+                <Link to="/sign-in" className="marketing-splash__btn-secondary">
+                  Sign in
+                </Link>
+              </>
+            )}
+          </div>
+        </section>
 
-        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 lg:flex-row lg:items-center lg:gap-12 xl:gap-16">
-          <div className="spydr-marketing-enter flex w-full max-w-[560px] shrink-0 flex-col justify-center">
-            <div className="mb-3 flex items-center gap-2 md:mb-4">
-              <SpydrMark size={32} className="shrink-0" alt="" />
-              <span className="text-[20px] font-semibold leading-none tracking-[-0.02em] text-foreground">
-                Spydr<span className="text-highlight-secondary">.</span>
-              </span>
+        <div className="marketing-splash__panels">
+          <ul
+            className="marketing-splash__panel marketing-splash__strands"
+            aria-label="Workspace areas"
+          >
+            {strands.map((strand) => {
+              const Icon = strand.icon;
+              return (
+                <li key={strand.title} className="marketing-splash__strand">
+                  <Icon
+                    className="marketing-splash__strand-icon"
+                    aria-hidden
+                    strokeWidth={1.75}
+                  />
+                  <span className="marketing-splash__strand-name">
+                    {strand.title}
+                  </span>
+                  <span className="marketing-splash__strand-body">
+                    {strand.body}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+
+          <aside
+            className="marketing-splash__panel marketing-splash__ai"
+            aria-label="AI assistant"
+          >
+            <div className="marketing-splash__ai-head">
+              <h2 className="marketing-splash__ai-title">
+                Your AI assistant, inside your web
+              </h2>
+              <span className="marketing-splash__ai-via">via MCP</span>
             </div>
-
-            <h1 className="mb-3 max-w-[560px] text-[40px] font-semibold leading-[1.08] tracking-[-0.02em] text-foreground md:mb-4 md:text-[48px] xl:text-[56px]">
-              One web for the work that matters.
-            </h1>
-
-            <p className="mb-6 max-w-[560px] text-[16px] leading-relaxed text-[hsl(220_14%_82%)] md:mb-8">
-              {SUBHEAD}
+            <p className="marketing-splash__ai-lede">
+              Claude and other MCP clients can plan projects, create tasks and
+              capture notes for you.
             </p>
 
-            <div className="flex flex-wrap items-center gap-4">
-              <Button asChild>
-                <Link to="/sign-up">Get started</Link>
-              </Button>
-              <Button variant="ghost" asChild>
-                <Link to="/sign-in">Sign in</Link>
-              </Button>
-            </div>
-          </div>
+            <ExampleExchange reducedMotion={reducedMotion} />
 
-          {/* Right column: surface panel + MCP card (second product message) */}
-          <div className="spydr-marketing-enter-panel relative z-10 flex min-w-0 flex-1 flex-col justify-center gap-3">
-            <ul
-              className="spydr-marketing-panel grid grid-rows-5 overflow-hidden rounded-md border border-white/15"
-              aria-label="Workspace areas"
-            >
-              {strands.map((strand) => {
-                const Icon = strand.icon;
-                return (
-                  <li
-                    key={strand.title}
-                    className="grid min-h-[44px] grid-cols-[20px_minmax(5.5rem,7rem)_1fr] items-center gap-3 border-b border-white/10 px-4 py-2 last:border-b-0 md:min-h-[48px]"
-                  >
-                    <Icon
-                      className="h-5 w-5 shrink-0 text-highlight"
-                      aria-hidden
-                      strokeWidth={1.75}
-                    />
-                    <span className="text-[14px] font-semibold leading-none tracking-tight text-foreground">
-                      {strand.title}
-                    </span>
-                    <span className="text-[14px] leading-snug text-[hsl(220_12%_78%)]">
-                      {strand.body}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <aside
-              className="spydr-marketing-panel spydr-marketing-mcp rounded-md border border-white/15 border-l-2 border-l-highlight px-4 py-3"
-              aria-label="MCP"
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <Bot
-                  className="h-4 w-4 shrink-0 text-highlight"
-                  aria-hidden
-                  strokeWidth={1.75}
-                />
-                <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-[hsl(220_12%_68%)]">
-                  MCP
-                </span>
-              </div>
-
-              <h2 className="mb-1.5 text-[16px] font-semibold leading-snug tracking-[-0.02em] text-foreground md:text-[20px]">
-                {MCP_TITLE}
-              </h2>
-
-              <p className="mb-3 text-[14px] leading-snug text-[hsl(220_12%_78%)]">
-                {MCP_SENTENCE}
-              </p>
-
-              <ul className="mb-3 flex flex-wrap gap-2" aria-label="MCP capabilities">
-                {MCP_CHIPS.map((chip) => (
-                  <li
-                    key={chip}
-                    className="rounded-sm border border-white/10 bg-white/[0.03] px-2 py-1 text-[12px] leading-none text-[hsl(220_12%_78%)]"
-                  >
-                    {chip}
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                to="/docs/mcp/claude"
-                className={cn(
-                  "inline-flex text-[14px] font-medium text-highlight underline-offset-4 hover:underline",
-                  "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                )}
-              >
-                Connect in minutes
-              </Link>
-            </aside>
-          </div>
+            <Link to="/docs/mcp/claude" className="marketing-splash__connect">
+              Connect in minutes
+            </Link>
+          </aside>
         </div>
       </main>
 
-      <footer className="relative z-10 flex shrink-0 items-center justify-between gap-4 border-t border-white/10 px-4 py-3 md:px-8">
-        <span className="text-[14px] text-[hsl(220_12%_78%)]">© {year} Spydr</span>
-        <nav className="flex items-center gap-6" aria-label="Legal">
-          <Link
-            to="/privacy"
-            className={cn(
-              "text-[14px] text-[hsl(220_12%_78%)] transition-colors hover:text-foreground",
-              "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            )}
-          >
-            Privacy
-          </Link>
-          <Link
-            to="/terms"
-            className={cn(
-              "text-[14px] text-[hsl(220_12%_78%)] transition-colors hover:text-foreground",
-              "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            )}
-          >
-            Terms
-          </Link>
+      <footer className="marketing-splash__footer">
+        <span>© 2026 Spydr</span>
+        <nav className="marketing-splash__legal" aria-label="Legal">
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
         </nav>
       </footer>
     </div>

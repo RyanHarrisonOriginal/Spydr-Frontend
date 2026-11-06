@@ -1,80 +1,98 @@
-import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/domain/spydr/features/shared/components/PageHeader";
 import { usePageBreadcrumb } from "@/domain/spydr/features/shell/context/NavigationBreadcrumbContext";
 import {
   ErrorState,
   LoadingState,
 } from "@/domain/spydr/features/shared/components/ListState";
-import { formatRelativeTime } from "@/domain/spydr/features/shared/components/time";
-import { useWorkspaceDashboardQuery } from "@/domain/spydr/features/shared/hooks/queries";
-import { DashboardMetricStrip } from "../components/DashboardMetricStrip";
-import { DashboardPersonLoadSection } from "../components/DashboardPersonLoadSection";
-import { DashboardDistribution } from "../components/DashboardDistribution";
+import {
+  WorkPulse,
+  type WorkPulseKind,
+} from "@/domain/spydr/features/work/components/WorkPulse";
+import { workTasksPath } from "@/domain/spydr/features/work/utils/workPaths";
+import { useDashboardView } from "../hooks/useDashboardView";
+import { DashboardTotalsStrip } from "../components/DashboardTotalsStrip";
+import { DashboardNeedsAttention } from "../components/DashboardNeedsAttention";
+import { DashboardTaskMixPanel } from "../components/DashboardTaskMix";
+import { DashboardAreas } from "../components/DashboardAreas";
+import { DashboardLoadByPerson } from "../components/DashboardLoadByPerson";
+import "./dashboard-page.css";
+
+function formatUpdatedLabel(dataUpdatedAt: number, now = Date.now()): string {
+  if (!dataUpdatedAt) return "updated just now";
+  const seconds = Math.max(0, Math.floor((now - dataUpdatedAt) / 1000));
+  if (seconds < 45) return "updated just now";
+  if (seconds < 90) return "updated 1m ago";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `updated ${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `updated ${hours}h ago`;
+  return `updated ${Math.floor(hours / 24)}d ago`;
+}
 
 export function DashboardPage() {
-  const query = useWorkspaceDashboardQuery();
-  const dashboard = query.data;
+  const { view, isLoading, isError, errorMessage, dataUpdatedAt } =
+    useDashboardView();
+  const navigate = useNavigate();
   usePageBreadcrumb("Dashboard");
 
-  const pressure = dashboard
-    ? dashboard.summary.blockedTasks + dashboard.summary.overdueTasks
-    : 0;
+  const applyPulseFilter = (kind: WorkPulseKind) => {
+    if (kind === "overdue") {
+      navigate(workTasksPath({ person: "all", due: "overdue" }));
+    } else if (kind === "blocked") {
+      navigate(workTasksPath({ person: "all", status: "blocked" }));
+    } else {
+      navigate(workTasksPath({ person: "all", due: "this_week" }));
+    }
+  };
 
   return (
-    <div className="absolute inset-0 flex min-h-0 flex-col overflow-y-auto md:overflow-hidden">
+    <div className="dashboard-page absolute inset-0 flex min-h-0 flex-col overflow-y-auto">
       <PageHeader
         dense
+        atmosphere={false}
+        showBreadcrumbs={false}
+        inlineMeta
+        className="dashboard-page-header"
+        titleClassName="text-[24px] font-semibold tracking-[-0.03em] text-[var(--fg)]"
         title="Dashboard"
         meta={
-          dashboard ? (
-            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-              Updated {formatRelativeTime(dashboard.generatedAt)}
-              {pressure > 0 ? (
-                <>
-                  {" · "}
-                  <span className="text-[hsl(var(--status-blocked))]">
-                    {pressure} need attention
-                  </span>
-                </>
-              ) : (
-                " · Clear"
-              )}
-            </span>
+          view ? (
+            <WorkPulse counts={view.pulse} onSelect={applyPulseFilter} />
           ) : undefined
         }
         actions={
-          <Link
-            to="/work?view=tasks"
-            className="inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-[12px] text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-          >
-            View tasks
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </Link>
+          <span className="dashboard-updated">
+            {formatUpdatedLabel(dataUpdatedAt)}
+          </span>
         }
       />
 
-      {query.isLoading && <LoadingState title="Loading dashboard" />}
-      {query.isError && (
-        <ErrorState
-          title="Dashboard unavailable"
-          description={
-            query.error instanceof Error
-              ? query.error.message
-              : "Failed to load dashboard"
-          }
-        />
+      {isLoading && <LoadingState title="Loading dashboard" />}
+      {isError && (
+        <ErrorState title="Dashboard unavailable" description={errorMessage} />
       )}
 
-      {!query.isLoading && !query.isError && dashboard && (
-        <div className="flex min-h-0 flex-1 flex-col md:overflow-hidden">
-          <DashboardMetricStrip summary={dashboard.summary} />
-          <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-2 md:grid-rows-[auto_minmax(0,1fr)] md:overflow-hidden">
-            <DashboardDistribution dashboard={dashboard} />
-            <DashboardPersonLoadSection dashboard={dashboard} />
+      {!isLoading && !isError && view ? (
+        <div className="dashboard-page-body">
+          <DashboardTotalsStrip totals={view.totals} />
+          <div className="dashboard-panels">
+            <DashboardNeedsAttention
+              items={view.attention}
+              more={view.attentionMore}
+            />
+            <DashboardTaskMixPanel mix={view.taskMix} />
+            <DashboardAreas
+              areas={view.areas}
+              openTaskTotal={view.openTaskTotal}
+            />
+            <DashboardLoadByPerson
+              loads={view.personLoads}
+              openTaskTotal={view.openTaskTotal}
+            />
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

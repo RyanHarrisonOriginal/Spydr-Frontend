@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import type { ProjectAreaNode } from "@/domain/spydr/utils/types";
 import {
   areaColorSurfaceStyle,
@@ -23,6 +24,9 @@ function findArea(areas: ProjectAreaNode[], areaId: string) {
   return areas.find((area) => area.id === areaId);
 }
 
+const quietTriggerClassName =
+  "h-7 min-h-7 gap-2 rounded-md border-transparent bg-transparent px-1 shadow-none hover:border-transparent hover:bg-accent data-[state=open]:border-transparent data-[state=open]:bg-accent data-[state=open]:ring-0";
+
 export function ProjectAreaSelect({
   areas,
   value,
@@ -38,9 +42,7 @@ export function ProjectAreaSelect({
     { value: "", label: "Unassigned" },
     ...areas.map((area) => ({
       value: area.id,
-      label: area.details?.emoji
-        ? `${area.details.emoji} ${area.title}`
-        : area.title,
+      label: area.title,
     })),
   ];
 
@@ -57,29 +59,31 @@ export function ProjectAreaSelect({
       disabled={disabled}
       appearance={appearance}
       ariaLabel={appearance === "rail" ? `Area: ${areaName}` : "Project area"}
-      menuLabel="Area"
       placeholder="Unassigned"
       emptyValue=""
-      searchable
       wrapLabel={wrapLabel}
       fitContent={fitContent}
+      hideChevron={quiet}
       leading={
         appearance === "field" ? (
           hasValue && selectedColor ? (
-            <AreaColorSwatch color={selectedColor} />
-          ) : (
-            <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-dashed border-muted-foreground/40" />
+            <AreaColorSwatch color={selectedColor} className="h-2 w-2 border-0 shadow-none" />
+          ) : quiet ? null : (
+            <span className="inline-block h-2 w-2 shrink-0 rounded-full border border-dashed border-muted-foreground/40" />
           )
         ) : null
       }
       renderOptionLeading={(option) =>
         option.value ? (
-          <AreaColorSwatch color={resolveAreaColor(findArea(areas, option.value))} />
+          <AreaColorSwatch
+            color={resolveAreaColor(findArea(areas, option.value))}
+            className="h-2 w-2 border-0 shadow-none"
+          />
         ) : (
-          <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full border border-dashed border-muted-foreground/40" />
+          <span className="inline-block h-2 w-2 shrink-0 rounded-full border border-dashed border-muted-foreground/40" />
         )
       }
-      triggerClassName={className}
+      triggerClassName={cn(quiet && appearance === "field" && quietTriggerClassName, className)}
       triggerStyle={
         quiet
           ? undefined
@@ -91,17 +95,12 @@ export function ProjectAreaSelect({
               ? areaColorSurfaceStyle(selectedColor)
               : undefined
       }
-      labelClassName="font-medium tracking-tight text-foreground/90"
-      getOptionStyle={(option, selected) => {
-        if (!option.value) return undefined;
-        const color = resolveAreaColor(findArea(areas, option.value));
-        if (selected) {
-          return areaColorSurfaceStyle(color);
-        }
-        return {
-          backgroundColor: `hsl(${color} / 0.06)`,
-        };
-      }}
+      labelClassName={
+        quiet
+          ? "text-[13px] font-normal normal-case text-muted-foreground"
+          : "font-medium tracking-tight text-foreground/90"
+      }
+      contentClassName="p-1.5"
     />
   );
 }

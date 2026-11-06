@@ -131,16 +131,16 @@ export function inMotionProjectCount(counts: Record<string, number>): number {
 export function statusFillClass(status: string): string {
   switch (status) {
     case "active":
-      return "bg-[hsl(var(--status-active))]";
+      return "bg-[var(--active)]";
     case "waiting":
     case "snoozed":
-      return "bg-[hsl(var(--status-doing))]";
+      return "bg-[var(--warn)]";
     case "blocked":
-      return "bg-[hsl(var(--status-blocked))]";
+      return "bg-[var(--danger)]";
     case "completed":
-      return "bg-[hsl(var(--status-done))]";
+      return "bg-[#4A5058]";
     default:
-      return "bg-[hsl(var(--status-todo))]";
+      return "bg-[#5C626B]";
   }
 }
 
