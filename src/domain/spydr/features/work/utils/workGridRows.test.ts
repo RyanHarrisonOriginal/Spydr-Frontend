@@ -6,11 +6,15 @@ import {
   indexCommitted,
 } from "./workGridRows";
 
-function project(id: string, title: string): ProjectNode {
+function project(
+  id: string,
+  title: string,
+  status: string = "active"
+): ProjectNode {
   return {
     id,
     title,
-    status: "active",
+    status,
     priority: "high",
     area: "Ops",
     updatedAt: "2026-04-01T00:00:00.000Z",
@@ -119,6 +123,26 @@ describe("buildHierarchyRows", () => {
     expect(rows[0]?.data).toBeUndefined();
     expect(rows[0]?.open).toBeUndefined();
   });
+
+  it("hides completed projects until showCompleted is on", () => {
+    const hidden = buildHierarchyRows(
+      [project("p1", "Alpha", "completed"), project("p2", "Beta")],
+      new Map(),
+      areas,
+      new Set(),
+      false
+    );
+    expect(hidden.map((row) => row.id)).toEqual(["p2"]);
+
+    const shown = buildHierarchyRows(
+      [project("p1", "Alpha", "completed"), project("p2", "Beta")],
+      new Map(),
+      areas,
+      new Set(),
+      true
+    );
+    expect(shown.map((row) => row.id)).toEqual(["p1", "p2"]);
+  });
 });
 
 describe("buildFlatTaskRows", () => {
@@ -132,5 +156,16 @@ describe("buildFlatTaskRows", () => {
       priority: "low",
     });
     expect(indexCommitted(rows).get("t1")?.date).toBe("2026-05-01");
+  });
+
+  it("hides completed tasks when showCompleted is false", () => {
+    const rows = buildFlatTaskRows(
+      [
+        task("t1", "Draft", "active", "p1"),
+        task("t2", "Ship", "completed", "p1"),
+      ],
+      false
+    );
+    expect(rows.map((row) => row.id)).toEqual(["t1"]);
   });
 });

@@ -66,7 +66,7 @@ export function WorkPage() {
   const createTask = useCreateTaskForm({
     assigneePersonNodeId: personId ?? undefined,
   });
-  const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   usePageBreadcrumb("Work");
 
@@ -103,14 +103,27 @@ export function WorkPage() {
     setExpandedIds,
   ]);
 
+  const visibleProjects = useMemo(
+    () =>
+      showCompleted
+        ? projectsPage.projects
+        : projectsPage.projects.filter(
+            (project) => !isClosedCollectionStatus(project.status)
+          ),
+    [projectsPage.projects, showCompleted]
+  );
+
   const expandableProjectIds = useMemo(
     () =>
-      projectsPage.projects
-        .filter(
-          (project) => (projectsPage.tasksByProjectId.get(project.id)?.length ?? 0) > 0
-        )
+      visibleProjects
+        .filter((project) => {
+          const tasks = projectsPage.tasksByProjectId.get(project.id) ?? [];
+          return tasks.some(
+            (task) => showCompleted || !isClosedCollectionStatus(task.status)
+          );
+        })
         .map((project) => project.id),
-    [projectsPage.projects, projectsPage.tasksByProjectId]
+    [projectsPage.tasksByProjectId, showCompleted, visibleProjects]
   );
 
   const isHierarchy = view === "hierarchy";
@@ -122,14 +135,27 @@ export function WorkPage() {
     ? projectsPage.errorMessage
     : tasksPage.errorMessage;
 
-  const completedTaskCount = useMemo(() => {
-    let count = 0;
-    for (const project of projectsPage.projects) {
-      const tasks = projectsPage.tasksByProjectId.get(project.id) ?? [];
-      count += tasks.filter((task) => isClosedCollectionStatus(task.status)).length;
+  const completedCount = useMemo(() => {
+    if (isHierarchy) {
+      let count = 0;
+      for (const project of projectsPage.projects) {
+        if (isClosedCollectionStatus(project.status)) count += 1;
+        const tasks = projectsPage.tasksByProjectId.get(project.id) ?? [];
+        count += tasks.filter((task) =>
+          isClosedCollectionStatus(task.status)
+        ).length;
+      }
+      return count;
     }
-    return count;
-  }, [projectsPage.projects, projectsPage.tasksByProjectId]);
+    return tasksPage.view.items.filter((task) =>
+      isClosedCollectionStatus(task.status)
+    ).length;
+  }, [
+    isHierarchy,
+    projectsPage.projects,
+    projectsPage.tasksByProjectId,
+    tasksPage.view.items,
+  ]);
 
   const hierarchyExpanded =
     expandableProjectIds.length > 0 &&
@@ -146,9 +172,9 @@ export function WorkPage() {
       <WorkMoreMenu
         trashCount={projectsPage.deletedCount}
         onOpenTrash={projectsPage.openTrash}
-        showCompleted={isHierarchy ? showCompletedTasks : undefined}
-        completedCount={completedTaskCount}
-        onToggleCompleted={isHierarchy ? setShowCompletedTasks : undefined}
+        showCompleted={showCompleted}
+        completedCount={completedCount}
+        onToggleCompleted={setShowCompleted}
         hierarchyExpanded={isHierarchy ? hierarchyExpanded : undefined}
         expandDisabled={expandableProjectIds.length === 0}
         onExpandAll={
@@ -314,32 +340,41 @@ export function WorkPage() {
       ]
   ).filter((message): message is string => Boolean(message));
 
+  const visibleTasks = useMemo(
+    () =>
+      showCompleted
+        ? tasksPage.view.items
+        : tasksPage.view.items.filter(
+            (task) => !isClosedCollectionStatus(task.status)
+          ),
+    [showCompleted, tasksPage.view.items]
+  );
+
   const showHierarchyGrid =
-    !isLoading && !isError && isHierarchy && projectsPage.projects.length > 0;
+    !isLoading && !isError && isHierarchy && visibleProjects.length > 0;
   const showTaskGrid =
-    !isLoading && !isError && !isHierarchy && tasksPage.view.items.length > 0;
+    !isLoading && !isError && !isHierarchy && visibleTasks.length > 0;
 
   const pulseCounts = useMemo(() => {
     if (isHierarchy) {
-      const projects = projectsPage.projects;
       const tasks: typeof tasksPage.view.items = [];
-      for (const project of projects) {
+      for (const project of visibleProjects) {
         const nested = projectsPage.tasksByProjectId.get(project.id) ?? [];
         for (const task of nested) {
-          if (showCompletedTasks || !isClosedCollectionStatus(task.status)) {
+          if (showCompleted || !isClosedCollectionStatus(task.status)) {
             tasks.push(task);
           }
         }
       }
-      return countVisiblePulse(projects, tasks);
+      return countVisiblePulse(visibleProjects, tasks);
     }
-    return countVisiblePulse([], tasksPage.view.items);
+    return countVisiblePulse([], visibleTasks);
   }, [
     isHierarchy,
-    projectsPage.projects,
     projectsPage.tasksByProjectId,
-    showCompletedTasks,
-    tasksPage.view.items,
+    showCompleted,
+    visibleProjects,
+    visibleTasks,
   ]);
 
   const applyPulseFilter = (kind: WorkPulseKind) => {
@@ -472,6 +507,17 @@ export function WorkPage() {
         {!isLoading &&
           !isError &&
           isHierarchy &&
+          projectsPage.projects.length > 0 &&
+          visibleProjects.length === 0 && (
+            <EmptyState
+              title="No open projects"
+              description="Turn on Show completed in the list menu to see finished work."
+            />
+          )}
+
+        {!isLoading &&
+          !isError &&
+          isHierarchy &&
           projectsPage.orgProjectCount > 0 &&
           projectsPage.allProjects.length === 0 && (
             <EmptyState
@@ -509,7 +555,7 @@ export function WorkPage() {
                 areas={projectsPage.areas}
                 people={isHierarchy ? projectsPage.people : tasksPage.people}
                 expandedIds={expandedIds}
-                showCompletedTasks={showCompletedTasks}
+                showCompleted={showCompleted}
                 reorderEnabled={
                   isHierarchy
                     ? projectsPage.reorder.canReorder
@@ -575,6 +621,17 @@ export function WorkPage() {
             <CollectionNoResults
               noun={tasksPage.view.noun}
               onClearFilters={tasksPage.view.clearFilters}
+            />
+          )}
+
+        {!isLoading &&
+          !isError &&
+          !isHierarchy &&
+          tasksPage.view.items.length > 0 &&
+          visibleTasks.length === 0 && (
+            <EmptyState
+              title="No open tasks"
+              description="Turn on Show completed in the list menu to see finished work."
             />
           )}
       </div>

@@ -172,26 +172,37 @@ export function buildHierarchyRows(
   tasksByProjectId: Map<string, TaskNode[]>,
   areas: ProjectAreaNode[],
   expandedIds: Set<string>,
-  showCompletedTasks: boolean
+  showCompleted: boolean
 ): WorkGridRow[] {
-  return projects.map((project) => {
-    const allTasks = tasksByProjectId.get(project.id) ?? [];
-    const visibleTasks = allTasks.filter(
-      (task) => showCompletedTasks || !isClosedCollectionStatus(task.status)
-    );
-    const children = visibleTasks.map(taskRow);
-    const row = projectRow(project, areas, allTasks);
-    if (children.length === 0) return row;
-    return {
-      ...row,
-      open: expandedIds.has(project.id),
-      data: children,
-    };
-  });
+  return projects
+    .filter(
+      (project) => showCompleted || !isClosedCollectionStatus(project.status)
+    )
+    .map((project) => {
+      const allTasks = tasksByProjectId.get(project.id) ?? [];
+      const visibleTasks = allTasks.filter(
+        (task) => showCompleted || !isClosedCollectionStatus(task.status)
+      );
+      const children = visibleTasks.map(taskRow);
+      const row = projectRow(project, areas, allTasks);
+      if (children.length === 0) return row;
+      return {
+        ...row,
+        open: expandedIds.has(project.id),
+        data: children,
+      };
+    });
 }
 
-export function buildFlatTaskRows(tasks: TaskNode[]): WorkGridRow[] {
-  return tasks.map(taskRow);
+export function buildFlatTaskRows(
+  tasks: TaskNode[],
+  showCompleted = true
+): WorkGridRow[] {
+  return tasks
+    .filter(
+      (task) => showCompleted || !isClosedCollectionStatus(task.status)
+    )
+    .map(taskRow);
 }
 
 export function indexCommitted(rows: WorkGridRow[]): Map<string, CommittedWorkRow> {

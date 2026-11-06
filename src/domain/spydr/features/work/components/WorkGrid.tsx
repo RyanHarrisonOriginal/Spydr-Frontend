@@ -68,7 +68,7 @@ export interface WorkGridProps {
   areas: ProjectAreaNode[];
   people: PersonNode[];
   expandedIds: Set<string>;
-  showCompletedTasks: boolean;
+  showCompleted: boolean;
   reorderEnabled: boolean;
   resetSignal?: string;
   todoTaskIds: Set<string>;
@@ -515,7 +515,7 @@ export function WorkGrid(props: WorkGridProps) {
     areas,
     people,
     expandedIds,
-    showCompletedTasks,
+    showCompleted,
     reorderEnabled,
     resetSignal = "",
   } = props;
@@ -534,9 +534,9 @@ export function WorkGrid(props: WorkGridProps) {
             tasksByProjectId,
             areas,
             expandedIds,
-            showCompletedTasks
+            showCompleted
           )
-        : buildFlatTaskRows(tasks);
+        : buildFlatTaskRows(tasks, showCompleted);
     return { rows, committed: indexCommitted(rows) };
   }, [
     areas,
@@ -544,7 +544,7 @@ export function WorkGrid(props: WorkGridProps) {
     mode,
     projects,
     resetSignal,
-    showCompletedTasks,
+    showCompleted,
     tasks,
     tasksByProjectId,
   ]);
