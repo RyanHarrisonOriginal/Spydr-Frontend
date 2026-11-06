@@ -1,8 +1,5 @@
 import { format } from "date-fns";
 import {
-  AlertTriangle,
-  ArrowDown,
-  ArrowUp,
   ChevronDown,
   ChevronRight,
   ChevronUp,
@@ -31,6 +28,7 @@ import { EmojiPicker } from "@/domain/spydr/features/shared/components/EmojiPick
 import { InlineDeleteButton } from "@/domain/spydr/features/shared/components/InlineDeleteButton";
 import { TruncatedText } from "@/domain/spydr/features/shared/components/TruncatedText";
 import { ProjectAreaSelect } from "@/domain/spydr/features/projects/components/ProjectAreaSelect";
+import { ProjectPrioritySelect } from "@/domain/spydr/features/projects/components/ProjectPrioritySelect";
 import { ProjectStatusSelect } from "@/domain/spydr/features/projects/components/ProjectStatusSelect";
 import { AddToTodoButton } from "@/domain/spydr/features/todos/components/AddToTodoButton";
 import { TaskStatusSelect } from "@/domain/spydr/features/tasks/components/TaskStatusSelect";
@@ -39,7 +37,6 @@ import { isClosedCollectionStatus } from "@/domain/spydr/utils/collectionVisibil
 import { parseCalendarDate } from "@/domain/spydr/utils/dateOnly";
 import { formatPerson } from "@/domain/spydr/utils/projectPersonas";
 import { useCurrentUserPerson } from "@/domain/spydr/features/people/context/CurrentUserPersonContext";
-import { projectPriorities } from "@/domain/spydr/utils/projectPriority";
 import type { TaskStatusChange } from "@/domain/spydr/utils/taskStatus";
 import type {
   PersonNode,
@@ -424,46 +421,26 @@ function AssigneeCell({ row, column }: ICellProps) {
   );
 }
 
-function PriorityCell({ row, column }: ICellProps) {
+function PriorityCell({ row }: ICellProps) {
   const handlers = useHandlers();
   const workRow = asWorkRow(row);
-  const priority = workRow.priority;
-  const isDefault = !priority || priority === "medium";
+  const busy = handlers.busyId === workRow.id;
+  const priority = workRow.priority || "medium";
 
   return (
-    <button
-      type="button"
-      className={cn(
-        "work-grid-fill work-grid-editable work-grid-priority",
-        priority === "low" && "work-grid-priority-low",
-        (priority === "high" || priority === "critical") && "work-grid-priority-hot"
-      )}
-      aria-label={`Priority ${priority || "medium"}`}
-      onMouseDown={stopGridPointer}
-      onClick={() => {
-        void handlers.api?.exec("open-editor", {
-          id: workRow.id,
-          column: column?.id ?? "priority",
-        });
-      }}
-    >
-      {isDefault ? null : priority === "low" ? (
-        <>
-          <ArrowDown className="h-3 w-3" />
-          <span>Low</span>
-        </>
-      ) : priority === "high" ? (
-        <>
-          <ArrowUp className="h-3 w-3" />
-          <span>High</span>
-        </>
-      ) : (
-        <>
-          <AlertTriangle className="h-3 w-3" />
-          <span>Critical</span>
-        </>
-      )}
-    </button>
+    <div className="work-grid-fill work-grid-field" onMouseDown={stopGridPointer}>
+      <ProjectPrioritySelect
+        value={priority}
+        disabled={busy}
+        fitContent
+        quiet
+        ariaLabel={`Priority ${priority}`}
+        onChange={(next) => {
+          if (next === priority) return;
+          handlers.onPriority(workRow.id, workRow.kind, next);
+        }}
+      />
+    </div>
   );
 }
 
@@ -527,11 +504,6 @@ function ProjectCell({ row, column }: ICellProps) {
   );
 }
 
-const priorityOptions = projectPriorities.map((priority) => ({
-  id: priority,
-  label: priority.charAt(0).toUpperCase() + priority.slice(1),
-}));
-
 const gridSizes = { rowHeight: 46, headerHeight: 38 };
 
 export function WorkGrid(props: WorkGridProps) {
@@ -578,17 +550,6 @@ export function WorkGrid(props: WorkGridProps) {
   ]);
 
   committedRef.current = model.committed;
-
-  const hasNonDefaultPriority = useMemo(() => {
-    const visit = (rows: WorkGridRow[]): boolean => {
-      for (const row of rows) {
-        if (row.priority && row.priority !== "medium") return true;
-        if (row.data && visit(row.data)) return true;
-      }
-      return false;
-    };
-    return visit(model.rows);
-  }, [model.rows]);
 
   const columns = useMemo(() => {
     const personOptions = [
@@ -687,9 +648,6 @@ export function WorkGrid(props: WorkGridProps) {
         width: 104,
         resize: true,
         sort: true,
-        hidden: !hasNonDefaultPriority,
-        options: priorityOptions,
-        editor: "richselect",
         cell: PriorityCell,
       },
       {
@@ -734,14 +692,7 @@ export function WorkGrid(props: WorkGridProps) {
     });
 
     return cols;
-  }, [
-    currentUserPersonId,
-    hasNonDefaultPriority,
-    mode,
-    people,
-    projects,
-    reorderEnabled,
-  ]);
+  }, [currentUserPersonId, mode, people, projects, reorderEnabled]);
 
   const revert = (id: string, row: Partial<WorkGridRow>) => {
     void apiRef.current?.exec("update-row", { id, row });
